@@ -45,6 +45,14 @@ class LaunchpadFrame(Stackframe):
                 frame['args'] = match.group(4)
                 frame['file'] = match.group(5)
                 matched = True
+        if not matched: # Missing address
+            match = re.match('^#(\d+)\s+(\S+)\s+\(([^\)]*)\)\s+at\s+(\S+)\s*$', line)
+            if match is not None:
+                frame['depth'] = int(match.group(1))
+                frame['function'] = match.group(2)
+                frame['args'] = match.group(3)
+                frame['file'] = match.group(4)
+                matched = True
         if not matched:
             match = re.match('^#(\d+)\s+(\S+)\s+in\s+(\S+)\s+\(([^\)]*)\)\s*$', line)
             if match is not None:
@@ -66,7 +74,7 @@ class LaunchpadFrame(Stackframe):
         if matched:
             return frame
         else:
-            raise RuntimeError("Couldn't recognize stack frame format :(")
+            raise RuntimeError("Couldn't recognize stack frame format: %s" % (line))
 
 class LaunchpadStack(Stacktrace):
     
@@ -79,6 +87,8 @@ class LaunchpadStack(Stacktrace):
         prevline = None
         for line in  stacklines:
             if re.match('^\s+', line):
+                extras.append(line.rstrip())
+            elif re.match('^No locals.', line):
                 extras.append(line.rstrip())
             else:
                 if prevline is not None:
@@ -118,7 +128,12 @@ class LaunchpadCrash(Crash):
             if matches is not None:
                 for match in matches:
                     crash[match[0]] = match[1]
-            stack_path = os.path.join(path, "Stacktrace.txt")
+            stack_path = None
+            if os.path.isfile(os.path.join(path, "Stacktrace.txt (retraced)")):
+                stack_path = os.path.join(path, "Stacktrace.txt (retraced)")
+            elif os.path.isfile(os.path.join(path, "Stacktrace.txt")):
+                stack_path = os.path.join(path, "Stacktrace.txt")
+            assert (stack_path is not None)
             crash['stacktrace'] = LaunchpadStack.load_from_file(stack_path)
         else:
             raise NotImplementedError("Not a directory, I don't know how to load this.")
@@ -226,8 +241,6 @@ class TestCrash(unittest.TestCase):
         '  1576:         g_cond_free(cond_scan);\n'\
         '  1577:         g_mutex_free(mutex_scan);\n'
 
-
-    
     def test_ubuntu(self):
         import tempfile
         import os
@@ -261,5 +274,124 @@ class TestCrash(unittest.TestCase):
         finally:
             shutil.rmtree(dirpath)
             
+            
+    example_ubuntu_post2 = \
+        'Binary package hint: evince\n'\
+        '\n'\
+        'This happens immediately when trying to mark text with the mouse.\n'\
+        '\n'\
+        'ProblemType: Crash\n'\
+        'Architecture: amd64\n'\
+        'Date: Wed Jun 20 10:27:06 2007\n'\
+        'DistroRelease: Ubuntu 7.10\n'\
+        'ExecutablePath: /usr/bin/evince\n'\
+        'NonfreeKernelModules: vmnet vmmon\n'\
+        'Package: evince 0.9.0-1ubuntu4\n'\
+        'PackageArchitecture: amd64\n'\
+        'ProcCmdline: evince ./expenses-uds-sevilla.pdf\n'\
+        'ProcCwd: /home/martin\n'\
+        'ProcEnviron:\n'\
+        ' SHELL=/bin/bash\n'\
+        ' PATH=/home/martin/bin:/usr/lib/ccache:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games\n'\
+        ' LANG=de_DE.UTF-8\n'\
+        ' LANGUAGE=de_DE.UTF-8\n'\
+        'Signal: 11\n'\
+        'SourcePackage: evince\n'\
+        'StacktraceTop:\n'\
+        ' cairo_transform () from /usr/lib/libcairo.so.2\n'\
+        ' CairoOutputDev::setDefaultCTM () from /usr/lib/libpoppler-glib.so.1\n'\
+        ' TextSelectionPainter::TextSelectionPainter () from /usr/lib/libpoppler.so.1\n'\
+        ' TextPage::drawSelection () from /usr/lib/libpoppler.so.1\n'\
+        ' poppler_page_render_selection () from /usr/lib/libpoppler-glib.so.1\n'\
+        'Title: evince crashed with SIGSEGV in cairo_transform()\n'\
+        'Uname: Linux donald 2.6.20-15-generic #2 SMP Sun Apr 15 06:17:24 UTC 2007 x86_64 GNU/Linux\n'\
+        'UserGroups: adm admin audio cdrom dialout dip floppy lpadmin netdev plugdev powerdev scanner video'
+
+    example_ubuntu_stacktrace2 = \
+        '#0  cairo_transform (cr=0x0, matrix=0x7fff69ce7c40) at /build/buildd/libcairo-1.4.6/src/cairo.c:1222\n'\
+        '\tstatus = <value optimized out>\n'\
+        '#1  0x00002b344498a150 in CairoOutputDev::setDefaultCTM () from /usr/lib/libpoppler-glib.so.1\n'\
+        '#2  0x00002b344ae2cefc in TextSelectionPainter::TextSelectionPainter () from /usr/lib/libpoppler.so.1\n'\
+        '#3  0x00002b344ae2cff0 in TextPage::drawSelection () from /usr/lib/libpoppler.so.1\n'\
+        '#4  0x00002b344498684a in poppler_page_render_selection () from /usr/lib/libpoppler-glib.so.1\n'\
+        '#5  0x000000000045be48 in pdf_selection_render_selection (selection=<value optimized out>, rc=0xc53a40, pixbuf=<value optimized out>, points=0xbf4a90, old_points=0x0, \n'\
+        '    text=0xb77bf8, base=0xb77c34) at /build/buildd/evince-0.9.0/./backend/pdf/ev-poppler.cc:1632\n'\
+        '\twidth_points = 612\n'\
+        '\theight_points = 792\n'\
+        '#6  0x0000000000430a9e in ev_pixbuf_cache_get_selection_pixbuf (pixbuf_cache=0xd738a0, page=<value optimized out>, scale=<value optimized out>, region=0x7fff69ce8010)\n'\
+        '    at /build/buildd/evince-0.9.0/./shell/ev-pixbuf-cache.c:906\n'\
+        '\told_points = (EvRectangle *) 0x0\n'\
+        '\ttext = (GdkColor *) 0xb77bf8\n'\
+        '\tbase = (GdkColor *) 0xb77c34\n'\
+        '\tjob_info = (CacheJobInfo *) 0xbf4a40\n'\
+        '\t__PRETTY_FUNCTION__ = "ev_pixbuf_cache_get_selection_pixbuf"\n'\
+        '#7  0x000000000043acd1 in selection_update_idle_cb (view=0x6e41d0) at /build/buildd/evince-0.9.0/./shell/ev-view.c:4555\n'\
+        'No locals.\n'\
+        '#8  0x00002b34478c9fd3 in IA__g_main_context_dispatch (context=0x6eea30) at /build/buildd/glib2.0-2.13.5/glib/gmain.c:2061\n'\
+        'No locals.\n'\
+        '#9  0x00002b34478cd2dd in g_main_context_iterate (context=0x6eea30, block=1, dispatch=1, self=<value optimized out>) at /build/buildd/glib2.0-2.13.5/glib/gmain.c:2694\n'\
+        '\tgot_ownership = <value optimized out>\n'\
+        '\tmax_priority = 200\n'\
+        '\ttimeout = 0\n'\
+        '\tsome_ready = 1\n'\
+        '\tnfds = <value optimized out>\n'\
+        '\tallocated_nfds = <value optimized out>\n'\
+        '\tfds = (GPollFD *) 0x7367e0\n'\
+        '\t__PRETTY_FUNCTION__ = "g_main_context_iterate"\n'\
+        '#10 0x00002b34478cd5ea in IA__g_main_loop_run (loop=0x72c990) at /build/buildd/glib2.0-2.13.5/glib/gmain.c:2898\n'\
+        '\tgot_ownership = <value optimized out>\n'\
+        '\tself = (GThread *) 0x6b2940\n'\
+        '\t__PRETTY_FUNCTION__ = "IA__g_main_loop_run"\n'\
+        '#11 0x00002b344355a623 in IA__gtk_main () at /build/buildd/gtk+2.0-2.11.3/gtk/gtkmain.c:1143\n'\
+        '\ttmp_list = (GList *) 0x6da580\n'\
+        '\tfunctions = (GList *) 0x0\n'\
+        '\tinit = (GtkInitFunction *) 0x72c990\n'\
+        '\tloop = (GMainLoop *) 0x72c990\n'\
+        '#12 0x000000000044c710 in main (argc=7185800, argv=<value optimized out>) at /build/buildd/evince-0.9.0/./shell/main.c:382\n'\
+        '\tvalue = <value optimized out>\n'\
+        '\tscreen = <value optimized out>\n'\
+        '\tdisplay_name = (const gchar *) 0x0\n'\
+        '\tmode = 7185792\n'\
+        '\tdisplay = <value optimized out>\n'\
+        '\tscreen_number = 7563232\n'\
+        '\tenable_metadata = 0\n'\
+        '\tcontext = <value optimized out>\n'\
+        '\targs = (GHashTable *) 0x6f4cc0\n'\
+        '\tprogram = (GnomeProgram *) 0x6c1050'
+
+    def test_ubuntu2(self):
+        import tempfile
+        import os
+        import shutil
+        import datetime
+        dirpath=tempfile.mkdtemp()
+        try:
+            # Test setup
+            stacktrace_path = os.path.join(dirpath, "Stacktrace.txt (retraced)")
+            with open(stacktrace_path, 'w') as stacktrace_file:
+                stacktrace_file.write(self.example_ubuntu_stacktrace2)
+            post_path = os.path.join(dirpath, "Post.txt")
+            with open(post_path, 'w') as post_file:
+                post_file.write(self.example_ubuntu_post2)
+            
+            # Test crash loader
+            crash = Crash.load_from_file(dirpath)
+            
+            # test that contents are loaded correctly
+            assert (isinstance(crash, Crash))
+            assert (crash['cpu'] == 'amd64')
+            assert (crash['date'] == datetime.datetime(2007, 6, 20, 10, 27, 6))
+            stacktrace = crash['stacktrace']
+            assert (isinstance(stacktrace, Stacktrace))
+            assert (isinstance(stacktrace[0], Stackframe))
+            assert (stacktrace[0]['depth'] == 0)
+            assert (stacktrace[0]['function'] == 'cairo_transform')
+            assert (not 'address' in stacktrace[0])
+            assert (stacktrace[1]['depth'] == 1)
+            assert (stacktrace[1]['address'] == '0x00002b344498a150')
+            
+        finally:
+            shutil.rmtree(dirpath)
+
 if __name__ == '__main__':
     unittest.main()
