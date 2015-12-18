@@ -62,15 +62,40 @@ class LaunchpadFrame(Stackframe):
                 frame['args'] = match.group(4)
                 matched = True
         if not matched: # sometimes args list is cut off?
-            match = re.match('^#(\d+)\s+(\S+)\s+in\s+(\S+)\s+\(([^\)]*)\s*$', line)
+            match = re.match('^#(\d+)\s+(\S+)\s+in\s+(\S+)\s+\((.*?)\s*$', line)
             if match is not None:
                 frame['depth'] = int(match.group(1))
                 frame['address'] = match.group(2)
                 frame['function'] = match.group(3)
                 frame['args'] = match.group(4)
                 matched = True
+        if not matched: # no "in" or address
+            match = re.match('^#(\d+)\s+<(.+?)>\s*$', line)
+            if match is not None:
+                frame['depth'] = int(match.group(1))
+                frame['function'] = match.group(2)
+                matched = True
+        if not matched: # no "in" or address
+            match = re.match('^#(\d+)\s+(\S+)\s+\((.*?)\s*$', line)
+            if match is not None:
+                frame['depth'] = int(match.group(1))
+                frame['function'] = match.group(2)
+                frame['args'] = match.group(3)
+                matched = True
+        leftover_extras = []
         if extras is not None:
-            frame['extra'] = extras
+            for extra in extras:
+                extra_matched = False
+                if not extra_matched:
+                    match = re.match('^\s*at\s+([^\s:]+):(\d+)\s*$', extra)
+                    if match is not None:
+                        frame['file'] = match.group(1)
+                        frame['fileline'] = match.group(2)
+                        extra_matched = True
+                if not extra_matched:
+                    leftover_extras.append(extra)
+        if len(leftover_extras) > 0:
+            frame['extra'] = leftover_extras
         if matched:
             return frame
         else:
@@ -86,15 +111,13 @@ class LaunchpadStack(Stacktrace):
         extras = []
         prevline = None
         for line in  stacklines:
-            if re.match('^\s+', line):
-                extras.append(line.rstrip())
-            elif re.match('^No locals.', line):
-                extras.append(line.rstrip())
-            else:
+            if re.match('^#', line):
                 if prevline is not None:
                     stack.append(LaunchpadFrame.load_from_strings(prevline,extras))
                 prevline = line
                 extras = []
+            else:
+                extras.append(line.rstrip())
         stack.append(LaunchpadFrame.load_from_strings(prevline,extras))
         
         return stack
@@ -131,6 +154,8 @@ class LaunchpadCrash(Crash):
             stack_path = None
             if os.path.isfile(os.path.join(path, "Stacktrace.txt (retraced)")):
                 stack_path = os.path.join(path, "Stacktrace.txt (retraced)")
+            elif os.path.isfile(os.path.join(path, "StacktraceSource.txt")):
+                stack_path = os.path.join(path, "StacktraceSource.txt")
             elif os.path.isfile(os.path.join(path, "Stacktrace.txt")):
                 stack_path = os.path.join(path, "Stacktrace.txt")
             assert (stack_path is not None)
@@ -392,6 +417,216 @@ class TestCrash(unittest.TestCase):
             
         finally:
             shutil.rmtree(dirpath)
+    
+    example_ubuntu_post3 = \
+        'Binary package hint: beryl-core\n'\
+        '\n'\
+        'Login in\n'\
+        '\n'\
+        'ProblemType: Crash\n'\
+        'Architecture: amd64\n'\
+        'Date: Wed Jun 27 14:22:11 2007\n'\
+        'DistroRelease: Ubuntu 7.10\n'\
+        'ExecutablePath: /usr/bin/beryl\n'\
+        'NonfreeKernelModules: nvidia\n'\
+        'Package: beryl-core 0.2.1.dfsg+git20070318-0ubuntu3\n'\
+        'PackageArchitecture: amd64\n'\
+        'ProcCmdline: beryl --skip-gl-yield\n'\
+        'ProcCwd: /home/svajda\n'\
+        'ProcEnviron:\n'\
+        ' LANGUAGE=en_US.UTF-8\n'\
+        ' PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/X11:/usr/games\n'\
+        ' LANG=en_US.UTF-8\n'\
+        ' SHELL=/bin/bash\n'\
+        'Signal: 11\n'\
+        'SourcePackage: beryl-core\n'\
+        'StacktraceTop:\n'\
+        ' nanosleep () from /lib/libc.so.6\n'\
+        ' sleep () from /lib/libc.so.6\n'\
+        ' IceOpenConnection () from /usr/lib/libICE.so.6\n'\
+        ' SmcOpenConnection () from /usr/lib/libSM.so.6\n'\
+        ' initSession ()\n'\
+        'Title: beryl crashed with SIGSEGV in nanosleep()\n'\
+        'Uname: Linux blackstone 2.6.22-7-generic #1 SMP Mon Jun 25 17:07:55 GMT 2007 x86_64 GNU/Linux\n'\
+        'UserGroups: adm admin audio cdrom dialout dip floppy lpadmin plugdev scanner video'
+
+            
+    example_ubuntu_stacktrace3 = \
+        '#0  XQueryExtension (dpy=0x0, name=0x2b9e31057f11 "MIT-SHM", major_opcode=0x7fff7bd6cc54, first_event=0x7fff7bd6cc58, first_error=0x7fff7bd6cc5c)\n'\
+        '    at ../../src/QuExt.c:46\n'\
+        '\trep = {type = 144 \'\\220\', pad1 = 106 \'j\', sequenceNumber = 12447, length = 11166, present = 0 \'\\0\', major_opcode = 96 \'`\', first_event = 158 \'\\236\', \n'\
+        '  first_error = 48 \'0\', pad3 = 11166, pad4 = 822392720, pad5 = 11166, pad6 = 815688040, pad7 = 11166}\n'\
+        '#1  0x00002b9e30d6faa4 in XInitExtension (dpy=0x0, name=0x2b9e31057f11 "MIT-SHM") at ../../src/InitExt.c:49\n'\
+        '\tcodes = {extension = 1, major_opcode = 0, first_event = 816156333, first_error = 11166}\n'\
+        '\text = <value optimized out>\n'\
+        '#2  0x00002b9e31057c09 in XextAddDisplay (extinfo=0x2b9e3125ab80, dpy=0x0, ext_name=0x2b9e31057f11 "MIT-SHM", hooks=0x2b9e3125a840, nevents=1, data=0x0)\n'\
+        '    at ../../src/extutil.c:108\n'\
+        '\tdpyinfo = (XExtDisplayInfo *) 0x647cb0\n'\
+        '#3  0x00002b9e3105328e in XShmDetach (dpy=0x0, shminfo=0x2b9e31057f11) at ../../src/XShm.c:254\n'\
+        '\tinfo = <value optimized out>\n'\
+        '#4  0x000000000040fb0b in releaseDisplay () at display.c:2390\n'\
+        'No locals.\n'\
+        '#5  0x000000000040be25 in signalHandler (sig=0) at main.c:128\n'\
+        '\tstatus = 11166\n'\
+        '#6  <signal handler called>\n'\
+        '#7  0x00002b9e30a7d750 in __nanosleep_nocancel () from /lib/libc.so.6\n'\
+        '#8  0x00002b9e30a7d5a4 in sleep () from /lib/libc.so.6\n'\
+        '#9  0x00002b9e2fb9d2e9 in IceOpenConnection (networkIdsList=<value optimized out>, context=0x0, mustAuthenticate=0, majorOpcodeCheck=1, errorLength=1024, \n'\
+        '    errorStringRet=0x7fff7bd6d770 "") at ../../src/connect.c:510\n'\
+        '\tdelim = <value optimized out>\n'\
+        '\tlen = <value optimized out>\n'\
+        '\taddress_size = <value optimized out>\n'\
+        '\taddrbuf = "local/blackstone:/tmp/.ICE-unix/24847\\000\\000\\000\\bl!\\000\\000\\000\\000\\000\\023\\000\\000\\000\\000\\000\\000\\000\xe0|d\\000\\000\\000\\000\\000\\001\\000\\000\\000\\000\\000\\000\\000H\xd4c\\000\\000\\000\\000\\000\\000p\xb9/\\236+\\000\\000D\\206\xd4.\\236+\\000\\000\xc8\\206\xb9/\\236+\\000\\000pyx/\\236+\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\xff\xff\xff\xff\\000\\000\\000\\000\xb0\\v\\2370\\236+\\000\\000@w ", \'\\0\' <repeats 13 times>, "\xa4h\xb9/\\236+\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000H\xd4c\\000\\000\\000\\000\\000\\000\xf0\\230/\\236+\\000\\000D\\206\xd4.\\236+\\000\\000\\001", \'\\0\' <repeats 15 times>...\n'\
+        '\taddress = 0x7fff7bd6d500 "local/blackstone:/tmp/.ICE-unix/24847"\n'\
+        '\tmadeConnection = 0\n'\
+        '\tretry = 2\n'\
+        '\tconnect_stat = -2\n'\
+        '\ttrans_conn = (XtransConnInfo) 0x643360\n'\
+        '\ticeConn = (IceConn) 0x643220\n'\
+        '\textra = <value optimized out>\n'\
+        '\ti = <value optimized out>\n'\
+        '\tj = <value optimized out>\n'\
+        '\tendian = <value optimized out>\n'\
+        '\tgotReply = <value optimized out>\n'\
+        '\tioErrorOccured = <value optimized out>\n'\
+        '\tsetup_sequence = <value optimized out>\n'\
+        '\tpByteOrderMsg = <value optimized out>\n'\
+        '\tpSetupMsg = <value optimized out>\n'\
+        '\tpData = <value optimized out>\n'\
+        '\treplyWait = {sequence_of_request = 47958401250488, major_opcode_of_request = 798556531, minor_opcode_of_request = 11166, reply = 0x7fff7bd6d678}\n'\
+        '\treply = {type = 650271786, connection_reply = {type = 650271786, version_index = 0, vendor = 0x12ed448d4 <Address 0x12ed448d4 out of bounds>, \n'\
+        '    release = 0x2b9e2f787818 "\xb8\\202\xd5.\\236+"}, connection_error = {type = 650271786, error_message = 0x12ed448d4 <Address 0x12ed448d4 out of bounds>}, \n'\
+        '  protocol_reply = {type = 650271786, major_opcode = 0, version_index = 785664212, vendor = 0x2b9e2f787818 "\xb8\\202\xd5.\\236+", \n'\
+        '    release = 0x7fff7bd6d5e0 "\xc8\\206\xb9/\\236+"}, protocol_error = {type = 650271786, error_message = 0x12ed448d4 <Address 0x12ed448d4 out of bounds>}}\n'\
+        '\tauthUsableCount = <value optimized out>\n'\
+        '\tauthUsableFlags = {1, 32767, 796424216, 11166, 2077676976, 32767, 2077676896, 32767, 2077676920, 32767, 918218968, 0, 0, 0, 785664755, 11166, 0, 0, \n'\
+        '  0, 0, 1, 16777216, 0, 0, 1, 0, 842738704, 11166, 6, 0, 0, 0}\n'\
+        '\tauthIndices = {918218968, 0, 785664212, 11166, 0, 1, 2077676528, 32767, 918218968, 0, 2077676896, 32767, 2077676920, 32767, 800685248, 11166, 0, 0, \n'\
+        '  0, 0, 796424560, 11166, 798556531, 11166, 800690648, 11166, 798553744, 11166, 0, 1, 107, 1}\n'\
+        '#10 0x00002b9e2f991bc4 in SmcOpenConnection (networkIdsList=0x0, context=0x0, xsmpMajorRev=<value optimized out>, xsmpMinorRev=<value optimized out>, \n'\
+        '    mask=15, callbacks=0x640a00, previousId=0x0, clientIdRet=0x640a58, errorLength=1024, errorStringRet=0x7fff7bd6d770 "") at ../../src/sm_client.c:135\n'\
+        '\tsmcConn = <value optimized out>\n'\
+        '\ticeConn = <value optimized out>\n'\
+        '\tids = 0x7fff7bd6d310 ""\n'\
+        '\tsetupstat = <value optimized out>\n'\
+        '\tmajorVersion = <value optimized out>\n'\
+        '\tminorVersion = <value optimized out>\n'\
+        '\tvendor = 0x0\n'\
+        '\trelease = 0x0\n'\
+        '\tpMsg = <value optimized out>\n'\
+        '\treplyWait = {sequence_of_request = 2, major_opcode_of_request = 0, minor_opcode_of_request = 0, reply = 0x0}\n'\
+        '\treply = {status = 1, client_id = 0x0}\n'\
+        '\tgotReply = <value optimized out>\n'\
+        '\tauth_names = {0x2b9e2f995800 "MIT-MAGIC-COOKIE-1"}\n'\
+        '\tauth_procs = {0x2b9e2fb9f350 <_IcePoMagicCookie1Proc>}\n'\
+        '\tversions = {{major_version = 1, minor_version = 0, process_msg_proc = 0x2b9e2f994a00 <_SmcProcessMessage>}}\n'\
+        '#11 0x000000000042a2f5 in initSession (smPrevClientId=0x0) at session.c:126\n'\
+        '\terrorBuffer = "\\000\xd9\xd6{\xff\\177\\000\\000\xb0\\036\xd40\\236+", \'\\0\' <repeats 18 times>, "\xb0d\\2360\\236+\\000\\000\xc3\xa2\xd40\\236+\\000\\000\\200\\237\xd40\\236+\\000\\000\\030\\230\xd40\\236+\\000\\000\\000\\000\\000\\000\\001\\000\\000\\000\\017\\005\\000\\000\\001", \'\\0\' <repeats 11 times>, "\\020h\\2360\\236+\\000\\000@\xd9\xd6{\xff\\177\\000\\000\xf0\xd8\xd6{\xff\\177\\000\\000\\b\xd9\xd6{\xff\\177\\000\\000`\\211\xd30\\236+\\000\\000\xa8\\211\xd30\\236+\\000\\000\xa8\\211\xd30\\236+\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\xc0\\211\xd30\\236+\\000\\000\\001\\000\\000\\000\\236+\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\001\\000\\000\\000\\236+\\000\\000@\xd9\xd6{\xff\\177\\000\\000\xb0d\\2360\\236+\\000\\000\xb0}d\\000\\000\\000\\000\\000P"...\n'\
+        '\tcallbacks = {save_yourself = {callback = 0x42a4c0 <saveYourselfCallback>, client_data = 0x0}, die = {callback = 0x42a4b0 <dieCallback>, \n'\
+        '    client_data = 0x0}, save_complete = {callback = 0x42a170 <saveCompleteCallback>, client_data = 0x0}, shutdown_cancelled = {\n'\
+        '    callback = 0x42a180 <shutdownCancelledCallback>, client_data = 0x0}}\n'\
+        '#12 0x000000000040bbbe in main (argc=2, argv=0x7fff7bd6e818) at main.c:365\n'\
+        '\tdisplayName = <value optimized out>\n'\
+        '\tplugin = {0x7fff7bd6e3c0 "", 0x2b9e2ed471dc <Address 0x2b9e2ed471dc out of bounds>, 0x2b9e2ed5a900 "", 0x2b9e309e64b0 "", 0x2b9e309e6000 "", 0x0, \n'\
+        '  0x0, 0x7fff7bd6dce0 "\xb0d\\2360\\236+", 0x3 <Address 0x3 out of bounds>, 0x7fff7bd6dbb0 "\xf0\xe6\xd6{\xff\\177", 0x2b9e2ed4877b <Address 0x2b9e2ed4877b out of bounds>, \n'\
+        '  0x0, 0xe <Address 0xe out of bounds>, 0x7fff7bd6e350 "\xab\xec\xd6{\xff\\177", 0x7fff7bd6e3c0 "", 0x2b9e2f17d058 "\\016", 0x0, 0x7fff7bd6de00 "P\xde\xd6{\xff\\177", \n'\
+        '  0x2 <Address 0x2 out of bounds>, 0x2b9e2ed469fd <Address 0x2b9e2ed469fd out of bounds>, 0x0, 0x2b9e2f17d038 "\\001", 0x0, \n'\
+        '  0x2b9e2ed48796 <Address 0x2b9e2ed48796 out of bounds>, 0x7fff7bd6e350 "\xab\xec\xd6{\xff\\177", 0x2b9e2ed469c0 <Address 0x2b9e2ed469c0 out of bounds>, \n'\
+        '  0x7fff7bd6e38f "", 0x7fff7bd6e380 "", 0x7fff7bd6e378 "\\222\xe2\xd4.\\236+", 0x5 <Address 0x5 out of bounds>, 0x7fff7bd6e3c0 "", \n'\
+        '  0x2b9e2ed471dc <Address 0x2b9e2ed471dc out of bounds>, 0x2b9e309e64b0 "", 0x2b9e2ed5a900 "", 0x2b9e309e6968 "", 0x2b9e309e6000 "", 0x0, \n'\
+        '  0x7fff7bd6de00 "P\xde\xd6{\xff\\177", 0x2 <Address 0x2 out of bounds>, 0x7fff7bd6dca0 "P\xe3\xd6{\xff\\177", 0x2b9e2ed4877b <Address 0x2b9e2ed4877b out of bounds>, \n'\
+        '  0x2b9e2f17d038 "\\001", 0x7fff7bd6e498 "\\004", 0x7fff7bd6dd80 "5", 0x0, 0x1 <Address 0x1 out of bounds>, 0x7fff7bd6e4e0 "\'\\031C", \n'\
+        '  0x2b9e304194f1 <Address 0x2b9e304194f1 out of bounds>, 0x7fff7bd6dd80 "5", 0x7fff7bd6e4f0 "\\\\\xd4c", 0x0, \n'\
+        '  0x2b9e30a3997b "D\\213\\205\xb8\xfc\xff\xffH\\211\xc1H\\213\xb5P\xfe\xff\xffH;u\xb8\\017\\204K\xf9\xff\xff\xf6\\205$\xfd\xff\xff\\b\\017\\205\xe3", 0xa000300000035 <Address 0xa000300000035 out of bounds>, \n'\
+        '  0x7fff7bd6e810 "\\002", 0x2b9e3125b4a8 "/lib/libdl.so.2", 0x0, 0x8000300000000 <Address 0x8000300000000 out of bounds>, 0x7fff7bd6e350 "\xab\xec\xd6{\xff\\177", \n'\
+        '  0x7fff7bd6e3c0 "", 0x4 <Address 0x4 out of bounds>, 0x7fff7bd6e3c0 "", 0x2b9e2ed471dc <Address 0x2b9e2ed471dc out of bounds>, \n'\
+        '  0x1 <Address 0x1 out of bounds>, 0x2b9e3125b968 "", 0x7fff7bd6d430 "\\001", 0x0, 0x2b9e2ef5c6ed "libz.so.1", \n'\
+        '  0x2b9e2ed470cc <Address 0x2b9e2ed470cc out of bounds>, 0x7fff7bd6de50 "\xc0\xe3\xd6{\xff\\177", 0x2b9e303884b8 "", 0x2b <Address 0x2b out of bounds>, \n'\
+        '  0x60 <Address 0x60 out of bounds>, 0x7fff7bd6e378 "\\222\xe2\xd4.\\236+", 0x2b9e2ef58c18 "", 0x7fff7bd6e350 "\xab\xec\xd6{\xff\\177", 0x0, \n'\
+        '  0x87bd6e38f <Address 0x87bd6e38f out of bounds>, 0x4063ca "libdl.so.2", 0x7fff7bd6e3c0 "", 0x63c5c0 "\\f", 0x0, 0x0, 0x0, 0x2b9e30d38960 "", \n'\
+        '  0x2b <Address 0x2b out of bounds>, 0x7fff7bd6ecab "beryl", 0x7fff7bd6e390 " ", 0x0, 0x6 <Address 0x6 out of bounds>, \n'\
+        '  0x2b9e30a58ead "H\\205\xc0I\\211\xc4tJ\\203=\xcc/.", 0x7fff7bd6e5e0 "\\203\\031C", 0x25 <Address 0x25 out of bounds>, 0x7fff7bd6ecab "beryl", \n'\
+        '  0x2b9e2ed48903 <Address 0x2b9e2ed48903 out of bounds>, 0x0, 0x7fff7bd6de60 "", 0x2b9e2ed4877b <Address 0x2b9e2ed4877b out of bounds>, 0x63c590 "\\001", \n'\
+        '  0x0, 0x0, 0x1 <Address 0x1 out of bounds>, 0x2b9e3125b4b8 "", 0x7fff7bd6ddd0 "\\001", 0x2b9e2ed493a5 <Address 0x2b9e2ed493a5 out of bounds>, \n'\
+        '  0x4063ca "libdl.so.2", 0x2b9e2ed58000 "", 0x2b9e31466a1f "", 0x2b9e2ed433c0 <Address 0x2b9e2ed433c0 out of bounds>, 0x7fff7bd6df00 "\\001", 0x0, \n'\
+        '  0x406334 "libXrender.so.1", 0x2b9e2ed470cc <Address 0x2b9e2ed470cc out of bounds>, 0x1 <Address 0x1 out of bounds>, 0x2b9e309e6968 "", \n'\
+        '  0x7fff7bd6df30 "\\037jF1\\236+", 0x90000101 <Address 0x90000101 out of bounds>, 0x2 <Address 0x2 out of bounds>, \n'\
+        '  0x2b9e2ed470cc <Address 0x2b9e2ed470cc out of bounds>, 0x1 <Address 0x1 out of bounds>, 0x2b9e309e64b0 "", 0x7fff7bd6df60 "\\001", 0x0, \n'\
+        '  0x405e86 "libX11.so.6", 0x2b9e2ed470cc <Address 0x2b9e2ed470cc out of bounds>, 0x1 <Address 0x1 out of bounds>, 0x2b9e309e6000 "", 0x7fff7bd6df90 "\\001", \n'\
+        '  0x0, 0x405cd6 "libc.so.6", 0x2b9e2ed470cc <Address 0x2b9e2ed470cc out of bounds>, 0x1 <Address 0x1 out of bounds>, 0x2b9e30388970 "", \n'\
+        '  0x7fff7bd6dfc0 "\\001", 0x0, 0x4059d0 "libberylsettings.so.0", 0x2b9e2ed470cc <Address 0x2b9e2ed470cc out of bounds>, 0x1 <Address 0x1 out of bounds>, \n'\
+        '  0x2b9e303884b8 "", 0x7fff7bd6dff0 "\\001", 0x0, 0x4059c2 "libm.so.6", 0x2b9e2ed470cc <Address 0x2b9e2ed470cc out of bounds>, \n'\
+        '  0x1 <Address 0x1 out of bounds>, 0x2b9e30388000 "", 0x7fff7bd6e020 "\\001", 0x0, 0x405610 "libGL.so.1", \n'\
+        '  0x2b9e2ed470cc <Address 0x2b9e2ed470cc out of bounds>, 0x1 <Address 0x1 out of bounds>, 0x2b9e2fdb29b8 "", 0x7fff7bd6e050 "\\001", 0x0, \n'\
+        '  0x4055cf "libglib-2.0.so.0", 0x2b9e2ed4448b <Address 0x2b9e2ed4448b out of bounds>, 0x1 <Address 0x1 out of bounds>, 0x2b9e323b2c50 "", \n'\
+        '  0xe <Address 0xe out of bounds>, 0x19 <Address 0x19 out of bounds>, 0x7c96f087 <Address 0x7c96f087 out of bounds>, \n'\
+        '  0x2b9e2ed448d4 <Address 0x2b9e2ed448d4 out of bounds>, 0x1 <Address 0x1 out of bounds>, 0x7fff7bd6e110 "", 0x7c96f086 <Address 0x7c96f086 out of bounds>, \n'\
+        '  0x7fff7bd6e280 "", 0x7fff7bd6e298 "\xb5\xd8\\006", 0x2b9e2ed4448b <Address 0x2b9e2ed4448b out of bounds>, 0x0, 0x2b9e323b2c50 "", \n'\
+        '  0xe <Address 0xe out of bounds>, 0x19 <Address 0x19 out of bounds>, 0xd827590 <Address 0xd827590 out of bounds>, \n'\
+        '  0x2b9e2ed448d4 <Address 0x2b9e2ed448d4 out of bounds>, 0x0, 0x7fff7bd6e170 "", 0xd827590 <Address 0xd827590 out of bounds>, 0x7fff7bd6e2e0 "\xb0\\v\\2370", \n'\
+        '  0x7fff7bd6e2f8 "y:<\\a", 0x2b9e309eaa78 "", 0x0, 0x2b9e327ba150 "\xae\\207:0\\236+", 0x64 <Address 0x64 out of bounds>, \n'\
+        '  0x2b9e30a391d6 "D\\213\\205\xb8\xfc\xff\xff\\215C\xdbM\\215e\\001<S\\017\\207\xf5", 0x2b9e309f6bb0 "", 0x2b9effffffff <Address 0x2b9effffffff out of bounds>, \n'\
+        '  0x100000000 <Address 0x100000000 out of bounds>, 0x10000040d <Address 0x10000040d out of bounds>, 0x7fff00000001 <Address 0x7fff00000001 out of bounds>, \n'\
+        '  0x2b9e30388368 "\xb8\\202\xd5.\\236+", 0x7fff7bd6e330 "\\200\xdd\xd6{\xff\\177", 0x7fff7bd6e2e0 "\xb0\\v\\2370", 0x7fff7bd6e2f8 "y:<\\a", 0x0, 0x7fff7bd6e610 "\xf8\xd1c", \n'\
+        '  0x2b9e2ed44af3 <Address 0x2b9e2ed44af3 out of bounds>, 0x200000000 <Address 0x200000000 out of bounds>, 0x2b9e327ba150 "\xae\\207:0\\236+", \n'\
+        '  0xffffffff <Address 0xffffffff out of bounds>, 0x2b9e30d37560 "@M\xd30\\236+", 0x2b9e30d34d40 ",*\xb00\\236+", 0x0...}\n'\
+        '\tscreenNum = -1\n'\
+        '\tnPlugin = 0\n'\
+        '\tresult = <value optimized out>\n'\
+        '\tclientId = <value optimized out>\n'\
+        '\tforceNvidia = 0\n'\
+        '\tforceXgl = 0\n'\
+        '\tforceAiglx = 0\n'\
+        '\toptch = <value optimized out>\n'\
+        '\tsopts = "hv"\n'\
+        '\tlopts = {{name = 0x4318ef "help", has_arg = 0, flag = 0x0, val = 104}, {name = 0x4318f4 "version", has_arg = 0, flag = 0x0, val = 118}, {\n'\
+        '    name = 0x4318fc "display", has_arg = 1, flag = 0x0, val = 1}, {name = 0x4347e9 "screen", has_arg = 1, flag = 0x0, val = 2}, {\n'\
+        '    name = 0x4318de "skip-gl-yield", has_arg = 0, flag = 0x63d454, val = 1}, {name = 0x431904 "force-nvidia", has_arg = 0, flag = 0x0, val = 4}, {\n'\
+        '    name = 0x431911 "force-xgl", has_arg = 0, flag = 0x0, val = 5}, {name = 0x43191b "force-aiglx", has_arg = 0, flag = 0x0, val = 6}, {\n'\
+        '    name = 0x431927 "use-tfp", has_arg = 0, flag = 0x63d45c, val = 0}, {name = 0x43192f "use-copy", has_arg = 0, flag = 0x0, val = 7}, {\n'\
+        '    name = 0x431938 "indirect-rendering", has_arg = 0, flag = 0x63d448, val = 1}, {name = 0x43194b "xgl-rendering", has_arg = 0, flag = 0x63d448, val = 0}, {\n'\
+        '    name = 0x431959 "strict-binding", has_arg = 0, flag = 0x63d44c, val = 1}, {name = 0x431968 "xgl-binding", has_arg = 0, flag = 0x63d44c, val = 0}, {\n'\
+        '    name = 0x431974 "use-cow", has_arg = 0, flag = 0x63d450, val = 1}, {name = 0x43197c "no-cow", has_arg = 0, flag = 0x63d450, val = 0}, {\n'\
+        '    name = 0x431983 "no-replace", has_arg = 0, flag = 0x63d1f8, val = 0}, {name = 0x431986 "replace", has_arg = 0, flag = 0x63d1f8, val = 1}, {\n'\
+        '    name = 0x43198e "sm-disable", has_arg = 0, flag = 0x63d474, val = 1}, {name = 0x431999 "skip-tests", has_arg = 0, flag = 0x63d464, val = 1}, {\n'\
+        '    name = 0x4319a4 "test-only", has_arg = 0, flag = 0x63d470, val = 1}, {name = 0x4319ae "no-context-share", has_arg = 0, flag = 0x63d46c, val = 1}, {\n'\
+        '    name = 0x433bec "sm-client-id", has_arg = 1, flag = 0x0, val = 8}, {name = 0x0, has_arg = 0, flag = 0x0, val = 0}}'
+
+
+    def test_ubuntu3(self):
+        import tempfile
+        import os
+        import shutil
+        import datetime
+        dirpath=tempfile.mkdtemp()
+        try:
+            # Test setup
+            stacktrace_path = os.path.join(dirpath, "Stacktrace.txt (retraced)")
+            with open(stacktrace_path, 'w') as stacktrace_file:
+                stacktrace_file.write(self.example_ubuntu_stacktrace3)
+            post_path = os.path.join(dirpath, "Post.txt")
+            with open(post_path, 'w') as post_file:
+                post_file.write(self.example_ubuntu_post3)
+            
+            # Test crash loader
+            crash = Crash.load_from_file(dirpath)
+            
+            # test that contents are loaded correctly
+            assert (isinstance(crash, Crash))
+            stacktrace = crash['stacktrace']
+            assert (isinstance(stacktrace, Stacktrace))
+            assert (isinstance(stacktrace[0], Stackframe))
+            assert (stacktrace[0]['depth'] == 0)
+            assert (stacktrace[1]['depth'] == 1)
+            assert (stacktrace[6]['function'] == 'signal handler called')
+            assert (stacktrace[4]['extra'][0] == 'No locals.')
+            assert (stacktrace[0]['file'] == '../../src/QuExt.c')
+            assert (stacktrace[0]['fileline'] == '46')
+            assert (len(stacktrace[0]['extra']) == 2)
+            
+        finally:
+            shutil.rmtree(dirpath)
+
 
 if __name__ == '__main__':
     unittest.main()
