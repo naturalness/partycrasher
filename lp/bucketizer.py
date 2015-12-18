@@ -65,9 +65,9 @@ def main():
         bugkets[v] = bugkets.get(v, [])
         bugkets[v].append(k)
     cursor = db.cursor()
-    cursor.execute("SELECT name, url, lp_id FROM issues_ext_launchpad INNER JOIN issues INNER JOIN attachments ON (attachments.issue_id = issues.id AND issues_ext_launchpad.issue_id = issues.id);")
+    cursor.execute("SELECT name, url, lp_id, issues.description FROM issues_ext_launchpad INNER JOIN issues INNER JOIN attachments ON (attachments.issue_id = issues.id AND issues_ext_launchpad.issue_id = issues.id);")
     for row in cursor:
-        name, url, bugid = row
+        name, url, bugid, description = row
         bugket_id = bugs_to_bugkets[bugid]
         path = "bugkets/" + str(bugket_id) + "/" + str(bugid)
         try:
@@ -76,14 +76,24 @@ def main():
             if exc.errno == errno.EEXIST and os.path.isdir(path):
                 pass
             else: raise
+        i = 0
         filepath = path + "/" + name
         bugpath = re.sub('https://', '', url)
+        while os.path.isfile(filepath):
+            i = i+1
+            filepath = path + "/" + name + "." + str(i)
         try:
             shutil.copyfile(bugpath, filepath)
+            print filepath
         except IOError as exc: # Python >2.5
             if exc.errno == errno.ENOENT and os.path.isdir(path):
                 pass
             else: raise
+        postpath = path + "/Post.txt"
+        with open(postpath, "w") as post_file:
+            post_file.write(description)
+            print postpath
+
 
 if __name__ == "__main__":
     main()
