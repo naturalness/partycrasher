@@ -197,6 +197,8 @@ class LaunchpadCrash(Crash):
                 stack_path = os.path.join(path, "StacktraceSource.txt")
             elif os.path.isfile(os.path.join(path, "Stacktrace.txt")):
                 stack_path = os.path.join(path, "Stacktrace.txt")
+            elif os.path.isfile(os.path.join(path, "Stacktrace")):
+                stack_path = os.path.join(path, "Stacktrace")
             assert (stack_path is not None)
             crash['stacktrace'] = LaunchpadStack.load_from_file(stack_path)
         else:

@@ -90,9 +90,10 @@ def main():
                 pass
             else: raise
         postpath = path + "/Post.txt"
-        with open(postpath, "w") as post_file:
-            post_file.write(description)
-            print postpath
+        if not os.path.isfile(postpath): # we get this multiple times due to our join denormalizing
+            with open(postpath, "w") as post_file:
+                post_file.write(description)
+                print postpath
 
 
 if __name__ == "__main__":
