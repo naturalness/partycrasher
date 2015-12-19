@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 #  Copyright (C) 2015 Jshua Charles Campbell
 
@@ -18,17 +19,36 @@
 
 from crash import Crash, Stacktrace, Stackframe
 
-import os, re
+import os, re, io, chardet
 import dateutil.parser as dateparser
+import unicodedata
 
 class LaunchpadFrame(Stackframe):
     
     @classmethod
-    def load_from_strings(cls, line, extras=None):
+    def load_from_strings(cls, line_raw, extras=None):
         frame = LaunchpadFrame()
         matched = False
-        if not matched:
-            match = re.match('^#(\d+)\s+(\S+)\s+in\s+(\S+)\s+\(([^\)]*)\)\s+from\s+(\S+)\s*$', line)
+        line = u""
+        for ch in line_raw:
+            if unicodedata.category(ch)[0] == 'C':
+                ch = u'?'
+                #raise ValueError("Bad encoding %s in: %s" % (ch.encode('unicode_escape'), line.encode('utf-8')))
+            elif ch == u'\ufffd':
+                ch = u'?'
+            line += ch
+        if not matched: #number address in function (args) at file from lib
+            match = re.match('^#(\d+)\s+(\S+)\s+in\s+(.+?)\s+\(([^\)]*)\)\s+at\s+(\S+)\sfrom\s+(\S+)\s*$', line)
+            if match is not None:
+                frame['depth'] = int(match.group(1))
+                frame['address'] = match.group(2)
+                frame['function'] = match.group(3)
+                frame['args'] = match.group(4)
+                frame['file'] = match.group(5)
+                frame['dylib'] = match.group(6)
+                matched = True
+        if not matched: #number address in function (args) from lib
+            match = re.match('^#(\d+)\s+(\S+)\s+in\s+(.+?)\s+\(([^\)]*)\)\s+from\s+(.+?)\s*$', line)
             if match is not None:
                 frame['depth'] = int(match.group(1))
                 frame['address'] = match.group(2)
@@ -36,8 +56,8 @@ class LaunchpadFrame(Stackframe):
                 frame['args'] = match.group(4)
                 frame['dylib'] = match.group(5)
                 matched = True
-        if not matched:
-            match = re.match('^#(\d+)\s+(\S+)\s+in\s+(\S+)\s+\(([^\)]*)\)\s+at\s+(\S+)\s*$', line)
+        if not matched:  #number address in function (args) at file
+            match = re.match('^#(\d+)\s+(\S+)\s+in\s+(.+?)\s+\((.*?)\)\s+at\s+(\S+)\s*$', line)
             if match is not None:
                 frame['depth'] = int(match.group(1))
                 frame['address'] = match.group(2)
@@ -45,42 +65,52 @@ class LaunchpadFrame(Stackframe):
                 frame['args'] = match.group(4)
                 frame['file'] = match.group(5)
                 matched = True
-        if not matched: # Missing address
-            match = re.match('^#(\d+)\s+(\S+)\s+\(([^\)]*)\)\s+at\s+(\S+)\s*$', line)
+        if not matched: #number function (args) at file
+            match = re.match('^#(\d+)\s+(.+?)\s+\((.*?)\)\s+at\s+(\S+)\s*$', line)
             if match is not None:
                 frame['depth'] = int(match.group(1))
                 frame['function'] = match.group(2)
                 frame['args'] = match.group(3)
                 frame['file'] = match.group(4)
                 matched = True
-        if not matched:
-            match = re.match('^#(\d+)\s+(\S+)\s+in\s+(\S+)\s+\(([^\)]*)\)\s*$', line)
+        if not matched: #number address in function (args
+            match = re.match('^#(\d+)\s+(\S+)\s+in\s+(.+?)\s*\((.*?)\)?\s*$', line)
             if match is not None:
+                assert (not re.search(' at ', line))
+                assert (not re.search(' from ', line))
                 frame['depth'] = int(match.group(1))
                 frame['address'] = match.group(2)
                 frame['function'] = match.group(3)
                 frame['args'] = match.group(4)
                 matched = True
-        if not matched: # sometimes args list is cut off?
-            match = re.match('^#(\d+)\s+(\S+)\s+in\s+(\S+)\s+\((.*?)\s*$', line)
+        if not matched: #number address in function
+            match = re.match('^#(\d+)\s+(\S+)\s+in\s+(.+?)\s*$', line)
             if match is not None:
+                assert (not re.search(' at ', line))
+                assert (not re.search(' from ', line))
+                assert (not re.search('\(.*?\)', line))
                 frame['depth'] = int(match.group(1))
                 frame['address'] = match.group(2)
                 frame['function'] = match.group(3)
-                frame['args'] = match.group(4)
                 matched = True
-        if not matched: # no "in" or address
-            match = re.match('^#(\d+)\s+<(.+?)>\s*$', line)
+        if not matched: #number function (args
+            match = re.match('^#(\d+)\s+(.+?)\s+\((.*?)\)?\s*$', line)
             if match is not None:
-                frame['depth'] = int(match.group(1))
-                frame['function'] = match.group(2)
-                matched = True
-        if not matched: # no "in" or address
-            match = re.match('^#(\d+)\s+(\S+)\s+\((.*?)\s*$', line)
-            if match is not None:
+                assert (not re.search(' at ', line))
+                assert (not re.search(' from ', line))
+                assert (not re.search(' ()\s*$', line))
                 frame['depth'] = int(match.group(1))
                 frame['function'] = match.group(2)
                 frame['args'] = match.group(3)
+                matched = True
+        if not matched: #number <function>
+            match = re.match('^#(\d+)\s+(<.*?>)\s*$', line)
+            if match is not None:
+                assert (not re.search(' at ', line))
+                assert (not re.search(' from ', line))
+                assert (not re.search('\(.*?\)', line))
+                frame['depth'] = int(match.group(1))
+                frame['function'] = match.group(2)
                 matched = True
         leftover_extras = []
         if extras is not None:
@@ -99,18 +129,27 @@ class LaunchpadFrame(Stackframe):
         if matched:
             return frame
         else:
-            raise RuntimeError("Couldn't recognize stack frame format: %s" % (line))
+            raise RuntimeError("Couldn't recognize stack frame format: %s" % (line.encode('unicode_escape')))
 
 class LaunchpadStack(Stacktrace):
     
     @classmethod
     def load_from_file(cls, path):
-        with open(path) as stackfile: stacklines = stackfile.readlines()
+        
+        #with io.open(path, mode="r+b") as stackfile:
+            #encoding_guess = chardet.detect(stackfile.read())['encoding']
+        #with open(path) as stackfile:
+        encoding_guess = 'utf-8'
+        with io.open(path, encoding=encoding_guess, errors='replace') as stackfile:
+            stacklines = stackfile.readlines()
         stack = LaunchpadStack()
-        map(str.rstrip, stacklines)
         extras = []
         prevline = None
         for line in  stacklines:
+            line = line.rstrip()
+            #for ch in line.lstrip():
+                #if ch != '\t' and unicodedata.category(ch)[0] == 'C':
+                    #raise ValueError("Bad encoding %s %s: %s" % (encoding_guess, ch.encode('unicode_escape'), line.encode('unicode_escape')))
             if re.match('^#', line):
                 if prevline is not None:
                     stack.append(LaunchpadFrame.load_from_strings(prevline,extras))
