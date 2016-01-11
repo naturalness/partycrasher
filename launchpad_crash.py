@@ -19,9 +19,10 @@
 
 from crash import Crash, Stacktrace, Stackframe
 
-import os, re, io, chardet
+import os, re, io, chardet, gzip
 import dateutil.parser as dateparser
 import unicodedata
+from logging import critical, error, warning, info, debug
 
 class LaunchpadFrame(Stackframe):
     
@@ -85,7 +86,10 @@ class LaunchpadFrame(Stackframe):
         if not matched: #number address in function (args
             match = re.match('^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s*\((.*?)\)?\s*$', line)
             if match is not None:
-                assert ((not re.search(' at ', line)) or re.search('memory at ', line))
+                assert ((not re.search(' at ', line))
+                        or re.search('memory at ', line)
+                        or re.search('at remote ', line)
+                        ), line
                 assert (not re.search(' from ', line))
                 frame['depth'] = int(match.group(1))
                 frame['address'] = match.group(2)
@@ -105,7 +109,7 @@ class LaunchpadFrame(Stackframe):
         if not matched: #number function (args
             match = re.match('^#([\dx]+)\s+(.+?)\s+\((.*?)\)?\s*$', line)
             if match is not None:
-                print line
+                #print line
                 assert (not re.search(' at ', line))
                 assert (not re.search(' from ', line))
                 assert (not re.search(' ()\s*$', line))
@@ -150,8 +154,13 @@ class LaunchpadStack(Stacktrace):
             #encoding_guess = chardet.detect(stackfile.read())['encoding']
         #with open(path) as stackfile:
         encoding_guess = 'utf-8'
-        with io.open(path, encoding=encoding_guess, errors='replace') as stackfile:
-            stacklines = stackfile.readlines()
+        if 'gz' in path:
+            # gzip doesn't support encoding= ... this may need a workaround
+            with gzip.open(path) as stackfile:
+                stacklines = [line.decode(encoding=encoding_guess, errors='replace') for line in stackfile.readlines()]
+        else:
+            with io.open(path, encoding=encoding_guess, errors='replace') as stackfile:
+                stacklines = stackfile.readlines()
         stack = LaunchpadStack()
         extras = []
         prevline = None
@@ -209,7 +218,10 @@ class LaunchpadCrash(Crash):
                 stack_path = os.path.join(path, "Stacktrace.txt")
             elif os.path.isfile(os.path.join(path, "Stacktrace")):
                 stack_path = os.path.join(path, "Stacktrace")
-            assert (stack_path is not None)
+            elif os.path.isfile(os.path.join(path, "Stacktrace.gz")):
+                stack_path = os.path.join(path, "Stacktrace.gz")
+            if stack_path is None:
+                raise IOError("No stacktrace file found in %s" % (path))
             crash['stacktrace'] = LaunchpadStack.load_from_file(stack_path)
         else:
             raise NotImplementedError("Not a directory, I don't know how to load this.")

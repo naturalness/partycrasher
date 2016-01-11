@@ -53,8 +53,8 @@ for bucketdir in os.listdir(topdir):
             crashdata['bucket'] = bucket
             if len(crashdata['stacktrace']) < 1:
                 continue
-            crashes.append(crashdata)
-            print "in %i crashes and %i bugkets:" % (len(crashes), len(buckets))
+            if (len(crashes) % 100) == 0:
+                print "in %i crashes and %i bugkets:" % (len(crashes), len(buckets))
             for comparison in comparisons:
                 comparison_data = comparisons[comparison]
                 if not ('tp' in comparison_data):
@@ -76,21 +76,29 @@ for bucketdir in os.listdir(topdir):
                         comparison_data['tn'] += 1
                     if (not compared_same) and bucket_same:
                         comparison_data['fn'] += 1
-                print "%s: tp %i, fp %i, tn %i, fn %i" \
-                    % (comparison,
-                       comparison_data['tp'],
-                       comparison_data['fp'],
-                       comparison_data['tn'],
-                       comparison_data['fn'],
-                      )
-                try:
-                    print "%s: recall %f, specificity %f, precision %f, fall-out %f" \
-                        % (comparison,
-                        comparison_data['tp']/(comparison_data['tp']+comparison_data['fn']),
-                        comparison_data['tn']/(comparison_data['fp']+comparison_data['tn']),
-                        comparison_data['tp']/(comparison_data['tp']+comparison_data['fp']),
-                        comparison_data['fp']/(comparison_data['fp']+comparison_data['tn']),
-                        )
-                except ZeroDivisionError:
-                    pass
-            print ""
+                #print "%s: tp %i, fp %i, tn %i, fn %i" \
+                    #% (comparison,
+                       #comparison_data['tp'],
+                       #comparison_data['fp'],
+                       #comparison_data['tn'],
+                       #comparison_data['fn'],
+                      #)
+                if (len(crashes) % 100) == 0:
+                    try:
+                        precision = comparison_data['tp']/(comparison_data['tp']+comparison_data['fp'])
+                        recall = comparison_data['tp']/(comparison_data['tp']+comparison_data['fn'])
+                        specificity = comparison_data['tn']/(comparison_data['fp']+comparison_data['tn'])
+                        beta = 1.0
+                        fscore = (1.0+(beta**2.0))*((precision*recall)/((beta**2.0)*precision+recall))
+                        print "%s: precision %f, recall %f, specificity %f, f-score %f" \
+                            % (comparison,
+                            precision,
+                            recall,
+                            specificity,
+                            fscore,
+                            )
+                    except ZeroDivisionError:
+                        pass
+            if (len(crashes) % 100) == 0:
+                print ""
+            crashes.append(crashdata)
