@@ -17,7 +17,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import os, sys, re, errno, json, copy, datetime, time
+import os, sys, re, errno, json, copy, datetime, time, uuid
 import dateutil.parser as dateparser
 import json_store
 import requests
@@ -28,10 +28,16 @@ crash_query = {
     }
 
 
-delay = 0.7
+delay = 0.6
+last_query = datetime.datetime.utcnow()
+
+# attempt to download 1/4 of the data (by UUID)
+target_limit = 2**126 
+
 
 def doaday(day=None):
     global delay
+    global last_query
     session = requests.Session()
     print day
     path = 'days/%s' % (str(day))
@@ -47,16 +53,23 @@ def doaday(day=None):
             pass
         else:
             raise
-    for uuid in sorted(data.keys()):
-        uuid_path = path + '/%s.json' % uuid
-        if os.path.isfile(uuid_path):
+    for auuid in data.keys():
+        if uuid.UUID(auuid).int > target_limit:
+            del data[auuid]
+    for auuid in sorted(data.keys()):
+        auuid_path = path + '/%s.json' % auuid
+        if os.path.isfile(auuid_path):
             done += 1
             continue
-        crash_query_uuid = copy.deepcopy(crash_query)
-        crash_query_uuid['crash_id'] = uuid
+        crash_query_auuid = copy.deepcopy(crash_query)
+        crash_query_auuid['crash_id'] = auuid
         while True:
-            time.sleep(delay)
-            response = session.get(crash_query_url, params=crash_query_uuid)
+            now = datetime.datetime.utcnow()
+            sleep_time = (last_query - now).total_seconds() + delay
+            if sleep_time > 0.0:
+                time.sleep(sleep_time)
+            last_query = datetime.datetime.utcnow()
+            response = session.get(crash_query_url, params=crash_query_auuid)
             if response.status_code == 429:
                 print "Delay reset, was %f" % (delay)
                 delay = delay*1.1
@@ -71,7 +84,7 @@ def doaday(day=None):
             print response.status_code
             print response.text
             raise
-        with open(uuid_path, "w") as json_file:
+        with open(auuid_path, "w") as json_file:
             json_file.write(response.text)
         done += 1
         downloaded += 1
@@ -95,7 +108,7 @@ while True:
             #print date
             daylist.append(date)
             
-    for day in sorted(daylist, reverse=True):
+    for day in sorted(daylist, reverse=False):
         while True:
             if doaday(day) == 0:
                 break

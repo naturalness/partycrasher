@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 #  Copyright (C) 2016 Joshua Charles Campbell
 
@@ -37,9 +38,9 @@ class TopN(Comparer):
                     return False
                 else:
                     return True
-            if '??' in a['stacktrace'][i]['function']:
+            if a['stacktrace'][i]['function'] is None:
                 return False
-            if '??' in b['stacktrace'][i]['function']:
+            if b['stacktrace'][i]['function'] is None:
                 return False
             if a['stacktrace'][i]['function'] != b['stacktrace'][i]['function']:
                 return False
@@ -105,6 +106,7 @@ class TopNFile(Comparer):
           on Mining Software Repositories (MSR), 2013, pp. 247–256.
 
     """
+    # BUG takes n, does nothing with it
 
     def __init__(self, n=1):
         self.n = n

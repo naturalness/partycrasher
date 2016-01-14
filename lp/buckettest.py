@@ -20,7 +20,7 @@ from __future__ import division
 
 import os, sys
 import crash
-from topN import TopN, TopNLoose, TopNAddress
+from topN import TopN, TopNLoose, TopNAddress, TopNFile
 
 topdir = sys.argv[1]
 
@@ -33,6 +33,7 @@ comparisons = {
     'top3': {'comparer': TopN(3)},
     'top3l': {'comparer': TopNLoose(3)},
     'top3a': {'comparer': TopNAddress(3)},
+    'top1file' : {'comparer': TopNFile(1)},
 }
 
 
@@ -49,7 +50,13 @@ for bucketdir in os.listdir(topdir):
         assert os.path.isdir(bugdir)
         #print repr(os.listdir(bugdir))
         if len(os.listdir(bugdir)) > 1:
-            crashdata = crash.Crash.load_from_file(bugdir)
+            try:
+                crashdata = crash.Crash.load_from_file(bugdir)
+            except IOError as e:
+                if "No stacktrace" in str(e):
+                    continue
+                else:
+                    raise
             crashdata['bucket'] = bucket
             if len(crashdata['stacktrace']) < 1:
                 continue

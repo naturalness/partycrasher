@@ -17,27 +17,34 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import copy, os, datetime, time
-import requests
+import copy, os, datetime, time, sys
+import requests, pytz
 import dateutil.parser as dateparser
 import json_store
 
+def now():
+    return datetime.datetime.now(pytz.utc)
+
 uuids_at_once = 1000
+
+date_range_start = dateparser.parse('2016-01-06T00:00:00.000000+00:00')
+date_range_end = dateparser.parse('2016-01-07T00:00:00.000000+00:00')
 
 uuids_query_url = 'https://crash-stats.mozilla.com/api/SuperSearch/'
 uuids_query = {
     '_columns': ['uuid', 'date'],
-    'sort': 'date',
+    '_sort': 'date',
     '_facets_size': 1,
     '_results_number': uuids_at_once,
+    'date': [],
 }
 
 last_total_uuids = 2450724
 
 delay = 1.0
 
-last_query = datetime.datetime.utcnow()
-
+last_query = now()
+last_date_recieved = datetime.datetime.min.replace(tzinfo=pytz.utc)
 
 def json_serializer(obj):
     if isinstance(obj, datetime.datetime):
@@ -57,25 +64,30 @@ def attempt():
     global last_total_uuids
     global last_query
     global delay
+    global last_date_recieved
     
     days = dict()
 
     results_position = 0
   
-    starttime = datetime.datetime.utcnow()
+    starttime = now()
 
     session = requests.Session()
-
-    while results_position <= last_total_uuids:
+    
+    
+    while results_position < last_total_uuids:
         uuids_page_query = copy.deepcopy(uuids_query)
         uuids_page_query['_results_offset'] = results_position
+        uuids_page_query['date'].append('>=' + day_query_start.isoformat())
+        uuids_page_query['date'].append('<' + day_query_end.isoformat())
         while True:
-            now = datetime.datetime.utcnow()
-            sleep_time = (last_query - now).total_seconds() + delay
+            query_time = now()
+            sleep_time = (last_query - query_time).total_seconds() + delay
             if sleep_time > 0.0:
                 time.sleep(sleep_time)
-            last_query = datetime.datetime.utcnow()
+            last_query = now()
             response = session.get(uuids_query_url, params=uuids_page_query)
+            #print response.url
             if response.status_code == 429:
                 print "429'd :((("
                 time.sleep(60)
@@ -95,6 +107,11 @@ def attempt():
         for hit in responsedata['hits']:
             uuid = hit['uuid']
             crashts = dateparser.parse(hit['date'])
+            if crashts < last_date_recieved:
+                print str(results) + \
+                    ": Date went backwards: " + crashts.isoformat() + " < " + \
+                    last_date_recieved.isoformat()
+            last_date_recieved = crashts
             date = crashts.date()
             if not date in days:
                 days[date] = json_store.JSONStore("days/%s.json" % (str(date)),
@@ -113,19 +130,19 @@ def attempt():
         # force the results windows to overlap :(
         # this is to prevent shifting result set from 
         # causing gaps
-        results_position += int(results/2)
+        results_position += results
         if (newuuids > 0):
             for day, daydata in days.iteritems():
                 daydata.sync()
-        now = datetime.datetime.utcnow()
-        dt = now - starttime
+        stats_now = now()
+        dt = stats_now - starttime
         rate = dt/results_position
         eta = rate*(last_total_uuids-results_position)
         total_have = 0
         for day, daydata in days.iteritems():
             total_have += len(daydata)
         print "%s %i/%i, %i uuids total in %i days\n\t    ETA %s delay %f" % (
-                now.isoformat(),
+                stats_now.isoformat(),
                 results_position, 
                 last_total_uuids, 
                 total_have,
@@ -137,15 +154,17 @@ def attempt():
         for day in daylist:
             print "\t%s: %i" % (day, len(days[day]))
 
-while True:
-    started = datetime.datetime.utcnow().date()
+day_query_start = date_range_start
+while day_query_start < date_range_end:
+    day_query_end = day_query_start + datetime.timedelta(days=1)
+    started = now().date()
     attempt()
-    finished = datetime.datetime.utcnow().date()
+    finished = now().date()
     print "Started on %s" % (started.isoformat())
     print "Finished on %s" % (finished.isoformat())
     print "Time: %s" % (finished - started)
     while True:
         nextattempt = started + datetime.timedelta(hours=3)
-        if datetime.datetime.utcnow().date() > nextattempt:
+        if now().date() > nextattempt:
             break
         time.sleep(60)

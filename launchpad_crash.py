@@ -126,6 +126,8 @@ class LaunchpadFrame(Stackframe):
                 frame['depth'] = int(match.group(1))
                 frame['function'] = match.group(2)
                 matched = True
+        if frame['function'] is '??':
+            frame['function'] = None
         leftover_extras = []
         if extras is not None:
             for extra in extras:
