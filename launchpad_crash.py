@@ -352,6 +352,7 @@ class TestCrash(unittest.TestCase):
             assert (crash['cpu'] == 'i386')
             assert (crash['date'] == datetime.datetime(2008, 4, 11, 22, 12, 11))
             stacktrace = crash['stacktrace']
+            assert stacktrace is crash.stacktrace
             assert (isinstance(stacktrace, Stacktrace))
             assert (isinstance(stacktrace[0], Stackframe))
             assert (stacktrace[0]['depth'] == 0)
@@ -470,6 +471,7 @@ class TestCrash(unittest.TestCase):
             assert (crash['cpu'] == 'amd64')
             assert (crash['date'] == datetime.datetime(2007, 6, 20, 10, 27, 6))
             stacktrace = crash['stacktrace']
+            assert stacktrace is crash.stacktrace
             assert (isinstance(stacktrace, Stacktrace))
             assert (isinstance(stacktrace[0], Stackframe))
             assert (stacktrace[0]['depth'] == 0)
@@ -677,6 +679,7 @@ class TestCrash(unittest.TestCase):
             # test that contents are loaded correctly
             assert (isinstance(crash, Crash))
             stacktrace = crash['stacktrace']
+            assert stacktrace is crash.stacktrace
             assert (isinstance(stacktrace, Stacktrace))
             assert (isinstance(stacktrace[0], Stackframe))
             assert (stacktrace[0]['depth'] == 0)
