@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#  Copyright (C) 2015 Jshua Charles Campbell
+#  Copyright (C) 2015,2016 Jshua Charles Campbell
 
 #  This program is free software; you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License
@@ -192,7 +192,12 @@ class LaunchpadCrash(Crash):
     
     def __setitem__(self, key, val):
         if key == 'Date': # Apport
-            return super(LaunchpadCrash, self).__setitem__('date', dateparser.parse(val))
+            date = None
+            try:
+                return super(LaunchpadCrash, self).__setitem__('date', dateparser.parse(val))
+            except:
+                error("Couln't parse date: %s" % (val))
+                pass
         else:
             return super(LaunchpadCrash, self).__setitem__(key, val)
         
