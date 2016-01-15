@@ -27,8 +27,13 @@ def now():
 
 uuids_at_once = 1000
 
-date_range_start = dateparser.parse('2016-01-06T00:00:00.000000+00:00')
-date_range_end = dateparser.parse('2016-01-07T00:00:00.000000+00:00')
+date_range_start = dateparser.parse(sys.argv[1])
+date_range_end = dateparser.parse(sys.argv[2])
+
+if date_range_start.tzinfo is None:
+    date_range_start = date_range_start.replace(tzinfo=pytz.utc)
+if date_range_end.tzinfo is None:
+    date_range_end = date_range_end.replace(tzinfo=pytz.utc)
 
 uuids_query_url = 'https://crash-stats.mozilla.com/api/SuperSearch/'
 uuids_query = {
@@ -90,7 +95,7 @@ def attempt():
             #print response.url
             if response.status_code == 429:
                 print "429'd :((("
-                time.sleep(60)
+                time.sleep(120)
                 delay = delay * 1.1
             else:
                 break
@@ -157,14 +162,10 @@ def attempt():
 day_query_start = date_range_start
 while day_query_start < date_range_end:
     day_query_end = day_query_start + datetime.timedelta(days=1)
-    started = now().date()
+    started = now()
     attempt()
-    finished = now().date()
+    finished = now()
     print "Started on %s" % (started.isoformat())
     print "Finished on %s" % (finished.isoformat())
     print "Time: %s" % (finished - started)
-    while True:
-        nextattempt = started + datetime.timedelta(hours=3)
-        if now().date() > nextattempt:
-            break
-        time.sleep(60)
+    time.sleep(60)

@@ -149,6 +149,8 @@ class LaunchpadFrame(Stackframe):
 
 class LaunchpadStack(Stacktrace):
     
+    stackframe_class = LaunchpadFrame
+
     @classmethod
     def load_from_file(cls, path):
         
@@ -185,6 +187,8 @@ class LaunchpadStack(Stacktrace):
 
 class LaunchpadCrash(Crash):
     
+    stacktrace_class = LaunchpadStack
+
     synonyms = Crash.synonyms
     synonyms['ProblemType'] = 'type'
     synonyms['DistroRelease'] = 'os'
@@ -212,6 +216,7 @@ class LaunchpadCrash(Crash):
             if not os.path.isfile(post_path):
                 raise NotImplementedError("Missing %s, I don't know how to load this." % (post_path))
             with open(post_path) as postfile: post = postfile.read()
+            crash['database_id'] = 'launchpad:' + os.path.basename(path)
             matches = re.findall('^\s*(\S+):\s+(\S+(?:\s+\S+)*?)\s*$', post, re.MULTILINE)
             if matches is not None:
                 for match in matches:

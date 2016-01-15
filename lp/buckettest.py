@@ -18,9 +18,10 @@
 
 from __future__ import division
 
-import os, sys
+import os, sys, pprint, random
 import crash
 from topN import TopN, TopNLoose, TopNAddress, TopNFile
+from es_crash import ESCrash
 
 topdir = sys.argv[1]
 
@@ -50,14 +51,23 @@ for bucketdir in os.listdir(topdir):
         assert os.path.isdir(bugdir)
         #print repr(os.listdir(bugdir))
         if len(os.listdir(bugdir)) > 1:
+            database_id = 'launchpad:'+os.path.basename(bugdir)
             try:
-                crashdata = crash.Crash.load_from_file(bugdir)
-            except IOError as e:
-                if "No stacktrace" in str(e):
-                    continue
-                else:
-                    raise
-            crashdata['bucket'] = bucket
+                crashdata = ESCrash(database_id)
+                print "ES: " + database_id
+            except:
+                crashdata = None
+            if crashdata is None:
+                try:
+                    crashdata = crash.Crash.load_from_file(bugdir)
+                except IOError as e:
+                    if "No stacktrace" in str(e):
+                        continue
+                    else:
+                        raise
+                crashdata['bucket'] = bucket
+                crashdata = ESCrash(crashdata)
+                print "Disk: " + database_id
             if len(crashdata['stacktrace']) < 1:
                 continue
             if (len(crashes) % 100) == 0:
@@ -109,3 +119,4 @@ for bucketdir in os.listdir(topdir):
             if (len(crashes) % 100) == 0:
                 print ""
             crashes.append(crashdata)
+

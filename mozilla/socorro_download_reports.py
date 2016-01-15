@@ -28,7 +28,7 @@ crash_query = {
     }
 
 
-delay = 0.6
+delay = 0.62
 last_query = datetime.datetime.utcnow()
 
 # attempt to download 1/4 of the data (by UUID)
@@ -71,9 +71,8 @@ def doaday(day=None):
             last_query = datetime.datetime.utcnow()
             response = session.get(crash_query_url, params=crash_query_auuid)
             if response.status_code == 429:
-                print "Delay reset, was %f" % (delay)
-                delay = delay*1.1
-                time.sleep(60)
+                print "Got 429 :("
+                time.sleep(120)
             else:
                 #delay = delay*0.99
                 break
