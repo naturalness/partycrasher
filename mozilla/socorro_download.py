@@ -46,7 +46,7 @@ uuids_query = {
 
 last_total_uuids = 2450724
 
-delay = 1.0
+delay = 1.2
 
 last_query = now()
 last_date_recieved = datetime.datetime.min.replace(tzinfo=pytz.utc)
@@ -96,7 +96,6 @@ def attempt():
             if response.status_code == 429:
                 print "429'd :((("
                 time.sleep(120)
-                delay = delay * 1.1
             else:
                 break
         try:
@@ -169,3 +168,4 @@ while day_query_start < date_range_end:
     print "Finished on %s" % (finished.isoformat())
     print "Time: %s" % (finished - started)
     time.sleep(60)
+    day_query_start = day_query_end

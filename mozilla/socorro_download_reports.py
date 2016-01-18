@@ -28,7 +28,7 @@ crash_query = {
     }
 
 
-delay = 0.62
+delay = 0.7
 last_query = datetime.datetime.utcnow()
 
 # attempt to download 1/4 of the data (by UUID)
@@ -73,9 +73,18 @@ def doaday(day=None):
             if response.status_code == 429:
                 print "Got 429 :("
                 time.sleep(120)
+            elif response.status_code == 424:
+                print "Got 424... failed dependency?"
+                print response.status_code
+                print response.text
+                print response.url
+                break
             else:
                 #delay = delay*0.99
                 break
+        if response.status_code == 424:
+            continue # No clue what's going on here, waiting for a response
+                     # from mozilla, for now just skip it
         try:
             assert response.status_code == 200
             assert 'application/json' in response.headers['content-type']
@@ -101,7 +110,7 @@ while True:
     flist = os.listdir('days')
     daylist = []
     for f in flist:
-        match = re.match('(\d+-\d+-\d+).json', f)
+        match = re.match('(\d+-\d+-\d+).json$', f)
         if not match is None:
             date = dateparser.parse(match.group(1)).date()
             #print date
