@@ -38,94 +38,100 @@ class LaunchpadFrame(Stackframe):
             elif ch == u'\ufffd':
                 ch = u'?'
             line += ch
-        if not matched: #number address in function (args) at file from lib
-            match = re.match('^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\(([^\)]*)\)\s+at\s+(\S+)\sfrom\s+(\S+)\s*$', line)
-            if match is not None:
-                frame['depth'] = int(match.group(1))
-                frame['address'] = match.group(2)
-                frame['function'] = match.group(3)
-                frame['args'] = match.group(4)
-                frame['file'] = match.group(5)
-                frame['dylib'] = match.group(6)
-                matched = True
-        if not matched: #number address in function (args) from lib
-            match = re.match('^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\(([^\)]*)\)\s+from\s+(.+?)\s*$', line)
-            if match is not None:
-                frame['depth'] = int(match.group(1))
-                frame['address'] = match.group(2)
-                frame['function'] = match.group(3)
-                frame['args'] = match.group(4)
-                frame['dylib'] = match.group(5)
-                matched = True
-        if not matched: #number address function (args) from lib (missing in)
-            match = re.match('^#([\dx]+)\s+(\S+)\s+(.+?)\s+\(([^\)]*)\)\s+from\s+(.+?)\s*$', line)
-            if match is not None:
-                frame['depth'] = int(match.group(1))
-                frame['address'] = match.group(2)
-                frame['function'] = match.group(3)
-                frame['args'] = match.group(4)
-                frame['dylib'] = match.group(5)
-                matched = True
-        if not matched:  #number address in function (args) at file
-            match = re.match('^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\((.*?)\)\s+at\s+(\S+)\s*$', line)
-            if match is not None:
-                frame['depth'] = int(match.group(1))
-                frame['address'] = match.group(2)
-                frame['function'] = match.group(3)
-                frame['args'] = match.group(4)
-                frame['file'] = match.group(5)
-                matched = True
-        if not matched: #number function (args) at file
-            match = re.match('^#([\dx]+)\s+(.+?)\s+\((.*?)\)\s+at\s+(\S+)\s*$', line)
-            if match is not None:
-                frame['depth'] = int(match.group(1))
-                frame['function'] = match.group(2)
-                frame['args'] = match.group(3)
-                frame['file'] = match.group(4)
-                matched = True
-        if not matched: #number address in function (args
-            match = re.match('^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s*\((.*?)\)?\s*$', line)
-            if match is not None:
-                assert ((not re.search(' at ', line))
-                        or re.search('memory at ', line)
-                        or re.search('at remote ', line)
-                        ), line
-                assert (not re.search(' from ', line))
-                frame['depth'] = int(match.group(1))
-                frame['address'] = match.group(2)
-                frame['function'] = match.group(3)
-                frame['args'] = match.group(4)
-                matched = True
-        if not matched: #number address in function
-            match = re.match('^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s*$', line)
-            if match is not None:
-                assert (not re.search(' at ', line))
-                assert (not re.search(' from ', line))
-                assert (not re.search('\(.*?\)', line))
-                frame['depth'] = int(match.group(1))
-                frame['address'] = match.group(2)
-                frame['function'] = match.group(3)
-                matched = True
-        if not matched: #number function (args
-            match = re.match('^#([\dx]+)\s+(.+?)\s+\((.*?)\)?\s*$', line)
-            if match is not None:
-                #print line
-                assert (not re.search(' at ', line))
-                assert (not re.search(' from ', line))
-                assert (not re.search(' ()\s*$', line))
-                frame['depth'] = int(match.group(1))
-                frame['function'] = match.group(2)
-                frame['args'] = match.group(3)
-                matched = True
-        if not matched: #number <function>
-            match = re.match('^#(\d+)\s+(<.*?>)\s*$', line)
-            if match is not None:
-                assert (not re.search(' at ', line))
-                assert (not re.search(' from ', line))
-                assert (not re.search('\(.*?\)', line))
-                frame['depth'] = int(match.group(1))
-                frame['function'] = match.group(2)
-                matched = True
+        try:
+            if not matched: #number address in function (args) at file from lib
+                match = re.match('^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\(([^\)]*)\)\s+at\s+(\S+)\sfrom\s+(\S+)\s*$', line)
+                if match is not None:
+                    frame['depth'] = int(match.group(1))
+                    frame['address'] = match.group(2)
+                    frame['function'] = match.group(3)
+                    frame['args'] = match.group(4)
+                    frame['file'] = match.group(5)
+                    frame['dylib'] = match.group(6)
+                    matched = True
+            if not matched: #number address in function (args) from lib
+                match = re.match('^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\(([^\)]*)\)\s+from\s+(.+?)\s*$', line)
+                if match is not None:
+                    frame['depth'] = int(match.group(1))
+                    frame['address'] = match.group(2)
+                    frame['function'] = match.group(3)
+                    frame['args'] = match.group(4)
+                    frame['dylib'] = match.group(5)
+                    matched = True
+            if not matched: #number address function (args) from lib (missing in)
+                match = re.match('^#([\dx]+)\s+(\S+)\s+(.+?)\s+\(([^\)]*)\)\s+from\s+(.+?)\s*$', line)
+                if match is not None:
+                    frame['depth'] = int(match.group(1))
+                    frame['address'] = match.group(2)
+                    frame['function'] = match.group(3)
+                    frame['args'] = match.group(4)
+                    frame['dylib'] = match.group(5)
+                    matched = True
+            if not matched:  #number address in function (args) at file
+                match = re.match('^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\((.*?)\)\s+at\s+(\S+)\s*$', line)
+                if match is not None:
+                    frame['depth'] = int(match.group(1))
+                    frame['address'] = match.group(2)
+                    frame['function'] = match.group(3)
+                    frame['args'] = match.group(4)
+                    frame['file'] = match.group(5)
+                    matched = True
+            if not matched: #number function (args) at file
+                match = re.match('^#([\dx]+)\s+(.+?)\s+\((.*?)\)\s+at\s+(\S+)\s*$', line)
+                if match is not None:
+                    frame['depth'] = int(match.group(1))
+                    frame['function'] = match.group(2)
+                    frame['args'] = match.group(3)
+                    frame['file'] = match.group(4)
+                    matched = True
+            if not matched: #number address in function (args
+                match = re.match('^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s*\((.*?)\)?\s*$', line)
+                if match is not None:
+                    assert ((not re.search(' at ', line))
+                            or re.search('memory at ', line)
+                            or re.search('at remote ', line)
+                            ), line
+                    assert (not re.search(' from ', line))
+                    frame['depth'] = int(match.group(1))
+                    frame['address'] = match.group(2)
+                    frame['function'] = match.group(3)
+                    frame['args'] = match.group(4)
+                    matched = True
+            if not matched: #number address in function
+                match = re.match('^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s*$', line)
+                if match is not None:
+                    assert (not re.search(' at ', line))
+                    assert (not re.search(' from ', line))
+                    assert (not re.search('\(.*?\)', line))
+                    frame['depth'] = int(match.group(1))
+                    frame['address'] = match.group(2)
+                    frame['function'] = match.group(3)
+                    matched = True
+            if not matched: #number function (args
+                match = re.match('^#([\dx]+)\s+(.+?)\s+\((.*?)\)?\s*$', line)
+                if match is not None:
+                    assert ((not re.search(' at ', line))
+                            or re.search('memory at ', line)
+                            or re.search('at remote ', line)
+                            ), line
+                    assert (not re.search(' from ', line))
+                    assert (not re.search(' ()\s*$', line))
+                    frame['depth'] = int(match.group(1))
+                    frame['function'] = match.group(2)
+                    frame['args'] = match.group(3)
+                    matched = True
+            if not matched: #number <function>
+                match = re.match('^#(\d+)\s+(<.*?>)\s*$', line)
+                if match is not None:
+                    assert (not re.search(' at ', line))
+                    assert (not re.search(' from ', line))
+                    assert (not re.search('\(.*?\)', line))
+                    frame['depth'] = int(match.group(1))
+                    frame['function'] = match.group(2)
+                    matched = True
+        except:
+            print line
+            raise
         if frame['function'] == '??':
             frame['function'] = None
         leftover_extras = []
@@ -178,6 +184,8 @@ class LaunchpadStack(Stacktrace):
                     stack.append(LaunchpadFrame.load_from_strings(prevline,extras))
                 prevline = line
                 extras = []
+            if re.match('rax', line):
+                return None
             else:
                 extras.append(line.rstrip())
         stack.append(LaunchpadFrame.load_from_strings(prevline,extras))
@@ -209,7 +217,7 @@ class LaunchpadCrash(Crash):
         
     
     @classmethod
-    def load_from_file(cls, path):
+    def load_from_file(cls, path, skip_files=[]):
         crash = LaunchpadCrash()
         if os.path.isdir(path):
             post_path = os.path.join(path, "Post.txt")
@@ -222,19 +230,30 @@ class LaunchpadCrash(Crash):
                 for match in matches:
                     crash[match[0]] = match[1]
             stack_path = None
-            if os.path.isfile(os.path.join(path, "Stacktrace.txt (retraced)")):
-                stack_path = os.path.join(path, "Stacktrace.txt (retraced)")
-            elif os.path.isfile(os.path.join(path, "StacktraceSource.txt")):
-                stack_path = os.path.join(path, "StacktraceSource.txt")
-            elif os.path.isfile(os.path.join(path, "Stacktrace.txt")):
-                stack_path = os.path.join(path, "Stacktrace.txt")
-            elif os.path.isfile(os.path.join(path, "Stacktrace")):
-                stack_path = os.path.join(path, "Stacktrace")
-            elif os.path.isfile(os.path.join(path, "Stacktrace.gz")):
-                stack_path = os.path.join(path, "Stacktrace.gz")
+            try_files = [
+                "Stacktrace.txt (retraced)",
+                "StacktraceSource.txt",
+                "Stacktrace.txt",
+                "Stacktrace",
+                "Stacktrace.gz",
+                "Stacktrace.txt.1",
+                ]
+            for fname in try_files:
+                try_stack_path = os.path.join(path, fname)
+                for skipname in skip_files:
+                    if skipname in try_stack_path:
+                        try_stack_path = None
+                if try_stack_path is None:
+                    continue
+                if os.path.isfile(try_stack_path):
+                    stack_path = try_stack_path
             if stack_path is None:
                 raise IOError("No stacktrace file found in %s" % (path))
             crash['stacktrace'] = LaunchpadStack.load_from_file(stack_path)
+            if crash['stacktrace'] is None:
+                print stack_path + " did not contain a stack trace!"
+                skip_files.append(stack_path)
+                return load_from_file(cls, path, skip_files)
         else:
             raise NotImplementedError("Not a directory, I don't know how to load this.")
         return crash

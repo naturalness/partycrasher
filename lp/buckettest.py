@@ -37,26 +37,8 @@ comparisons = {
     'top1file' : {'comparer': TopNFile(1)},
 }
 
+#TODO: MISSING CODE HERE TO ITERATE OVER EVERYTHING IN ELASTIC
 
-for bucketdir in os.listdir(topdir):
-    bucket = bucketdir
-    bucketdir = os.path.join(topdir, bucketdir)
-    assert os.path.isdir(bucketdir)
-    buglist = os.listdir(bucketdir)
-    if len(buglist) < 2:
-        continue
-    buckets.append(bucket)
-    for bugdir in buglist:
-        bugdir = os.path.join(bucketdir, bugdir)
-        assert os.path.isdir(bugdir)
-        #print repr(os.listdir(bugdir))
-        if len(os.listdir(bugdir)) > 1:
-            database_id = 'launchpad:'+os.path.basename(bugdir)
-            try:
-                crashdata = ESCrash(database_id)
-                print "ES: " + database_id
-            except:
-                crashdata = None
             if crashdata is None:
                 try:
                     crashdata = crash.Crash.load_from_file(bugdir)
