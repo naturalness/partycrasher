@@ -23,7 +23,7 @@ import dateutil.parser as dateparser
 # This is the separator which is meant to be used when turning
 # stack traces into strings, between levels of the stack, going
 # DOWN from the TOP (most recent call FIRST)
-STACK_SEPARATOR = " ≻ "
+STACK_SEPARATOR = u' ≻ '
 
 class Stackframe(dict):
     pass
