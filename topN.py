@@ -120,10 +120,17 @@ class TopNFile(Comparer):
           on Mining Software Repositories (MSR), 2013, pp. 247–256.
 
     """
-    # BUG takes n, does nothing with it
 
     def __init__(self, n=1):
         self.n = n
+
+    @staticmethod
+    def compare_frames(a, b):
+        # Sentinel object that will NEVER compare equal.
+        # >>> (NeverEqual == NeverEqual) == False
+        NeverEqual = float('nan')
+        return a.stacktrace[0].get('file', NeverEqual) == \
+               b.stacktrace[0].get('file', NeverEqual)
 
     def compare(self, a, b):
         """
@@ -132,8 +139,8 @@ class TopNFile(Comparer):
         """
         assert len(a.stacktrace) > 0
         assert len(b.stacktrace) > 0
-        # Sentinel objects that will NEVER compare equal.
-        UnknownA = object()
-        UnknownB = object()
-        return a.stacktrace[0].get('file', UnknownA) == \
-               b.stacktrace[0].get('file', UnknownB)
+
+        for sa, sb, _ in zip(a.stacktrace, b.stacktrace, xrange(self.n)):
+            if not self.compare_frame(sa, sb):
+                return False
+        return True
