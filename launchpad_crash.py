@@ -126,7 +126,7 @@ class LaunchpadFrame(Stackframe):
                 frame['depth'] = int(match.group(1))
                 frame['function'] = match.group(2)
                 matched = True
-        if frame['function'] is '??':
+        if frame['function'] == '??':
             frame['function'] = None
         leftover_extras = []
         if extras is not None:
@@ -696,12 +696,78 @@ class TestCrash(unittest.TestCase):
             assert (isinstance(stacktrace[0], Stackframe))
             assert (stacktrace[0]['depth'] == 0)
             assert (stacktrace[1]['depth'] == 1)
-            assert (stacktrace[6]['function'] == 'signal handler called')
+            assert (stacktrace[6]['function'] == '<signal handler called>')
             assert (stacktrace[4]['extra'][0] == 'No locals.')
             assert (stacktrace[0]['file'] == '../../src/QuExt.c')
             assert (stacktrace[0]['fileline'] == '46')
             assert (len(stacktrace[0]['extra']) == 2)
             
+        finally:
+            shutil.rmtree(dirpath)
+    
+    example_ubuntu_post4 = 'When connected to wired network the applet does not crash.  When unplugging the wired connection is favor of the wireless, nm-applet crashes immediately do to an issue between it and gnome-keyring.  I believe this is a duplicate bug of 122380, but I\'ve submitted a new bug so that apport could attach the information for me.  Let me know if there are any traces you need (valgrind or the like).\n'\
+        '\n'\
+        'ProblemType: Crash\n'\
+        'Architecture: i386\n'\
+        'CrashCounter: 1\n'\
+        'Date: Tue Jun 26 17:37:21 2007\n'\
+        'DistroRelease: Ubuntu 7.10\n'\
+        'ExecutablePath: /usr/bin/nm-applet\n'\
+        'NonfreeKernelModules: cdrom\n'\
+        'Package: network-manager-gnome 0.6.5-0ubuntu3\n'\
+        'PackageArchitecture: i386\n'\
+        'ProcCmdline: nm-applet --sm-disable\n'\
+        'ProcCwd: /home/jerrid\n'\
+        'ProcEnviron:\n'\
+        ' PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games\n'\
+        ' LANG=en_US.UTF-8\n'\
+        ' SHELL=/bin/bash\n'\
+        'Signal: 11\n'\
+        'SourcePackage: network-manager-applet\n'\
+        'StacktraceTop:\n'\
+        ' ?? ()\n'\
+        ' ?? ()\n'\
+        ' ?? ()\n'\
+        ' ?? ()\n'\
+        ' ?? ()\n'\
+        'Title: nm-applet crashed with SIGSEGV\n'\
+        'Uname: Linux kws3 2.6.22-7-generic #1 SMP Mon Jun 25 17:33:14 GMT 2007 i686 GNU/Linux\n'\
+        'UserGroups: adm admin audio cdrom dialout dip floppy lpadmin netdev plugdev powerdev scanner video'
+    example_ubuntu_stacktrace4 = '#0  0x0805f92c in ?? ()\n'\
+        '#1  0x085e5618 in ?? ()\n'\
+        '#2  0x085e5618 in ?? ()\n'\
+        '#3  0xbfc06a88 in ?? ()\n'\
+        '#4  0xbfc06a84 in ?? ()\n'\
+        '#5  0xb730fa28 in ?? () from /usr/lib/libgnome-keyring.so.0\n'\
+        '#6  0xbfc06a88 in ?? ()\n'\
+        '#7  0x00000000 in ?? ()'
+
+
+    def test_ubuntu4(self):
+        import tempfile
+        import os
+        import shutil
+        import datetime
+        dirpath=tempfile.mkdtemp()
+        try:
+            # Test setup
+            stacktrace_path = os.path.join(dirpath, "Stacktrace.txt")
+            with open(stacktrace_path, 'w') as stacktrace_file:
+                stacktrace_file.write(self.example_ubuntu_stacktrace4)
+            post_path = os.path.join(dirpath, "Post.txt")
+            with open(post_path, 'w') as post_file:
+                post_file.write(self.example_ubuntu_post4)
+            
+            # Test crash loader
+            crash = Crash.load_from_file(dirpath)
+            
+            # test that contents are loaded correctly
+            assert (isinstance(crash, Crash))
+            stacktrace = crash['stacktrace']
+            assert stacktrace is crash.stacktrace
+            assert (isinstance(stacktrace, Stacktrace))
+            assert (isinstance(stacktrace[0], Stackframe))
+            assert stacktrace[0]['function'] is None
         finally:
             shutil.rmtree(dirpath)
 

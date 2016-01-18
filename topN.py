@@ -144,3 +144,92 @@ class TopNFile(Comparer):
             if not self.compare_frame(sa, sb):
                 return False
         return True
+
+
+import unittest
+class TestTopN(unittest.TestCase):
+    exampleJson1 = '{\n'\
+        '    "CrashCounter": "1",\n'\
+        '    "ExecutablePath": "/bin/nbd-server",\n'\
+        '    "NonfreeKernelModules": "fglrx",\n'\
+        '    "Package": "nbd-server 1:2.9.3-3ubuntu1",\n'\
+        '    "PackageArchitecture": "i386",\n'\
+        '    "ProcCmdline": "/bin/nbd-server",\n'\
+        '    "ProcCwd": "/",\n'\
+        '    "ProcEnviron": "PATH=/sbin:/bin:/usr/sbin:/usr/bin",\n'\
+        '    "Signal": "11",\n'\
+        '    "SourcePackage": "nbd",\n'\
+        '    "StacktraceTop": "\\ufffd?? ()",\n'\
+        '    "Title": "nbd-server crashed with SIGSEGV",\n'\
+        '    "Uname": "Linux mlcochff 2.6.22-7-generic #1 SMP Mon Jun 25 17:33:14 GMT 2007 i686 GNU/Linux",\n'\
+        '    "cpu": "i386",\n'\
+        '    "date": "2007-06-27T12:04:43",\n'\
+        '    "os": "Ubuntu 7.10",\n'\
+        '    "stacktrace": [\n'\
+        '        {\n'\
+        '            "address": "0x0804cbd3",\n'\
+        '            "args": "argc=",\n'\
+        '            "depth": 0,\n'\
+        '            "extra": [\n'\
+        '                "\\tserve = (SERVER *) 0x0",\n'\
+        '                "\\tservers = (GArray *) 0x8051418",\n'\
+        '                "\\terr = (GError *) 0x0"\n'\
+        '            ],\n'\
+        '            "file": "nbd-server.c:1546",\n'\
+        '            "function": "main"\n'\
+        '        },\n'\
+        '        {\n'\
+        '            "address": "0xb7cfcebc",\n'\
+        '            "args": "",\n'\
+        '            "depth": 1,\n'\
+        '            "function": "??"\n'\
+        '        },\n'\
+        '        {\n'\
+        '            "address": "0x00000001",\n'\
+        '            "args": "",\n'\
+        '            "depth": 2,\n'\
+        '            "function": "??"\n'\
+        '        },\n'\
+        '        {\n'\
+        '            "address": "0xbfeff544",\n'\
+        '            "args": "",\n'\
+        '            "depth": 3,\n'\
+        '            "function": "??"\n'\
+        '        },\n'\
+        '        {\n'\
+        '            "address": "0xbfeff54c",\n'\
+        '            "args": "",\n'\
+        '            "depth": 4,\n'\
+        '            "function": "??"\n'\
+        '        },\n'\
+        '        {\n'\
+        '            "address": "0xb7f1b898",\n'\
+        '            "args": "",\n'\
+        '            "depth": 5,\n'\
+        '            "function": "??"\n'\
+        '        },\n'\
+        '        {\n'\
+        '            "address": "0x00000000",\n'\
+        '            "args": "",\n'\
+        '            "depth": 6,\n'\
+        '            "function": "??"\n'\
+        '        }\n'\
+        '    ],\n'\
+        '    "type": "Crash"\n'\
+        '}\n'
+
+                        
+    def test_serdes(self):
+        serdes = Crash.fromjson(self.exampleCrash1.json()) 
+        assert (self.exampleCrash1 == serdes)
+        assert len(self.exampleCrash1['stacktrace']) > 1
+        assert len(serdes['stacktrace']) > 1
+        
+    def test_desser(self):
+        assert (json.loads(Crash.fromjson(self.exampleJson1).json()) ==
+                json.loads(self.exampleJson1))
+    
+        
+if __name__ == '__main__':
+    unittest.main()
+
