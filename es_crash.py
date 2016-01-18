@@ -22,23 +22,38 @@ from elasticsearch import Elasticsearch
 from weakref import WeakValueDictionary
 
 class ESCrashMeta(type):
+    # The purpose of all of this shit is to ensure that we don't
+    # end up with two copies of the same crash in elastic search
+    # in memory because then they would fall out of sync, and
+    # cause really annoying and hard to find bugs, etc.
+    # So, if a ESCrash with the same database_id is already
+    # retrieved/added to ES and is already in memory, then we
+    # just return that very same object
+    # It's not my fault, the only way to do this is with metaclasses.
+    # I seriously tried.
     _crashes = WeakValueDictionary()
     def __call__(cls, crash=None):
         cls.index_create()
+        # This is the case that the constructor was called with a whole
+        # crash datastructure
         if isinstance(crash, Crash):
             if 'database_id' in crash:
+                # The case that we already have it in memory
                 if crash['database_id'] in cls._crashes:
                     already = cls._crashes[crash['database_id']]
                     assert(Crash(already) == crash)
                     return already
+                # We don't have it in memory so see if its already in ES
                 existing = cls.getrawbyid(crash['database_id'])
                 if not existing is None:
-                    print existing
-                    print crash
+                    # It is already in elastic search
+                    # make sure its the same data
                     assert(existing == crash)
                     newish = super(ESCrashMeta, cls).__call__(existing)
+                    # cache it as a weak reference
                     cls._crashes[crash['database_id']] = newish
                     return newish
+                # It's not in ES, so add it
                 else:
                     r = cls.es.create(index='crashes',
                                 doc_type='crash',
@@ -47,10 +62,12 @@ class ESCrashMeta(type):
                                 )
                     assert r['created']
                     new = super(ESCrashMeta, cls).__call__(crash)
+                    # Cache it as a weak reference
                     cls._crashes[crash['database_id']] = new
                     return new
             else:
                 raise Exception("Crash with no database_id!")
+        # The case where the constructor is called with a database id only
         elif isinstance(crash, str):
             if crash in cls._crashes:
                 return cls._crashes[crash]
@@ -97,7 +114,7 @@ class ESCrash(Crash):
         if r['hits']['total'] == 0:
             return None
         elif r['hits']['total'] > 1:
-            raise Exception("wat")
+            raise Exception("The ID occurs in ES twice, which shouldn't be possible, since they are all supposed to be stored with their document ID equal to the database ID.")
         else:
             # should this be ESCRash.__base__?
             return Crash(r['hits']['hits'][0]['_source'])

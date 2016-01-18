@@ -28,7 +28,7 @@ crash_query = {
     }
 
 
-delay = 0.7
+delay = 0.65
 last_query = datetime.datetime.utcnow()
 
 # attempt to download 1/4 of the data (by UUID)
