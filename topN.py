@@ -17,7 +17,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from crash import Crash, Stacktrace, Stackframe
+from crash import Crash, Stacktrace, Stackframe, STACK_SEPARATOR
 from comparer import Comparer
 import re
 
@@ -25,6 +25,16 @@ class TopN(Comparer):
 
     def __init__(self, n=3):
         self.n = n
+
+    def get_signature(self, crash):
+        signature = ''
+        for i in range(0, self.n):
+            if i >= len(crash['stacktrace']):
+                return signature
+            if len(signature) > 0:
+                signature += STACK_SEPARATOR
+            if a['stacktrace'][i]['function'] is None:
+                signature += a['database_id'] + "#" + str(i)
 
     def compare(self, a, b):
         for i in range(0, self.n):
@@ -76,7 +86,7 @@ class TopNLoose(Comparer):
 class TopNAddress(Comparer):
 
     def __init__(self, n=3):
-        self.n = n
+        self.n = n        
 
     def compare(self, a, b):
         for i in range(0, self.n):

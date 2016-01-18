@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 #  Copyright (C) 2015, 2016 Joshua Charles Campbell
 
@@ -19,14 +20,10 @@
 import json, datetime
 import dateutil.parser as dateparser
 
+STACK_SEPARATOR = " ≻ "
+
 class Stackframe(dict):
-    if False:
-        def __repr__(self):
-            return (self.__class__.__name__
-                    + "("
-                    + super(Stackframe, self).__repr__()
-                    + ")"
-                    )
+    pass
 
 class Stacktrace(list):
     
@@ -41,14 +38,6 @@ class Stacktrace(list):
                 self.extend(map(self.stackframe_class, value))
         else:
             raise AttributeError
-    
-    if False:
-        def __repr__(self):
-            return (self.__class__.__name__
-                    + "("
-                    + super(Stacktrace, self).__repr__()
-                    + ")"
-                    )
 
     def extend(self, arg):
         for a in arg:

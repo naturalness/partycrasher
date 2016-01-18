@@ -46,7 +46,7 @@ uuids_query = {
 
 last_total_uuids = 2450724
 
-delay = 1.0
+delay = 1.5
 
 last_query = now()
 last_date_recieved = datetime.datetime.min.replace(tzinfo=pytz.utc)
@@ -96,7 +96,6 @@ def attempt():
             if response.status_code == 429:
                 print "429'd :((("
                 time.sleep(120)
-                delay = delay * 1.1
             else:
                 break
         try:
@@ -135,7 +134,7 @@ def attempt():
         # force the results windows to overlap :(
         # this is to prevent shifting result set from 
         # causing gaps
-        results_position += results
+        results_position += min(results, uuids_at_once - 10)
         if (newuuids > 0):
             for day, daydata in days.iteritems():
                 daydata.sync()
@@ -169,3 +168,4 @@ while day_query_start < date_range_end:
     print "Finished on %s" % (finished.isoformat())
     print "Time: %s" % (finished - started)
     time.sleep(60)
+    day_query_start = day_query_end
