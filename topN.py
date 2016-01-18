@@ -41,60 +41,44 @@ class TopN(Comparer):
             signature += crash['stacktrace'][i]['function']
         return signature
 
-class TopNLoose(Comparer):
+class TopNLoose(TopN):
+    # TODO: NEEDS TESTS
 
-    def __init__(self, n=3):
-        self.n = n
-
-    def compare(self, a, b):
+    def get_signature(self, crash):
+        signature = u''
         for i in range(0, self.n):
-            if i >= len(a['stacktrace']):
-                if i < len(b['stacktrace']):
-                    return False
-                else:
-                    return True
-            if i >= len(b['stacktrace']):
-                if i < len(a['stacktrace']):
-                    return False
-                else:
-                    return True
-            if a['stacktrace'][i]['function'] is None:
-                return False
-            if b['stacktrace'][i]['function'] is None:
-                return False
-            fna = a['stacktrace'][i]['function']
-            fnb = b['stacktrace'][i]['function']
-            fna = re.sub(r"[^a-zA-Z]", "", fna)
-            fnb = re.sub(r"[^a-zA-Z]", "", fnb)
-            fna = fna.lower()
-            fnb = fnb.lower()
-            if fna != fnb:
-                return False
-        return True
+            if i >= len(crash['stacktrace']):
+                return signature
+            if len(signature) > 0:
+                signature += STACK_SEPARATOR
+            if crash['stacktrace'][i]['function'] is None:
+                # This depends on the assumption that the database_id is
+                # unique, which is enforced by es_crash.py
+                signature += crash['database_id'] + "#" + str(i)
+                continue
+            fn = crash['stacktrace'][i]['function']
+            fn = re.sub(r"[^a-zA-Z]", "", fn)
+            fn = fn.lower()
+            signature += fn
+        return signature
 
-class TopNAddress(Comparer):
+class TopNAddress(TopN):
 
-    def __init__(self, n=3):
-        self.n = n        
-
-    def compare(self, a, b):
+    def get_signature(self, crash):
+        signature = u''
         for i in range(0, self.n):
-            if i >= len(a['stacktrace']):
-                if i < len(b['stacktrace']):
-                    return False
-                else:
-                    return True
-            if i >= len(b['stacktrace']):
-                if i < len(a['stacktrace']):
-                    return False
-                else:
-                    return True
-            try:
-                if a['stacktrace'][i]['address'] != b['stacktrace'][i]['address']:
-                    return False
-            except KeyError:
-                return False # treat unknown addresses as never equal
-        return True
+            if i >= len(crash['stacktrace']):
+                return signature
+            if len(signature) > 0:
+                signature += STACK_SEPARATOR
+            if ('address' not in crash['stacktrace'][i]
+                or crash['stacktrace'][i]['address'] is None):
+                # This depends on the assumption that the database_id is
+                # unique, which is enforced by es_crash.py
+                signature += crash['database_id'] + "#" + str(i)
+                continue
+            signature += crash['stacktrace'][i]['address']
+        return signature
 
 class TopNFile(Comparer):
     """
@@ -109,28 +93,22 @@ class TopNFile(Comparer):
     def __init__(self, n=1):
         self.n = n
 
-    @staticmethod
-    def compare_frames(a, b):
-        # Sentinel object that will NEVER compare equal.
-        # >>> (NeverEqual == NeverEqual) == False
-        NeverEqual = float('nan')
-        return a[0].get('file', NeverEqual) == \
-               b[0].get('file', NeverEqual)
-
-    def compare(self, a, b):
-        return False
-        """
-        Two crashes are correlated if the top stack frame occured in the same
-        **SOURCE** file.
-        """
-        assert len(a.stacktrace) > 0
-        assert len(b.stacktrace) > 0
-
-        for sa, sb, _ in zip(a.stacktrace, b.stacktrace, xrange(self.n)):
-            if not self.compare_frames(sa, sb):
-                return False
-        return True
-
+    def get_signature(self, crash):
+        signature = u''
+        for i in range(0, self.n):
+            if i >= len(crash['stacktrace']):
+                return signature
+            if len(signature) > 0:
+                signature += STACK_SEPARATOR
+            
+            if ('file' not in crash['stacktrace'][i]
+                or crash['stacktrace'][i]['file'] is None):
+                # This depends on the assumption that the database_id is
+                # unique, which is enforced by es_crash.py
+                signature += crash['database_id'] + "#" + str(i)
+                continue
+            signature += crash['stacktrace'][i]['file']
+        return signature
 
 import unittest
 class TestTopN(unittest.TestCase):
@@ -208,7 +186,7 @@ class TestTopN(unittest.TestCase):
         '        "type": "Crash"\n'\
         '}\n'
                         
-    # Different from 1 only in database_id
+    # Different from 1 only in database_id, and one missing address
     exampleJson2 = '{\n'\
         '        "CrashCounter": "1",\n'\
         '        "ExecutablePath": "/usr/bin/nm-applet",\n'\
@@ -243,7 +221,6 @@ class TestTopN(unittest.TestCase):
         '                "function": null\n'\
         '            },\n'\
         '            {\n'\
-        '                "address": "0x085e5618",\n'\
         '                "args": "",\n'\
         '                "depth": 2,\n'\
         '                "function": null\n'\
@@ -287,14 +264,22 @@ class TestTopN(unittest.TestCase):
         should_contain = 'launchpad:122451#0'
         crash = Crash.fromjson(self.exampleJson1)
         topn = TopN(3)
+        topna = TopNAddress(3)
+        topnf = TopNFile(3)
         signature = topn.get_signature(crash)
         assert 'launchpad:122451#0' in signature
         print repr(signature)
         assert signature == \
             u'launchpad:122451#0 ≻ launchpad:122451#1 ≻ launchpad:122451#2'
+        assert topna.get_signature(crash) == \
+            u'0x0805f92c ≻ 0x085e5618 ≻ 0x085e5618'
         crash2 = Crash.fromjson(self.exampleJson2)
         assert not topn.compare(crash, crash2)
         assert topn.compare(crash, crash)
+        assert not topna.compare(crash, crash2)
+        assert topna.compare(crash, crash)
+        assert not topnf.compare(crash, crash2)
+        assert topnf.compare(crash, crash)
         
 if __name__ == '__main__':
     unittest.main()
