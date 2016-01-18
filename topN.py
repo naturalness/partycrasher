@@ -33,8 +33,12 @@ class TopN(Comparer):
                 return signature
             if len(signature) > 0:
                 signature += STACK_SEPARATOR
-            if a['stacktrace'][i]['function'] is None:
-                signature += a['database_id'] + "#" + str(i)
+            if crash['stacktrace'][i]['function'] is None:
+                # This depends on the assumption that the database_id is
+                # unique, which is enforced by es_crash.py
+                signature += crash['database_id'] + "#" + str(i)
+                continue
+            signature += crash['stacktrace'][i]['function']
 
     def compare(self, a, b):
         for i in range(0, self.n):
