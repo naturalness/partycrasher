@@ -28,6 +28,7 @@ topdir = sys.argv[1]
 buckets = []
 
 from elasticsearch import Elasticsearch
+bugs_total = 0
 
 for bucketdir in os.listdir(topdir):
     bucket = bucketdir
@@ -57,5 +58,18 @@ for bucketdir in os.listdir(topdir):
                         continue
                     else:
                         raise
-                crashdata['bucket'] = bucket
                 crashdata = ESCrash(crashdata)
+            try:
+                oracledata = ESCrash(database_id, index='oracle')
+            except:
+                oracledata = None
+            if oracledata is None:
+                oracledata = crash.Crash({
+                    'database_id': database_id,
+                    'bucket': bucket,
+                    })
+                oracledata = ESCrash(oracledata, index='oracle')
+            else:
+                oracledata['bucket'] = bucket
+            bugs_total += 1
+print str(bugs_total) + " loaded"

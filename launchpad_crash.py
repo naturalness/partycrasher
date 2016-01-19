@@ -188,7 +188,8 @@ class LaunchpadStack(Stacktrace):
                 return None
             else:
                 extras.append(line.rstrip())
-        stack.append(LaunchpadFrame.load_from_strings(prevline,extras))
+        if prevline is not None:
+            stack.append(LaunchpadFrame.load_from_strings(prevline,extras))
         
         return stack
 
@@ -249,11 +250,12 @@ class LaunchpadCrash(Crash):
                     stack_path = try_stack_path
             if stack_path is None:
                 raise IOError("No stacktrace file found in %s" % (path))
-            crash['stacktrace'] = LaunchpadStack.load_from_file(stack_path)
-            if crash['stacktrace'] is None:
+            trace = LaunchpadStack.load_from_file(stack_path)
+            if trace is None:
                 print stack_path + " did not contain a stack trace!"
                 skip_files.append(stack_path)
-                return load_from_file(cls, path, skip_files)
+                return cls.load_from_file(path, skip_files)
+            crash['stacktrace'] = trace
         else:
             raise NotImplementedError("Not a directory, I don't know how to load this.")
         return crash

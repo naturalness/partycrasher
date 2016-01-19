@@ -31,50 +31,52 @@ class ESCrashMeta(type):
     # just return that very same object
     # It's not my fault, the only way to do this is with metaclasses.
     # I seriously tried.
-    _crashes = WeakValueDictionary()
-    def __call__(cls, crash=None):
-        cls.index_create()
+    _cached = {}
+    def __call__(cls, crash=None, index='crashes'):
+        cls.index_create(index)
         # This is the case that the constructor was called with a whole
         # crash datastructure
+        if index not in cls._cached:
+            cls._cached[index] = WeakValueDictionary()
         if isinstance(crash, Crash):
             if 'database_id' in crash:
                 # The case that we already have it in memory
-                if crash['database_id'] in cls._crashes:
-                    already = cls._crashes[crash['database_id']]
+                if crash['database_id'] in cls._cached[index]:
+                    already = cls._cached[index][crash['database_id']]
                     assert(Crash(already) == crash)
                     return already
                 # We don't have it in memory so see if its already in ES
-                existing = cls.getrawbyid(crash['database_id'])
+                existing = cls.getrawbyid(crash['database_id'], index=index)
                 if not existing is None:
                     # It is already in elastic search
                     # make sure its the same data
                     assert(existing == crash)
-                    newish = super(ESCrashMeta, cls).__call__(existing)
+                    newish = super(ESCrashMeta, cls).__call__(crash=existing, index=index)
                     # cache it as a weak reference
-                    cls._crashes[crash['database_id']] = newish
+                    cls._cached[index][crash['database_id']] = newish
                     return newish
                 # It's not in ES, so add it
                 else:
-                    r = cls.es.create(index='crashes',
+                    r = cls.es.create(index=index,
                                 doc_type='crash',
                                 body=crash,
                                 id=crash['database_id'],
                                 )
                     assert r['created']
-                    new = super(ESCrashMeta, cls).__call__(crash)
+                    new = super(ESCrashMeta, cls).__call__(crash=crash, index=index)
                     # Cache it as a weak reference
-                    cls._crashes[crash['database_id']] = new
+                    cls._cached[index][crash['database_id']] = new
                     return new
             else:
                 raise Exception("Crash with no database_id!")
         # The case where the constructor is called with a database id only
-        elif isinstance(crash, str):
-            if crash in cls._crashes:
-                return cls._crashes[crash]
-            existing = cls.getrawbyid(crash)
+        elif isinstance(crash, str) or isinstance(crash, unicode):
+            if crash in cls._cached[index]:
+                return cls._cached[index][crash]
+            existing = cls.getrawbyid(crash, index=index)
             if not existing is None:
-                newish = super(ESCrashMeta, cls).__call__(existing)
-                cls._crashes[crash] = newish
+                newish = super(ESCrashMeta, cls).__call__(crash=existing, index=index)
+                cls._cached[index][crash] = newish
                 return newish
             else:
                 raise Exception("ID not found!")
@@ -91,11 +93,12 @@ class ESCrash(Crash):
     crashes = {}
     
     @classmethod
-    def getrawbyid(cls, database_id):
-        if database_id in cls.crashes:
-            return cls.crashes[database_id]
+    def getrawbyid(cls, database_id, index='crashes'):
+        if index in cls.crashes:
+            if database_id in cls.crashes[index]:
+                return cls.crashes[database_id]
         r = cls.es.search(
-            index='crashes',
+            index=index,
             body={
                 'query': {
                     'filtered':{
@@ -120,8 +123,8 @@ class ESCrash(Crash):
             return Crash(r['hits']['hits'][0]['_source'])
     
     @classmethod
-    def index_create(cls):
-        if cls.es.indices.exists(index='crashes'):
+    def index_create(cls, index='crashes'):
+        if cls.es.indices.exists(index=index):
             return
         else:
             #known_types = {
@@ -134,7 +137,7 @@ class ESCrash(Crash):
                 #properties[field] = {
                     #'type': ftype
                     #}
-            cls.es.indices.create(index='crashes',
+            cls.es.indices.create(index=index,
                 body={
                     'mappings': {
                         'crash': {
@@ -145,7 +148,7 @@ class ESCrash(Crash):
                                     },
                                 'bucket': {
                                     'type': 'string',
-                                    'index': 'no',
+                                    'index': 'not_analyzed',
                                     }
                                 }
                             }
@@ -153,9 +156,10 @@ class ESCrash(Crash):
                     }
                 )
             cls.es.cluster.health(wait_for_status='yellow')
-    def __init__(self, *args):
+    def __init__(self, index='crashes', crash=None):
+        self.index = index
         self.hot = False
-        super(ESCrash, self).__init__(*args)
+        super(ESCrash, self).__init__(crash)
         self.hot = True
 
     def __setitem__(self, key, val):
@@ -166,7 +170,7 @@ class ESCrash(Crash):
         super(ESCrash, self).__setitem__(key, val)
         newval = self[key]
         if (oldval != newval) and self.hot:
-            r = self.es.update(index='crashes',
+            r = self.es.update(index=self.index,
                         doc_type='crash',
                         id=self['database_id'],
                         body={
