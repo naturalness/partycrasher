@@ -18,7 +18,7 @@
 
 from __future__ import division
 
-import os, sys, pprint, random
+import os, sys, pprint, random, time
 import crash
 from topN import TopN, TopNLoose, TopNAddress, TopNFile
 from es_crash import ESCrash
@@ -44,7 +44,7 @@ oracle_all = elasticsearch.helpers.scan(es,
     
 all_ids = {}
 all_buckets = {}
-seen_buckets = {}
+seen_buckets = {'new':True}
 
 for i in oracle_all:
     database_id = i['_source']['database_id']
@@ -59,6 +59,35 @@ del oracle_all
 print str(len(all_ids)) + " IDs found in oracle"
 crashes_so_far = 0
 
+
+# reset simulation index for each comparison type
+# for time-travel prevention
+for comparison in comparisons:
+    es.indices.delete(index=comparison, ignore=[400, 404])
+    es.indices.create(index=comparison, ignore=400,
+                body={
+                    'mappings': {
+                        'crash': {
+                            'properties': {
+                                'database_id': {
+                                    'type': 'string',
+                                    'index': 'not_analyzed'
+                                    },
+                                'bucket': {
+                                    'type': 'string',
+                                    'index': 'not_analyzed',
+                                    },
+                                comparison: {
+                                    'type': 'string',
+                                    'index': 'not_analyzed',
+                                    },
+                                }
+                            }
+                        }
+                    }
+                )
+    es.cluster.health(wait_for_status='yellow')
+
 for database_id in sorted(all_ids.keys()):
     oracledata = ESCrash(database_id, index='oracle')
     crashdata = ESCrash(database_id)
@@ -66,7 +95,7 @@ for database_id in sorted(all_ids.keys()):
         continue
     #print database_id
     if (crashes_so_far % 100) == 0:
-        print "in %i/%i crashes and %i bugkets:" % (crashes_so_far, len(all_ids), len(all_buckets))
+        print "in %i/%i crashes and %i/%i bugkets:" % (crashes_so_far, len(all_ids), len(seen_buckets), len(all_buckets))
     for comparison in comparisons:
         comparison_data = comparisons[comparison]
         if not ('tp' in comparison_data):
@@ -79,13 +108,10 @@ for database_id in sorted(all_ids.keys()):
             comparison_data['fn'] = 0
         comparer = comparison_data['comparer']
         this_signature = comparer.get_signature(crashdata)
-        oracle_match = es.search(
-            index='oracle',
+        simulation_match = es.search(
+            index=comparison,
             body={
                 'query': {
-                    #'match': {
-                        #comparison: this_signature
-                        #}
                     'filtered':{
                         'query': {
                             'match_all': {}
@@ -97,35 +123,43 @@ for database_id in sorted(all_ids.keys()):
                         }
                     }
                 },
-                #'min_score': 1.0,
                 'aggregations': {
                     'buckets': {
                         'terms': {
                             'field': 'bucket',
-                            'size': 10
+                            'size': 1
                         }
                     }
                 }
             })
-        other_buckets = {}
-        #print len(oracle_match['aggregations']['buckets']['buckets'])
-        if len(oracle_match['aggregations']['buckets']['buckets']) > 2 and False:
-            pprint.PrettyPrinter(indent=4).pprint(oracle_match)
-            sys.exit(0)
-        for other_result in oracle_match['aggregations']['buckets']['buckets']:
-            other_bucket = other_result['key']
-            other_buckets[other_bucket] = True
+        simulation_buckets = {}
+        for simulation_result in simulation_match['aggregations']['buckets']['buckets']:
+            simulation_bucket = simulation_result['key']
+            simulation_buckets[simulation_bucket] = True
         for bucket in seen_buckets:
-            if bucket in other_buckets:
-                if bucket == oracledata['bucket']:
-                    comparison_data['tp'] += 1
+            if bucket == 'new':
+                if len(simulation_buckets) == 0:
+                    if not (oracledata['bucket'] in seen_buckets):
+                        comparison_data['tp'] += 1
+                    else:
+                        comparison_data['fp'] += 1
                 else:
-                    comparison_data['fp'] += 1
+                    if not (oracledata['bucket'] in seen_buckets):
+                        comparison_data['fn'] += 1
+                    else:
+                        comparison_data['tn'] += 1
             else:
-                if bucket == oracledata['bucket']:
-                    comparison_data['fn'] += 1
+                if bucket in simulation_buckets:
+                    if bucket == oracledata['bucket']:
+                        comparison_data['tp'] += 1
+                    else:
+                        comparison_data['fp'] += 1
                 else:
-                    comparison_data['tn'] += 1
+                    if bucket == oracledata['bucket']:
+                        comparison_data['fn'] += 1
+                    else:
+                        comparison_data['tn'] += 1
+                
         #print "%s: tp %i, fp %i, tn %i, fn %i" \
             #% (comparison,
                 #comparison_data['tp'],
@@ -149,7 +183,11 @@ for database_id in sorted(all_ids.keys()):
                     )
             except ZeroDivisionError:
                 pass
-        oracledata[comparison] = this_signature
+        # add to the simulation data set now that we've seen it
+        simulationdata = ESCrash(crashdata, index=comparison)
+        simulationdata[comparison] = this_signature
+        simulationdata['bucket'] = oracledata['bucket']
+        es.indices.refresh(index=comparison)
     crashes_so_far += 1
     bucket = oracledata['bucket']
     # prevent ourselves from seeing the future!
@@ -157,5 +195,15 @@ for database_id in sorted(all_ids.keys()):
         seen_buckets[bucket] = [database_id]
     else:
         seen_buckets[bucket].append(database_id)
-    
+    def get_active():
+        nodes = es.nodes.stats()['nodes']
+        node = nodes[nodes.keys()[0]]
+        things = 0
+        for k, v in node['thread_pool'].iteritems():
+            things += v['active'] + v['queue']
+        #print things
+        return things
+    #while get_active() > 1:
+        #time.sleep(0.1)
+    last_seen_buckets = seen_buckets
 
