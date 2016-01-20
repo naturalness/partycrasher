@@ -16,59 +16,64 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from crash import Crash
-from bucketer import Bucketer
-from es_crash import ESCrash
+import json
+from crash import Crash 
 
-class Comparer(Bucketer):
+class Bucketer(object):
+    """Superclass for bucketers which require pre-existing data to work."""
     
-    def __init__(self, index='crashes', es=None, name=None, *args, **kwargs):
-        super(Comparer, self).__init__(*args, **kwargs)
-        self.index = index
-        self.es = es
-        if name is None:
-            name = self.__class__.__name__.lower()
-        self.name = name
-
-    def get_signature(self, crash):
+    def __init__(self, max_buckets=0):
+        self.max_buckets = max_buckets
+    
+    def bucket(self, crash):
         assert isinstance(crash, Crash)
         raise NotImplementedError("I don't know how to generate a signature for this crash.")
     
-    def compare(self, a, b):
-        return (self.get_signature(a) == self.get_signature(b))
+class MLT(Bucketer):
     
+    def __init__(self, index='crashes', es=None, thresh=1.0, *args, **kwargs):
+        super(MLT, self).__init__(*args, **kwargs)
+        self.index = index
+        self.es = es
+        self.thresh = thresh
+        
     def bucket(self, crash):
         assert isinstance(crash, Crash)
         matches = self.es.search(
         index=self.index,
         body={
+            '_source': False,
+            'min_score': self.thresh,
             'query': {
-                'filtered':{
-                    'query': {
-                        'match_all': {}
-                        },
-                    'filter': {
-                        'term': {
-                            self.name: self.get_signature(crash),
-                        }
-                    }
-                }
-            },
+            'more_like_this': {
+                'docs': [{
+                    '_index': self.index,
+                    '_type': 'crash',
+                    'doc': crash,
+                    }]
+                },
+                },
             'aggregations': {
                 'buckets': {
                     'terms': {
                         'field': 'bucket',
                         'size': self.max_buckets
-                    }
+                    },
+                    'aggs': {
+                        'top': {
+                            'top_hits': {
+                                'size': 1,
+                                '_source': {
+                                    'include': ['database_id'],
+                                    }
+                                }
+                            }
+                        }
                 }
             }
         })
         matching_buckets=[]
         for match in matches['aggregations']['buckets']['buckets']:
+            assert match['top']['hits']['max_score'] >= self.thresh
             matching_buckets.append(match['key'])
         return matching_buckets
-    
-    def save_signature(self, crash):
-        savedata = ESCrash(crash, index=self.index)
-        savedata[self.name] = self.get_signature(crash)
-        return savedata

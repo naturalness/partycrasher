@@ -24,18 +24,43 @@ from topN import TopN, TopNLoose, TopNAddress, TopNFile
 from es_crash import ESCrash
 from elasticsearch import Elasticsearch
 import elasticsearch.helpers
+from bucketer import MLT
 
+es = Elasticsearch()
 comparisons = {
-    'top1': {'comparer': TopN(1)}, 
-    'top2': {'comparer': TopN(2)},
-    'top3': {'comparer': TopN(3)},
-    'top3l': {'comparer': TopNLoose(3)},
-    'top3a': {'comparer': TopNAddress(3)},
-    'top1file' : {'comparer': TopNFile(1)},
+    'top1': {'comparer': TopN, 'kwargs': {'n':1}}, 
+    'top2': {'comparer': TopN, 'kwargs': {'n':2}},
+    'top3': {'comparer': TopN, 'kwargs': {'n':3}},
+    'top3l': {'comparer': TopNLoose, 'kwargs': {'n':3}},
+    'top3a': {'comparer': TopNAddress, 'kwargs': {'n':3}},
+    'top1file' : {'comparer': TopNFile, 'kwargs': {'n':1}},
+    'mlt': {'bucketer': MLT, 'kwargs': {}},
 }
 
-#TODO: MISSING CODE HERE TO ITERATE OVER EVERYTHING IN ELASTIC
-es = Elasticsearch()
+max_buckets = 1
+
+for comparison in comparisons:
+    comparison_data = comparisons[comparison]
+    if 'comparer' in comparison_data:
+        kwargs = comparison_data['kwargs']
+        comparison_data['comparer'] = (
+            comparison_data['comparer'](
+                es=es,
+                name=comparison,
+                index=comparison,
+                max_buckets=max_buckets,
+                **kwargs)
+            )
+    elif 'bucketer' in comparison_data:
+        kwargs = comparison_data['kwargs']
+        comparison_data['bucketer'] = (
+            comparison_data['bucketer'](
+                es=es,
+                index=comparison,
+                max_buckets=max_buckets,
+                **kwargs)
+            )
+
 oracle_all = elasticsearch.helpers.scan(es,
     index='oracle',
     query={
@@ -106,36 +131,13 @@ for database_id in sorted(all_ids.keys()):
             comparison_data['tn'] = 0
         if not ('fn' in comparison_data):
             comparison_data['fn'] = 0
-        comparer = comparison_data['comparer']
-        this_signature = comparer.get_signature(crashdata)
-        simulation_match = es.search(
-            index=comparison,
-            body={
-                'query': {
-                    'filtered':{
-                        'query': {
-                            'match_all': {}
-                            },
-                        'filter': {
-                            'term': {
-                                comparison: this_signature,
-                            }
-                        }
-                    }
-                },
-                'aggregations': {
-                    'buckets': {
-                        'terms': {
-                            'field': 'bucket',
-                            'size': 1
-                        }
-                    }
-                }
-            })
-        simulation_buckets = {}
-        for simulation_result in simulation_match['aggregations']['buckets']['buckets']:
-            simulation_bucket = simulation_result['key']
-            simulation_buckets[simulation_bucket] = True
+        if 'comparer' in comparison_data:
+            bucketer = comparison_data['comparer']
+            comparer = comparison_data['comparer']
+        else:
+            bucketer = comparison_data['bucketer']
+            comparer = None
+        simulation_buckets = bucketer.bucket(crashdata)
         for bucket in seen_buckets:
             if bucket == 'new':
                 if len(simulation_buckets) == 0:
@@ -184,8 +186,10 @@ for database_id in sorted(all_ids.keys()):
             except ZeroDivisionError:
                 pass
         # add to the simulation data set now that we've seen it
-        simulationdata = ESCrash(crashdata, index=comparison)
-        simulationdata[comparison] = this_signature
+        if comparer is not None:
+            simulationdata = comparer.save_signature(crashdata)
+        else:
+            simulationdata = ESCrash(crashdata, index=comparison)
         simulationdata['bucket'] = oracledata['bucket']
         es.indices.refresh(index=comparison)
     crashes_so_far += 1

@@ -23,7 +23,8 @@ import re
 
 class TopN(Comparer):
 
-    def __init__(self, n=3):
+    def __init__(self, n=3, *args, **kwargs):
+        super(TopN, self).__init__(*args, **kwargs)
         self.n = n
 
     def get_signature(self, crash):
@@ -90,7 +91,8 @@ class TopNFile(Comparer):
 
     """
 
-    def __init__(self, n=1):
+    def __init__(self, n=1, *args, **kwargs):
+        super(TopNFile, self).__init__(*args, **kwargs)
         self.n = n
 
     def get_signature(self, crash):
