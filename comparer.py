@@ -72,3 +72,39 @@ class Comparer(Bucketer):
         savedata = ESCrash(crash, index=self.index)
         savedata[self.name] = self.get_signature(crash)
         return savedata
+
+    def create_index(self):
+        self.es.indices.create(index=self.index, ignore=400,
+        body={
+            'mappings': {
+                'crash': {
+                    'properties': {
+                        'database_id': {
+                            'type': 'string',
+                            'index': 'not_analyzed'
+                            },
+                        'bucket': {
+                            'type': 'string',
+                            'index': 'not_analyzed',
+                            },
+                        self.name: {
+                            'type': 'string',
+                            'index': 'not_analyzed',
+                            },
+                        }
+                    }
+                },
+            'settings': {
+                'analysis': {
+                    'analyzer': {
+                        'default': {
+                            'type': 'custom',
+                            'char_filter': [],
+                            'tokenizer': 'whitespace',
+                            'filter': [],
+                            }
+                        }
+                    }
+                }
+            }
+        )

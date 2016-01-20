@@ -24,9 +24,9 @@ from topN import TopN, TopNLoose, TopNAddress, TopNFile
 from es_crash import ESCrash
 from elasticsearch import Elasticsearch
 import elasticsearch.helpers
-from bucketer import MLT
+from bucketer import MLT, MLTf, MLTlc, MLTw
 
-es = Elasticsearch()
+es = Elasticsearch(retry_on_timeout=True)
 comparisons = {
     'top1': {'comparer': TopN, 'kwargs': {'n':1}}, 
     'top2': {'comparer': TopN, 'kwargs': {'n':2}},
@@ -34,7 +34,15 @@ comparisons = {
     'top3l': {'comparer': TopNLoose, 'kwargs': {'n':3}},
     'top3a': {'comparer': TopNAddress, 'kwargs': {'n':3}},
     'top1file' : {'comparer': TopNFile, 'kwargs': {'n':1}},
-    'mlt': {'bucketer': MLT, 'kwargs': {}},
+    #'mlt1': {'bucketer': MLT, 'kwargs': {}},
+    'mlt4': {'bucketer': MLT, 'kwargs': {'thresh':4.0}},
+    'mltlc4': {'bucketer': MLTlc, 'kwargs': {'thresh':4.0}},
+    'mltw4': {'bucketer': MLTlc, 'kwargs': {'thresh':4.0}},
+    'mltf3': {'bucketer': MLTf, 'kwargs': {'thresh':3.0}},
+    'mltf4': {'bucketer': MLTf, 'kwargs': {'thresh':4.0}},
+    'mltf6': {'bucketer': MLTf, 'kwargs': {'thresh':6.0}},
+    #'mlta': {'bucketer': MLT, 'kwargs': {'use_aggs':True}},
+    #'mlta2': {'bucketer': MLT, 'kwargs': {'use_aggs':True, 'thresh':2.0}},
 }
 
 max_buckets = 1
@@ -51,6 +59,7 @@ for comparison in comparisons:
                 max_buckets=max_buckets,
                 **kwargs)
             )
+        comparison_data['bucketer'] = comparison_data['comparer']
     elif 'bucketer' in comparison_data:
         kwargs = comparison_data['kwargs']
         comparison_data['bucketer'] = (
@@ -87,31 +96,13 @@ crashes_so_far = 0
 
 # reset simulation index for each comparison type
 # for time-travel prevention
-for comparison in comparisons:
+print "Resetting indices..."
+for comparison in sorted(comparisons.keys()):
+    print "Deleting index %s" % comparison
     es.indices.delete(index=comparison, ignore=[400, 404])
-    es.indices.create(index=comparison, ignore=400,
-                body={
-                    'mappings': {
-                        'crash': {
-                            'properties': {
-                                'database_id': {
-                                    'type': 'string',
-                                    'index': 'not_analyzed'
-                                    },
-                                'bucket': {
-                                    'type': 'string',
-                                    'index': 'not_analyzed',
-                                    },
-                                comparison: {
-                                    'type': 'string',
-                                    'index': 'not_analyzed',
-                                    },
-                                }
-                            }
-                        }
-                    }
-                )
-    es.cluster.health(wait_for_status='yellow')
+    comparisons[comparison]['bucketer'].create_index()
+es.cluster.health(wait_for_status='yellow')
+print "Running simulations..."
 
 for database_id in sorted(all_ids.keys()):
     oracledata = ESCrash(database_id, index='oracle')
@@ -121,7 +112,7 @@ for database_id in sorted(all_ids.keys()):
     #print database_id
     if (crashes_so_far % 100) == 0:
         print "in %i/%i crashes and %i/%i bugkets:" % (crashes_so_far, len(all_ids), len(seen_buckets), len(all_buckets))
-    for comparison in comparisons:
+    for comparison in sorted(comparisons.keys()):
         comparison_data = comparisons[comparison]
         if not ('tp' in comparison_data):
             comparison_data['tp'] = 0

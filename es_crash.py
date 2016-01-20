@@ -89,7 +89,7 @@ class ESCrash(Crash):
     __metaclass__ = ESCrashMeta
 
     # Global ES connection
-    es = Elasticsearch()
+    es = Elasticsearch(retry_on_timeout=True)
     crashes = {}
     
     @classmethod
