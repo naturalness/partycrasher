@@ -26,7 +26,8 @@ from elasticsearch import Elasticsearch
 import elasticsearch.helpers
 from bucketer import MLT, MLTf, MLTlc, MLTw
 
-es = Elasticsearch(retry_on_timeout=True)
+es = ESCrash.es
+
 comparisons = {
     'top1': {'comparer': TopN, 'kwargs': {'n':1}}, 
     'top2': {'comparer': TopN, 'kwargs': {'n':2}},
@@ -66,6 +67,7 @@ for comparison in comparisons:
             comparison_data['bucketer'](
                 es=es,
                 index=comparison,
+                name=comparison,
                 max_buckets=max_buckets,
                 **kwargs)
             )
@@ -180,7 +182,11 @@ for database_id in sorted(all_ids.keys()):
         if comparer is not None:
             simulationdata = comparer.save_signature(crashdata)
         else:
-            simulationdata = ESCrash(crashdata, index=comparison)
+            if len(simulation_buckets) > 0:
+                assign = simulation_buckets[0]
+            else:
+                assign = 'bucket:' + crashdata['database_id'] # Make a new bucket
+            simulationdata = bucketer.assign_save_bucket(crashdata, bucket=assign)
         simulationdata['bucket'] = oracledata['bucket']
         es.indices.refresh(index=comparison)
     crashes_so_far += 1

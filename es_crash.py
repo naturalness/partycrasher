@@ -32,8 +32,9 @@ class ESCrashMeta(type):
     # It's not my fault, the only way to do this is with metaclasses.
     # I seriously tried.
     _cached = {}
-    def __call__(cls, crash=None, index='crashes'):
-        cls.index_create(index)
+    def __call__(cls, crash=None, index='crashes', unsafe=False):
+        if not unsafe:
+            cls.index_create(index)
         # This is the case that the constructor was called with a whole
         # crash datastructure
         if index not in cls._cached:
@@ -46,7 +47,10 @@ class ESCrashMeta(type):
                     assert(Crash(already) == crash)
                     return already
                 # We don't have it in memory so see if its already in ES
-                existing = cls.getrawbyid(crash['database_id'], index=index)
+                if not unsafe:
+                    existing = cls.getrawbyid(crash['database_id'], index=index)
+                else:
+                    existing = None
                 if not existing is None:
                     # It is already in elastic search
                     # make sure its the same data
@@ -57,12 +61,29 @@ class ESCrashMeta(type):
                     return newish
                 # It's not in ES, so add it
                 else:
-                    r = cls.es.create(index=index,
-                                doc_type='crash',
-                                body=crash,
-                                id=crash['database_id'],
-                                )
-                    assert r['created']
+                    try:
+                        r = cls.es.create(index=index,
+                                    doc_type='crash',
+                                    body=crash,
+                                    id=crash['database_id'],
+                                    )
+                        assert r['created']
+                    except elasticsearch.exceptions.ConflictError as e:
+                        if 'DocumentAlreadyExistsException' in e.error:
+                            print "Got DocumentAlreadyExistsException on create!"
+                            time.sleep(5) # Let ES think about its life...
+                            already = cls.getrawbyid(crash['database_id'], index=index)
+                            if not already is None:
+                                # It got added...
+                                # I think what is happening here is that the
+                                # python client lib is retrying after the create
+                                # times out, but ES did recieve the create and
+                                # created the document but didn't return in time
+                                assert(Crash(already) == crash)
+                            else:
+                                raise
+                        else:
+                            raise
                     new = super(ESCrashMeta, cls).__call__(crash=crash, index=index)
                     # Cache it as a weak reference
                     cls._cached[index][crash['database_id']] = new

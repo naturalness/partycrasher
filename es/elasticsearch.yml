@@ -1,41 +1,8 @@
 node.local: true # diable network
 discovery.zen.ping.multicast: false
-index.number_of_shards: 1
 index.number_of_replicas: 0
-processors: 1
 index.store.throttle.type: none
 index.merge.scheduler.max_thread_count: 1
-threadpool:
-    index:
-        size: 1
-        type: fixed
-    search:
-        size: 1
-        type: fixed
-    suggest:
-        size: 1
-        type: fixed
-    get:
-        size: 1
-        type: fixed
-    bulk:
-        size: 1
-        type: fixed
-    percolate:
-        size: 1
-        type: fixed
-    snapshot:
-        size: 1
-        type: fixed
-    warmer:
-        size: 1
-        type: fixed
-    refresh:
-        size: 1
-        type: fixed
-    listener:
-        size: 1
-        type: fixed
 
 
 ##################### Elasticsearch Configuration Example #####################

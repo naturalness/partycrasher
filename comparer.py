@@ -22,13 +22,10 @@ from es_crash import ESCrash
 
 class Comparer(Bucketer):
     
-    def __init__(self, index='crashes', es=None, name=None, *args, **kwargs):
+    def __init__(self, index='crashes', es=None, *args, **kwargs):
         super(Comparer, self).__init__(*args, **kwargs)
         self.index = index
         self.es = es
-        if name is None:
-            name = self.__class__.__name__.lower()
-        self.name = name
 
     def get_signature(self, crash):
         assert isinstance(crash, Crash)
@@ -73,38 +70,3 @@ class Comparer(Bucketer):
         savedata[self.name] = self.get_signature(crash)
         return savedata
 
-    def create_index(self):
-        self.es.indices.create(index=self.index, ignore=400,
-        body={
-            'mappings': {
-                'crash': {
-                    'properties': {
-                        'database_id': {
-                            'type': 'string',
-                            'index': 'not_analyzed'
-                            },
-                        'bucket': {
-                            'type': 'string',
-                            'index': 'not_analyzed',
-                            },
-                        self.name: {
-                            'type': 'string',
-                            'index': 'not_analyzed',
-                            },
-                        }
-                    }
-                },
-            'settings': {
-                'analysis': {
-                    'analyzer': {
-                        'default': {
-                            'type': 'custom',
-                            'char_filter': [],
-                            'tokenizer': 'whitespace',
-                            'filter': [],
-                            }
-                        }
-                    }
-                }
-            }
-        )

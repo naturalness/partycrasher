@@ -16,88 +16,31 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import json
-from crash import Crash 
+import json, uuid
+from crash import Crash
+from es_crash import ESCrash
+
 
 class Bucketer(object):
     """Superclass for bucketers which require pre-existing data to work."""
     
-    def __init__(self, max_buckets=0):
+    def __init__(self, 
+                 max_buckets=0, 
+                 name=None, 
+                 index='crashes',
+                 es=None,
+                 ):
         self.max_buckets = max_buckets
+        if name is None:
+            name = self.__class__.__name__.lower()
+        self.name = name
+        self.index = index
+        self.es = es
     
     def bucket(self, crash):
         assert isinstance(crash, Crash)
         raise NotImplementedError("I don't know how to generate a signature for this crash.")
     
-    
-class MLT(Bucketer):
-    
-    def __init__(self,
-                 index='crashes',
-                 es=None,
-                 thresh=1.0,
-                 use_aggs=False,
-                 *args,
-                 **kwargs):
-        super(MLT, self).__init__(*args, **kwargs)
-        self.index = index
-        self.es = es
-        self.thresh = thresh
-        self.use_aggs = use_aggs
-        
-    def bucket(self, crash):
-        assert isinstance(crash, Crash)
-        matches = self.es.search(
-        index=self.index,
-        body={
-            '_source': ['bucket'],
-            'size': self.max_buckets,
-            'min_score': self.thresh,
-            'query': {
-            'more_like_this': {
-                'docs': [{
-                    '_index': self.index,
-                    '_type': 'crash',
-                    'doc': crash,
-                    }],
-                'max_query_terms': 2500,
-                'minimum_should_match': 0,
-                'min_term_freq': 0,
-                'min_doc_freq': 0,
-                },
-                },
-            'aggregations': {
-                'buckets': {
-                    'terms': {
-                        'field': 'bucket',
-                        'size': self.max_buckets
-                    },
-                    'aggs': {
-                        'top': {
-                            'top_hits': {
-                                'size': 1,
-                                '_source': {
-                                    'include': ['database_id'],
-                                    }
-                                }
-                            }
-                        }
-                }
-            }
-        })
-        matching_buckets=[]
-        if self.use_aggs:
-            for match in matches['aggregations']['buckets']['buckets']:
-                assert match['top']['hits']['max_score'] >= self.thresh
-                matching_buckets.append(match['key'])
-        else:
-            for match in matches['hits']['hits']:
-                bucket = match['_source']['bucket']
-                if bucket not in matching_buckets:
-                    matching_buckets.append(bucket)
-        return matching_buckets
-
-
     def create_index(self):
         self.es.indices.create(index=self.index, ignore=400,
         body={
@@ -109,6 +52,10 @@ class MLT(Bucketer):
                             'index': 'not_analyzed'
                             },
                         'bucket': {
+                            'type': 'string',
+                            'index': 'not_analyzed',
+                            },
+                        self.name: {
                             'type': 'string',
                             'index': 'not_analyzed',
                             },
@@ -129,6 +76,86 @@ class MLT(Bucketer):
                 }
             }
         )
+    
+    def assign_bucket(self, crash):
+        buckets = self.bucket(crash)
+        if len(buckets) > 0:
+            bucket = buckets[0]
+        else:
+            bucket = 'bucket:' + crash['database_id'] # Make a new bucket
+
+    def assign_save_bucket(self, crash, bucket=None):
+        if bucket is None:
+            bucket = self.assign_bucket(crash)
+        savedata = ESCrash(crash, index=self.index)
+        savedata[self.name] = bucket
+        return savedata
+
+    
+class MLT(Bucketer):
+    
+    def __init__(self,
+                 thresh=1.0,
+                 use_aggs=False,
+                 *args,
+                 **kwargs):
+        super(MLT, self).__init__(*args, **kwargs)
+        self.thresh = thresh
+        self.use_aggs = use_aggs
+        
+    def bucket(self, crash):
+        assert isinstance(crash, Crash)
+        body={
+            '_source': ['bucket'],
+            'size': self.max_buckets,
+            'min_score': self.thresh,
+            'query': {
+            'more_like_this': {
+                'docs': [{
+                    '_index': self.index,
+                    '_type': 'crash',
+                    'doc': crash,
+                    }],
+                'max_query_terms': 2500,
+                'minimum_should_match': 0,
+                'min_term_freq': 0,
+                'min_doc_freq': 0,
+                },
+            },
+        }
+        if self.use_aggs:
+            body['aggregations'] ={
+                'buckets': {
+                    'terms': {
+                        'field': 'bucket',
+                        'size': self.max_buckets
+                    },
+                    'aggs': {
+                        'top': {
+                            'top_hits': {
+                                'size': 1,
+                                '_source': {
+                                    'include': ['database_id'],
+                                    }
+                                }
+                            }
+                        }
+                }
+            };
+        matches = self.es.search(index=self.index,body=body)
+        matching_buckets=[]
+        if self.use_aggs:
+            for match in matches['aggregations']['buckets']['buckets']:
+                assert match['top']['hits']['max_score'] >= self.thresh
+                matching_buckets.append(match['key'])
+        else:
+            for match in matches['hits']['hits']:
+                bucket = match['_source']['bucket']
+                if bucket not in matching_buckets:
+                    matching_buckets.append(bucket)
+        return matching_buckets
+
+
 
 class MLTf(MLT):
     """MLT with an analyzer inded to capture CamelCase"""
