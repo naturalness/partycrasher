@@ -18,6 +18,7 @@
 
 import datetime, time
 from crash import Crash, Stacktrace, Stackframe
+import elasticsearch
 from elasticsearch import Elasticsearch
 from weakref import WeakValueDictionary
 
