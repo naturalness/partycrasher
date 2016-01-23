@@ -80,7 +80,7 @@ class ESCrashMeta(type):
                                 # python client lib is retrying after the create
                                 # times out, but ES did recieve the create and
                                 # created the document but didn't return in time
-                                assert(Crash(already) == crash)
+                                pass
                             else:
                                 raise
                         else:

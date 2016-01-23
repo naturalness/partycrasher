@@ -68,7 +68,7 @@ def main():
     cursor.execute("SELECT name, url, lp_id, issues.description FROM issues_ext_launchpad INNER JOIN issues INNER JOIN attachments ON (attachments.issue_id = issues.id AND issues_ext_launchpad.issue_id = issues.id);")
     for row in cursor:
         name, url, bugid, description = row
-        if re.search('CoreDump', name, flags=re.IGNORECASE):
+        if re.search('Stacktrace', name, flags=re.IGNORECASE) is None:
             continue
         bugket_id = bugs_to_bugkets[bugid]
         str_bugid = "%010i" % (bugid)

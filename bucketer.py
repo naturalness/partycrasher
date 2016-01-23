@@ -16,10 +16,9 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import json, uuid
+import json, uuid, time
 from crash import Crash
 from es_crash import ESCrash
-
 
 class Bucketer(object):
     """Superclass for bucketers which require pre-existing data to work."""
@@ -83,6 +82,7 @@ class Bucketer(object):
             bucket = buckets[0]
         else:
             bucket = 'bucket:' + crash['database_id'] # Make a new bucket
+        return bucket
 
     def assign_save_bucket(self, crash, bucket=None):
         if bucket is None:
@@ -103,10 +103,12 @@ class MLT(Bucketer):
         self.thresh = thresh
         self.use_aggs = use_aggs
         
-    def bucket(self, crash):
+    def bucket(self, crash, bucket_field=None):
+        if bucket_field is None:
+            bucket_field = self.name
         assert isinstance(crash, Crash)
         body={
-            '_source': ['bucket'],
+            '_source': [bucket_field],
             'size': self.max_buckets,
             'min_score': self.thresh,
             'query': {
@@ -127,7 +129,7 @@ class MLT(Bucketer):
             body['aggregations'] ={
                 'buckets': {
                     'terms': {
-                        'field': 'bucket',
+                        'field': bucket_field,
                         'size': self.max_buckets
                     },
                     'aggs': {
@@ -150,12 +152,22 @@ class MLT(Bucketer):
                 matching_buckets.append(match['key'])
         else:
             for match in matches['hits']['hits']:
-                bucket = match['_source']['bucket']
+                try:
+                    bucket = match['_source'][bucket_field]
+                except KeyError:
+                    #self.es.indices.flush(index=self.index)
+                    #print crash['database_id']
+                    #time.sleep(1)
+                    #return self.bucket(crash, bucket_field)
+                    print json.dumps(matches, indent=4)
+                    raise
                 if bucket not in matching_buckets:
                     matching_buckets.append(bucket)
         return matching_buckets
 
-
+    def alt_bucket(self, crash, bucket_field='bucket'):
+        return self.bucket(crash, bucket_field)
+        
 
 class MLTf(MLT):
     """MLT with an analyzer inded to capture CamelCase"""

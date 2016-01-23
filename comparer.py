@@ -34,7 +34,7 @@ class Comparer(Bucketer):
     def compare(self, a, b):
         return (self.get_signature(a) == self.get_signature(b))
     
-    def bucket(self, crash):
+    def alt_bucket(self, crash, field='bucket'):
         assert isinstance(crash, Crash)
         matches = self.es.search(
         index=self.index,
@@ -54,7 +54,7 @@ class Comparer(Bucketer):
             'aggregations': {
                 'buckets': {
                     'terms': {
-                        'field': 'bucket',
+                        'field': field,
                         'size': self.max_buckets
                     }
                 }
@@ -70,3 +70,6 @@ class Comparer(Bucketer):
         savedata[self.name] = self.get_signature(crash)
         return savedata
 
+    def bucket(self, crash, bucket_field=None):
+        """Must return an array!"""
+        return [self.get_signature(crash)]

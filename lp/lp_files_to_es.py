@@ -29,6 +29,7 @@ buckets = []
 
 from elasticsearch import Elasticsearch
 bugs_total = 0
+no_stacktrace = 0
 
 for bucketdir in os.listdir(topdir):
     bucket = bucketdir
@@ -55,6 +56,7 @@ for bucketdir in os.listdir(topdir):
                     crashdata = crash.Crash.load_from_file(bugdir)
                 except IOError as e:
                     if "No stacktrace" in str(e):
+                        no_stacktrace += 1
                         continue
                     else:
                         raise
@@ -73,3 +75,4 @@ for bucketdir in os.listdir(topdir):
                 oracledata['bucket'] = bucket
             bugs_total += 1
 print str(bugs_total) + " loaded"
+print str(no_stacktrace) + " thrown out because of unparsable stacktraces"
