@@ -112,6 +112,41 @@ class TopNFile(Comparer):
             signature += crash['stacktrace'][i]['file']
         return signature
 
+class TopNModule(Comparer):
+    """
+    Rule 2. Top frame comparison. From:
+
+          S. Wang, F. Khomh, and Y.  Zou, “Improving bug localization using
+          correlations in crash reports,” in 2013 10th IEEE Working Conference
+          on Mining Software Repositories (MSR), 2013, pp. 247–256.
+
+    """
+
+    def __init__(self, n=1, *args, **kwargs):
+        super(TopNModule, self).__init__(*args, **kwargs)
+        self.n = n
+
+    def get_signature(self, crash):
+        signature = u''
+        for i in range(0, self.n):
+            if i >= len(crash['stacktrace']):
+                return signature
+            if len(signature) > 0:
+                signature += STACK_SEPARATOR
+            #print crash['stacktrace'][i]
+            if ('file' in crash['stacktrace'][i]
+                and not crash['stacktrace'][i]['file'] is None):
+                signature += crash['stacktrace'][i]['file']
+                continue
+            if ('dylib' in crash['stacktrace'][i]
+                and not crash['stacktrace'][i]['dylib'] is None):
+                signature += crash['stacktrace'][i]['dylib']
+                continue
+            # This depends on the assumption that the database_id is
+            # unique, which is enforced by es_crash.py
+            signature += crash['database_id'] + "#" + str(i)
+        return signature
+
 import unittest
 class TestTopN(unittest.TestCase):
     exampleJson1 = '{\n'\

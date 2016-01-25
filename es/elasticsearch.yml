@@ -4,7 +4,6 @@ index.number_of_replicas: 0
 index.store.throttle.type: none
 index.merge.scheduler.max_thread_count: 1
 
-
 ##################### Elasticsearch Configuration Example #####################
 
 # This file contains an overview of various configuration settings,

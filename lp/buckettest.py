@@ -18,13 +18,13 @@
 
 from __future__ import division
 
-import os, sys, pprint, random, time, operator, math
+import os, sys, pprint, random, time, operator, math, csv
 import crash
-from topN import TopN, TopNLoose, TopNAddress, TopNFile
+from topN import TopN, TopNLoose, TopNAddress, TopNFile, TopNModule
 from es_crash import ESCrash
 from elasticsearch import Elasticsearch
 import elasticsearch.helpers
-from bucketer import MLT, MLTf, MLTlc, MLTw
+from bucketer import MLT, MLTf, MLTlc, MLTw, MLTstack
 
 es = ESCrash.es
 
@@ -37,13 +37,17 @@ comparisons = {
     'top1': {'comparer': TopN, 'kwargs': {'n':1}}, 
     'top2': {'comparer': TopN, 'kwargs': {'n':2}},
     'top3': {'comparer': TopN, 'kwargs': {'n':3}},
-    'top1l': {'comparer': TopNLoose, 'kwargs': {'n':1}},
+    'mltw4': {'bucketer': MLTw, 'kwargs': {'thresh':4.0}},
+    'mlts2': {'bucketer': MLTstack, 'kwargs': {'thresh':2.5}},
+    'mlts3': {'bucketer': MLTstack, 'kwargs': {'thresh':3.0}},
     'top1a': {'comparer': TopNAddress, 'kwargs': {'n':1}},
     'top1f' : {'comparer': TopNFile, 'kwargs': {'n':1}},
+    'top1m' : {'comparer': TopNModule, 'kwargs': {'n':1}},
+    # trash pile vvvvv
+    #'top1l': {'comparer': TopNLoose, 'kwargs': {'n':1}},
     #'mlt1': {'bucketer': MLT, 'kwargs': {}},
     #'mlt4': {'bucketer': MLT, 'kwargs': {'thresh':4.0}},
     #'mltlc4': {'bucketer': MLTlc, 'kwargs': {'thresh':4.0}},
-    'mltw4': {'bucketer': MLTlc, 'kwargs': {'thresh':4.0}},
     #'mltf3': {'bucketer': MLTf, 'kwargs': {'thresh':3.0}},
     #'mltf4': {'bucketer': MLTf, 'kwargs': {'thresh':4.0}},
     #'mltf6': {'bucketer': MLTf, 'kwargs': {'thresh':6.0}},
@@ -55,6 +59,19 @@ max_buckets = 1
 
 for comparison in comparisons:
     comparison_data = comparisons[comparison]
+    comparison_data['csvfileh'] = open(comparison + '.csv', 'wb')
+    comparison_data['csvfile'] = csv.writer(comparison_data['csvfileh'])
+    comparison_data['csvfile'].writerow([
+        'n',
+        'b3p',
+        'b3r',
+        'b3f',
+        'purity',
+        'invpur',
+        'purf',
+        'buckets',
+        'obuckets',
+        ])
     if 'comparer' in comparison_data:
         kwargs = comparison_data['kwargs']
         comparison_data['comparer'] = (
@@ -100,7 +117,7 @@ del oracle_all
 print str(len(all_ids)) + " IDs found in oracle"
 crashes_so_far = 0
 print_after = 100
-increasing_spacing = True
+increasing_spacing = False
 
 def argmax(d):
     mv = None
@@ -121,6 +138,8 @@ for comparison in sorted(comparisons.keys()):
 es.cluster.health(wait_for_status='yellow')
 print "Running simulations..."
 
+interval = print_after
+
 for database_id in sorted(all_ids.keys()):
     oracledata = ESCrash(database_id, index='oracle')
     crashdata = ESCrash(database_id)
@@ -131,9 +150,9 @@ for database_id in sorted(all_ids.keys()):
     if ((crashes_so_far >= print_after)
         or (crashes_so_far >= (len(all_ids)-2))):
         if increasing_spacing:
-            print_after = (int(math.sqrt(print_after)) + 10) ** 2
+            print_after = (int(math.sqrt(print_after)) + int(math.sqrt(interval))) ** 2
         else:
-            print_after += print_after
+            print_after += interval
         do_print = True
         print "in %i/%i crashes and %i/%i bugkets:" % (crashes_so_far, len(all_ids), len(seen_buckets), len(all_buckets))
         if mode == 'purity':
@@ -302,7 +321,18 @@ for database_id in sorted(all_ids.keys()):
                     F,
                     len(assigned_totals)/len(oracle_totals)
                     )
-                        
+                comparison_data['csvfile'].writerow([
+                    N,
+                    precision,
+                    recall,
+                    fscore,
+                    purity,
+                    ipurity,
+                    F,
+                    len(assigned_totals),
+                    len(oracle_totals),
+                    ])
+                comparison_data['csvfileh'].flush()
         es.indices.refresh(index=comparison)
         #es.indices.flush(index=comparison)
     crashes_so_far += 1

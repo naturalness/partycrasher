@@ -106,7 +106,6 @@ class MLT(Bucketer):
     def bucket(self, crash, bucket_field=None):
         if bucket_field is None:
             bucket_field = self.name
-        assert isinstance(crash, Crash)
         body={
             '_source': [bucket_field],
             'size': self.max_buckets,
@@ -295,3 +294,9 @@ class MLTw(MLT):
                 }
             }
         )
+
+class MLTstack(MLTw):
+    
+    def bucket(self, crash, *args, **kwargs):
+        stack_only = {'stacktrace': crash['stacktrace']}
+        return super(MLTstack, self).bucket(stack_only, *args, **kwargs)
