@@ -128,6 +128,12 @@ class Crash(dict):
         if crash is None:
             raise NotImplementedError("I don't know how to load this!")
         return crash
+    
+    def __getitem__(self, key):
+        if key in self.synonyms:
+            return super(Crash, self).__getitem__(self.synonyms[key])
+        else:
+            return super(Crash, self).__getitem__(key)
 
     def __setitem__(self, key, val):
         # Translates key synonyms to their "canonical" key.

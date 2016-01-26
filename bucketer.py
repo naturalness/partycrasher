@@ -295,7 +295,57 @@ class MLTw(MLT):
             }
         )
 
-class MLTstack(MLTw):
+class MLTLerch(MLT):
+    """MLT with an analyzer as described in Lerch, 2013"""
+    def create_index(self):
+        print "Creating index: %s" % self.index
+        self.es.indices.create(index=self.index, ignore=400,
+        body={
+            'mappings': {
+                'crash': {
+                    'properties': {
+                        'database_id': {
+                            'type': 'string',
+                            'index': 'not_analyzed'
+                            },
+                        'bucket': {
+                            'type': 'string',
+                            'index': 'not_analyzed',
+                            },
+                        }
+                    }
+                },
+            'settings': {
+                'analysis': {
+                    'filter': {
+                        'lerch': {
+                            'type': 'length',
+                            'min': 4,
+                            'max': 2000,
+                            },
+                        },
+                    'tokenizer': {
+                        'lerch': {
+                            'type': 'pattern',
+                            'pattern': '\W+',
+                            'group': -1,
+                            },
+                        },
+                    'analyzer': {
+                        'default': {
+                            'type': 'custom',
+                            'char_filter': [],
+                            'tokenizer': 'lerch',
+                            'filter': ['lowercase', 'lerch'],
+                            }
+                        }
+                    }
+                }
+            }
+        )
+
+
+class MLTstack(MLTLerch):
     
     def bucket(self, crash, *args, **kwargs):
         stack_only = {'stacktrace': crash['stacktrace']}

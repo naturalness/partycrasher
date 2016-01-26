@@ -19,7 +19,7 @@
 
 from crash import Crash, Stacktrace, Stackframe
 
-import os, re, io, chardet, gzip
+import os, re, io, chardet, gzip, json
 import dateutil.parser as dateparser
 import unicodedata
 from logging import critical, error, warning, info, debug
@@ -47,7 +47,6 @@ save_fields = [
     "Uname", 
     "Signal", 
     "Title", 
-    "StacktraceTop", 
     "stacktrace.function", 
     "UserGroups", 
     "ProcEnviron", 
@@ -84,7 +83,6 @@ save_fields = [
     "dmi.board.version", 
     "InstallationDate", 
     "EcryptfsInUse", 
-    "Stacktrace", 
     "Release", 
     "dmi.chassis.version", 
     "Description", 
@@ -114,7 +112,6 @@ save_fields = [
     "CheckboxSubmission", 
     "version.libgl1-mesa-dri-experimental", 
     "version.libgl1-mesa-dri", 
-    "ThreadStacktrace", 
     "version.xserver-xorg-input-evdev", 
     "version.xserver-xorg", 
     "version.xserver-xorg-core", 
@@ -122,26 +119,32 @@ save_fields = [
     "version.ia32-libs", 
     "CurrentDesktop", 
     "DkmsStatus", 
-    "RelatedPackageVersions"
+    "RelatedPackageVersions",
+    "extra"
 ]
+
+def fixline(line_raw, encoding_guess="utf-8"):
+    line_raw=line_raw.decode(encoding=encoding_guess, errors='replace')
+    line = u""
+    for ch in line_raw:
+        if unicodedata.category(ch)[0] == 'C':
+            ch = u'?'
+            #raise ValueError("Bad encoding %s in: %s" % (ch.encode('unicode_escape'), line.encode('utf-8')))
+        elif ch == u'\ufffd':
+            ch = u'?'
+        line += ch
+    return line
+    
 
 class LaunchpadFrame(Stackframe):
     
     @classmethod
-    def load_from_strings(cls, line_raw, extras=None):
+    def load_from_strings(cls, line, extras=None):
         frame = LaunchpadFrame()
         matched = False
-        line = u""
-        for ch in line_raw:
-            if unicodedata.category(ch)[0] == 'C':
-                ch = u'?'
-                #raise ValueError("Bad encoding %s in: %s" % (ch.encode('unicode_escape'), line.encode('utf-8')))
-            elif ch == u'\ufffd':
-                ch = u'?'
-            line += ch
         try:
             if not matched: #number address in function (args) at file from lib
-                match = re.match('^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\(([^\)]*)\)\s+at\s+(\S+)\sfrom\s+(\S+)\s*$', line)
+                match = re.match(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\(([^\)]*)\)\s+at\s+(\S+)\sfrom\s+(\S+)\s*$', line)
                 if match is not None:
                     frame['depth'] = int(match.group(1))
                     frame['address'] = match.group(2)
@@ -151,7 +154,7 @@ class LaunchpadFrame(Stackframe):
                     frame['dylib'] = match.group(6)
                     matched = True
             if not matched: #number address in function (args) from lib
-                match = re.match('^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\(([^\)]*)\)\s+from\s+(.+?)\s*$', line)
+                match = re.match(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\(([^\)]*)\)\s+from\s+(.+?)\s*$', line)
                 if match is not None:
                     frame['depth'] = int(match.group(1))
                     frame['address'] = match.group(2)
@@ -160,7 +163,7 @@ class LaunchpadFrame(Stackframe):
                     frame['dylib'] = match.group(5)
                     matched = True
             if not matched: #number address function (args) from lib (missing in)
-                match = re.match('^#([\dx]+)\s+(\S+)\s+(.+?)\s+\(([^\)]*)\)\s+from\s+(.+?)\s*$', line)
+                match = re.match(r'^#([\dx]+)\s+(\S+)\s+(.+?)\s+\(([^\)]*)\)\s+from\s+(.+?)\s*$', line)
                 if match is not None:
                     frame['depth'] = int(match.group(1))
                     frame['address'] = match.group(2)
@@ -169,7 +172,7 @@ class LaunchpadFrame(Stackframe):
                     frame['dylib'] = match.group(5)
                     matched = True
             if not matched:  #number address in function (args) at file
-                match = re.match('^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\((.*?)\)\s+at\s+(\S+)\s*$', line)
+                match = re.match(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\((.*?)\)\s+at\s+(\S+)\s*$', line)
                 if match is not None:
                     frame['depth'] = int(match.group(1))
                     frame['address'] = match.group(2)
@@ -178,7 +181,7 @@ class LaunchpadFrame(Stackframe):
                     frame['file'] = match.group(5)
                     matched = True
             if not matched: #number function (args) at file
-                match = re.match('^#([\dx]+)\s+(.+?)\s+\((.*?)\)\s+at\s+(\S+)\s*$', line)
+                match = re.match(r'^#([\dx]+)\s+(.+?)\s+\((.*?)\)\s+at\s+(\S+)\s*$', line)
                 if match is not None:
                     frame['depth'] = int(match.group(1))
                     frame['function'] = match.group(2)
@@ -186,7 +189,7 @@ class LaunchpadFrame(Stackframe):
                     frame['file'] = match.group(4)
                     matched = True
             if not matched: #number address in function (args
-                match = re.match('^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s*\((.*?)\)?\s*$', line)
+                match = re.match(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s*\((.*?)\)?\s*$', line)
                 if match is not None:
                     assert ((not re.search(' at ', line))
                             or re.search('memory at ', line)
@@ -199,7 +202,7 @@ class LaunchpadFrame(Stackframe):
                     frame['args'] = match.group(4)
                     matched = True
             if not matched: #number address in function
-                match = re.match('^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s*$', line)
+                match = re.match(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s*$', line)
                 if match is not None:
                     assert (not re.search(' at ', line))
                     assert (not re.search(' from ', line))
@@ -209,7 +212,7 @@ class LaunchpadFrame(Stackframe):
                     frame['function'] = match.group(3)
                     matched = True
             if not matched: #number function (args
-                match = re.match('^#([\dx]+)\s+(.+?)\s+\((.*?)\)?\s*$', line)
+                match = re.match(r'^#([\dx]+)\s+(.+?)\s+\((.*?)\)?\s*$', line)
                 if match is not None:
                     assert ((not re.search(' at ', line))
                             or re.search('memory at ', line)
@@ -222,7 +225,7 @@ class LaunchpadFrame(Stackframe):
                     frame['args'] = match.group(3)
                     matched = True
             if not matched: #number <function>
-                match = re.match('^#(\d+)\s+(<.*?>)\s*$', line)
+                match = re.match(r'^#(\d+)\s+(<.*?>)\s*$', line)
                 if match is not None:
                     assert (not re.search(' at ', line))
                     assert (not re.search(' from ', line))
@@ -240,7 +243,7 @@ class LaunchpadFrame(Stackframe):
             for extra in extras:
                 extra_matched = False
                 if not extra_matched:
-                    match = re.match('^\s*at\s+([^\s:]+):(\d+)\s*$', extra)
+                    match = re.match(r'^\s*at\s+([^\s:]+):(\d+)\s*$', extra)
                     if match is not None:
                         frame['file'] = match.group(1)
                         frame['fileline'] = match.group(2)
@@ -268,7 +271,7 @@ class LaunchpadStack(Stacktrace):
         if 'gz' in path:
             # gzip doesn't support encoding= ... this may need a workaround
             with gzip.open(path) as stackfile:
-                stacklines = [line.decode(encoding=encoding_guess, errors='replace') for line in stackfile.readlines()]
+                stacklines = [fixline(line) for line in stackfile.readlines()]
         else:
             with io.open(path, encoding=encoding_guess, errors='replace') as stackfile:
                 stacklines = stackfile.readlines()
@@ -327,14 +330,21 @@ class LaunchpadCrash(Crash):
                 raise NotImplementedError("Missing %s, I don't know how to load this." % (post_path))
             with open(post_path) as postfile: post = postfile.read()
             crash['database_id'] = 'launchpad:' + os.path.basename(path)
-            matches = re.findall('^\s*(\S+):\s+(\S+(?:\s+\S+)*?)\s*$', post, re.MULTILINE)
-            if matches is not None:
-                for match in matches:
-                    crash[match[0]] = match[1]
+            prevfield = 'extra'
+            crash['extra'] = ''
+            for line in post.split('\n'):
+                line = fixline(line)
+                match = re.match(r'^(\S[^:]+):\s*(.*)\s*$', line)
+                if match is not None:
+                    #print repr(match.group(1)) + '|||' + repr(match.group(2))
+                    crash[match.group(1)] = match.group(2)
+                    prevfield = match.group(1)
+                else:
+                    crash[prevfield] += line + "\n"
             for key, value in list(crash.iteritems()): # limit the number of field mappings that ES creates
                 if not key in save_fields:
                     del crash[key]
-            crash['extra'] = post
+                    crash['extra'] += key + ": " + value + "\n"
             stack_path = None
             try_files = [
                 "Stacktrace.txt (retraced)",
@@ -361,6 +371,7 @@ class LaunchpadCrash(Crash):
                 skip_files.append(stack_path)
                 return cls.load_from_file(path, skip_files)
             crash['stacktrace'] = trace
+            #print json.dumps(crash, indent=4, default=repr)
         else:
             raise NotImplementedError("Not a directory, I don't know how to load this.")
         return crash

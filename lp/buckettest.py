@@ -34,15 +34,31 @@ assert mode in ['purity', 'accuracy']
 beta = 1.0
 
 comparisons = {
-    'top1': {'comparer': TopN, 'kwargs': {'n':1}}, 
-    'top2': {'comparer': TopN, 'kwargs': {'n':2}},
-    'top3': {'comparer': TopN, 'kwargs': {'n':3}},
-    'mltw4': {'bucketer': MLTw, 'kwargs': {'thresh':4.0}},
-    'mlts2': {'bucketer': MLTstack, 'kwargs': {'thresh':2.5}},
-    'mlts3': {'bucketer': MLTstack, 'kwargs': {'thresh':3.0}},
-    'top1a': {'comparer': TopNAddress, 'kwargs': {'n':1}},
-    'top1f' : {'comparer': TopNFile, 'kwargs': {'n':1}},
-    'top1m' : {'comparer': TopNModule, 'kwargs': {'n':1}},
+    'mlts1.0': {'bucketer': MLTstack, 'kwargs': {'thresh':1.0}},
+    'mlts2.25': {'bucketer': MLTstack, 'kwargs': {'thresh':2.25}},
+    'mlts3.25': {'bucketer': MLTstack, 'kwargs': {'thresh':3.25}},
+    'mlts3.5': {'bucketer': MLTstack, 'kwargs': {'thresh':3.5}},
+    'mlts3.75': {'bucketer': MLTstack, 'kwargs': {'thresh':3.75}},
+    'mlts4.5': {'bucketer': MLTstack, 'kwargs': {'thresh':4.5}},
+    'mlts5.5': {'bucketer': MLTstack, 'kwargs': {'thresh':5.5}},
+    'mlts7.0': {'bucketer': MLTstack, 'kwargs': {'thresh':7.0}},
+    # done vvvv
+    #'mlts2.0': {'bucketer': MLTstack, 'kwargs': {'thresh':2.0}},
+    #'mlts2.5': {'bucketer': MLTstack, 'kwargs': {'thresh':2.5}},
+    #'mlts2.75': {'bucketer': MLTstack, 'kwargs': {'thresh':2.75}},
+    #'mlts3.0': {'bucketer': MLTstack, 'kwargs': {'thresh':3.0}},
+    #'mlts4.0': {'bucketer': MLTstack, 'kwargs': {'thresh':4.0}},
+    #'mlts5.0': {'bucketer': MLTstack, 'kwargs': {'thresh':5.0}},
+    #'mlts6.0': {'bucketer': MLTstack, 'kwargs': {'thresh':6.0}},
+    #'mlts8.0': {'bucketer': MLTstack, 'kwargs': {'thresh':8.0}},
+    #'mlts10.0': {'bucketer': MLTstack, 'kwargs': {'thresh':10.0}},
+    #'top1': {'comparer': TopN, 'kwargs': {'n':1}}, 
+    #'top2': {'comparer': TopN, 'kwargs': {'n':2}},
+    #'top3': {'comparer': TopN, 'kwargs': {'n':3}},
+    #'mltw4': {'bucketer': MLTw, 'kwargs': {'thresh':4.0}},
+    #'top1a': {'comparer': TopNAddress, 'kwargs': {'n':1}},
+    #'top1f' : {'comparer': TopNFile, 'kwargs': {'n':1}},
+    #'top1m' : {'comparer': TopNModule, 'kwargs': {'n':1}},
     # trash pile vvvvv
     #'top1l': {'comparer': TopNLoose, 'kwargs': {'n':1}},
     #'mlt1': {'bucketer': MLT, 'kwargs': {}},
@@ -116,7 +132,7 @@ del oracle_all
 
 print str(len(all_ids)) + " IDs found in oracle"
 crashes_so_far = 0
-print_after = 100
+print_after = 1000
 increasing_spacing = False
 
 def argmax(d):
