@@ -158,7 +158,9 @@ plota(data, "buckets", "Total Number of Buckets Created", l=TRUE, ylim=c(0,14400
 dev.off()
 
 
-vals <- c("0.0", "0.25", "0.5", "1.0", "1.5",
+vals <- c("0.0", 
+#           "0.25",
+          "0.5", "1.0", "1.5",
           "2.0", "2.25", "2.5", "2.75", "3.0", "3.25", "3.5", "3.75",
           "4.0", "4.5", "5.0", "5.5", "6.0", "7.0", "8.0", "10.0")
 
@@ -174,22 +176,74 @@ f = lapply(1:length(data), function(ti){tail(data[[ti]][["b3f"]],n=1)})
 t = lapply(1:length(data), function(ti){paste0(" ", mnames[ti], " F=.",
                                                sprintf("%02i ", round(100*f[[ti]])))
                                         })
-svg(filename="prc.svg", width=col_width, height=col_width*0.99, 
+svg(filename="prc.svg", width=col_width, height=col_width, 
     family="Latin Modern Roman", pointsize=10)
 mypar(c(1,1))
-par(mar=c(1.75,2.0,0.75,0)+0.0)
+par(mar=c(1.75,2.0,1.75,0)+0.0)
 plot(p, r, xlim=c(0,1.01), ylim=c(0,1), asp=1,
-        ylab="", xlab="", axes=FALSE)
+        ylab="", xlab="", axes=FALSE,
+        pch=19, cex=linesx)
 axis(2, mgp=c(1.5, 0.5, 0), lwd=(1/shrink), pos=0) 
 axis(1, mgp=c(1.5, 0.5, 0), lwd=(1/shrink), pos=0)
 px = c(0, p, tail(p,n=1), 0)
 rx = c(head(r,n=1),r, 0, 0)
 polygon(px, rx, border=NA, col="#0000003f")
-reorientate = 1:5
+reorientate = (1:length(p))[p<0.5]
 text(p[reorientate], r[reorientate], labels=t[reorientate],
      adj=c(0,0.5), cex=mex, srt=15)
 text(p[-(reorientate)], r[-(reorientate)], labels=t[-(reorientate)],
      adj=c(1,0.5), cex=mex, srt=15)
-title(ylab="Recall", line=1.0)
-title(xlab="Precision", line=1.25)
+title(ylab="BCubed Recall", line=1.0)
+title(xlab="BCubed Precision", line=1.25)
+dev.off()
+
+
+methods <- c(
+            "cc.csv", 
+            "ccl.csv",  
+            "id.csv",
+            "idl.csv", 
+            "let.csv",
+            "letl.csv", 
+            "spc.csv", 
+            "spcl.csv",
+            "uni.csv", 
+            "unil.csv",
+            "mlts4.0.csv"
+            )
+mnames <- c(
+            "Camel", 
+            "camel",  
+            "Ident",
+            "ident", 
+            "Lett",
+            "lett", 
+            "Space", 
+            "space",
+            "Uni", 
+            "uni",
+            "Lerch"
+            )
+data = NULL
+data = lapply(setNames(methods, make.names(mnames)), 
+         read.csv)
+svg(filename="b3a.svg", width=page_width, height=height, 
+    family="Latin Modern Roman", pointsize=10)
+mypar(c(1,3))
+plota(data, "b3p", "BCubed Precision", l=FALSE)
+plota(data, "b3r", "BCubed Recall", l=TRUE, lpos="topleft")
+plota(data, "b3f", "BCubed F1-Score", l=FALSE)
+dev.off()
+svg(filename="pura.svg", width=page_width, height=height, 
+    family="Latin Modern Roman", pointsize=10)
+mypar(c(1,3))
+plota(data, "purity", "Purity", l=FALSE)
+plota(data, "invpur", "Inverse Purity", l=TRUE, lpos="topleft")
+plota(data, "purf", "Purity F1-Score", l=FALSE)
+dev.off()
+svg(filename="nbucketsa.svg", width=col_width, height=height, 
+    family="Latin Modern Roman", pointsize=10)
+mypar(c(1,1))
+plota(data, "buckets", "Total Number of Buckets Created", l=TRUE, ylim=c(0,14400), 
+    lpos="topleft", oracle="Oracle")
 dev.off()

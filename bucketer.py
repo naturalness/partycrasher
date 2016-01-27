@@ -21,13 +21,15 @@ from crash import Crash
 from es_crash import ESCrash
 
 class Bucketer(object):
-    """Superclass for bucketers which require pre-existing data to work."""
+    """Superclass for bucketers which require pre-existing data to work.
+    The default analyzer breaks on whitespace."""
     
     def __init__(self, 
                  max_buckets=0, 
                  name=None, 
                  index='crashes',
                  es=None,
+                 lowercase=False,
                  ):
         self.max_buckets = max_buckets
         if name is None:
@@ -35,12 +37,17 @@ class Bucketer(object):
         self.name = name
         self.index = index
         self.es = es
+        self.lowercase = lowercase
     
     def bucket(self, crash):
         assert isinstance(crash, Crash)
         raise NotImplementedError("I don't know how to generate a signature for this crash.")
     
     def create_index(self):
+        if self.lowercase:
+            filter_ = ['lowercase']
+        else:
+            filter_ = []
         self.es.indices.create(index=self.index, ignore=400,
         body={
             'mappings': {
@@ -68,7 +75,7 @@ class Bucketer(object):
                             'type': 'custom',
                             'char_filter': [],
                             'tokenizer': 'whitespace',
-                            'filter': [],
+                            'filter': filter_,
                             }
                         }
                     }
@@ -97,15 +104,19 @@ class MLT(Bucketer):
     def __init__(self,
                  thresh=1.0,
                  use_aggs=False,
+                 only_stack=False,
                  *args,
                  **kwargs):
         super(MLT, self).__init__(*args, **kwargs)
         self.thresh = thresh
         self.use_aggs = use_aggs
+        self.only_stack = only_stack
         
     def bucket(self, crash, bucket_field=None):
         if bucket_field is None:
             bucket_field = self.name
+        if self.only_stack:
+            crash = {'stacktrace': crash['stacktrace']}
         body={
             '_source': [bucket_field],
             'size': self.max_buckets,
@@ -166,11 +177,14 @@ class MLT(Bucketer):
 
     def alt_bucket(self, crash, bucket_field='bucket'):
         return self.bucket(crash, bucket_field)
-        
 
-class MLTf(MLT):
-    """MLT with an analyzer inded to capture CamelCase"""
+class MLTStandardUnicode(MLT):
+    """MLT with an analyzer breaking on spaces and then lowercasing"""
     def create_index(self):
+        if self.lowercase:
+            filter_ = ['lowercase']
+        else:
+            filter_ = []
         print "Creating index: %s" % self.index
         self.es.indices.create(index=self.index, ignore=400,
         body={
@@ -190,19 +204,12 @@ class MLTf(MLT):
                 },
             'settings': {
                 'analysis': {
-                    'tokenizer': {
-                        'alphanumplus': {
-                            'type': 'pattern',
-                            'pattern': '([^\\s][^A-Z_:.,\\s]*)',
-                            'group': 0,
-                            },
-                        },
                     'analyzer': {
                         'default': {
                             'type': 'custom',
                             'char_filter': [],
-                            'tokenizer': 'alphanumplus',
-                            'filter': ['lowercase'],
+                            'tokenizer': 'standard',
+                            'filter': filter_,
                             }
                         }
                     }
@@ -210,9 +217,13 @@ class MLTf(MLT):
             }
         )
 
-class MLTlc(MLT):
-    """MLT with a diffrent analyzer"""
+class MLTLetters(MLT):
+    """MLT with a diffrent analyzer (capture letter strings then optionally make them lowercase)"""
     def create_index(self):
+        if self.lowercase:
+            tokenizer = 'lowercase'
+        else:
+            tokenizer = 'letter'
         print "Creating index: %s" % self.index
         self.es.indices.create(index=self.index, ignore=400,
         body={
@@ -232,19 +243,11 @@ class MLTlc(MLT):
                 },
             'settings': {
                 'analysis': {
-                    'tokenizer': {
-                        'my_ngram_tokenizer': {
-                            'type': 'nGram',
-                            'min_gram': 1,
-                            'max_gram': 3,
-                            'token_chars': [],
-                            },
-                        },
                     'analyzer': {
                         'default': {
                             'type': 'custom',
                             'char_filter': [],
-                            'tokenizer': 'lowercase',
+                            'tokenizer': tokenizer,
                             'filter': [],
                             }
                         }
@@ -253,7 +256,8 @@ class MLTlc(MLT):
             }
         )
 
-class MLTw(MLT):
+
+class MLTIdentifier(MLT):
     """MLT with an analyzer intended to capture programming words"""
     def create_index(self):
         print "Creating index: %s" % self.index
@@ -275,20 +279,48 @@ class MLTw(MLT):
                 },
             'settings': {
                 'analysis': {
-                    'tokenizer': {
-                        'alphanum': {
-                            'type': 'pattern',
-                            'pattern': '([A-Za-z0-9_]+)',
-                            'group': 0,
-                            },
-                        },
                     'analyzer': {
                         'default': {
-                            'type': 'custom',
-                            'char_filter': [],
-                            'tokenizer': 'alphanum',
-                            'filter': ['lowercase'],
-                            }
+                            'type': 'pattern',
+                            'pattern': '([A-Za-z0-9_]+)',
+                            'lowercase': self.lowercase,
+                           }
+                        }
+                    }
+                }
+            }
+        )
+
+class MLTCamelCase(MLT):
+    """MLT intended to break up identifiers into sub-words"""
+    def create_index(self):
+        print "Creating index: %s" % self.index
+        self.es.indices.create(index=self.index, ignore=400,
+        body={
+            'mappings': {
+                'crash': {
+                    'properties': {
+                        'database_id': {
+                            'type': 'string',
+                            'index': 'not_analyzed'
+                            },
+                        'bucket': {
+                            'type': 'string',
+                            'index': 'not_analyzed',
+                            },
+                        }
+                    }
+                },
+            'settings': {
+                'analysis': {
+                    'analyzer': {
+                        'default': {
+                            'type': 'pattern',
+                            # From ES Docs: https://github.com/elastic/elasticsearch/blob/1.6/docs/reference/analysis/analyzers/pattern-analyzer.asciidoc
+                            # 2016-01-27
+                            'pattern': '([^\\p{L}\\d]+)|(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)|(?<=[\\p{L}&&[^\\p{Lu}]])(?=\\p{Lu})|(?<=\\p{Lu})(?=\\p{Lu}[\\p{L}&&[^\\p{Lu}]])',
+                            'lowercase': self.lowercase,
+                           }
                         }
                     }
                 }
@@ -343,10 +375,3 @@ class MLTLerch(MLT):
                 }
             }
         )
-
-
-class MLTstack(MLTLerch):
-    
-    def bucket(self, crash, *args, **kwargs):
-        stack_only = {'stacktrace': crash['stacktrace']}
-        return super(MLTstack, self).bucket(stack_only, *args, **kwargs)

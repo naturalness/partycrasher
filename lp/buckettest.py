@@ -24,7 +24,7 @@ from topN import TopN, TopNLoose, TopNAddress, TopNFile, TopNModule
 from es_crash import ESCrash
 from elasticsearch import Elasticsearch
 import elasticsearch.helpers
-from bucketer import MLT, MLTf, MLTlc, MLTw, MLTstack
+from bucketer import MLT, MLTStandardUnicode, MLTLetters, MLTIdentifier, MLTCamelCase
 
 es = ESCrash.es
 
@@ -34,45 +34,47 @@ assert mode in ['purity', 'accuracy']
 beta = 1.0
 
 comparisons = {
-    'mlts0.25': {'bucketer': MLTstack, 'kwargs': {'thresh':0.25}},
-    'mlts0.0': {'bucketer': MLTstack, 'kwargs': {'thresh':0.0}},
+    'spc': {'bucketer': MLT, 'kwargs': {'thresh':4.0, 'lowercase':False}},
+    'spcl': {'bucketer': MLT, 'kwargs': {'thresh':4.0, 'lowercase':True}},
+    'uni': {'bucketer': MLTStandardUnicode, 'kwargs': {'thresh':4.0, 'lowercase':False}},
+    'unil': {'bucketer': MLTStandardUnicode, 'kwargs': {'thresh':4.0, 'lowercase':True}},
+    'let': {'bucketer': MLTLetters, 'kwargs': {'thresh':4.0, 'lowercase':False}},
+    'letl': {'bucketer': MLTLetters, 'kwargs': {'thresh':4.0, 'lowercase':True}},
+    'id': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':False}},
+    'idl': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':True}},
+    'cc': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':4.0, 'lowercase':False}},
+    'ccl': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':4.0, 'lowercase':True}},
     # done vvvv
-    #'mlts0.5': {'bucketer': MLTstack, 'kwargs': {'thresh':0.5}},
-    #'mlts1.5': {'bucketer': MLTstack, 'kwargs': {'thresh':1.5}},
-    #'mlts1.0': {'bucketer': MLTstack, 'kwargs': {'thresh':1.0}},
-    'mlts2.25': {'bucketer': MLTstack, 'kwargs': {'thresh':2.25}},
-    #'mlts3.25': {'bucketer': MLTstack, 'kwargs': {'thresh':3.25}},
-    #'mlts3.5': {'bucketer': MLTstack, 'kwargs': {'thresh':3.5}},
-    #'mlts3.75': {'bucketer': MLTstack, 'kwargs': {'thresh':3.75}},
-    #'mlts4.5': {'bucketer': MLTstack, 'kwargs': {'thresh':4.5}},
-    #'mlts5.5': {'bucketer': MLTstack, 'kwargs': {'thresh':5.5}},
-    #'mlts7.0': {'bucketer': MLTstack, 'kwargs': {'thresh':7.0}},
-    #'mlts2.0': {'bucketer': MLTstack, 'kwargs': {'thresh':2.0}},
-    #'mlts2.5': {'bucketer': MLTstack, 'kwargs': {'thresh':2.5}},
-    #'mlts2.75': {'bucketer': MLTstack, 'kwargs': {'thresh':2.75}},
-    #'mlts3.0': {'bucketer': MLTstack, 'kwargs': {'thresh':3.0}},
-    #'mlts4.0': {'bucketer': MLTstack, 'kwargs': {'thresh':4.0}},
-    #'mlts5.0': {'bucketer': MLTstack, 'kwargs': {'thresh':5.0}},
-    #'mlts6.0': {'bucketer': MLTstack, 'kwargs': {'thresh':6.0}},
-    #'mlts8.0': {'bucketer': MLTstack, 'kwargs': {'thresh':8.0}},
-    #'mlts10.0': {'bucketer': MLTstack, 'kwargs': {'thresh':10.0}},
+    #'lerch0.25': {'bucketer': MLTLerch, 'kwargs': {'thresh':0.25, 'only_stack':True}},
+    #'lerch0.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':0.0, 'only_stack':True}},
+    #'lerch0.5': {'bucketer': MLTLerch, 'kwargs': {'thresh':0.5, 'only_stack':True}},
+    #'lerch1.5': {'bucketer': MLTLerch, 'kwargs': {'thresh':1.5, 'only_stack':True}},
+    #'lerch1.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':1.0, 'only_stack':True}},
+    #'lerch2.25': {'bucketer': MLTLerch, 'kwargs': {'thresh':2.25, 'only_stack':True}},
+    #'lerch3.25': {'bucketer': MLTLerch, 'kwargs': {'thresh':3.25, 'only_stack':True}},
+    #'lerch3.5': {'bucketer': MLTLerch, 'kwargs': {'thresh':3.5, 'only_stack':True}},
+    #'lerch3.75': {'bucketer': MLTLerch, 'kwargs': {'thresh':3.75, 'only_stack':True}},
+    #'lerch4.5': {'bucketer': MLTLerch, 'kwargs': {'thresh':4.5, 'only_stack':True}},
+    #'lerch5.5': {'bucketer': MLTLerch, 'kwargs': {'thresh':5.5, 'only_stack':True}},
+    #'lerch7.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':7.0, 'only_stack':True}},
+    #'lerch2.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':2.0, 'only_stack':True}},
+    #'lerch2.5': {'bucketer': MLTLerch, 'kwargs': {'thresh':2.5, 'only_stack':True}},
+    #'lerch2.75': {'bucketer': MLTLerch, 'kwargs': {'thresh':2.75, 'only_stack':True}},
+    #'lerch3.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':3.0, 'only_stack':True}},
+    #'lerch4.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':4.0, 'only_stack':True}},
+    #'lerch5.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':5.0, 'only_stack':True}},
+    #'lerch6.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':6.0, 'only_stack':True}},
+    #'lerch8.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':8.0, 'only_stack':True}},
+    #'lerch10.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':10.0, 'only_stack':True}},
     #'top1': {'comparer': TopN, 'kwargs': {'n':1}}, 
     #'top2': {'comparer': TopN, 'kwargs': {'n':2}},
     #'top3': {'comparer': TopN, 'kwargs': {'n':3}},
-    #'mltw4': {'bucketer': MLTw, 'kwargs': {'thresh':4.0}},
+    #'lerchC': {'bucketer': Lerch, 'kwargs': {'thresh':4.0, 'only_stack':False}},
     #'top1a': {'comparer': TopNAddress, 'kwargs': {'n':1}},
     #'top1f' : {'comparer': TopNFile, 'kwargs': {'n':1}},
     #'top1m' : {'comparer': TopNModule, 'kwargs': {'n':1}},
     # trash pile vvvvv
     #'top1l': {'comparer': TopNLoose, 'kwargs': {'n':1}},
-    #'mlt1': {'bucketer': MLT, 'kwargs': {}},
-    #'mlt4': {'bucketer': MLT, 'kwargs': {'thresh':4.0}},
-    #'mltlc4': {'bucketer': MLTlc, 'kwargs': {'thresh':4.0}},
-    #'mltf3': {'bucketer': MLTf, 'kwargs': {'thresh':3.0}},
-    #'mltf4': {'bucketer': MLTf, 'kwargs': {'thresh':4.0}},
-    #'mltf6': {'bucketer': MLTf, 'kwargs': {'thresh':6.0}},
-    #'mlta': {'bucketer': MLT, 'kwargs': {'use_aggs':True}},
-    #'mlta2': {'bucketer': MLT, 'kwargs': {'use_aggs':True, 'thresh':2.0}},
 }
 
 max_buckets = 1
