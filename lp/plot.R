@@ -1,3 +1,21 @@
+#!/usr/bin/env python
+
+#  Copyright (C) 2016 Joshua Charles Campbell
+
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#  
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#  
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 top1 = read.csv("top1.csv")
 methods <- c(
             "top1.csv", 
@@ -140,7 +158,8 @@ plota(data, "buckets", "Total Number of Buckets Created", l=TRUE, ylim=c(0,14400
 dev.off()
 
 
-vals <- c("1.0", "2.0", "2.25", "2.5", "2.75", "3.0", "3.25", "3.5", "3.75",
+vals <- c("0.0", "0.25", "0.5", "1.0", "1.5",
+          "2.0", "2.25", "2.5", "2.75", "3.0", "3.25", "3.5", "3.75",
           "4.0", "4.5", "5.0", "5.5", "6.0", "7.0", "8.0", "10.0")
 
 methods <- lapply(vals, function(i){paste0("mlts",i,".csv")})
@@ -166,8 +185,11 @@ axis(1, mgp=c(1.5, 0.5, 0), lwd=(1/shrink), pos=0)
 px = c(0, p, tail(p,n=1), 0)
 rx = c(head(r,n=1),r, 0, 0)
 polygon(px, rx, border=NA, col="#0000003f")
-text(p[1:1], r[1:1], labels=t[1:1], adj=c(0,0.5), cex=mex, srt=30)
-text(p[-(1:1)], r[-(1:1)], labels=t[-(1:1)], adj=c(1,0.5), cex=mex, srt=30)
+reorientate = 1:5
+text(p[reorientate], r[reorientate], labels=t[reorientate],
+     adj=c(0,0.5), cex=mex, srt=15)
+text(p[-(reorientate)], r[-(reorientate)], labels=t[-(reorientate)],
+     adj=c(1,0.5), cex=mex, srt=15)
 title(ylab="Recall", line=1.0)
 title(xlab="Precision", line=1.25)
 dev.off()
