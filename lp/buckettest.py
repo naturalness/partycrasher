@@ -34,15 +34,17 @@ assert mode in ['purity', 'accuracy']
 beta = 1.0
 
 comparisons = {
-    'mlts1.0': {'bucketer': MLTstack, 'kwargs': {'thresh':1.0}},
-    'mlts2.25': {'bucketer': MLTstack, 'kwargs': {'thresh':2.25}},
-    'mlts3.25': {'bucketer': MLTstack, 'kwargs': {'thresh':3.25}},
-    'mlts3.5': {'bucketer': MLTstack, 'kwargs': {'thresh':3.5}},
-    'mlts3.75': {'bucketer': MLTstack, 'kwargs': {'thresh':3.75}},
-    'mlts4.5': {'bucketer': MLTstack, 'kwargs': {'thresh':4.5}},
-    'mlts5.5': {'bucketer': MLTstack, 'kwargs': {'thresh':5.5}},
-    'mlts7.0': {'bucketer': MLTstack, 'kwargs': {'thresh':7.0}},
+    'mlts0.5': {'bucketer': MLTstack, 'kwargs': {'thresh':1.0}},
+    'mlts1.5': {'bucketer': MLTstack, 'kwargs': {'thresh':1.0}},
     # done vvvv
+    #'mlts1.0': {'bucketer': MLTstack, 'kwargs': {'thresh':1.0}},
+    #'mlts2.25': {'bucketer': MLTstack, 'kwargs': {'thresh':2.25}},
+    #'mlts3.25': {'bucketer': MLTstack, 'kwargs': {'thresh':3.25}},
+    #'mlts3.5': {'bucketer': MLTstack, 'kwargs': {'thresh':3.5}},
+    #'mlts3.75': {'bucketer': MLTstack, 'kwargs': {'thresh':3.75}},
+    #'mlts4.5': {'bucketer': MLTstack, 'kwargs': {'thresh':4.5}},
+    #'mlts5.5': {'bucketer': MLTstack, 'kwargs': {'thresh':5.5}},
+    #'mlts7.0': {'bucketer': MLTstack, 'kwargs': {'thresh':7.0}},
     #'mlts2.0': {'bucketer': MLTstack, 'kwargs': {'thresh':2.0}},
     #'mlts2.5': {'bucketer': MLTstack, 'kwargs': {'thresh':2.5}},
     #'mlts2.75': {'bucketer': MLTstack, 'kwargs': {'thresh':2.75}},
