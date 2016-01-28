@@ -24,8 +24,8 @@ methods <- c(
             "top1a.csv", 
             "top1f.csv",
             "top1m.csv", 
-            "mlts4.0.csv", 
-            "mltw4.csv" 
+            "lerch4.0.csv", 
+            "lerchc.csv" 
             )
 mnames <- c(
             "1Frame", 
@@ -74,9 +74,13 @@ plota<-function(data, metric, y, l, ylim=c(0.2,1.0), lpos="bottomleft",
         lty=linetype[i], col=colors[i], pch=plotchar[i], bg=fcolors[i])
     }
     if (l) {
+        par(family="Latin Modern Mono")
         legend(lpos, legend=lnames, col=colors, pch=plotchar, lty=linetype,
-            title="Method", cex=mex*0.9, pt.cex=linesx, bty="n", ncol=3, pt.bg=fcolors,
-            xjust=0)
+            title="Method", cex=mex*0.9, pt.cex=linesx, bty="n", ncol=3,
+            pt.bg=fcolors,
+            xjust=0
+            )
+        par(family="Latin Modern Roman")
     }
 }
 
@@ -123,10 +127,10 @@ svg(filename="nbuckets.svg", width=col_width, height=height,
     family="Latin Modern Roman", pointsize=10)
 mypar(c(1,1))
 plota(data, "buckets", "Total Number of Buckets Created", l=TRUE, ylim=c(0,14400), 
-    lpos="topleft", oracle="Oracle")
+    lpos="topleft", oracle="Ubuntu")
 dev.off()
 
-vals <- c("2.0", "3.0", "3.5",
+vals <- c("2.0", "3.0",
           "4.0", "4.5",
           "5.0", "6.0", "8.0", "10.0")
 
@@ -153,8 +157,8 @@ dev.off()
 svg(filename="nbucketst.svg", width=col_width, height=height, 
     family="Latin Modern Roman", pointsize=10)
 mypar(c(1,1))
-plota(data, "buckets", "Total Number of Buckets Created", l=TRUE, ylim=c(0,14400), 
-    lpos="topleft", oracle="Oracle")
+plota(data, "buckets", "Total Number of Buckets Created", l=TRUE, ylim=c(0,15000), 
+    lpos="topleft", oracle="Ubuntu")
 dev.off()
 
 
@@ -200,29 +204,35 @@ dev.off()
 
 methods <- c(
             "cc.csv", 
-            "ccl.csv",  
-            "id.csv",
-            "idl.csv", 
-            "let.csv",
+#             "ccl.csv",  
+#             "let.csv",
             "letl.csv", 
             "spc.csv", 
-            "spcl.csv",
-            "uni.csv", 
+#             "spcl.csv",
+#             "uni.csv", 
             "unil.csv",
-            "mlts4.0.csv"
+            "id.csv",
+            "idl.csv",
+            "ids.csv",
+            "idls.csv",
+            "lerch4.0.csv",
+            "lerchc.csv"
             )
 mnames <- c(
             "Camel", 
-            "camel",  
-            "Ident",
-            "ident", 
-            "Lett",
+#             "camel",  
+#             "Lett",
             "lett", 
             "Space", 
-            "space",
-            "Uni", 
+#             "space",
+#             "Uni", 
             "uni",
-            "Lerch"
+            "IdC",
+            "idc",
+            "Id",
+            "id",
+            "lerch",
+            "lerchc"
             )
 data = NULL
 data = lapply(setNames(methods, make.names(mnames)), 
@@ -230,16 +240,16 @@ data = lapply(setNames(methods, make.names(mnames)),
 svg(filename="b3a.svg", width=page_width, height=height, 
     family="Latin Modern Roman", pointsize=10)
 mypar(c(1,3))
-plota(data, "b3p", "BCubed Precision", l=FALSE)
-plota(data, "b3r", "BCubed Recall", l=TRUE, lpos="topleft")
-plota(data, "b3f", "BCubed F1-Score", l=FALSE)
+plota(data, "b3p", "BCubed Precision", l=FALSE, ylim=c(0.5, 0.9))
+plota(data, "b3r", "BCubed Recall", l=TRUE, lpos="topleft", ylim=c(0.5, 0.9))
+plota(data, "b3f", "BCubed F1-Score", l=FALSE, ylim=c(0.5, 0.9))
 dev.off()
 svg(filename="pura.svg", width=page_width, height=height, 
     family="Latin Modern Roman", pointsize=10)
 mypar(c(1,3))
-plota(data, "purity", "Purity", l=FALSE)
-plota(data, "invpur", "Inverse Purity", l=TRUE, lpos="topleft")
-plota(data, "purf", "Purity F1-Score", l=FALSE)
+plota(data, "purity", "Purity", l=FALSE, ylim=c(0.55, 0.925))
+plota(data, "invpur", "Inverse Purity", l=TRUE, lpos="topleft", ylim=c(0.55, 0.925))
+plota(data, "purf", "Purity F1-Score", l=FALSE, ylim=c(0.55, 0.925))
 dev.off()
 svg(filename="nbucketsa.svg", width=col_width, height=height, 
     family="Latin Modern Roman", pointsize=10)

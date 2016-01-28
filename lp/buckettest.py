@@ -24,7 +24,7 @@ from topN import TopN, TopNLoose, TopNAddress, TopNFile, TopNModule
 from es_crash import ESCrash
 from elasticsearch import Elasticsearch
 import elasticsearch.helpers
-from bucketer import MLT, MLTStandardUnicode, MLTLetters, MLTIdentifier, MLTCamelCase
+from bucketer import MLT, MLTStandardUnicode, MLTLetters, MLTIdentifier, MLTCamelCase, MLTLerch, MLTNGram
 
 es = ESCrash.es
 
@@ -34,17 +34,21 @@ assert mode in ['purity', 'accuracy']
 beta = 1.0
 
 comparisons = {
-    'spc': {'bucketer': MLT, 'kwargs': {'thresh':4.0, 'lowercase':False}},
-    'spcl': {'bucketer': MLT, 'kwargs': {'thresh':4.0, 'lowercase':True}},
-    'uni': {'bucketer': MLTStandardUnicode, 'kwargs': {'thresh':4.0, 'lowercase':False}},
-    'unil': {'bucketer': MLTStandardUnicode, 'kwargs': {'thresh':4.0, 'lowercase':True}},
-    'let': {'bucketer': MLTLetters, 'kwargs': {'thresh':4.0, 'lowercase':False}},
-    'letl': {'bucketer': MLTLetters, 'kwargs': {'thresh':4.0, 'lowercase':True}},
-    'id': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':False}},
-    'idl': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':True}},
-    'cc': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':4.0, 'lowercase':False}},
-    'ccl': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':4.0, 'lowercase':True}},
+    'ids': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':False, 'only_stack':True}},
+    'idls': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':True, 'only_stack':True}},
+    #'ngram5l': {'bucketer': MLTNGram, 'kwargs': {'thresh':4.0, 'lowercase':True, 'n':5}},
     # done vvvv
+    #'ngram3l': {'bucketer': MLTNGram, 'kwargs': {'thresh':4.0, 'lowercase':True, 'n':3}},
+    #'spc': {'bucketer': MLT, 'kwargs': {'thresh':4.0, 'lowercase':False}},
+    #'spcl': {'bucketer': MLT, 'kwargs': {'thresh':4.0, 'lowercase':True}},
+    #'uni': {'bucketer': MLTStandardUnicode, 'kwargs': {'thresh':4.0, 'lowercase':False}},
+    #'unil': {'bucketer': MLTStandardUnicode, 'kwargs': {'thresh':4.0, 'lowercase':True}},
+    #'let': {'bucketer': MLTLetters, 'kwargs': {'thresh':4.0, 'lowercase':False}},
+    #'letl': {'bucketer': MLTLetters, 'kwargs': {'thresh':4.0, 'lowercase':True}},
+    #'id': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':False}},
+    #'idl': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':True}},
+    #'cc': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':4.0, 'lowercase':False}},
+    #'ccl': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':4.0, 'lowercase':True}},
     #'lerch0.25': {'bucketer': MLTLerch, 'kwargs': {'thresh':0.25, 'only_stack':True}},
     #'lerch0.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':0.0, 'only_stack':True}},
     #'lerch0.5': {'bucketer': MLTLerch, 'kwargs': {'thresh':0.5, 'only_stack':True}},
@@ -62,6 +66,7 @@ comparisons = {
     #'lerch2.75': {'bucketer': MLTLerch, 'kwargs': {'thresh':2.75, 'only_stack':True}},
     #'lerch3.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':3.0, 'only_stack':True}},
     #'lerch4.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':4.0, 'only_stack':True}},
+    #'lerchc': {'bucketer': MLTLerch, 'kwargs': {'thresh':4.0, 'only_stack':False}},
     #'lerch5.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':5.0, 'only_stack':True}},
     #'lerch6.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':6.0, 'only_stack':True}},
     #'lerch8.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':8.0, 'only_stack':True}},

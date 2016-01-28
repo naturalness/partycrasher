@@ -282,7 +282,13 @@ class MLTIdentifier(MLT):
                     'analyzer': {
                         'default': {
                             'type': 'pattern',
-                            'pattern': '([A-Za-z0-9_]+)',
+                            'pattern': 
+                                '([^\\p{L}\\d]+)'
+                                '|(?<=\\D)(?=0[xX][a-fA-F\\d)])'
+                                '|(?<=\\D)(?=\\d)'
+                                '|(?<=\\d)(?=\\D)'
+                                '|(?<=[\\p{L}&&[^\\p{Lu}]])(?=\\p{Lu})'
+                                '|(?<=\\p{Lu})(?=\\p{Lu}[\\p{L}&&[^\\p{Lu}]])',
                             'lowercase': self.lowercase,
                            }
                         }
@@ -369,6 +375,59 @@ class MLTLerch(MLT):
                             'char_filter': [],
                             'tokenizer': 'lerch',
                             'filter': ['lowercase', 'lerch'],
+                            }
+                        }
+                    }
+                }
+            }
+        )
+
+class MLTNGram(MLT):
+    """MLT with an N-Gram Analyzer"""
+    def __init__(self,
+                 n=3,
+                 *args,
+                 **kwargs):
+        super(MLTNGram, self).__init__(*args, **kwargs)
+        self.n = n
+
+    def create_index(self):
+        if self.lowercase:
+            filter_ = ['lowercase']
+        else:
+            filter_ = []
+        print "Creating index: %s" % self.index
+        self.es.indices.create(index=self.index, ignore=400,
+        body={
+            'mappings': {
+                'crash': {
+                    'properties': {
+                        'database_id': {
+                            'type': 'string',
+                            'index': 'not_analyzed'
+                            },
+                        'bucket': {
+                            'type': 'string',
+                            'index': 'not_analyzed',
+                            },
+                        }
+                    }
+                },
+            'settings': {
+                'analysis': {
+                    'tokenizer': {
+                        'my_ngram_tokenizer': {
+                            'type': 'nGram',
+                            'min_gram': self.n,
+                            'max_gram': self.n,
+                            },
+                        },
+                    'analyzer': {
+                        'default': {
+                            'type': 'custom',
+                            'char_filter': [],
+                            'tokenizer': 'my_ngram_tokenizer',
+                            'filter': filter_,
                             }
                         }
                     }
