@@ -204,33 +204,34 @@ dev.off()
 
 methods <- c(
             "cc.csv", 
-#             "ccl.csv",  
+            "ccs.csv",  
 #             "let.csv",
-            "letl.csv", 
+#             "letl.csv", 
             "spc.csv", 
+            "spcs.csv", 
 #             "spcl.csv",
 #             "uni.csv", 
-            "unil.csv",
-            "id.csv",
-            "idl.csv",
-            "ids.csv",
-            "idls.csv",
+#             "unil.csv",
+#             "id.csv",
+#             "idl.csv",
+#             "ids.csv",
+#             "idls.csv",
             "lerch4.0.csv",
             "lerchc.csv"
             )
 mnames <- c(
-            "Camel", 
-#             "camel",  
+             "CamelC", 
+             "Camel",  
 #             "Lett",
-            "lett", 
-            "Space", 
-#             "space",
+#             "lettc", 
+            "SpaceC", 
+            "Space",
 #             "Uni", 
-            "uni",
-            "IdC",
-            "idc",
-            "Id",
-            "id",
+#             "unic",
+#             "IdC",
+#             "idc",
+#             "Id",
+#             "id",
             "lerch",
             "lerchc"
             )
@@ -240,9 +241,9 @@ data = lapply(setNames(methods, make.names(mnames)),
 svg(filename="b3a.svg", width=page_width, height=height, 
     family="Latin Modern Roman", pointsize=10)
 mypar(c(1,3))
-plota(data, "b3p", "BCubed Precision", l=FALSE, ylim=c(0.5, 0.9))
-plota(data, "b3r", "BCubed Recall", l=TRUE, lpos="topleft", ylim=c(0.5, 0.9))
-plota(data, "b3f", "BCubed F1-Score", l=FALSE, ylim=c(0.5, 0.9))
+plota(data, "b3p", "BCubed Precision", l=FALSE, ylim=c(0.2, 1.0))
+plota(data, "b3r", "BCubed Recall", l=TRUE, lpos="topleft", ylim=c(0.2, 1.0))
+plota(data, "b3f", "BCubed F1-Score", l=FALSE, ylim=c(0.2, 1.0))
 dev.off()
 svg(filename="pura.svg", width=page_width, height=height, 
     family="Latin Modern Roman", pointsize=10)

@@ -34,10 +34,13 @@ assert mode in ['purity', 'accuracy']
 beta = 1.0
 
 comparisons = {
-    'ids': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':False, 'only_stack':True}},
-    'idls': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':True, 'only_stack':True}},
+    'spcs': {'bucketer': MLT, 'kwargs': {'thresh':4.0, 'lowercase':False, 'only_stack': True}},
+    #'cc': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':4.0, 'lowercase':False}},
+    #'ccs': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':4.0, 'lowercase':False, 'only_stack':True}},
     #'ngram5l': {'bucketer': MLTNGram, 'kwargs': {'thresh':4.0, 'lowercase':True, 'n':5}},
     # done vvvv
+    #'ids': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':False, 'only_stack':True}},
+    #'idls': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':True, 'only_stack':True}},
     #'ngram3l': {'bucketer': MLTNGram, 'kwargs': {'thresh':4.0, 'lowercase':True, 'n':3}},
     #'spc': {'bucketer': MLT, 'kwargs': {'thresh':4.0, 'lowercase':False}},
     #'spcl': {'bucketer': MLT, 'kwargs': {'thresh':4.0, 'lowercase':True}},
@@ -47,7 +50,6 @@ comparisons = {
     #'letl': {'bucketer': MLTLetters, 'kwargs': {'thresh':4.0, 'lowercase':True}},
     #'id': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':False}},
     #'idl': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':True}},
-    #'cc': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':4.0, 'lowercase':False}},
     #'ccl': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':4.0, 'lowercase':True}},
     #'lerch0.25': {'bucketer': MLTLerch, 'kwargs': {'thresh':0.25, 'only_stack':True}},
     #'lerch0.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':0.0, 'only_stack':True}},
