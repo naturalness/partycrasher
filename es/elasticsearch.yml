@@ -2,7 +2,7 @@ node.local: true # diable network
 discovery.zen.ping.multicast: false
 index.number_of_replicas: 0
 index.store.throttle.type: none
-index.merge.scheduler.max_thread_count: 1
+#index.merge.scheduler.max_thread_count: 1
 
 ##################### Elasticsearch Configuration Example #####################
 

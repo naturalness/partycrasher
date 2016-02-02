@@ -19,7 +19,7 @@
 
 from crash import Crash, Stacktrace, Stackframe
 
-import os, re, io, chardet, gzip, json
+import os, re, io, gzip, json
 import dateutil.parser as dateparser
 import unicodedata
 from logging import critical, error, warning, info, debug
@@ -264,9 +264,6 @@ class LaunchpadStack(Stacktrace):
     @classmethod
     def load_from_file(cls, path):
         
-        #with io.open(path, mode="r+b") as stackfile:
-            #encoding_guess = chardet.detect(stackfile.read())['encoding']
-        #with open(path) as stackfile:
         encoding_guess = 'utf-8'
         if 'gz' in path:
             # gzip doesn't support encoding= ... this may need a workaround

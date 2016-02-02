@@ -25,7 +25,8 @@ methods <- c(
             "top1f.csv",
             "top1m.csv", 
             "lerch4.0.csv", 
-            "lerchc.csv" 
+            "lerchc.csv",
+            "cc.csv"
             )
 mnames <- c(
             "1Frame", 
@@ -35,7 +36,8 @@ mnames <- c(
             "1File",
             "1Mod", 
             "Lerch", 
-            "LerchC" 
+            "LerchC",
+            "CamelC"
             )
 data = NULL
 data = lapply(setNames(methods, make.names(mnames)), 
@@ -203,12 +205,12 @@ dev.off()
 
 
 methods <- c(
-            "cc.csv", 
             "ccs.csv",  
+            "cc.csv", 
 #             "let.csv",
 #             "letl.csv", 
-            "spc.csv", 
             "spcs.csv", 
+            "spc.csv", 
 #             "spcl.csv",
 #             "uni.csv", 
 #             "unil.csv",
@@ -220,20 +222,20 @@ methods <- c(
             "lerchc.csv"
             )
 mnames <- c(
-             "CamelC", 
              "Camel",  
+             "CamelC", 
 #             "Lett",
 #             "lettc", 
-            "SpaceC", 
             "Space",
+            "SpaceC", 
 #             "Uni", 
 #             "unic",
 #             "IdC",
 #             "idc",
 #             "Id",
 #             "id",
-            "lerch",
-            "lerchc"
+            "Lerch",
+            "LerchC"
             )
 data = NULL
 data = lapply(setNames(methods, make.names(mnames)), 

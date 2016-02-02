@@ -165,12 +165,12 @@ class MLT(Bucketer):
                 try:
                     bucket = match['_source'][bucket_field]
                 except KeyError:
-                    #self.es.indices.flush(index=self.index)
-                    #print crash['database_id']
-                    #time.sleep(1)
-                    #return self.bucket(crash, bucket_field)
-                    print json.dumps(matches, indent=4)
-                    raise
+                    self.es.indices.flush(index=self.index)
+                    print "Force waiting for refresh on " + crash['database_id']
+                    time.sleep(1)
+                    return self.bucket(crash, bucket_field)
+                    #print json.dumps(matches, indent=4)
+                    #raise
                 if bucket not in matching_buckets:
                     matching_buckets.append(bucket)
         return matching_buckets

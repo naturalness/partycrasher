@@ -34,9 +34,18 @@ assert mode in ['purity', 'accuracy']
 beta = 1.0
 
 comparisons = {
-    'spcs': {'bucketer': MLT, 'kwargs': {'thresh':4.0, 'lowercase':False, 'only_stack': True}},
+    #'ccx0.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':0.0, 'lowercase':False, 'only_stack':False}},
+    #'ccx1.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':1.0, 'lowercase':False, 'only_stack':False}},
+    #'ccx2.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':2.0, 'lowercase':False, 'only_stack':False}},
+    'ccx3.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':3.0, 'lowercase':False, 'only_stack':False}},
+    'ccx4.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':4.0, 'lowercase':False, 'only_stack':False}},
+    #'ccx5.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':5.0, 'lowercase':False, 'only_stack':False}},
+    #'ccx6.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':6.0, 'lowercase':False, 'only_stack':False}},
+    #'ccx7.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':7.0, 'lowercase':False, 'only_stack':False}},
+    #'ccx8.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':8.0, 'lowercase':False, 'only_stack':False}},
+    #'ccx10.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':10.0, 'lowercase':False, 'only_stack':False}},
+    #'spcs': {'bucketer': MLT, 'kwargs': {'thresh':4.0, 'lowercase':False, 'only_stack': True}},
     #'cc': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':4.0, 'lowercase':False}},
-    #'ccs': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':4.0, 'lowercase':False, 'only_stack':True}},
     #'ngram5l': {'bucketer': MLTNGram, 'kwargs': {'thresh':4.0, 'lowercase':True, 'n':5}},
     # done vvvv
     #'ids': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':False, 'only_stack':True}},
@@ -76,7 +85,7 @@ comparisons = {
     #'top1': {'comparer': TopN, 'kwargs': {'n':1}}, 
     #'top2': {'comparer': TopN, 'kwargs': {'n':2}},
     #'top3': {'comparer': TopN, 'kwargs': {'n':3}},
-    #'lerchC': {'bucketer': Lerch, 'kwargs': {'thresh':4.0, 'only_stack':False}},
+    #'lerchcx': {'bucketer': MLTLerch, 'kwargs': {'thresh':4.0, 'only_stack':False}},
     #'top1a': {'comparer': TopNAddress, 'kwargs': {'n':1}},
     #'top1f' : {'comparer': TopNFile, 'kwargs': {'n':1}},
     #'top1m' : {'comparer': TopNModule, 'kwargs': {'n':1}},
@@ -204,11 +213,11 @@ for database_id in sorted(all_ids.keys()):
                 comparison_data['oracle_totals'] = {}
                 comparison_data['assigned_totals'] = {}
                 comparison_data['bcubed'] = {}
-        oracle_to_assigned = comparison_data['oracle_to_assigned']
-        assigned_to_oracle = comparison_data['assigned_to_oracle']
-        oracle_totals = comparison_data['oracle_totals']
-        assigned_totals = comparison_data['assigned_totals']
-        bcubed = comparison_data['bcubed']
+            oracle_to_assigned = comparison_data['oracle_to_assigned']
+            assigned_to_oracle = comparison_data['assigned_to_oracle']
+            oracle_totals = comparison_data['oracle_totals']
+            assigned_totals = comparison_data['assigned_totals']
+            bcubed = comparison_data['bcubed']
         if 'comparer' in comparison_data:
             bucketer = comparison_data['comparer']
             comparer = comparison_data['comparer']
@@ -362,7 +371,7 @@ for database_id in sorted(all_ids.keys()):
                     len(oracle_totals),
                     ])
                 comparison_data['csvfileh'].flush()
-        es.indices.refresh(index=comparison)
+        #es.indices.refresh(index=comparison)
         #es.indices.flush(index=comparison)
     crashes_so_far += 1
     bucket = oracledata['bucket']
