@@ -1,7 +1,7 @@
 # Partycrasher
 Automated scalable crash bucketing!
 
-Partycrasher is a framework for automatically gruping crash
+Partycrasher is a framework for automatically grouping crash
 reports based on the contents of stacktraces and other
 data available at the time of a crash. You can read the [paper about it](https://peerj.com/preprints/1705/).
 
