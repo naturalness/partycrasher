@@ -16,5 +16,5 @@ Partycrasher requires [Elastic (ElasticSearch)](https://www.elastic.co/).
 
 # Licensing
 
-Assume that UnnaturalCode is licensed under the [GPL3+](LICENSE) unless otherwise
+Assume that Partycrasher is licensed under the [GPL3+](LICENSE) unless otherwise
 specified.
