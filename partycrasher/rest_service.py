@@ -34,7 +34,7 @@ def status():
 def reports():
     if request.method == 'POST':
         posted = request.get_json(force=True)
-        return jsonify(post=posted, headers=dict(request.headers), crash=crasher.ingest(posted))
+        return jsonify(post=posted, headers=dict(request.headers), crash=crasher.ingest(posted)), 201
     if request.method == 'GET':
         raise NotImplementedError()
 
@@ -43,7 +43,7 @@ def project_reports(project=None):
     if request.method == 'POST':
         posted = request.get_json(force=True)
         posted['project'] = project
-        return jsonify(post=posted, headers=dict(request.headers), crash=crasher.ingest(posted))
+        return jsonify(post=posted, headers=dict(request.headers), crash=crasher.ingest(posted)), 201
     if request.method == 'GET':
         raise NotImplementedError()
 
