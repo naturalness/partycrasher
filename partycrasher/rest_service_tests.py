@@ -145,7 +145,7 @@ class RestServiceTestCase(unittest.TestCase):
         database_id_b = str(uuid.uuid4())
         database_id_c = str(uuid.uuid4())
         tfidf_trickery= str(uuid.uuid4())
-        response = requests.post(self.url + 'alan_parsons/reports/dry-run', 
+        response = requests.post(self.url + 'alan_parsons/buckets', 
                                  json=[
                                      {'database_id': database_id_a,
                                       'tfidf_trickery': tfidf_trickery},
