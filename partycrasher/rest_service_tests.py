@@ -28,7 +28,8 @@ class RestServiceTestCase(unittest.TestCase):
         self.url = 'http://localhost:' + str(self.port) + '/'
         python_cmd = subprocess.check_output("which python", shell=True).rstrip()
         print python_cmd
-        self.rest_service = subprocess.Popen([python_cmd, "rest_service.py", str(self.port)], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        # preexec_fn=os.setid required for process group on unix, windows needs something else
+        self.rest_service = subprocess.Popen([python_cmd, "rest_service.py", str(self.port)], preexec_fn=os.setsid)
         time.sleep(1)
     
     def testAlive(self):
@@ -36,10 +37,9 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 200
         
     def tearDown(self):
-        print self.rest_service.pid
-        self.rest_service.terminate()
+        # This should really be the subprocess.Popen.terminate() behavior by default...
+        os.killpg(os.getpgid(self.rest_service.pid), signal.SIGTERM)
         self.rest_service.wait()
-        print "Stopped."
         
 if __name__ == '__main__':
     unittest.main()
