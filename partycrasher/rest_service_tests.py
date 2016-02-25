@@ -55,6 +55,8 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.json()['crash']['bucket'] is not None
         assert response.json()['crash']['project'] == 'alan_parsons'
         # TODO: bucket url
+        # TODO: ensure if URL project and JSON project conflict HTTP 400
+        #       is returned
 
     def testDryRun(self):
         database_id = str(uuid.uuid4())
@@ -90,6 +92,8 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.json()['crashes'][2]['bucket'] is not None
         assert response.json()['crashes'][2]['project'] == 'alan_parsons'
         # TODO: bucket url
+        # TODO: ensure if URL project and JSON project conflict HTTP 400
+        #       is returned
         
     def testGetCrash(self):
         database_id = str(uuid.uuid4())
@@ -103,6 +107,11 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.json()['crash']['project'] == 'alan_parsons'
         # TODO: bucket url
 
+    def testGetCrashProject(self):
+        raise NotImplementedError()
+        # TODO: ensure if URL project and JSON project conflict HTTP 400
+        #       is returned
+
     def testDeleteCrash(self):
         database_id = str(uuid.uuid4())
         response = requests.post(self.url + 'alan_parsons/reports', 
@@ -113,6 +122,11 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.get(self.url + 'alan_parsons/reports/' + database_id)
         assert response.status_code == 404
     
+    def testDeleteCrashProject(self):
+        raise NotImplementedError()
+        # TODO: ensure if URL project and JSON project conflict HTTP 400
+        #       is returned
+
     def testGetProjectConfig(self):
         response = requests.get(self.url + 'alan_parsons/config')
         assert response.status_code == 200

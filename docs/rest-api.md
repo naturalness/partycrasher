@@ -42,6 +42,9 @@ HTTP/1.1 303 See Other
 Location: https://domain.tld/<project>/report/<report id>/
 ````
 
+When the project url is used but the project field in the crash report
+does not match the project specified in the url.
+
 Categorize crash (dry-run)
 ------
 
