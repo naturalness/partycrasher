@@ -232,7 +232,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'PartyCrasher.tex', u'PartyCrasher Documentation',
-     u'Joshua Joseph Campbell, Eddie Antonio Santos, Abram Hindle', 'manual'),
+     u'Joshua Charles Campbell, Eddie Antonio Santos, Abram Hindle', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
