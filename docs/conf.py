@@ -56,8 +56,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'PartyCrasher'
-copyright = u'2016, Joshua Joseph Campbell, Eddie Antonio Santos, Abram Hindle'
-author = u'Joshua Joseph Campbell, Eddie Antonio Santos, Abram Hindle'
+copyright = u'2016, Joshua Charles Campbell, Eddie Antonio Santos, Abram Hindle'
+author = u'Joshua Charles Campbell, Eddie Antonio Santos, Abram Hindle'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
