@@ -5,7 +5,9 @@ Overview
 --------
 
  - Like the GitHub API, this contains full-qualified URLs to resources (based on the User-Agent facing host).
- - Like BugParty, all paths are prefixed with `/partycrasher/:project/`
+ - Unlike BugParty, all paths are optionally prefixed with `/:project/`
+ - All paths are also available without the `/:project/` prefix in case the
+project is unknown or unspecified.
  - There are three entities:
    - Buckets
    - Reports
@@ -14,16 +16,20 @@ Overview
 Accept new crash
 -----
 
-> `POST /partycrasher/:project/reports`
+> `POST /:project/reports`
+
+or
+
+> `POST /reports`
 
 ```http
 HTTP/1.1 201 Created
-Location: https://domain.tld/partycrasher/<project>/report/<report id>/
+Location: https://domain.tld/<project>/report/<report id>/
 
 {
     "id": <report-id>,
     "bucket_id": <bucket-id>,
-    "bucket_url": "https://domain.tld/partycrasher/<project>/buckets/<T=[default]>/<bucket-id>"
+    "bucket_url": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>"
 }
 ```
 
@@ -33,27 +39,35 @@ When an _identical_ (not just duplicate) crash is posted:
 
 ```http
 HTTP/1.1 303 See Other
-Location: https://domain.tld/partycrasher/<project>/report/<report id>/
+Location: https://domain.tld/<project>/report/<report id>/
 ````
 
 Categorize crash (dry-run)
 ------
 
-> `POST /partycrasher/:project/reports/dry-run`
+> `POST /:project/reports/dry-run`
+
+or
+
+> `POST /reports/dry-run`
 
 ```http
 HTTP/1.1 202 Accepted
 
 {
     "bucket_id": <bucket-id>,
-    "bucket_url": "https://domain.tld/partycrasher/<project>/buckets/<T=[default]>/<bucket-id>"
+    "bucket_url": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>"
 }
 ```
 
 Accept multiple reports
 -----
 
-> `POST /partycrasher/:project/reports`
+> `POST /:project/reports`
+
+or
+
+> `POST /reports`
 
 ```http
 HTTP/1.1 201 Created
@@ -62,12 +76,12 @@ HTTP/1.1 201 Created
     {
         "id": <report-id 1>,
         "bucket_id": <bucket-id 1>,
-        "bucket_url": "https://domain.tld/partycrasher/<project>/buckets/<T=[default]>/<bucket-id 1>"
+        "bucket_url": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id 1>"
     },
     {
         "id": <report-id 2>,
         "bucket_id": <bucket-id 2>,
-        "bucket_url": "https://domain.tld/partycrasher/<project>/buckets/<T=[default]>/<bucket-id 2>"
+        "bucket_url": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id 2>"
     },
     ...
 ]
@@ -77,26 +91,30 @@ HTTP/1.1 201 Created
 Get information on a crash
 --------------------------
 
-> `GET /partycrasher/:project/reports/:report_id`
+> `GET /:project/reports/:report_id`
+
+or
+
+> `GET /reports/:report_id`
 
 ```http
 HTTP/1.1 200 OK
-Link: <https://domain.tld/partycrasher/<project>/buckets/<T=[default]>/<bucket-id>; rel="related",
+Link: <https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>; rel="related",
 
 {
     "id": <report-id>,
     "buckets": {
         "3.5": {
             "id": <bucket-id, T=3.5>,
-            "url": "https://domain.tld/partycrasher/<project>/buckets/3.5/<bucket-id>"
+            "url": "https://domain.tld/<project>/buckets/3.5/<bucket-id>"
         },
         "4.0": {
             "id": <bucket-id, T=4.0>,
-            "url": "https://domain.tld/partycrasher/<project>/buckets/4.0/<bucket-id>"
+            "url": "https://domain.tld/<project>/buckets/4.0/<bucket-id>"
         },
         "4.5": {
             "id": <bucket-id, T=3.5>,
-            "url": "https://domain.tld/partycrasher/<project>/buckets/4.5/<bucket-id>"
+            "url": "https://domain.tld/<project>/buckets/4.5/<bucket-id>"
         },
         ...
     },
@@ -116,7 +134,7 @@ Link: <https://domain.tld/partycrasher/<project>/buckets/<T=[default]>/<bucket-i
 Override bucket assignment
 -----
 
-> `PATCH /partycrasher/:project/reports`
+> `PATCH /:project/reports`
 
 ### Data 
 
@@ -130,12 +148,12 @@ Override bucket assignment
 
 ```http
 HTTP/1.1 200 OK
-Link: <https://domain.tld/partycrasher/<project>/buckets/<T=[default]>/<bucket-id>; rel="related",
+Link: <https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>; rel="related",
 
 {
     "id": <report-id>,
     "bucket_id": <bucket-id>,
-    "bucket_url": "https://domain.tld/partycrasher/<project>/buckets/<T=[default]>/<bucket-id>"
+    "bucket_url": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>"
 }
 ```
 
@@ -143,8 +161,11 @@ Link: <https://domain.tld/partycrasher/<project>/buckets/<T=[default]>/<bucket-i
 Remove report
 -----
 
-> `DELETE /partycrasher/:project/reports/:report_id`
+> `DELETE /:project/reports/:report_id`
 
+or
+
+> `DELETE /reports/:report_id`
 
 ```http
 HTTP/1.1 204 No Content
@@ -153,7 +174,11 @@ HTTP/1.1 204 No Content
 Get summary about a bucket
 -------------------------
 
-> `GET /partycrasher/:project/buckets/:threshold/:bucket_id`
+> `GET /:project/buckets/:threshold/:bucket_id`
+
+or
+
+> `GET /buckets/:threshold/:bucket_id`
 
 ```http
 HTTP/1.1 200 OK
@@ -162,8 +187,8 @@ HTTP/1.1 200 OK
     "id": <bucket-id>,
     "num-reports": <number-of-crashes>,
     "top-reports": [
-        "https://domain.tld/partycrasher/<project>/reports/<report-id 1>",
-        "https://domain.tld/partycrasher/<project>/reports/<report-id 2>"
+        "https://domain.tld/<project>/reports/<report-id 1>",
+        "https://domain.tld/<project>/reports/<report-id 2>"
     ]
 }
 ```
@@ -171,7 +196,11 @@ HTTP/1.1 200 OK
 Get summary for all buckets
 -----------------------------
 
-`GET /partycrasher/:project/buckets/<threshold>?since=<date>`
+> `GET /:project/buckets/<threshold>?since=<date>`
+
+or
+
+> `GET /buckets/<threshold>?since=<date>`
 
 ```http
 HTTP/1.1 200 OK
@@ -181,7 +210,7 @@ HTTP/1.1 200 OK
     "top-buckets": [
         {
             "id": <bucket-id 1>,
-            "url": "https://domain.tld/partycrasher/<project>/buckets/3.5/<bucket-id>",
+            "url": "https://domain.tld/<project>/buckets/3.5/<bucket-id>",
             "num-reports-in-period": <num crashes>,
             "num-reports-total": <num reports>
         }
@@ -192,7 +221,7 @@ HTTP/1.1 200 OK
 Viewing per-project configuration
 ----
 
-> `GET /partycrasher/:project/config`
+> `GET /:project/config`
 
 ```http
 HTTP/1.1 200 OK
@@ -205,7 +234,7 @@ HTTP/1.1 200 OK
 Setting per-project configuration
 ---------------------------------
 
-> `PATCH /partycrasher/:project/config`
+> `PATCH /:project/config`
 
 ### Data
 
