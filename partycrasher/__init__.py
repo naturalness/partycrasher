@@ -1,8 +1,13 @@
+# -*- coding: UTF-8 -*-
+
 import ConfigParser
+
 from elasticsearch import Elasticsearch, NotFoundError
+
 from partycrasher.crash import Crash
 from partycrasher.es_crash import ESCrash
 from partycrasher.bucketer import MLTCamelCase
+
 
 __version__ = "0.0.1"
 
