@@ -20,13 +20,15 @@ import sys
 import os
 
 from flask import Flask, jsonify, request
+from flask.ext.cors import CORS
 
-# Hacky things to add this directory to the path.
+# Hacky things to add this PartyCrasher to the path.
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import partycrasher
 
 
-app = Flask("partycrasher")
+app = Flask('partycrasher')
+CORS(app)
 crasher = partycrasher.PartyCrasher()
 
 
