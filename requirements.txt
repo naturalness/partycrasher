@@ -1,3 +1,4 @@
 # TODO: Support ElasticSearch 1.x?
 elasticsearch >= 2.2.0
 python-dateutil >= 2.4.0
+flask-cors >= 2.1.0
