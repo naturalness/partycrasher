@@ -1,0 +1,8 @@
+# Python stuff
+*.pyc
+__pycache__/
+
+# Distutils
+*.egg/
+*.egg-info/
+dist/
