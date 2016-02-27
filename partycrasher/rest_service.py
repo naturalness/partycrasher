@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 #  Copyright (C) 2016 Joshua Charles Campbell
 #  Copyright (C) 2016 Eddie Antonio Santos
@@ -20,23 +21,28 @@
 import sys
 import os
 
-from flask import Flask, json, jsonify, request, make_response, url_for
+from flask import Flask, jsonify, request, url_for
 from flask.ext.cors import CORS
 
 # Hacky things to add PartyCrasher to the path.
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import partycrasher
 
+from partycrasher.rest_api_utils import BadRequest, jsonify_list
 
 app = Flask('partycrasher')
 CORS(app)
 crasher = partycrasher.PartyCrasher()
 
 
-class BadRequest(RuntimeError):
+@app.errorhandler(BadRequest)
+def on_bad_request(error):
     """
-    Raised and handled when something funky happens.
+    Handles BadRequest exceptions; sends status 400 back to the client,
+    along with a message sent as JSON.
     """
+    message = error.message if error.message else 'Bad Request'
+    return jsonify(message=message), 400
 
 
 @app.route('/')
@@ -287,16 +293,6 @@ def update_project_config(project=None):
     """
     raise NotImplementedError()
 
-
-@app.errorhandler(BadRequest)
-def on_bad_request(error):
-    """
-    Handles BadRequest exceptions; sends status 400 back to the client,
-    along with a message sent as JSON.
-    """
-    message = error.message if error.message else 'Bad Request'
-    return jsonify(message=message), 400
-
 #############################################################################
 #                                 Utilities                                 #
 #############################################################################
@@ -306,18 +302,8 @@ def ingest_one(report, project_name):
     """
     Returns a tuple of ingested report and its URL.
     """
-    if 'project' not in report:
-        if project_name:
-            # Graft the project name onto the report:
-            report['project'] = project_name
-        else:
-            # No project name anywhere. This is not good...
-            raise BadRequest('Missing project name')
-    elif project_name is not None and report['project'] != project_name:
-        raise BadRequest("Project name mismatch: "
-                         "Posted a report to '{0!s}' "
-                         "but the report claims it's from '{1!s}'"
-                         .format(project_name, report['project']))
+
+    raise_bad_request_on_project_mismatch(report, project_name)
 
     report = crasher.ingest(report)
     url = url_for('view_report',
@@ -326,24 +312,35 @@ def ingest_one(report, project_name):
     return report, url
 
 
-
 def ingest_multiple(reports, project_name):
+    """
+    Same as ingest_one, but takes a list of reports, and returns a list of
+    reports.
+    """
     return [ingest_one(report, project_name)[0] for report in reports]
 
 
-def jsonify_list(seq):
+def raise_bad_request_on_project_mismatch(report, project_name):
     """
-    Same as jsonify, but works on lists.
+    Checks if the project in the report and the given project name are the
+    same.
+
+    Side-effect: grafts the correct project name when not present in the
+    report.
     """
-    # Coerce to list
-    if not isinstance(seq, list):
-        seq = list(seq)
+    if 'project' not in report:
+        if project_name:
+            # Graft the project name onto the report:
+            report['project'] = project_name
+        else:
+            # No project name anywhere. This is not good...
+            raise BadRequest('Missing project name')
 
-    should_indent = not (request.headers.get('X-Requested-With', '') ==
-                         'XMLHttpRequest')
-    body = json.dumps(seq, indent=4 if should_indent else None)
-
-    return make_response((body, None, {'Content-Type': 'application/json'}))
+    elif project_name is not None and report['project'] != project_name:
+        raise BadRequest("Project name mismatch: "
+                         "Posted a report to '{0!s}' "
+                         "but the report claims it's from '{1!s}'"
+                         .format(project_name, report['project']))
 
 
 def main():
