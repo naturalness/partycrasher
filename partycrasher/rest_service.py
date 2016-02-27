@@ -19,7 +19,7 @@
 import sys
 import os
 
-from flask import Flask, json, jsonify, request, make_response
+from flask import Flask, json, jsonify, request, make_response, url_for
 from flask.ext.cors import CORS
 
 # Hacky things to add this PartyCrasher to the path.
@@ -38,12 +38,6 @@ class BadRequest(RuntimeError):
     """
 
 
-@app.errorhandler(BadRequest)
-def on_bad_request(error):
-    message = error.message if error.message else 'Bad Request'
-    return jsonify(message=message), 400
-
-
 @app.route('/')
 def status():
     return jsonify(partycrasher={'version': partycrasher.__version__,
@@ -53,7 +47,7 @@ def status():
 
 @app.route('/reports', methods=['POST'])
 @app.route('/<project>/reports', methods=['POST'])
-def add_reports(project=None):
+def add_report(project=None):
     """
     ================
     Accept new crash
@@ -92,8 +86,8 @@ def add_reports(project=None):
             HTTP/1.1 303 See Other
             Location: https://domain.tld/<project>/report/<report-id>/
 
-    When a project URL is used but the project field in the crash report does
-    not match the project specified in the url:
+    When a project URL is used but the project field in the crash report
+    reports a it belongs to a different project:
         .. code-block:: http
 
             HTTP/1.1 400 Bad Request
@@ -105,10 +99,48 @@ def add_reports(project=None):
     if isinstance(report, list):
         return jsonify_list(ingest_multiple(report, project)), 201
     else:
-        return jsonify(ingest_one(report, project)), 201
+        report, url = ingest_one(report, project)
+        return jsonify(report), 201, {
+            'Location': url
+        }
 
+
+@app.route('/reports/<report_id>',
+           defaults={'project': None},
+           endpoint='view_report_no_project')
+@app.route('/<project>/reports/<report_id>')
+def view_report(project=None, report_id=None):
+    # Ignore project.
+    assert report_id is not None
+
+    try:
+        report = crasher.get_crash(report_id)
+    except KeyError:
+        return '', 404
+    else:
+        return jsonify(report)
+
+
+@app.route('/<project>/reports')
+def reports_overview(project=None):
+    raise NotImplementedError()
+
+
+@app.route('/<project>/config', methods=['GET', 'PATCH'])
+def project_config(project=None):
+    if request.method == 'PATCH':
+        raise NotImplementedError()
+    if request.method == 'GET':
+        return jsonify(default_threshold=4.0)
+
+#############################################################################
+#                                 Utilities                                 #
+#############################################################################
 
 def ingest_one(report, project_name):
+    """
+    Returns a tuple of ingested report and its URL.
+    """
     if 'project' not in report:
         if project_name:
             # Graft the project name onto the report:
@@ -122,11 +154,21 @@ def ingest_one(report, project_name):
                          "but the report claims it's from '{1!s}'"
                          .format(project_name, report['project']))
 
-    return crasher.ingest(report)
+    report = crasher.ingest(report)
+    url = url_for('view_report',
+                  project=report['project'],
+                  report_id=report['database_id'])
+    return report, url
+
+
+@app.errorhandler(BadRequest)
+def on_bad_request(error):
+    message = error.message if error.message else 'Bad Request'
+    return jsonify(message=message), 400
 
 
 def ingest_multiple(reports, project_name):
-    return [ingest_one(report, project_name) for report in reports]
+    return [ingest_one(report, project_name)[0] for report in reports]
 
 
 def jsonify_list(seq):
@@ -142,29 +184,6 @@ def jsonify_list(seq):
     body = json.dumps(seq, indent=4 if should_indent else None)
 
     return make_response((body, None, {'Content-Type': 'application/json'}))
-    
-
-
-@app.route('/<project>/reports')
-def reports_overview(project=None):
-    raise NotImplementedError()
-
-
-def project_reports(project=None):
-    if request.method == 'POST':
-        posted = request.get_json(force=True)
-        posted['project'] = project
-        return jsonify(post=posted, headers=dict(request.headers), crash=crasher.ingest(posted)), 201
-    if request.method == 'GET':
-        raise NotImplementedError()
-
-
-@app.route('/<project>/config', methods=['GET', 'PATCH'])
-def project_config(project=None):
-    if request.method == 'PATCH':
-        raise NotImplementedError()
-    if request.method == 'GET':
-        return jsonify(default_threshold=4.0)
 
 
 def main():

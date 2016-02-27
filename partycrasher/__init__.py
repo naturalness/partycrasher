@@ -37,11 +37,11 @@ class PartyCrasher(object):
         except NotFoundError as e:
             raise Exception(' '.join([e.error, str(e.status_code), repr(e.info)]))
         
-    def getcrash(database_id):
+    def get_crash(self, database_id):
         try:
-            return self.ESCrash(database_id, index='crashes')
+            return ESCrash(database_id, index='crashes')
         except NotFoundError as e:
-            raise Exception(' '.join([e.error, str(e.status_code), repr(e.info)]))
+            raise KeyError(database_id)
         
     def delcrash(database_id):
         # TODO: we have to call ES directly here, theres nothing in Crash/ESCrash or Bucketer to handle this case

@@ -22,6 +22,12 @@ import elasticsearch
 from elasticsearch import Elasticsearch
 from weakref import WeakValueDictionary
 
+class ReportNotFoundError(KeyError):
+    """
+    Raised when... the crash is not found!
+    """
+
+
 class ESCrashMeta(type):
     # The purpose of all of this shit is to ensure that we don't
     # end up with two copies of the same crash in elastic search
@@ -96,12 +102,13 @@ class ESCrashMeta(type):
             if crash in cls._cached[index]:
                 return cls._cached[index][crash]
             existing = cls.getrawbyid(crash, index=index)
-            if not existing is None:
+            if existing is not None:
+                # Found it in ElasticSearch!
                 newish = super(ESCrashMeta, cls).__call__(crash=existing, index=index)
                 cls._cached[index][crash] = newish
                 return newish
             else:
-                raise Exception("ID not found!")
+                raise ReportNotFoundError(crash)
         else:
             raise ValueError()
 
@@ -113,71 +120,71 @@ class ESCrash(Crash):
     # Global ES connection
     es = Elasticsearch(retry_on_timeout=True)
     crashes = {}
-    
+
     @classmethod
     def getrawbyid(cls, database_id, index='crashes'):
         if index in cls.crashes:
             if database_id in cls.crashes[index]:
                 return cls.crashes[database_id]
-        r = cls.es.search(
-            index=index,
-            body={
-                'query': {
-                    'filtered':{
-                        'query': {
-                            'match_all': {}
-                            },
-                        'filter': {
-                            'term': {
-                                'database_id': database_id,
-                                }
-                            }
+        response = cls.es.search(index=index, body={
+            'query': {
+                'filtered':{
+                    'query': {
+                        'match_all': {}
+                    },
+                    'filter': {
+                        'term': {
+                            'database_id': database_id,
                         }
                     }
-                },
-            )
-        if r['hits']['total'] == 0:
+                }
+            }
+        })
+        if response['hits']['total'] == 0:
             return None
-        elif r['hits']['total'] > 1:
-            raise Exception("The ID occurs in ES twice, which shouldn't be possible, since they are all supposed to be stored with their document ID equal to the database ID.")
+        elif response['hits']['total'] > 1:
+            raise Exception("The ID occurs in ES twice, which shouldn't be "
+                            "possible, since they are all supposed to be stored "
+                            "with their document ID equal to the database ID.")
         else:
             # should this be ESCRash.__base__?
-            return Crash(r['hits']['hits'][0]['_source'])
-    
+            return Crash(response['hits']['hits'][0]['_source'])
+
     @classmethod
     def index_create(cls, index='crashes'):
         if cls.es.indices.exists(index=index):
             return
         else:
             #known_types = {
-                #datetime : 'date',
-                #Stacktrace: None,
-            #}    
+            #datetime : 'date',
+            #Stacktrace: None,
+            #}
             #properties = {}
             #for field, info in cls.canonical_fields.iteritems():
-                #ftype = known_types[info['type']]
-                #properties[field] = {
-                    #'type': ftype
-                    #}
+            #ftype = known_types[info['type']]
+            #properties[field] = {
+            #'type': ftype
+            #}
             cls.es.indices.create(index=index,
-                body={
-                    'mappings': {
-                        'crash': {
-                            'properties': {
-                                'database_id': {
-                                    'type': 'string',
-                                    'index': 'not_analyzed'
-                                    },
-                                'bucket': {
-                                    'type': 'string',
-                                    'index': 'not_analyzed',
-                                    }
-                                }
-                            }
-                        }
-                    }
-                )
+                                  body={
+                                      'mappings': {
+                                          'crash': {
+                                              'properties': {
+                                                  'database_id': {
+                                                      'type': 'string',
+                                                      'index': 'not_analyzed'
+                                                  },
+                                                  'bucket': {
+                                                      'type': 'string',
+                                                      'index': 'not_analyzed',
+                                                  }
+                                              }
+                                          }
+                                      }
+                                  }
+                                  )
             cls.es.cluster.health(wait_for_status='yellow')
+
     def __init__(self, index='crashes', crash=None):
         self.index = index
         self.hot = False
@@ -224,7 +231,7 @@ class TestCrash(unittest.TestCase):
         'cpu': 'i386',
         'date': datetime.datetime(2007, 6, 27, 12, 4, 43),
         'os': 'Ubuntu 7.10',
-        'stacktrace': Stacktrace([   
+        'stacktrace': Stacktrace([
                         Stackframe({
                             'address': u'0x0804cbd3',
                             'args': u'argc=',
@@ -271,7 +278,7 @@ class TestCrash(unittest.TestCase):
         es = Elasticsearch(hosts=['localhost'])
         es.indices.create(index='test-index', ignore=400)
         es.indices.delete(index='test-index', ignore=[400, 404])
-    
+
     def test_es_add(self):
         import gc
         es = ESCrash.es
@@ -291,7 +298,7 @@ class TestCrash(unittest.TestCase):
         fetched_from_es_undone = Crash(fetched_from_es)
         assert fetched_from_es_undone == self.exampleCrash1
         fetched_from_es['cpu'] = 'amd64'
-        
+
 
 if __name__ == '__main__':
     unittest.main()

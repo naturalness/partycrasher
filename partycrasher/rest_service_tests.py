@@ -108,7 +108,8 @@ class RestServiceTestCase(unittest.TestCase):
                                  json={'database_id': database_id,
                                        'project': 'alan_parsons'})
 
-        # TODO: Link header/Location header
+        report_url = self.path_to('alan_parsons', 'reports', database_id)
+        assert response.headers.get('Location', '') == report_url
         assert response.status_code == 201
         assert response.json()['database_id'] == database_id
         assert response.json()['bucket'] is not None
@@ -216,13 +217,13 @@ class RestServiceTestCase(unittest.TestCase):
         report_url = self.path_to('alan_parsons', 'reports', database_id)
         response = requests.get(report_url)
         assert response.status_code == 200
-        assert response.json()['crash']['database_id'] == database_id
-        assert response.json()['crash']['bucket'] is not None
-        assert response.json()['crash']['project'] == 'alan_parsons'
+        assert response.json()['database_id'] == database_id
+        assert response.json()['bucket'] is not None
+        assert response.json()['project'] == 'alan_parsons'
         # TODO: bucket url
 
     @unittest.skip
-    def testGetCrashProject(self):
+    def test_get_crash_project(self):
         """
         I'm not super sure what this could be for? (ambiguous)
         """
@@ -243,9 +244,9 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(url, json={'database_id': database_id})
 
         assert response.status_code == 202
-        assert response.json()['crash']['database_id'] == database_id
-        assert response.json()['crash']['bucket'] is not None
-        assert response.json()['crash']['project'] == 'alan_parsons'
+        assert response.json()['database_id'] == database_id
+        assert response.json()['bucket'] is not None
+        assert response.json()['project'] == 'alan_parsons'
         # TODO: bucket url
 
         # Try to find this crash... and fail!
