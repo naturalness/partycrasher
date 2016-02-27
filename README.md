@@ -1,4 +1,7 @@
 # Partycrasher
+
+[![Build Status](https://travis-ci.org/naturalness/partycrasher.svg?branch=master)](https://travis-ci.org/naturalness/partycrasher)
+
 Automated scalable crash bucketing!
 
 Partycrasher is a framework for automatically grouping crash
