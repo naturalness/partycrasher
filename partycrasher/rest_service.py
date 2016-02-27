@@ -48,8 +48,8 @@ def status():
     })
 
 
-@app.route('/reports/', methods=['POST'])
-@app.route('/<project>/reports/', methods=['POST'])
+@app.route('/reports', methods=['POST'])
+@app.route('/<project>/reports', methods=['POST'])
 def add_report(project=None):
     """
     .. _upload-single:
@@ -66,6 +66,13 @@ def add_report(project=None):
     ::
 
         POST /reports HTTP/1.1
+
+    Uploads a new report. The report should be sent as a JSON Object with at
+    least a unique ``database_id`` property. If uploaded to
+    ``/:project/reports``, the ``project`` property will automatically be set.
+
+    The response contains the bucket assignments, as well as the canonical URL
+    to access the report.
 
     ::
 
@@ -97,10 +104,6 @@ def add_report(project=None):
     Upload multiple new reports
     ===========================
 
-    Send multiple reports (formatted as in :ref:`upload-single`) bundled up
-    in a JSON Array (list). The response is a JSON Array of report results.
-    Similar errors and statuses apply.
-
     ::
 
         POST /:project/reports HTTP/1.1
@@ -110,6 +113,10 @@ def add_report(project=None):
     ::
 
         POST /reports HTTP/1.1
+
+    Send multiple reports (formatted as in :ref:`upload-single`) bundled up
+    in a JSON Array (list). The response is a JSON Array of report results.
+    Similar errors and statuses apply.
 
     ::
 
@@ -280,6 +287,16 @@ def update_project_config(project=None):
     """
     raise NotImplementedError()
 
+
+@app.errorhandler(BadRequest)
+def on_bad_request(error):
+    """
+    Handles BadRequest exceptions; sends status 400 back to the client,
+    along with a message sent as JSON.
+    """
+    message = error.message if error.message else 'Bad Request'
+    return jsonify(message=message), 400
+
 #############################################################################
 #                                 Utilities                                 #
 #############################################################################
@@ -308,11 +325,6 @@ def ingest_one(report, project_name):
                   report_id=report['database_id'])
     return report, url
 
-
-@app.errorhandler(BadRequest)
-def on_bad_request(error):
-    message = error.message if error.message else 'Bad Request'
-    return jsonify(message=message), 400
 
 
 def ingest_multiple(reports, project_name):
