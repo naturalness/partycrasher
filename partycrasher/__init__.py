@@ -9,7 +9,7 @@ from partycrasher.es_crash import ESCrash, ReportNotFoundError
 from partycrasher.bucketer import MLTCamelCase
 
 
-__version__ = "0.0.1"
+__version__ = u'0.1.0'
 
 
 class PartyCrasher(object):

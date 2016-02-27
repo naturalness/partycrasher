@@ -49,30 +49,30 @@ def status():
 @app.route('/<project>/reports', methods=['POST'])
 def add_report(project=None):
     """
-    ================
-    Accept new crash
-    ================
+    ===================
+    Upload a new report
+    ===================
 
-    .. code-block:: http
+    ::
 
-        POST /:project/reports
+        POST /:project/reports HTTP/1.1
 
     or
 
-    .. : code-block:: http
+    ::
 
-        POST /reports
+        POST /reports HTTP/1.1
 
-    .. code-block:: http
+    ::
 
         HTTP/1.1 201 Created
-        Location: https://domain.tld/<project>/report/<report id>/
+        Location: https://domain.tld/<project>/report/<report-id>/
 
     .. code-block:: JSON
 
         {
-            "id": <report-id>,
-            "bucket_id": <bucket-id>,
+            "id": "<report-id>",
+            "bucket_id": "<bucket-id>",
             "bucket_url": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>"
         }
 
@@ -80,17 +80,15 @@ def add_report(project=None):
     Possible errors
     ---------------
 
-    When an identical (not just duplicate) crash is posted:
-        .. code-block:: http
+    When an identical (not just duplicate) crash is posted::
 
-            HTTP/1.1 303 See Other
-            Location: https://domain.tld/<project>/report/<report-id>/
+        HTTP/1.1 303 See Other
+        Location: https://domain.tld/<project>/report/<report-id>/
 
     When a project URL is used but the project field in the crash report
-    reports a it belongs to a different project:
-        .. code-block:: http
+    reports a it belongs to a different project::
 
-            HTTP/1.1 400 Bad Request
+        HTTP/1.1 400 Bad Request
 
     """
 

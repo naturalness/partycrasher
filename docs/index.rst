@@ -7,7 +7,7 @@ Contents:
    :maxdepth: 2
 
    rest-api
-
+   proposed-rest-api
 
 
 Indices and tables
@@ -15,3 +15,4 @@ Indices and tables
 
 * :ref:`genindex`
 
+.. vim: set ft=sphinx :
