@@ -58,6 +58,7 @@ def status():
 @app.route('/<project>/reports', methods=['POST'])
 def add_report(project=None):
     """
+    .. api-doc-order: 1.0
     .. _upload-single:
 
     Upload a new report
@@ -174,6 +175,8 @@ def add_report(project=None):
 @app.route('/<project>/reports/<report_id>')
 def view_report(project=None, report_id=None):
     """
+    .. api-doc-order: 2.0
+
     Get information on a crash
     ==========================
 
@@ -240,6 +243,8 @@ def reports_overview(project=None):
 @app.route('/<project>/config')
 def get_project_config(project=None):
     """
+    .. api-doc-order: 100.0
+
     View per-project configuration
     ==============================
 
@@ -265,6 +270,8 @@ def get_project_config(project=None):
 @app.route('/<project>/config', methods=['PATCH'])
 def update_project_config(project=None):
     """
+    .. api-doc-order: 100.0
+
     Set per-project configuration
     =============================
 

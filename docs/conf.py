@@ -30,11 +30,25 @@ from partycrasher import __version__ as partycrasher_version
 
 def create_rest_api_docs():
     """
-    Creates rest-api.rst dynamically from 
+    Creates rest-api.rst automatically from rest_service, using
+    rest-api.rst.template as a template.
+
+    Any documented REST endpoint (decorated with @app.route() and with a
+    docstring such as this one) is concatenated and written to rest-api.rst.
+
+    **To control the order of the documentation**:
+
+    Make this the FIRST line of the docstring::
+
+        .. api-doc-order: 1.0
+
+
+    Where 1.0 can be any float.
     """
+
     # Get a list of endpoints, according to Flask
     known_endpoints = frozenset(rule.endpoint for rule in
-                          rest_service.app.url_map.iter_rules())
+                                rest_service.app.url_map.iter_rules())
 
     def sibling_filename(name):
         return os.path.join(os.path.abspath('.'), name)
@@ -48,13 +62,25 @@ def create_rest_api_docs():
                 continue
             yield textwrap.dedent(function.__doc__)
 
+
     filename = sibling_filename('rest-api.rst')
-    
     with open(sibling_filename('rest-api.rst.template')) as template_file:
         template = template_file.read()
 
+    def by_api_doc_order(docstring):
+        first_non_blank_line = next(line.strip()
+                                    for line in docstring.splitlines()
+                                    if len(line.strip()) > 0)
+        segments = first_non_blank_line.split()
+        # Comapre slices to avoid IndexErrors
+        if len(segments) == 3 and segments[0:2] == ['..', 'api-doc-order:']:
+            return float(segments[2])
+        else:
+            return first_non_blank_line
+
+    body = u'\n\n'.join(sorted(api_endpoints(), key=by_api_doc_order))
+
     with open(filename, 'w') as doc_file:
-        body = u'\n\n'.join(api_endpoints())
         doc_file.write(template.format(body=body,
                                        version=release))
 
