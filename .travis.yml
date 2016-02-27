@@ -1,7 +1,9 @@
 language: python
+sudo: false
+
 # For now, only CPython 2 is supported.
 python:
-- '2.7'
+ - '2.7'
 
 # The following wizard sorcery was copied from here: 
 # https://github.com/elastic/elasticsearch-py/blob/master/.travis.yml
