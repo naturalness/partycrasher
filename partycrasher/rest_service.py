@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 #  Copyright (C) 2016 Joshua Charles Campbell
+#  Copyright (C) 2016 Eddie Antonio Santos
 
 #  This program is free software; you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License
@@ -22,7 +23,7 @@ import os
 from flask import Flask, json, jsonify, request, make_response, url_for
 from flask.ext.cors import CORS
 
-# Hacky things to add this PartyCrasher to the path.
+# Hacky things to add PartyCrasher to the path.
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import partycrasher
 
@@ -40,9 +41,11 @@ class BadRequest(RuntimeError):
 
 @app.route('/')
 def status():
-    return jsonify(partycrasher={'version': partycrasher.__version__,
-                                 'elastic': crasher.esServers,
-                                 'elastic_health': crasher.es.cluster.health()})
+    return jsonify(partycrasher={
+        'version': partycrasher.__version__,
+        'elastic': crasher.esServers,
+        'elastic_health': crasher.es.cluster.health()
+    })
 
 
 @app.route('/reports', methods=['POST'])
@@ -124,16 +127,19 @@ def reports_overview(project=None):
     raise NotImplementedError()
 
 
-@app.route('/<project>/config', methods=['GET', 'PATCH'])
-def project_config(project=None):
-    if request.method == 'PATCH':
-        raise NotImplementedError()
-    if request.method == 'GET':
-        return jsonify(default_threshold=4.0)
+@app.route('/<project>/config')
+def get_project_config(project=None):
+    return jsonify(default_threshold=4.0)
+
+
+@app.route('/<project>/config', methods=['PATCH'])
+def update_project_config(project=None):
+    raise NotImplementedError()
 
 #############################################################################
 #                                 Utilities                                 #
 #############################################################################
+
 
 def ingest_one(report, project_name):
     """
