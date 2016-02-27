@@ -112,9 +112,9 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 201
         assert response.json()['database_id'] == database_id
         assert response.json()['bucket'] is not None
+        assert response.json()['project'] == 'alan_parsons'
         # TODO: bucket url
 
-    @unittest.skip
     def test_add_crash_project(self):
         """
         Add a single crash to a project;
@@ -129,9 +129,9 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(url, json={'database_id': database_id})
 
         assert response.status_code == 201
-        assert response.json()['crash']['database_id'] == database_id
-        assert response.json()['crash']['bucket'] is not None
-        assert response.json()['crash']['project'] == 'alan_parsons'
+        assert response.json()['database_id'] == database_id
+        assert response.json()['bucket'] is not None
+        assert response.json()['project'] == 'alan_parsons'
         # TODO: bucket url
 
     def test_add_crash_project_name_mismatch(self):
@@ -148,9 +148,17 @@ class RestServiceTestCase(unittest.TestCase):
                                  json={'database_id': database_id,
                                        'project': 'brooklyn'})
 
+        # The request should have failed.
         assert response.status_code == 400
 
-    @unittest.skip
+        # Now try to fetch it, globally and from either project
+        assert 404 == requests.get(self.path_to('reports',
+                                               database_id)).status_code
+        assert 404 == requests.get(self.path_to('alan_parsons', 'reports',
+                                               database_id)).status_code
+        assert 404 == requests.get(self.path_to('brooklyn', 'reports',
+                                               database_id)).status_code
+
     def test_add_multiple(self):
         """
         Add multiple crashes to a single project;
@@ -171,19 +179,21 @@ class RestServiceTestCase(unittest.TestCase):
                                  ])
 
         assert response.status_code == 201
-        assert response.json()['crashes'][0]['database_id'] == database_id_a
-        assert response.json()['crashes'][0]['bucket'] is not None
-        assert response.json()['crashes'][0]['project'] == 'alan_parsons'
+        assert len(response.json()) == 3
+
+        assert response.json()[0]['database_id'] == database_id_a
+        assert response.json()[0]['bucket'] is not None
+        assert response.json()[0]['project'] == 'alan_parsons'
         # TODO: bucket url
 
-        assert response.json()['crashes'][1]['database_id'] == database_id_b
-        assert response.json()['crashes'][1]['bucket'] is not None
-        assert response.json()['crashes'][1]['project'] == 'alan_parsons'
+        assert response.json()[1]['database_id'] == database_id_b
+        assert response.json()[1]['bucket'] is not None
+        assert response.json()[1]['project'] == 'alan_parsons'
         # TODO: bucket url
 
-        assert response.json()['crashes'][2]['database_id'] == database_id_c
-        assert response.json()['crashes'][2]['bucket'] is not None
-        assert response.json()['crashes'][2]['project'] == 'alan_parsons'
+        assert response.json()[2]['database_id'] == database_id_c
+        assert response.json()[2]['bucket'] is not None
+        assert response.json()[2]['project'] == 'alan_parsons'
         # TODO: bucket url
         # TODO: ensure if URL project and JSON project conflict HTTP 400
         #       is returned

@@ -19,7 +19,7 @@
 import sys
 import os
 
-from flask import Flask, jsonify, request
+from flask import Flask, json, jsonify, request, make_response
 from flask.ext.cors import CORS
 
 # Hacky things to add this PartyCrasher to the path.
@@ -41,7 +41,7 @@ class BadRequest(RuntimeError):
 @app.errorhandler(BadRequest)
 def on_bad_request(error):
     message = error.message if error.message else 'Bad Request'
-    return message, 400
+    return jsonify(message=message), 400
 
 
 @app.route('/')
@@ -100,14 +100,12 @@ def add_reports(project=None):
 
     """
 
-    posted = request.get_json()
+    report = request.get_json()
 
-    if isinstance(posted, list):
-        result = ingest_multiple(posted, project)
+    if isinstance(report, list):
+        return jsonify_list(ingest_multiple(report, project)), 201
     else:
-        result = ingest_one(posted, project)
-
-    return jsonify(result), 201
+        return jsonify(ingest_one(report, project)), 201
 
 
 def ingest_one(report, project_name):
@@ -125,6 +123,26 @@ def ingest_one(report, project_name):
                          .format(project_name, report['project']))
 
     return crasher.ingest(report)
+
+
+def ingest_multiple(reports, project_name):
+    return [ingest_one(report, project_name) for report in reports]
+
+
+def jsonify_list(seq):
+    """
+    Same as jsonify, but works on lists.
+    """
+    # Coerce to list
+    if not isinstance(seq, list):
+        seq = list(seq)
+
+    should_indent = not (request.headers.get('X-Requested-With', '') ==
+                         'XMLHttpRequest')
+    body = json.dumps(seq, indent=4 if should_indent else None)
+
+    return make_response((body, None, {'Content-Type': 'application/json'}))
+    
 
 
 @app.route('/<project>/reports')
