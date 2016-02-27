@@ -5,7 +5,7 @@ import ConfigParser
 from elasticsearch import Elasticsearch, NotFoundError
 
 from partycrasher.crash import Crash
-from partycrasher.es_crash import ESCrash
+from partycrasher.es_crash import ESCrash, ReportNotFoundError
 from partycrasher.bucketer import MLTCamelCase
 
 

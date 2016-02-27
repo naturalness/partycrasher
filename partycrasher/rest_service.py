@@ -115,8 +115,8 @@ def view_report(project=None, report_id=None):
 
     try:
         report = crasher.get_crash(report_id)
-    except KeyError:
-        return '', 404
+    except partycrasher.ReportNotFoundError:
+        return jsonify(not_found=report_id), 404
     else:
         return jsonify(report)
 

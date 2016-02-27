@@ -79,7 +79,6 @@ class RestServiceTestCase(unittest.TestCase):
         """
         return '/'.join((self.origin,) + args)
 
-    @unittest.skip
     def test_alive(self):
         """
         Can we access the root path?
@@ -87,7 +86,6 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.get(self.root_url)
         assert response.status_code == 200
 
-    @unittest.skip
     def test_basic_cors(self):
         """
         Can we send a pre-flight header?
@@ -199,7 +197,6 @@ class RestServiceTestCase(unittest.TestCase):
         # TODO: ensure if URL project and JSON project conflict HTTP 400
         #       is returned
 
-    @unittest.skip
     def test_get_crash(self):
         """
         Fetch a report from a project.
@@ -214,7 +211,12 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(create_url, json={'database_id': database_id})
         assert response.status_code == 201
 
+        # Wait... because... ElasticSearch... wants us to wait...
+        time.sleep(10)
+
+        # Now fetch it!
         report_url = self.path_to('alan_parsons', 'reports', database_id)
+        print(report_url)
         response = requests.get(report_url)
         assert response.status_code == 200
         assert response.json()['database_id'] == database_id
@@ -389,7 +391,6 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.json()['top_buckets'][0]['bucket'] == database_id_a
         assert response.json()['top_buckets'][0]['number_of_reports'] == 3
 
-    @unittest.skip
     def test_get_project_config(self):
         """
         Fetch per-project configuration.
@@ -442,7 +443,7 @@ def is_allowed_origin(origin, response):
         return True
 
     # Or we're explicitly allowing this host.
-    allowed_origins = [o.strip() for o in raw_origins.split(',')]
+    allowed_origins = [o.strip() for o in raw_origins.split()]
     assert origin in allowed_origins
     return True
 
