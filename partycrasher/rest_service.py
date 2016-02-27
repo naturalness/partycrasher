@@ -32,23 +32,106 @@ CORS(app)
 crasher = partycrasher.PartyCrasher()
 
 
+class BadRequest(RuntimeError):
+    """
+    Raised and handled when something funky happens.
+    """
+
+
+@app.errorhandler(BadRequest)
+def on_bad_request(error):
+    message = error.message if error.message else 'Bad Request'
+    return message, 400
+
+
 @app.route('/')
 def status():
-    return jsonify(partycrasher={'version':partycrasher.__version__,
-                                 'elastic':crasher.esServers,
-                                 'elastic_health':crasher.es.cluster.health()})
+    return jsonify(partycrasher={'version': partycrasher.__version__,
+                                 'elastic': crasher.esServers,
+                                 'elastic_health': crasher.es.cluster.health()})
 
 
-@app.route('/reports', methods=['GET', 'POST'])
-def reports():
-    if request.method == 'POST':
-        posted = request.get_json(force=True)
-        return jsonify(post=posted, headers=dict(request.headers), crash=crasher.ingest(posted)), 201
-    if request.method == 'GET':
-        raise NotImplementedError()
+@app.route('/reports', methods=['POST'])
+@app.route('/<project>/reports', methods=['POST'])
+def add_reports(project=None):
+    """
+    ================
+    Accept new crash
+    ================
+
+    .. code-block:: http
+
+        POST /:project/reports
+
+    or
+
+    .. : code-block:: http
+
+        POST /reports
+
+    .. code-block:: http
+
+        HTTP/1.1 201 Created
+        Location: https://domain.tld/<project>/report/<report id>/
+
+    .. code-block:: JSON
+
+        {
+            "id": <report-id>,
+            "bucket_id": <bucket-id>,
+            "bucket_url": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>"
+        }
+
+    ---------------
+    Possible errors
+    ---------------
+
+    When an identical (not just duplicate) crash is posted:
+        .. code-block:: http
+
+            HTTP/1.1 303 See Other
+            Location: https://domain.tld/<project>/report/<report-id>/
+
+    When a project URL is used but the project field in the crash report does
+    not match the project specified in the url:
+        .. code-block:: http
+
+            HTTP/1.1 400 Bad Request
+
+    """
+
+    posted = request.get_json()
+
+    if isinstance(posted, list):
+        result = ingest_multiple(posted, project)
+    else:
+        result = ingest_one(posted, project)
+
+    return jsonify(result), 201
 
 
-@app.route('/<project>/reports', methods=['GET', 'POST'])
+def ingest_one(report, project_name):
+    if 'project' not in report:
+        if project_name:
+            # Graft the project name onto the report:
+            report['project'] = project_name
+        else:
+            # No project name anywhere. This is not good...
+            raise BadRequest('Missing project name')
+    elif project_name is not None and report['project'] != project_name:
+        raise BadRequest("Project name mismatch: "
+                         "Posted a report to '{0!s}' "
+                         "but the report claims it's from '{1!s}'"
+                         .format(project_name, report['project']))
+
+    return crasher.ingest(report)
+
+
+@app.route('/<project>/reports')
+def reports_overview(project=None):
+    raise NotImplementedError()
+
+
 def project_reports(project=None):
     if request.method == 'POST':
         posted = request.get_json(force=True)
