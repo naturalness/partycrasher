@@ -48,11 +48,12 @@ def status():
     })
 
 
-@app.route('/reports', methods=['POST'])
-@app.route('/<project>/reports', methods=['POST'])
+@app.route('/reports/', methods=['POST'])
+@app.route('/<project>/reports/', methods=['POST'])
 def add_report(project=None):
     """
-    ===================
+    .. _upload-single:
+
     Upload a new report
     ===================
 
@@ -69,21 +70,20 @@ def add_report(project=None):
     ::
 
         HTTP/1.1 201 Created
-        Location: https://domain.tld/<project>/report/<report-id>/
+        Location: https://your.host/<project>/report/<report-id>/
 
     .. code-block:: JSON
 
         {
             "id": "<report-id>",
-            "bucket_id": "<bucket-id>",
+            "bucket": "<bucket-id>",
             "bucket_url": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>"
         }
 
-    ---------------
-    Possible errors
-    ---------------
+    Errors
+    ------
 
-    When an identical (not just duplicate) crash is posted::
+    When an _identical_ (not just duplicate) crash is posted::
 
         HTTP/1.1 303 See Other
         Location: https://domain.tld/<project>/report/<report-id>/
@@ -93,6 +93,55 @@ def add_report(project=None):
 
         HTTP/1.1 400 Bad Request
 
+
+    Upload multiple new reports
+    ===========================
+
+    Send multiple reports (formatted as in :ref:`upload-single`) bundled up
+    in a JSON Array (list). The response is a JSON Array of report results.
+    Similar errors and statuses apply.
+
+    ::
+
+        POST /:project/reports HTTP/1.1
+
+    or
+
+    ::
+
+        POST /reports HTTP/1.1
+
+    ::
+
+        HTTP/1.1 201 Created
+
+    .. code-block:: json
+
+        [
+            {
+                "id": "<report-id 1>",
+                "bucket_id": "<bucket-id 1>",
+                "bucket_url": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id 1>"
+            },
+            {
+                "id": "<report-id 2>",
+                "bucket_id": "<bucket-id 2>",
+                "bucket_url": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id 2>"
+            }
+        ]
+
+    Errors
+    ------
+
+    When an _identical_ (not just duplicate) crash is posted::
+
+        HTTP/1.1 303 See Other
+        Location: https://domain.tld/<project>/report/<report-id>/
+
+    When a project URL is used but the project field in the crash report
+    reports a it belongs to a different project::
+
+        HTTP/1.1 400 Bad Request
     """
 
     report = request.get_json()
@@ -111,6 +160,54 @@ def add_report(project=None):
            endpoint='view_report_no_project')
 @app.route('/<project>/reports/<report_id>')
 def view_report(project=None, report_id=None):
+    """
+    Get information on a crash
+    ==========================
+
+    ::
+
+        GET /:project/reports/:report_id HTTP/1.1
+
+    or
+
+    ::
+
+        GET /reports/:report_id HTTP/1.1
+
+    ::
+
+        HTTP/1.1 200 OK
+        Link: <https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>; rel="related"
+
+    .. code-block:: json
+
+        {
+            "id": "<report-id>",
+            "buckets": {
+                "3.5": {
+                    "id": "<bucket-id, T=3.5>",
+                    "url": "https://domain.tld/<project>/buckets/3.5/<bucket-id>"
+                },
+                "4.0": {
+                    "id": "<bucket-id, T=4.0>",
+                    "url": "https://domain.tld/<project>/buckets/4.0/<bucket-id>"
+                },
+                "4.5": {
+                    "id": "<bucket-id, T=3.5>",
+                    "url": "https://domain.tld/<project>/buckets/4.5/<bucket-id>"
+                }
+            },
+            "threads": [
+                {
+                    "stacktrace": ["..."]
+                }
+            ],
+            "comment": "<some flattering and not-at-all insulting comment about your software>",
+            "os": "<os>",
+            "platform": "<x86/arm, etc.>"
+        }
+
+    """
     # Ignore project.
     assert report_id is not None
 
@@ -122,18 +219,65 @@ def view_report(project=None, report_id=None):
         return jsonify(report)
 
 
-@app.route('/<project>/reports')
+@app.route('/<project>/reports/')
 def reports_overview(project=None):
     raise NotImplementedError()
 
 
 @app.route('/<project>/config')
 def get_project_config(project=None):
+    """
+    View per-project configuration
+    ==============================
+
+    ::
+
+        GET /:project/config HTTP/1.1
+
+    ::
+
+        HTTP/1.1 200 OK
+
+    .. code-block:: json
+
+        {
+            "default_threshold": 4.0
+        }
+
+    """
+
     return jsonify(default_threshold=4.0)
 
 
 @app.route('/<project>/config', methods=['PATCH'])
 def update_project_config(project=None):
+    """
+    Set per-project configuration
+    =============================
+
+    ::
+
+        PATCH /:project/config HTTP/1.1
+
+    Data:
+
+    .. code-block:: json
+
+        {
+            "default-threshold": 3.5
+        }
+
+    ::
+
+        HTTP/1.1 200 OK
+
+    .. code-block:: json
+
+        {
+            "default-threshold": 3.5
+        }
+
+    """
     raise NotImplementedError()
 
 #############################################################################

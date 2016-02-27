@@ -1,6 +1,6 @@
-******************
-REST API {version}
-******************
+*******************************
+PartyCrasher REST API {version}
+*******************************
 
 Overview
 ========
@@ -11,11 +11,12 @@ Overview
  - All paths are also available without the ``/:project/`` prefix in case the
    project is unknown or unspecified.
  - There are three entities:
+
    - Buckets
    - Reports
    - Projects (maintained mostly for psychological acceptability, and compatibility with BugParty)
 
-.. Set the default highlight langauge to HTTP
+.. Set the default highlighting language to HTTP
 .. highlight:: http
 
 {body}

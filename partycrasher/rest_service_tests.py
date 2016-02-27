@@ -212,7 +212,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 201
 
         # Wait... because... ElasticSearch... wants us to wait...
-        time.sleep(10)
+        time.sleep(2.5)
 
         # Now fetch it!
         report_url = self.path_to('alan_parsons', 'reports', database_id)
