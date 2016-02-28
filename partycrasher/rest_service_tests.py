@@ -149,6 +149,9 @@ class RestServiceTestCase(unittest.TestCase):
 
         # The request should have failed.
         assert response.status_code == 400
+        assert response.json()['error'] == 'name_mismatch'
+        assert response.json()['expected'] == 'alan_parsons'
+        assert response.json()['actual'] == 'brooklyn'
 
         # Now try to fetch it, globally and from either project
         assert 404 == requests.get(self.path_to('reports',

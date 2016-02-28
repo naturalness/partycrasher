@@ -20,13 +20,20 @@
 Utilties used in rest_service; these are kept here to unclutter the API file.
 """
 
-from flask import json, request, make_response
+from flask import json, jsonify, request, make_response
 
 
 class BadRequest(RuntimeError):
     """
     Raised and handled when something funky happens.
     """
+    def __init__(self, *args, **kwargs):
+        super(BadRequest, self).__init__(*args)
+        self.fields = kwargs
+
+    def make_response(self):
+        message = self.message if self.message else 'Bad Request'
+        return jsonify(message=self.message, **self.fields)
 
 
 def jsonify_list(seq):

@@ -42,7 +42,7 @@ def on_bad_request(error):
     along with a message sent as JSON.
     """
     message = error.message if error.message else 'Bad Request'
-    return jsonify(message=message), 400
+    return error.make_response(), 400
 
 
 @app.route('/')
@@ -341,13 +341,18 @@ def raise_bad_request_on_project_mismatch(report, project_name):
             report['project'] = project_name
         else:
             # No project name anywhere. This is not good...
-            raise BadRequest('Missing project name')
+            raise BadRequest('Missing project name',
+                             error="missing_project")
 
     elif project_name is not None and report['project'] != project_name:
-        raise BadRequest("Project name mismatch: "
-                         "Posted a report to '{0!s}' "
-                         "but the report claims it's from '{1!s}'"
-                         .format(project_name, report['project']))
+        message = ("Project name mismatch: "
+                   "Posted a report to '{0!s}' "
+                   "but the report claims it's from '{1!s}'"
+                   .format(project_name, report['project']))
+        raise BadRequest(message,
+                         error="name_mismatch",
+                         expected=project_name,
+                         actual=report['project'])
 
 
 def main():
