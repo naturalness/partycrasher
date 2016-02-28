@@ -97,13 +97,13 @@ def add_report(project=None):
     Errors
     ------
 
-    When an _identical_ (not just duplicate) crash is posted::
+    When an *identical* (not just duplicate) report is posted::
 
         HTTP/1.1 303 See Other
         Location: https://domain.tld/<project>/report/<report-id>/
 
-    When a project URL is used but the project field in the crash report
-    reports a it belongs to a different project::
+    When a report is posted to a ``:project/`` URL, but the report declares it
+    belongs to a different project::
 
         HTTP/1.1 400 Bad Request
 
@@ -147,13 +147,13 @@ def add_report(project=None):
     Errors
     ------
 
-    When an _identical_ (not just duplicate) crash is posted::
+    When an *identical* (not just duplicate) report is posted::
 
         HTTP/1.1 303 See Other
         Location: https://domain.tld/<project>/report/<report-id>/
 
-    When a project URL is used but the project field in the crash report
-    reports a it belongs to a different project::
+    When a report is posted to a ``:project/`` URL, but the report declares it
+    belongs to a different project::
 
         HTTP/1.1 400 Bad Request
     """
@@ -177,8 +177,8 @@ def view_report(project=None, report_id=None):
     """
     .. api-doc-order: 2.0
 
-    Get information on a crash
-    ==========================
+    Get information on a report
+    ===========================
 
     ::
 
