@@ -37,6 +37,11 @@ import time
 import unittest
 import uuid
 
+try:
+    from urlparse import urlparse
+except ImportError:
+    from urllib.parse import urlparse
+
 import requests
 
 
@@ -67,6 +72,10 @@ class RestServiceTestCase(unittest.TestCase):
         # Wait for the REST service to start up.
         time.sleep(1)
 
+    #################
+    # Test Utilites #
+    #################
+
     @property
     def root_url(self):
         """
@@ -79,6 +88,10 @@ class RestServiceTestCase(unittest.TestCase):
         Create a URL path, relative to the current origin.
         """
         return '/'.join((self.origin,) + args)
+
+    #########
+    # Tests #
+    #########
 
     def test_alive(self):
         """
@@ -93,6 +106,77 @@ class RestServiceTestCase(unittest.TestCase):
         Does it state that *any* origin can make non-idempotent requests?
         """
         assert is_cross_origin_accessible(self.root_url)
+
+    def test_absolute_url(self):
+        """
+        Does the server return absolute URIs?
+
+        Relies on the root returing a ``self`` object.
+        """
+
+        response = requests.get(self.root_url)
+
+        resource = response.json().get('self')
+        assert resource is not None
+
+        href = urlparse(resource.get('href', ''))
+        assert href.scheme == 'http'
+        assert href.host == 'localhost'
+        assert href.path == '/'
+
+    def test_absolute_url_behind_older_proxy(self):
+        """
+        Does the server return User-Agent-facing absolute URIs behind proxies?
+
+        Using older, de facto standards:
+        https://en.wikipedia.org/wiki/X-Forwarded-For
+
+        Relies on the root returing a ``self`` object.
+        """
+
+        proxy_headers = {
+            'Front-End-Https': 'on',
+            'X-Forwarded-Host': 'example.org',
+            'X-Forwarded-By': 'localhost',
+            'X-Forwarded-Proto': 'https',
+            'X-Forwarded-Ssl': 'on',
+            'X-Forwarded-For': '0.0.0.0, 127.0.0.1'
+        }
+        response = requests.get(self.root_url, headers=proxy_headers)
+
+        resource = response.json().get('self')
+        assert resource is not None
+
+        href = urlparse(resource.get('href', ''))
+        assert href.scheme == 'https'
+        assert href.host == 'example.org'
+        assert href.path == '/'
+
+    def test_absolute_url_behind_newer_proxy(self):
+        """
+        Does the server return User-Agent-facing absolute URIs behind proxies?
+
+        Using the Forwarded HTTP Extension:
+        https://tools.ietf.org/html/rfc7239
+
+        Relies on the root returing a ``self`` object.
+        """
+
+        proxy_headers = {
+            'Forwarded': ('for = 0.0.0.0;'
+                          'host = example.org;'
+                          'proto = https')
+        }
+        response = requests.get(self.root_url, headers=proxy_headers)
+
+        resource = response.json().get('self')
+        assert resource is not None
+
+        href = urlparse(resource.get('href', ''))
+        assert href.scheme == 'https'
+        assert href.host == 'example.org'
+        assert href.path == '/'
+
 
     def test_add_crash(self):
         """
