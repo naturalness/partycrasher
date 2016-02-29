@@ -28,7 +28,7 @@ from flask.ext.cors import CORS
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import partycrasher
 
-from partycrasher.rest_api_utils import BadRequest, jsonify_list
+from partycrasher.rest_api_utils import BadRequest, jsonify_list, href
 
 app = Flask('partycrasher')
 CORS(app)
@@ -100,15 +100,10 @@ def root():
     return jsonify(partycrasher=
                    {
                        'version': partycrasher.__version__,
-                       'canonical_url': url_for('/'),
                        'elastic': crasher.esServers,
                        'elastic_health': crasher.es.cluster.health()
                    },
-                   self={
-                       'href': url_for('root'),
-                       'rel': 'canonical',
-                       'methods': ['GET', 'HEAD']
-                   },
+                   self=dict(href('root'), rel='canonical'),
                    projects="NOT-IMPLEMENTED",
                    config={
                        'default_threshold': 4.0

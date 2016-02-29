@@ -20,7 +20,7 @@
 Utilties used in rest_service; these are kept here to unclutter the API file.
 """
 
-from flask import json, jsonify, request, make_response
+from flask import json, jsonify, request, make_response, url_for
 
 
 class BadRequest(RuntimeError):
@@ -51,3 +51,14 @@ def jsonify_list(seq):
     body = json.dumps(seq, indent=4 if should_indent else None)
 
     return make_response((body, None, {'Content-Type': 'application/json'}))
+
+
+def href(route, *args, **kwargs):
+    """
+    Like url_for, but returns a dictionary, with a key ``href`` which is the
+    external-facing URL for the service.
+    """
+
+    url = url_for(route, _external=True, *args, **kwargs)
+    # TODO: Methods; should also add methods!
+    return {'href': url, 'method': ['GET']}

@@ -121,7 +121,7 @@ class RestServiceTestCase(unittest.TestCase):
 
         href = urlparse(resource.get('href', ''))
         assert href.scheme == 'http'
-        assert href.host == 'localhost'
+        assert href.netloc == self.origin[len('http://'):]
         assert href.path == '/'
 
     def test_absolute_url_behind_older_proxy(self):
@@ -149,7 +149,7 @@ class RestServiceTestCase(unittest.TestCase):
 
         href = urlparse(resource.get('href', ''))
         assert href.scheme == 'https'
-        assert href.host == 'example.org'
+        assert href.netloc == 'example.org'
         assert href.path == '/'
 
     def test_absolute_url_behind_newer_proxy(self):
@@ -174,7 +174,7 @@ class RestServiceTestCase(unittest.TestCase):
 
         href = urlparse(resource.get('href', ''))
         assert href.scheme == 'https'
-        assert href.host == 'example.org'
+        assert href.netloc == 'example.org'
         assert href.path == '/'
 
 
