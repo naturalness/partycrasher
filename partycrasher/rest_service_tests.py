@@ -49,6 +49,10 @@ import requests
 REST_SERVICE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                  'rest_service.py')
 
+# XXX: REMOVE THIS (Ignore the octal literals)
+from datetime import datetime
+PAST_DUE_DATE = datetime.today() >= datetime(2016, 03, 04)
+
 # TODO: database_id => id.
 
 class RestServiceTestCase(unittest.TestCase):
@@ -120,9 +124,12 @@ class RestServiceTestCase(unittest.TestCase):
         assert resource is not None
 
         href = urlparse(resource.get('href', ''))
-        assert href.scheme == 'http'
-        assert href.netloc == self.origin[len('http://'):]
+        # Test in decreasing order of likely correctness:
+        # Path => Domain => Scheme
         assert href.path == '/'
+        # Get the origin name, minus the scheme.
+        assert href.netloc == urlparse(self.origin).netloc
+        assert href.scheme == 'http'
 
     def test_absolute_url_behind_older_proxy(self):
         """
@@ -148,9 +155,11 @@ class RestServiceTestCase(unittest.TestCase):
         assert resource is not None
 
         href = urlparse(resource.get('href', ''))
-        assert href.scheme == 'https'
-        assert href.netloc == 'example.org'
+        # Test in decreasing order of likely correctness:
+        # Path => Domain => Scheme
         assert href.path == '/'
+        assert href.netloc == 'example.org'
+        assert href.scheme == 'https'
 
     def test_absolute_url_behind_newer_proxy(self):
         """
@@ -173,9 +182,11 @@ class RestServiceTestCase(unittest.TestCase):
         assert resource is not None
 
         href = urlparse(resource.get('href', ''))
-        assert href.scheme == 'https'
-        assert href.netloc == 'example.org'
+        # Test in decreasing order of likely correctness:
+        # Path => Domain => Scheme
         assert href.path == '/'
+        assert href.netloc == 'example.org'
+        assert href.scheme == 'https'
 
 
     def test_add_crash(self):
@@ -218,6 +229,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.json()['project'] == 'alan_parsons'
         # TODO: bucket url
 
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_add_identical_crash_to_project(self):
         """
         Adds an IDENTICAL report to a project;
@@ -321,7 +333,7 @@ class RestServiceTestCase(unittest.TestCase):
         # TODO: ensure if URL project and JSON project conflict HTTP 400
         #       is returned
 
-    def test_get_project(self):
+    def test_get_crash(self):
         """
         Fetch a report globally.
         """
@@ -373,7 +385,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.json()['project'] == 'alan_parsons'
         # TODO: bucket url
 
-    @unittest.skip
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_dry_run(self):
         """
         Returns the bucket assignment were the given crash to be added.
@@ -396,7 +408,7 @@ class RestServiceTestCase(unittest.TestCase):
                                              database_id))
         assert response.status_code == 404
 
-    @unittest.skip
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_delete_crash(self):
         """
         Remove a report globally.
@@ -422,8 +434,8 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.get(report_url)
         assert response.status_code == 404
 
-    @unittest.skip
-    def test_delete_crash_project(self):
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
+    def test_delete_crash_from_project(self):
         """
         Remove a report, referenced through its project.
 
@@ -457,7 +469,7 @@ class RestServiceTestCase(unittest.TestCase):
         # TODO: ensure if URL project and JSON project conflict HTTP 400
         #       is returned
 
-    @unittest.skip
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_get_project_bucket(self):
         """
         Fetch a bucket and its contents.
@@ -499,7 +511,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert (response.json()['top_reports'][0]['tfidf_trickery'] ==
                 tfidf_trickery)
 
-    @unittest.skip
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_get_top_buckets(self):
         """
         Get top buckets for a given time frame.
@@ -531,6 +543,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.json()['top_buckets'][0]['bucket'] == database_id_a
         assert response.json()['top_buckets'][0]['number_of_reports'] == 3
 
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_get_project_config(self):
         """
         Fetch per-project configuration.
@@ -539,7 +552,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 200
         assert 0.0 <= float(response.json()['default_threshold']) <= 10.0
 
-    @unittest.skip
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_change_project_config(self):
         """
         Patch the project's default threshold.
