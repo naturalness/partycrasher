@@ -20,6 +20,8 @@
 Utilties used in rest_service; these are kept here to unclutter the API file.
 """
 
+import re
+
 from flask import json, jsonify, request, make_response, url_for
 
 
@@ -34,6 +36,12 @@ class BadRequest(RuntimeError):
     def make_response(self):
         message = self.message if self.message else 'Bad Request'
         return jsonify(message=self.message, **self.fields)
+
+
+class UnknownHostError(RuntimeError):
+    """
+    Raised when we could not determine the original host.
+    """
 
 
 def jsonify_list(seq):
@@ -55,10 +63,60 @@ def jsonify_list(seq):
 
 def href(route, *args, **kwargs):
     """
-    Like url_for, but returns a dictionary, with a key ``href`` which is the
+    Like url_for(), but returns a dictionary, with a key ``href`` which is the
     external-facing URL for the service.
     """
 
-    url = url_for(route, _external=True, *args, **kwargs)
+    host = determine_user_agent_facing_host()
+    path = url_for(route, *args, **kwargs)
     # TODO: Methods; should also add methods!
-    return {'href': url, 'method': ['GET']}
+    return {'href': host + path, 'method': ['GET']}
+
+
+def host_from_forwarded_header(content):
+    pairs = dict(parse_forwarded_pair(segment)
+                 for segment in cleave(';', content))
+    try:
+        hostname = pairs['host']
+        scheme = pairs['proto']
+    except KeyError:
+        raise UnknownHostError("Forwarded header does not contain host "
+                               "and/or proto")
+    return scheme + '://' + hostname
+
+
+def first_of(dictionary, *keys):
+    for key in keys:
+        if key in dictionary:
+            return dictionary[key]
+    raise KeyError(keys)
+
+
+def host_from_legacy_headers(headers):
+    try:
+        scheme = first_of(headers,
+                          'X-Forwarded-Proto',
+                          'X-Forwarded-Protocol')
+        hostname = headers['X-Forwarded-Host']
+    except KeyError:
+        raise UnknownHostError('Could not determine host from legacy '
+                               'forwarding headers')
+    return scheme + '://' + hostname
+
+
+def parse_forwarded_pair(pair_text):
+    key, value = cleave('=', pair_text.strip(), 2)
+    return (key, value.strip('"'))
+
+
+def cleave(separator, string, maxsplit=0):
+    return re.split(r'\s*' + separator + r'\s*', string, maxsplit)
+
+
+def determine_user_agent_facing_host():
+    if 'Forwarded' in request.headers:
+        return host_from_forwarded_header(request.headers['Forwarded'])
+    elif 'X-Forwarded-Host' in request.headers:
+        return host_from_legacy_headers(request.headers)
+    else:
+        return request.url_root.rstrip('/')
