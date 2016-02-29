@@ -18,6 +18,8 @@ Overview
 
 .. Set the default highlighting language to HTTP
 .. highlight:: http
+.. Set the default role to `any` -- it will usually do the right thing.
+.. default-role:: any
 
 {body}
 

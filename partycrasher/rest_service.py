@@ -46,19 +46,80 @@ def on_bad_request(error):
 
 
 @app.route('/')
-def status():
-    return jsonify(partycrasher={
-        'version': partycrasher.__version__,
-        'elastic': crasher.esServers,
-        'elastic_health': crasher.es.cluster.health()
-    })
+def root():
+    """
+    .. api-doc-order: 0
+
+    Conventions
+    ===========
+
+    Resource Links
+    --------------
+
+    Resources may be projects, buckets, reports, and other such entities.
+
+    A resources contains its hyperlink reference (i.e., URL), acceptable HTTP
+    methods, and (sometimes) its `link relation`_.
+
+    .. _link relation: http://www.iana.org/assignments/link-relations/link-relations.xhtml
+
+    ``methods`` lists any allowable HTTP methods *in addition* to ``OPTIONS``.
+    The same information can be obtained by issuing an ``OPTIONS`` request to
+    the ``href`` and parsing the ``ALLOW`` field in the response.
+
+    .. code-block:: json
+
+        {
+            "resource": {
+                "href": "http://domain.tld/path/to/resource",
+                "rel": "",
+                "methods": [
+                    "GET"
+                ]
+            }
+        }
+
+    .. code-block:: none
+
+        partycrasher
+        ├── alan_parsons
+        │   ├── buckets
+        │   ├── config
+        │   └── reports
+        │       └── dry_run
+        ├── buckets
+        ├── config
+        └── reports
+            └── dry_run
+
+    .. The root route; I'm really rooting for it.
+
+    """
+
+    # This should be a tree for all of the services available.
+    return jsonify(partycrasher=
+                   {
+                       'version': partycrasher.__version__,
+                       'canonical_url': url_for('/'),
+                       'elastic': crasher.esServers,
+                       'elastic_health': crasher.es.cluster.health()
+                   },
+                   self={
+                       'href': url_for('root'),
+                       'rel': 'canonical',
+                       'methods': ['GET', 'HEAD']
+                   },
+                   projects="NOT-IMPLEMENTED",
+                   config={
+                       'default_threshold': 4.0
+                   })
 
 
 @app.route('/reports', methods=['POST'])
 @app.route('/<project>/reports', methods=['POST'])
 def add_report(project=None):
     """
-    .. api-doc-order: 1.0
+    .. api-doc-order: 1
     .. _upload-single:
 
     Upload a new report
@@ -90,8 +151,14 @@ def add_report(project=None):
 
         {
             "id": "<report-id>",
-            "bucket": "<bucket-id>",
-            "bucket_url": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>"
+            "self": {
+                "href": "https://domain.tld/<project>/reports/<bucket-id>"
+            },
+            "bucket": {
+                "id": "<bucket-id>",
+                "href": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>"
+                "rel": "canonical"
+            }
         }
 
     Errors
@@ -175,7 +242,7 @@ def add_report(project=None):
 @app.route('/<project>/reports/<report_id>')
 def view_report(project=None, report_id=None):
     """
-    .. api-doc-order: 2.0
+    .. api-doc-order: 2
 
     Get information on a report
     ===========================
@@ -243,7 +310,7 @@ def reports_overview(project=None):
 @app.route('/<project>/config')
 def get_project_config(project=None):
     """
-    .. api-doc-order: 100.0
+    .. api-doc-order: 100
 
     View per-project configuration
     ==============================

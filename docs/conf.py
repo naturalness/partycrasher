@@ -60,12 +60,12 @@ def create_rest_api_docs():
             if not function.__doc__ :
                 warnings.warn('Undocumented API endpoint: ' + function.__name__)
                 continue
-            yield textwrap.dedent(function.__doc__)
+            yield textwrap.dedent(function.__doc__.decode('UTF-8'))
 
 
     filename = sibling_filename('rest-api.rst')
     with open(sibling_filename('rest-api.rst.template')) as template_file:
-        template = template_file.read()
+        template = template_file.read().decode('UTF-8')
 
     def by_api_doc_order(docstring):
         first_non_blank_line = next(line.strip()
@@ -80,9 +80,10 @@ def create_rest_api_docs():
 
     body = u'\n\n'.join(sorted(api_endpoints(), key=by_api_doc_order))
 
-    with open(filename, 'w') as doc_file:
-        doc_file.write(template.format(body=body,
-                                       version=release))
+    with open(filename, 'wb') as doc_file:
+        content = template.format(body=body,
+                                  version=release)
+        doc_file.write(content.encode('UTF-8'))
 
 
 
