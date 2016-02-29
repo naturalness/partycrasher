@@ -149,6 +149,13 @@ class ESCrash(Crash):
             # should this be ESCRash.__base__?
             return Crash(response['hits']['hits'][0]['_source'])
 
+    @classmethod
+    def index_create(cls, index='crashes'):
+        if cls.es.indices.exists(index=index):
+            return
+        else:
+            raise NotImplementedError()
+
     def __init__(self, index='crashes', crash=None):
         self.index = index
         self.hot = False
