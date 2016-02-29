@@ -179,7 +179,11 @@ class ESCrash(Crash):
                                 }
                             }
                         )
-
+                            
+    def delete():
+        del _cached[self['database_id']]
+        # code to delete from ES
+        # clear self
 
 import unittest
 class TestCrash(unittest.TestCase):
