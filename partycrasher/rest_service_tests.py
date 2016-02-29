@@ -44,6 +44,7 @@ import requests
 REST_SERVICE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                  'rest_service.py')
 
+# TODO: database_id => id.
 
 class RestServiceTestCase(unittest.TestCase):
     def setUp(self):
@@ -107,14 +108,14 @@ class RestServiceTestCase(unittest.TestCase):
                                        'project': 'alan_parsons'})
 
         report_url = self.path_to('alan_parsons', 'reports', database_id)
-        assert response.headers.get('Location', '') == report_url
+        assert response.headers.get('Location') == report_url
         assert response.status_code == 201
         assert response.json()['database_id'] == database_id
         assert response.json()['bucket'] is not None
         assert response.json()['project'] == 'alan_parsons'
         # TODO: bucket url
 
-    def test_add_crash_project(self):
+    def test_add_crash_to_project(self):
         """
         Add a single crash to a project;
         it must return its default bucket assignment
@@ -132,6 +133,42 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.json()['bucket'] is not None
         assert response.json()['project'] == 'alan_parsons'
         # TODO: bucket url
+
+    def test_add_identical_crash_to_project(self):
+        """
+        Adds an IDENTICAL report to a project;
+        this must redirect to the existing report.
+        """
+
+        url = self.path_to('alan_parsons', 'reports')
+        assert is_cross_origin_accessible(url)
+
+        # Make a new, unique database ID.
+        database_id = str(uuid.uuid4())
+        report = {
+            'database_id': database_id,
+            'platform': 'xbone'
+        }
+        response = requests.post(url, json=report)
+
+        # Check that it's created.
+        assert response.status_code == 201
+        assert response.json()['database_id'] == database_id
+        assert response.json()['bucket'] is not None
+        assert response.json()['project'] == 'alan_parsons'
+        # TODO: bucket url
+        report_url = response.headers.get('Location')
+        assert report_url is not None
+
+        # After inserts, gotta wait...
+        wait_for_elastic_search()
+
+        # Now insert it again!
+        response = requests.post(url, json=report)
+
+        # Must be a redirect.
+        assert response.status_code == 303
+        assert response.headers.get('Location') == report_url
 
     def test_add_crash_project_name_mismatch(self):
         """
@@ -200,11 +237,37 @@ class RestServiceTestCase(unittest.TestCase):
         # TODO: ensure if URL project and JSON project conflict HTTP 400
         #       is returned
 
-    def test_get_crash(self):
+    def test_get_project(self):
+        """
+        Fetch a report globally.
+        """
+        create_url = self.path_to('reports')
+        assert is_cross_origin_accessible(create_url)
+
+        # Insert a new crash with a unique database ID.
+        database_id = str(uuid.uuid4())
+        report = {
+            'database_id': database_id,
+            'project': 'alan_parsons'
+        }
+
+        response = requests.post(create_url, json=report)
+        assert response.status_code == 201
+
+        wait_for_elastic_search()
+
+        # Now fetch it! Globally!
+        report_url = self.path_to('reports', database_id)
+        response = requests.get(report_url)
+        assert response.status_code == 200
+        assert response.json()['database_id'] == database_id
+        assert response.json()['bucket'] is not None
+        assert response.json()['project'] == 'alan_parsons'
+        # TODO: bucket url
+
+    def test_get_crash_from_project(self):
         """
         Fetch a report from a project.
-
-        Note that GETs are ALWAYS cross-origin accessible.
         """
         create_url = self.path_to('alan_parsons', 'reports')
         assert is_cross_origin_accessible(create_url)
@@ -215,26 +278,16 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 201
 
         # Wait... because... ElasticSearch... wants us to wait...
-        time.sleep(2.5)
+        wait_for_elastic_search()
 
         # Now fetch it!
         report_url = self.path_to('alan_parsons', 'reports', database_id)
-        print(report_url)
         response = requests.get(report_url)
         assert response.status_code == 200
         assert response.json()['database_id'] == database_id
         assert response.json()['bucket'] is not None
         assert response.json()['project'] == 'alan_parsons'
         # TODO: bucket url
-
-    @unittest.skip
-    def test_get_crash_project(self):
-        """
-        I'm not super sure what this could be for? (ambiguous)
-        """
-        raise NotImplementedError()
-        # TODO: ensure if URL project and JSON project conflict HTTP 400
-        #       is returned
 
     @unittest.skip
     def test_dry_run(self):
@@ -450,6 +503,9 @@ def is_allowed_origin(origin, response):
     assert origin in allowed_origins
     return True
 
+
+def wait_for_elastic_search():
+    time.sleep(2.5)
 
 if __name__ == '__main__':
     unittest.main()
