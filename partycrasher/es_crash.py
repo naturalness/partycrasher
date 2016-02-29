@@ -38,7 +38,6 @@ class ESCrashMeta(type):
     # just return that very same object
     # It's not my fault, the only way to do this is with metaclasses.
     # I seriously tried.
-    _cached = {}
     def __call__(cls, crash=None, index='crashes', unsafe=False):
         if not unsafe:
             cls.index_create(index)
@@ -149,41 +148,6 @@ class ESCrash(Crash):
         else:
             # should this be ESCRash.__base__?
             return Crash(response['hits']['hits'][0]['_source'])
-
-    @classmethod
-    def index_create(cls, index='crashes'):
-        if cls.es.indices.exists(index=index):
-            return
-        else:
-            #known_types = {
-            #datetime : 'date',
-            #Stacktrace: None,
-            #}
-            #properties = {}
-            #for field, info in cls.canonical_fields.iteritems():
-            #ftype = known_types[info['type']]
-            #properties[field] = {
-            #'type': ftype
-            #}
-            cls.es.indices.create(index=index,
-                                  body={
-                                      'mappings': {
-                                          'crash': {
-                                              'properties': {
-                                                  'database_id': {
-                                                      'type': 'string',
-                                                      'index': 'not_analyzed'
-                                                  },
-                                                  'bucket': {
-                                                      'type': 'string',
-                                                      'index': 'not_analyzed',
-                                                  }
-                                              }
-                                          }
-                                      }
-                                  }
-                                  )
-            cls.es.cluster.health(wait_for_status='yellow')
 
     def __init__(self, index='crashes', crash=None):
         self.index = index

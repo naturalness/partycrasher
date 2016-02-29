@@ -65,6 +65,10 @@ class Bucketer(object):
                             'type': 'string',
                             'index': 'not_analyzed',
                             },
+                        'project': {
+                            'type': 'string',
+                            'index': 'not_analyzed',
+                            },
                         }
                     }
                 },
