@@ -20,8 +20,7 @@
 Utilties used in rest_service; these are kept here to unclutter the API file.
 """
 
-import re
-
+import httpheader
 from flask import json, jsonify, request, make_response, url_for
 
 
@@ -69,27 +68,34 @@ def href(route, *args, **kwargs):
 
     host = determine_user_agent_facing_host()
     path = url_for(route, *args, **kwargs)
-    # TODO: Methods; should also add methods!
+    # TODO: Methods: can use request.endpoint to determine acceptable methods.
     return {'href': host + path, 'method': ['GET']}
 
 
+def determine_user_agent_facing_host():
+    if 'Forwarded' in request.headers:
+        return host_from_forwarded_header(request.headers['Forwarded'])
+    elif 'X-Forwarded-Host' in request.headers:
+        return host_from_legacy_headers(request.headers)
+    else:
+        return request.url_root.rstrip('/')
+
+
 def host_from_forwarded_header(content):
-    pairs = dict(parse_forwarded_pair(segment)
-                 for segment in cleave(';', content))
+    """
+    Parses according to [RFC7239]
+
+    https://tools.ietf.org/html/rfc7239#section-5
+    """
+    pairs = parse_forwarded_header(content)
+
     try:
         hostname = pairs['host']
         scheme = pairs['proto']
     except KeyError:
         raise UnknownHostError("Forwarded header does not contain host "
-                               "and/or proto")
+                               "and/or protocol")
     return scheme + '://' + hostname
-
-
-def first_of(dictionary, *keys):
-    for key in keys:
-        if key in dictionary:
-            return dictionary[key]
-    raise KeyError(keys)
 
 
 def host_from_legacy_headers(headers):
@@ -104,19 +110,14 @@ def host_from_legacy_headers(headers):
     return scheme + '://' + hostname
 
 
-def parse_forwarded_pair(pair_text):
-    key, value = cleave('=', pair_text.strip(), 2)
-    return (key, value.strip('"'))
+def parse_forwarded_header(content):
+    parameters, _  = httpheader.parse_parameter_list(content)
+    return {name: httpheader.parse_token_or_quoted_string(value)[0]
+            for name, value in parameters}
 
 
-def cleave(separator, string, maxsplit=0):
-    return re.split(r'\s*' + separator + r'\s*', string, maxsplit)
-
-
-def determine_user_agent_facing_host():
-    if 'Forwarded' in request.headers:
-        return host_from_forwarded_header(request.headers['Forwarded'])
-    elif 'X-Forwarded-Host' in request.headers:
-        return host_from_legacy_headers(request.headers)
-    else:
-        return request.url_root.rstrip('/')
+def first_of(dictionary, *keys):
+    for key in keys:
+        if key in dictionary:
+            return dictionary[key]
+    raise KeyError(keys)
