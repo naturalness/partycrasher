@@ -38,6 +38,8 @@ class ESCrashMeta(type):
     # just return that very same object
     # It's not my fault, the only way to do this is with metaclasses.
     # I seriously tried.
+    _cached = {}
+
     def __call__(cls, crash=None, index='crashes', unsafe=False):
         if not unsafe:
             cls.index_create(index)
