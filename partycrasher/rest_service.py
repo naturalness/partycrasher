@@ -41,7 +41,6 @@ def on_bad_request(error):
     Handles BadRequest exceptions; sends status 400 back to the client,
     along with a message sent as JSON.
     """
-    message = error.message if error.message else 'Bad Request'
     return error.make_response(), 400
 
 
@@ -372,7 +371,9 @@ def ingest_one(report, project_name):
     Returns a tuple of ingested report and its URL.
     """
 
-    raise_bad_request_on_project_mismatch(report, project_name)
+    raise_bad_request_if_project_mismatch(report, project_name)
+    # Graft the project name onto the report.
+    report.setdefault('project', project_name)
 
     report = crasher.ingest(report)
     url = url_for('view_report',
@@ -389,24 +390,17 @@ def ingest_multiple(reports, project_name):
     return [ingest_one(report, project_name)[0] for report in reports]
 
 
-def raise_bad_request_on_project_mismatch(report, project_name):
+def raise_bad_request_if_project_mismatch(report, project_name):
     """
     Checks if the project in the report and the given project name are the
     same.
-
-    Side-effect: grafts the correct project name when not present in the
-    report.
     """
     if 'project' not in report:
-        if project_name:
-            # Graft the project name onto the report:
-            report['project'] = project_name
-        else:
+        if project_name is None:
             # No project name anywhere. This is not good...
             raise BadRequest('Missing project name',
                              error="missing_project")
-
-    elif project_name is not None and report['project'] != project_name:
+    elif project_name and project_name != report['project']:
         message = ("Project name mismatch: "
                    "Posted a report to '{0!s}' "
                    "but the report claims it's from '{1!s}'"
