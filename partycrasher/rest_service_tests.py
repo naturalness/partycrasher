@@ -32,7 +32,6 @@ import os
 import random
 import signal
 import subprocess
-import sys
 import time
 import unittest
 import uuid
@@ -44,14 +43,12 @@ except ImportError:
 
 import requests
 
-
 # Full path to ./rest_service.py
 REST_SERVICE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                  'rest_service.py')
 
 # XXX: REMOVE THIS (Ignore the octal literals)
-from datetime import datetime
-PAST_DUE_DATE = datetime.today() >= datetime(2016, 03, 04)
+PAST_DUE_DATE = datetime.datetime.today() >= datetime.datetime(2016, 03, 04)
 
 # TODO: database_id => id.
 
@@ -172,6 +169,7 @@ class RestServiceTestCase(unittest.TestCase):
         """
 
         proxy_headers = {
+            #'Forwarded': ('for = 0.0.0.0, for = 127.0.0;'
             'Forwarded': ('for = 0.0.0.0;'
                           'host = example.org;'
                           'proto = https')
@@ -198,9 +196,13 @@ class RestServiceTestCase(unittest.TestCase):
 
         # Make a new, unique database ID.
         database_id = str(uuid.uuid4())
+        before_insert = datetime.datetime.utcnow()
+
         response = requests.post(self.path_to('reports'),
                                  json={'database_id': database_id,
                                        'project': 'alan_parsons'})
+
+        after_insert = datetime.datetime.utcnow()
 
         report_url = self.path_to('alan_parsons', 'reports', database_id)
         assert response.headers.get('Location') == report_url
@@ -208,7 +210,12 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.json()['database_id'] == database_id
         assert response.json()['bucket'] is not None
         assert response.json()['project'] == 'alan_parsons'
+
+        insert_date = response.json().get('date_bucketed')
+        assert insert_date is not None
         # TODO: bucket url
+
+        assert before_insert <= parse_date(insert_date) <= after_insert
 
     def test_add_crash_to_project(self):
         """
@@ -603,6 +610,12 @@ def is_allowed_origin(origin, response):
 
 def wait_for_elastic_search():
     time.sleep(2.5)
+
+
+def parse_date(date):
+    assert isinstance(date, float)
+    return datetime.datetime.fromtimestamp(date / 1000.0)
+
 
 if __name__ == '__main__':
     unittest.main()

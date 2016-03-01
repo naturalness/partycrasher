@@ -16,11 +16,14 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import datetime, time
-from crash import Crash, Stacktrace, Stackframe
+import datetime
+import time
+from weakref import WeakValueDictionary
+
 import elasticsearch
 from elasticsearch import Elasticsearch
-from weakref import WeakValueDictionary
+
+from crash import Crash, Stacktrace, Stackframe
 
 
 class ReportNotFoundError(KeyError):
@@ -42,8 +45,6 @@ class ESCrashMeta(type):
     _cached = {}
 
     def __call__(cls, crash=None, index='crashes', unsafe=False):
-        if not unsafe:
-            cls.index_create(index)
         # This is the case that the constructor was called with a whole
         # crash datastructure
         if index not in cls._cached:
@@ -70,13 +71,15 @@ class ESCrashMeta(type):
                     return newish
                 # It's not in ES, so add it
                 else:
+                    # Ensure this is UTC time in milliseconds since the epoch.
+                    now = datetime.datetime.utcnow()
+                    crash['date_bucketed'] = miliseconds_since_epoch(now)
                     try:
-                        r = cls.es.create(index=index,
-                                    doc_type='crash',
-                                    body=crash,
-                                    id=crash['database_id'],
-                                    )
-                        assert r['created']
+                        response = cls.es.create(index=index,
+                                                 doc_type='crash',
+                                                 body=crash,
+                                                 id=crash['database_id'])
+                        assert response['created']
                     except elasticsearch.exceptions.ConflictError as e:
                         if 'DocumentAlreadyExistsException' in e.error:
                             print "Got DocumentAlreadyExistsException on create!"
@@ -152,13 +155,6 @@ class ESCrash(Crash):
             # should this be ESCRash.__base__?
             return Crash(response['hits']['hits'][0]['_source'])
 
-    @classmethod
-    def index_create(cls, index='crashes'):
-        if cls.es.indices.exists(index=index):
-            return
-        else:
-            raise NotImplementedError()
-
     def __init__(self, index='crashes', crash=None):
         self.index = index
         self.hot = False
@@ -182,11 +178,13 @@ class ESCrash(Crash):
                                 }
                             }
                         )
-                            
+
     def delete():
         del _cached[self['database_id']]
-        # code to delete from ES
-        # clear self
+        raise NotImplementedError
+        # TODO: code to delete from ES
+        # TODO: clear self
+
 
 import unittest
 class TestCrash(unittest.TestCase):
@@ -278,6 +276,12 @@ class TestCrash(unittest.TestCase):
         fetched_from_es['cpu'] = 'amd64'
 
 
+def miliseconds_since_epoch(then):
+    """
+    http://stackoverflow.com/a/8160307
+    """
+    return time.mktime(then.timetuple())*1e3 + then.microsecond/1e3
+
+
 if __name__ == '__main__':
     unittest.main()
-

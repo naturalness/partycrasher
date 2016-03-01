@@ -6,12 +6,12 @@
 #  modify it under the terms of the GNU General Public License
 #  as published by the Free Software Foundation; either version 2
 #  of the License, or (at your option) any later version.
-#  
+#
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-#  
+#
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -20,13 +20,14 @@ import json, uuid, time
 from crash import Crash
 from es_crash import ESCrash
 
+
 class Bucketer(object):
     """Superclass for bucketers which require pre-existing data to work.
     The default analyzer breaks on whitespace."""
-    
-    def __init__(self, 
-                 max_buckets=0, 
-                 name=None, 
+
+    def __init__(self,
+                 max_buckets=0,
+                 name=None,
                  index='crashes',
                  es=None,
                  lowercase=False,
@@ -38,11 +39,11 @@ class Bucketer(object):
         self.index = index
         self.es = es
         self.lowercase = lowercase
-    
+
     def bucket(self, crash):
         assert isinstance(crash, Crash)
         raise NotImplementedError("I don't know how to generate a signature for this crash.")
-    
+
     def create_index(self):
         if self.lowercase:
             filter_ = ['lowercase']
@@ -77,7 +78,7 @@ class Bucketer(object):
                 }
             }
         )
-    
+
     def assign_bucket(self, crash):
         buckets = self.bucket(crash)
         if len(buckets) > 0:
@@ -93,9 +94,9 @@ class Bucketer(object):
         savedata[self.name] = bucket
         return savedata
 
-    
+
 class MLT(Bucketer):
-    
+
     def __init__(self,
                  thresh=1.0,
                  use_aggs=False,
@@ -106,7 +107,7 @@ class MLT(Bucketer):
         self.thresh = thresh
         self.use_aggs = use_aggs
         self.only_stack = only_stack
-        
+
     def bucket(self, crash, bucket_field=None):
         if bucket_field is None:
             bucket_field = self.name
@@ -250,7 +251,7 @@ class MLTIdentifier(MLT):
                     'analyzer': {
                         'default': {
                             'type': 'pattern',
-                            'pattern': 
+                            'pattern':
                                 '([^\\p{L}\\d_]+)'
                                 '|(?=0[xX][a-fA-F\\d)]+)'
                                 '|(?<!0[xX][a-fA-F\\d)]{0,16})(?<=\\p{L}{3})(?=\\d)'
@@ -383,19 +384,29 @@ def common_properties():
     """
     Returns properties common to all indexes.
     """
+    # Database ID, the primary bucket, and the project,
+    # and the version are all literals.
     return {
-        # Database ID, the primary bucket, and the project,
-        # and the version are all literals.
+        # TODO: convert into _id
         'database_id': {
             'type': 'string',
             'index': 'not_analyzed'
         },
+        # TODO: Deprecate: use multi-tier bucket... thing.
         'bucket': {
             'type': 'string',
             'index': 'not_analyzed',
         },
+        # TODO: convert into _type
         'project': {
             'type': 'string',
             'index': 'not_analyzed',
         },
+        'date_ingested': {
+            'type': 'date',
+            'format': 'epoch_millis',
+            # Do not index, because our analysis has not studied this yet!
+            # Plus, Elastic won't index anyway...
+            'index': 'not_analyzed'
+        }
     }

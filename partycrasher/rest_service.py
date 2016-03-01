@@ -95,6 +95,12 @@ def root():
 
     """
 
+    # Projects query:
+    #
+    #   {"aggs":{"projects":{"terms":{"field":"project"}}}}
+    #
+    #   result['aggregations']['projects']['buckets']
+
     # This should be a tree for all of the services available.
     return jsonify(self=dict(href('root'), rel='canonical'),
                    partycrasher={
@@ -378,7 +384,7 @@ def delete_report(project=None, report_id=None):
 
     ::
 
-        HTTP/1.1 204 No Content
+        HTTP/1.1 200 OK
 
     """
     # Ignore project.
