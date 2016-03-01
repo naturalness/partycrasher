@@ -613,7 +613,7 @@ def wait_for_elastic_search():
 
 
 def parse_date(date):
-    assert isinstance(date, float)
+    assert isinstance(date, int)
     return datetime.datetime.fromtimestamp(date / 1000.0)
 
 

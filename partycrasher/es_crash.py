@@ -73,7 +73,8 @@ class ESCrashMeta(type):
                 else:
                     # Ensure this is UTC time in milliseconds since the epoch.
                     now = datetime.datetime.utcnow()
-                    crash['date_bucketed'] = miliseconds_since_epoch(now)
+                    crash.setdefault('date_bucketed', miliseconds_since_epoch(now))
+                    print(crash)
                     try:
                         response = cls.es.create(index=index,
                                                  doc_type='crash',
@@ -186,6 +187,13 @@ class ESCrash(Crash):
         # TODO: clear self
 
 
+def miliseconds_since_epoch(then):
+    """
+    http://stackoverflow.com/a/8160307
+    """
+    return int(time.mktime(then.timetuple())*1e3 + then.microsecond/1e3)
+
+
 import unittest
 class TestCrash(unittest.TestCase):
 
@@ -275,12 +283,6 @@ class TestCrash(unittest.TestCase):
         assert fetched_from_es_undone == self.exampleCrash1
         fetched_from_es['cpu'] = 'amd64'
 
-
-def miliseconds_since_epoch(then):
-    """
-    http://stackoverflow.com/a/8160307
-    """
-    return time.mktime(then.timetuple())*1e3 + then.microsecond/1e3
 
 
 if __name__ == '__main__':

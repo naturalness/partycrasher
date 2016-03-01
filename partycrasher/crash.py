@@ -64,6 +64,8 @@ class Stacktrace(list):
         return (super(Stacktrace, self).__eq__(other)
                 and self.__class__ == other.__class__)
 
+# TODO: MOVE DATE STUFF HERE.
+
 class Crash(dict):
     
     stacktrace_class = Stacktrace

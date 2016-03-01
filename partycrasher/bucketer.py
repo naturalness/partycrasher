@@ -402,7 +402,7 @@ def common_properties():
             'type': 'string',
             'index': 'not_analyzed',
         },
-        'date_ingested': {
+        'date_bucketed': {
             'type': 'date',
             'format': 'epoch_millis',
             # Do not index, because our analysis has not studied this yet!
