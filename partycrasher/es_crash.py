@@ -74,7 +74,6 @@ class ESCrashMeta(type):
                     # Ensure this is UTC time in milliseconds since the epoch.
                     now = datetime.datetime.utcnow()
                     crash.setdefault('date_bucketed', miliseconds_since_epoch(now))
-                    print(crash)
                     try:
                         response = cls.es.create(index=index,
                                                  doc_type='crash',

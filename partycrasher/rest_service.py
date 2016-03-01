@@ -392,11 +392,11 @@ def delete_report(project=None, report_id=None):
     raise NotImplementedError
 
 
-@app.route('/buckets',
+@app.route('/buckets/<threshold>',
            defaults={'project': None},
            endpoint='query_buckets_no_project')
-@app.route('/<project>/buckets')
-def query_buckets(project=None, report_id=None):
+@app.route('/<project>/buckets/<threshold>')
+def query_buckets(project=None, threshold=None):
     """
     .. api-doc-order: 10
 
@@ -428,6 +428,7 @@ def query_buckets(project=None, report_id=None):
     ===========  =============  ==================================
 
     """
+    assert threshold is not None
     raise NotImplementedError()
 
 
