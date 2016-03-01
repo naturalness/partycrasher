@@ -238,9 +238,8 @@ def view_report(project=None, report_id=None):
     """
     .. api-doc-order: 2
 
-    Get information on a report
-    ===========================
-
+    Get an existing report
+    ======================
     ::
 
         GET /:project/reports/:report_id HTTP/1.1
@@ -251,6 +250,20 @@ def view_report(project=None, report_id=None):
 
         GET /reports/:report_id HTTP/1.1
 
+    Fetches a processed report from the database.  This includes all data
+    originally posted, plus bucket assignments, and the URLs for every
+    relevant resource (buckets and project).
+
+    .. warning::
+
+        Due to ElasticSearch's `Near Realtime`_ nature, when you ``GET`` a report
+        immediately after a ``POST`` or a ``DELETE`` may not result in what you'd
+        expect! Usually, it takes a few seconds for any changes to fully
+        propagate throughout the database.
+
+    .. _Near Realtime: https://www.elastic.co/guide/en/elasticsearch/reference/current/_basic_concepts.html#_near_realtime_nrt
+
+
     ::
 
         HTTP/1.1 200 OK
@@ -259,7 +272,7 @@ def view_report(project=None, report_id=None):
     .. code-block:: json
 
         {
-            "id": "<report-id>",
+            "database_id": "<report-id>",
             "buckets": {
                 "3.5": {
                     "id": "<bucket-id, T=3.5>",
@@ -295,6 +308,122 @@ def view_report(project=None, report_id=None):
     else:
         return jsonify(report)
 
+@app.route('/reports/dry-run', methods=['POST'])
+@app.route('/<project>/reports/dry-run', methods=['POST'])
+def ask_about_report(project=None):
+    """
+    .. api-doc-order: 1.5
+
+    Upload a report (dry-run)
+    =========================
+
+    ::
+
+        POST /:project/reports/dry-run HTTP/1.1
+
+    or
+
+    ::
+
+        POST /reports/dry-run HTTP/1.1
+
+    Answers the question: what bucket would this report be assigned to? This
+    does **NOT** store or keep track of the report! Use :ref:`upload-single`
+    to commit reports to the database.
+
+    ::
+
+        HTTP/1.1 200 OK
+
+    .. code-block:: JSON
+
+        {
+            "id": "<report-id>",
+            "self": {
+                "href": "https://domain.tld/<project>/reports/<bucket-id>"
+            },
+            "bucket": {
+                "id": "<bucket-id>",
+                "href": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>"
+                "rel": "canonical"
+            }
+        }
+
+    """
+
+    raise NotImplementedError
+
+
+@app.route('/reports/<report_id>', methods=['DELETE'],
+           defaults={'project': None},
+           endpoint='delete_report_no_project')
+@app.route('/<project>/reports/<report_id>', methods=['DELETE'])
+def delete_report(project=None, report_id=None):
+    """
+    .. api-doc-order: 3
+
+    Delete an existing report
+    =========================
+    ::
+
+        DELETE /:project/reports/:report_id HTTP/1.1
+
+    or
+
+    ::
+
+        DELETE /reports/:report_id HTTP/1.1
+
+    Deletes an existing report from the database.
+
+    ::
+
+        HTTP/1.1 204 No Content
+
+    """
+    # Ignore project.
+    assert report_id is not None
+    raise NotImplementedError
+
+
+@app.route('/buckets',
+           defaults={'project': None},
+           endpoint='query_buckets_no_project')
+@app.route('/<project>/buckets')
+def query_buckets(project=None, report_id=None):
+    """
+    .. api-doc-order: 10
+
+    Get the top buckets in the recent past
+    ======================================
+
+    ::
+
+        GET /:project/buckets HTTP/1.1
+
+    or
+
+    ::
+
+        GET /:project/buckets HTTP/1.1
+
+    Find top buckets for a given time-frame. If queried  on a ``:project``
+    route, implicitly filters by project.
+
+    Query parameters
+    ----------------
+
+    ===========  =============  ==================================
+     Parameter    Values         Description
+    ===========  =============  ==================================
+    ``since``    Relative time  The time frame to rank top buckets.
+    ``project``  Project name   Limit to this project only.
+    ``version``  Version id     Limit to this version only.
+    ===========  =============  ==================================
+
+    """
+    raise NotImplementedError()
+
 
 @app.route('/<project>/reports/')
 def reports_overview(project=None):
@@ -328,38 +457,40 @@ def get_project_config(project=None):
     return jsonify(default_threshold=4.0)
 
 
-@app.route('/<project>/config', methods=['PATCH'])
-def update_project_config(project=None):
-    """
-    .. api-doc-order: 100.0
+# This route is not ready for release yet.
+if False:
+    @app.route('/<project>/config', methods=['PATCH'])
+    def update_project_config(project=None):
+        """
+        .. api-doc-order: 100.0
 
-    Set per-project configuration
-    =============================
+        Set per-project configuration
+        =============================
 
-    ::
+        ::
 
-        PATCH /:project/config HTTP/1.1
+            PATCH /:project/config HTTP/1.1
 
-    Data:
+        Data:
 
-    .. code-block:: json
+        .. code-block:: json
 
-        {
-            "default-threshold": 3.5
-        }
+            {
+                "default-threshold": 3.5
+            }
 
-    ::
+        ::
 
-        HTTP/1.1 200 OK
+            HTTP/1.1 200 OK
 
-    .. code-block:: json
+        .. code-block:: json
 
-        {
-            "default-threshold": 3.5
-        }
+            {
+                "default-threshold": 3.5
+            }
 
-    """
-    raise NotImplementedError()
+        """
+        raise NotImplementedError()
 
 #############################################################################
 #                                 Utilities                                 #
