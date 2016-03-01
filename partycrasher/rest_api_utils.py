@@ -20,6 +20,8 @@
 Utilties used in rest_service; these are kept here to unclutter the API file.
 """
 
+import weakref
+
 import httpheader
 from flask import json, jsonify, request, make_response, url_for
 
@@ -72,7 +74,19 @@ def href(route, *args, **kwargs):
     return {'href': host + path, 'method': ['GET']}
 
 
+HOST_CACHE = weakref.WeakKeyDictionary()
+
 def determine_user_agent_facing_host():
+    true_request = request._get_current_object()
+    if true_request in HOST_CACHE:
+        return HOST_CACHE[true_request]
+    else:
+        host = calculate_user_agent_facing_host()
+        HOST_CACHE[true_request] = host
+        return host
+
+
+def calculate_user_agent_facing_host():
     if 'Forwarded' in request.headers:
         return host_from_forwarded_header(request.headers['Forwarded'])
     elif 'X-Forwarded-Host' in request.headers:
