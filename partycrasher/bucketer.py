@@ -26,7 +26,7 @@ class Bucketer(object):
     The default analyzer breaks on whitespace."""
 
     def __init__(self,
-                 max_buckets=0,
+                 max_buckets=1,
                  name=None,
                  index='crashes',
                  es=None,
