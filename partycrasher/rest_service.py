@@ -96,13 +96,12 @@ def root():
     """
 
     # This should be a tree for all of the services available.
-    return jsonify(partycrasher=
-                   {
+    return jsonify(self=dict(href('root'), rel='canonical'),
+                   partycrasher={
                        'version': partycrasher.__version__,
                        'elastic': crasher.esServers,
                        'elastic_health': crasher.es.cluster.health()
                    },
-                   self=dict(href('root'), rel='canonical'),
                    projects="NOT-IMPLEMENTED",
                    config={
                        'default_threshold': 4.0
@@ -307,6 +306,7 @@ def view_report(project=None, report_id=None):
         return jsonify(not_found=report_id), 404
     else:
         return jsonify(report)
+
 
 @app.route('/reports/dry-run', methods=['POST'])
 @app.route('/<project>/reports/dry-run', methods=['POST'])

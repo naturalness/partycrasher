@@ -74,9 +74,21 @@ def href(route, *args, **kwargs):
     return {'href': host + path, 'method': ['GET']}
 
 
+# So that `determine user agent facing host` only needs to figure out the host
+# once, even it gets called 1000s of times per request.
+# Once the request leaves the system, the entry will automatically be popped
+# out of this dictionary.
 HOST_CACHE = weakref.WeakKeyDictionary()
 
+
 def determine_user_agent_facing_host():
+    """
+    Determines the host for the active request as seen by the User-Agent
+    (client), assuming proxies along the way have been being truthful.
+    """
+
+    # Request is a proxy object, and cannot be weakly-referenced; instead,
+    # get a reference to true object.
     true_request = request._get_current_object()
     if true_request in HOST_CACHE:
         return HOST_CACHE[true_request]
@@ -87,6 +99,10 @@ def determine_user_agent_facing_host():
 
 
 def calculate_user_agent_facing_host():
+    """
+    Does the hard work of determining the true host. Lots of string parsing
+    and string concatenation be here.
+    """
     if 'Forwarded' in request.headers:
         return host_from_forwarded_header(request.headers['Forwarded'])
     elif 'X-Forwarded-Host' in request.headers:
@@ -125,7 +141,7 @@ def host_from_legacy_headers(headers):
 
 
 def parse_forwarded_header(content):
-    parameters, _  = httpheader.parse_parameter_list(content)
+    parameters, _ = httpheader.parse_parameter_list(content)
     return {name: httpheader.parse_token_or_quoted_string(value)[0]
             for name, value in parameters}
 
