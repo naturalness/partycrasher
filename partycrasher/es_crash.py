@@ -22,6 +22,7 @@ import elasticsearch
 from elasticsearch import Elasticsearch
 from weakref import WeakValueDictionary
 
+
 class ReportNotFoundError(KeyError):
     """
     Raised when... the crash is not found!

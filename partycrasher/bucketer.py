@@ -48,30 +48,21 @@ class Bucketer(object):
             filter_ = ['lowercase']
         else:
             filter_ = []
+
+        properties = {
+            self.name: {
+                'type': 'string',
+                'index': 'not_analyzed'
+            }
+        }
+        properties.update(common_properties())
         self.es.indices.create(index=self.index, ignore=400,
         body={
             'mappings': {
                 'crash': {
-                    'properties': {
-                        'database_id': {
-                            'type': 'string',
-                            'index': 'not_analyzed'
-                            },
-                        'bucket': {
-                            'type': 'string',
-                            'index': 'not_analyzed',
-                            },
-                        self.name: {
-                            'type': 'string',
-                            'index': 'not_analyzed',
-                            },
-                        'project': {
-                            'type': 'string',
-                            'index': 'not_analyzed',
-                            },
-                        }
-                    }
-                },
+                    'properties': properties
+                }
+            },
             'settings': {
                 'analysis': {
                     'analyzer': {
@@ -194,18 +185,9 @@ class MLTStandardUnicode(MLT):
         body={
             'mappings': {
                 'crash': {
-                    'properties': {
-                        'database_id': {
-                            'type': 'string',
-                            'index': 'not_analyzed'
-                            },
-                        'bucket': {
-                            'type': 'string',
-                            'index': 'not_analyzed',
-                            },
-                        }
-                    }
-                },
+                    'properties': common_properties()
+                }
+            },
             'settings': {
                 'analysis': {
                     'analyzer': {
@@ -233,18 +215,9 @@ class MLTLetters(MLT):
         body={
             'mappings': {
                 'crash': {
-                    'properties': {
-                        'database_id': {
-                            'type': 'string',
-                            'index': 'not_analyzed'
-                            },
-                        'bucket': {
-                            'type': 'string',
-                            'index': 'not_analyzed',
-                            },
-                        }
-                    }
-                },
+                    'properties': common_properties()
+                }
+            },
             'settings': {
                 'analysis': {
                     'analyzer': {
@@ -269,18 +242,9 @@ class MLTIdentifier(MLT):
         body={
             'mappings': {
                 'crash': {
-                    'properties': {
-                        'database_id': {
-                            'type': 'string',
-                            'index': 'not_analyzed'
-                            },
-                        'bucket': {
-                            'type': 'string',
-                            'index': 'not_analyzed',
-                            },
-                        }
-                    }
-                },
+                    'properties': common_properties()
+                }
+            },
             'settings': {
                 'analysis': {
                     'analyzer': {
@@ -311,18 +275,9 @@ class MLTCamelCase(MLT):
         body={
             'mappings': {
                 'crash': {
-                    'properties': {
-                        'database_id': {
-                            'type': 'string',
-                            'index': 'not_analyzed'
-                            },
-                        'bucket': {
-                            'type': 'string',
-                            'index': 'not_analyzed',
-                            },
-                        }
-                    }
-                },
+                    'properties': common_properties()
+                }
+            },
             'settings': {
                 'analysis': {
                     'analyzer': {
@@ -347,18 +302,9 @@ class MLTLerch(MLT):
         body={
             'mappings': {
                 'crash': {
-                    'properties': {
-                        'database_id': {
-                            'type': 'string',
-                            'index': 'not_analyzed'
-                            },
-                        'bucket': {
-                            'type': 'string',
-                            'index': 'not_analyzed',
-                            },
-                        }
-                    }
-                },
+                    'properties': common_properties()
+                }
+            },
             'settings': {
                 'analysis': {
                     'filter': {
@@ -407,18 +353,9 @@ class MLTNGram(MLT):
         body={
             'mappings': {
                 'crash': {
-                    'properties': {
-                        'database_id': {
-                            'type': 'string',
-                            'index': 'not_analyzed'
-                            },
-                        'bucket': {
-                            'type': 'string',
-                            'index': 'not_analyzed',
-                            },
-                        }
-                    }
-                },
+                    'properties': common_properties()
+                }
+            },
             'settings': {
                 'analysis': {
                     'tokenizer': {
@@ -440,3 +377,25 @@ class MLTNGram(MLT):
                 }
             }
         )
+
+
+def common_properties():
+    """
+    Returns properties common to all indexes.
+    """
+    return {
+        # Database ID, the primary bucket, and the project,
+        # and the version are all literals.
+        'database_id': {
+            'type': 'string',
+            'index': 'not_analyzed'
+        },
+        'bucket': {
+            'type': 'string',
+            'index': 'not_analyzed',
+        },
+        'project': {
+            'type': 'string',
+            'index': 'not_analyzed',
+        },
+    }
