@@ -22,13 +22,14 @@ import os
 import sys
 import time
 
-from flask import Flask, jsonify, request, url_for, redirect
+from flask import jsonify, request, url_for, redirect
 from flask.ext.cors import CORS
 
 # Hacky things to add PartyCrasher to the path.
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import partycrasher
 
+from partycrasher.make_json_app import make_json_app
 from partycrasher.rest_api_utils import BadRequest, jsonify_list, href
 from partycrasher.epoch_date_library import (
     parse_absolute_or_relative_time,
@@ -37,7 +38,7 @@ from partycrasher.epoch_date_library import (
 )
 
 
-app = Flask('partycrasher')
+app = make_json_app('partycrasher')
 CORS(app)
 crasher = partycrasher.PartyCrasher()
 
