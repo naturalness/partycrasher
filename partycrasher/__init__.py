@@ -64,7 +64,8 @@ class PartyCrasher(object):
         Actually connects to ElasticSearch.
         """
         self._es = Elasticsearch(self.esServers)
-        self._bucketer = MLTCamelCase(thresh=0.0,
+        # TODO: Have more than one bucketer.
+        self._bucketer = MLTCamelCase(thresh=4.0,
                                       lowercase=False,
                                       only_stack=False,
                                       index='crashes',
