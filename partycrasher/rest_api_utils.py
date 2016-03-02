@@ -23,7 +23,7 @@ Utilties used in rest_service; these are kept here to unclutter the API file.
 import weakref
 
 import httpheader
-from flask import json, jsonify, request, make_response, url_for
+from flask import json, jsonify, request, redirect, make_response, url_for
 
 
 class BadRequest(RuntimeError):
@@ -60,6 +60,18 @@ def jsonify_list(seq):
     body = json.dumps(seq, indent=4 if should_indent else None)
 
     return make_response((body, None, {'Content-Type': 'application/json'}))
+
+
+def redirect_with_query_string(url, *args, **kwargs):
+    """
+    Like `flask.redirect` but appends the query string.
+
+    Requires an active request context.
+    """
+
+    query_string = request.environ.get('QUERY_STRING')
+    full_url = url + '?' + query_string if query_string else url
+    return redirect(full_url, *args, **kwargs)
 
 
 def href(route, **kwargs):

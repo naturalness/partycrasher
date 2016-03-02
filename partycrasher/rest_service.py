@@ -30,11 +30,16 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import partycrasher
 
 from partycrasher.make_json_app import make_json_app
-from partycrasher.rest_api_utils import BadRequest, jsonify_list, href
+from partycrasher.rest_api_utils import (
+    BadRequest,
+    jsonify_list,
+    href,
+    redirect_with_query_string,
+)
 from partycrasher.epoch_date_library import (
-    parse_absolute_or_relative_time,
     InvalidDateError,
-    DateParsingError
+    DateParsingError,
+    parse_absolute_or_relative_time,
 )
 
 
@@ -422,7 +427,7 @@ def query_default_buckets(project=None):
                                   threshold=crasher.default_threshold,
                                   project=project)
     # Redirect with "Found" semantics.
-    return redirect(appropriate_url, 302)
+    return redirect_with_query_string(appropriate_url, 302)
 
 
 @app.route('/buckets/<threshold>',
