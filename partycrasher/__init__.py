@@ -14,7 +14,7 @@ from partycrasher.epoch_date_library import milliseconds_since_epoch
 
 __version__ = u'0.1.0'
 
-class Bucket(namedtuple('Bucket', 'id total')):
+class Bucket(namedtuple('Bucket', 'id project threshold total crashes')):
     """
     Data class for buckets. Contains two identifiers:
      - id: The bucket's ID;
@@ -142,7 +142,11 @@ class PartyCrasher(object):
                        ['top_buckets']
                        ['buckets'])
 
-        return [Bucket(id=b['key'], total=b['doc_count'])
+        return [Bucket(id=b['key'],
+                       total=b['doc_count'],
+                       project=project,
+                       threshold=threshold,
+                       crashes=[])
                 for b in top_buckets]
 
 
