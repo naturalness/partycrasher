@@ -457,13 +457,57 @@ def query_buckets(project=None, threshold=None):
     Query parameters
     ----------------
 
-    ===========  =============  ==================================
-     Parameter    Values         Description
-    ===========  =============  ==================================
-    ``since``    Start time     From when to count top buckets.
-    ``project``  Project name   Limit to this project only.
-    ``version``  Version id     Limit to this version only.
-    ===========  =============  ==================================
+    .. this is the proposed version of this table:
+        +-------------+--------------+-------------------------------------------+
+        | Parameter   | Values       | Description                               |
+        +-------------+--------------+-------------------------------------------+
+        | ``since``   | Start time   | From when to count top buckets.           |
+        +-------------+--------------+-------------------------------------------+
+        | ``project`` | Project name | Limit to this project only; implied if    |
+        |             |              | using a ``/:project/`` endpoint.          |
+        +-------------+--------------+-------------------------------------------+
+        | ``version`` | Version id   | Limit to this version only.               |
+        +------------------------------------------------------------------------+
+
+    +-------------+--------------+-------------------------------------------+
+    | Parameter   | Values       | Description                               |
+    +-------------+--------------+-------------------------------------------+
+    | ``since``   | Start date   | Grab buckets since this date, represented |
+    |             |              | as an ISO 8601 date/time value            |
+    |             |              | (i.e, YYYY-MM-DD).                        |
+    +-------------+--------------+-------------------------------------------+
+    | ``project`` | Project name | Limit to this project only; implied if    |
+    |             |              | using a ``/:project/`` endpoint.          |
+    +-------------+--------------+-------------------------------------------+
+
+
+    Example
+    -------
+
+    ::
+    
+        GET /alan_parsons/buckets?since=2016-02-29 HTTP/1.1
+        Host: domain.tld
+
+    ::
+
+        HTTP/1.0 200 OK
+        Content-Type: application/json
+
+    .. code-block:: JSON
+
+        {
+            "since": "2016-02-29T00:00:00",
+            "threshold": "4.0",
+            "top_buckets": [
+                {
+                    "href": "http://domain.tld/alan_parsons/buckets/4.0/bucket:c29a81a0-5a53-4ba0-8123-5e96685a5895",
+                    "id": "bucket:c29a81a0-5a53-4ba0-8123-5e96685a5895",
+                    "method": [ "GET" ],
+                    "total": 253
+                }
+            ]
+        }
 
     """
     assert threshold is not None
