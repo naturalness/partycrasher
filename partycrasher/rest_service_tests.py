@@ -94,7 +94,7 @@ class RestServiceTestCase(unittest.TestCase):
     # Tests #
     #########
 
-    @unittest.skip('Temporary')
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_alive(self):
         """
         Can we access the root path?
@@ -102,7 +102,7 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.get(self.root_url)
         assert response.status_code == 200
 
-    @unittest.skip('Temporary')
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_basic_cors(self):
         """
         Can we send a pre-flight header?
@@ -110,7 +110,7 @@ class RestServiceTestCase(unittest.TestCase):
         """
         assert is_cross_origin_accessible(self.root_url)
 
-    @unittest.skip('Temporary')
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_absolute_url(self):
         """
         Does the server return absolute URIs?
@@ -131,7 +131,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert href.netloc == urlparse(self.origin).netloc
         assert href.scheme == 'http'
 
-    @unittest.skip('Temporary')
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_absolute_url_behind_older_proxy(self):
         """
         Does the server return User-Agent-facing absolute URIs behind proxies?
@@ -162,7 +162,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert href.netloc == 'example.org'
         assert href.scheme == 'https'
 
-    @unittest.skip('Temporary')
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_absolute_url_behind_newer_proxy(self):
         """
         Does the server return User-Agent-facing absolute URIs behind proxies?
@@ -191,8 +191,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert href.netloc == 'example.org'
         assert href.scheme == 'https'
 
-
-    @unittest.skip('Temporary')
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_add_crash(self):
         """
         Add a single crash, globally;
@@ -223,7 +222,7 @@ class RestServiceTestCase(unittest.TestCase):
 
         assert before_insert <= parse_date(insert_date) <= after_insert
 
-    @unittest.skip('Temporary')
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_add_crash_to_project(self):
         """
         Add a single crash to a project;
@@ -280,7 +279,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 303
         assert response.headers.get('Location') == report_url
 
-    @unittest.skip('Temporary')
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_add_crash_project_name_mismatch(self):
         """
         Add a single crash to the _wrong_ project.
@@ -309,7 +308,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert 404 == requests.get(self.path_to('manhattan', 'reports',
                                                database_id)).status_code
 
-    @unittest.skip('Temporary')
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_add_multiple(self):
         """
         Add multiple crashes to a single project;
@@ -349,7 +348,7 @@ class RestServiceTestCase(unittest.TestCase):
         # TODO: ensure if URL project and JSON project conflict HTTP 400
         #       is returned
 
-    @unittest.skip('Temporary')
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_get_crash(self):
         """
         Fetch a report globally.
@@ -380,7 +379,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.json()['project'] == 'alan_parsons'
         # TODO: bucket url
 
-    @unittest.skip('Temporary')
+    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_get_crash_from_project(self):
         """
         Fetch a report from a project.
@@ -519,7 +518,6 @@ class RestServiceTestCase(unittest.TestCase):
                                  ])
         assert response.status_code == 201
 
-        # Now, look up ONE of the crashes; it should
         bucket_url = self.path_to('alan_parsons', 'buckets', '4.0',
                                   database_id_a)
         response = requests.get(bucket_url)
@@ -570,8 +568,8 @@ class RestServiceTestCase(unittest.TestCase):
 
         # We should find our newly created reports as the most populous
         # bucket.
-        bucket_url = self.path_to('alan_parsons', 'buckets', '4.0')
-        response = requests.get(bucket_url, params={'since': now.isoformat()})
+        search_url = self.path_to('alan_parsons', 'buckets', '4.0')
+        response = requests.get(search_url, params={'since': now.isoformat()})
         assert response.json()['since'] == now.isoformat()
         assert len(response.json()['top_buckets']) > 0
         top_bucket = response.json()['top_buckets'][0]
@@ -579,6 +577,21 @@ class RestServiceTestCase(unittest.TestCase):
         assert top_bucket.get('href') is not None
         assert is_url(top_bucket['href'])
         assert top_bucket.get('total') == 3
+
+    def test_top_buckets_invalid_queries(self):
+        """
+        Send some invalid queries to top buckets.
+        """
+
+        search_url = self.path_to('alan_parsons', 'buckets', '4.0')
+
+        # Search an invalid date -- 2015 was not a leap year!
+        response = requests.get(search_url, params={'since': '2015-02-29'})
+        assert response.status_code == 400
+
+        # Search junk.
+        response = requests.get(search_url, params={'since': 'herp'})
+        assert response.status_code == 400
 
     @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_get_project_config(self):

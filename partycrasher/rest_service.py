@@ -22,8 +22,6 @@ import os
 import sys
 import time
 
-import dateutil.parser
-
 from flask import Flask, jsonify, request, url_for, redirect
 from flask.ext.cors import CORS
 
@@ -32,6 +30,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import partycrasher
 
 from partycrasher.rest_api_utils import BadRequest, jsonify_list, href
+from partycrasher.epoch_date_library import (
+    parse_absolute_or_relative_time,
+    InvalidDateError,
+    DateParsingError
+)
+
 
 app = Flask('partycrasher')
 CORS(app)
@@ -459,20 +463,20 @@ def query_buckets(project=None, threshold=None):
     assert threshold is not None
 
     since = request.args.get('since', 'a-week-ago')
-    # TODO: encapsulate this weird logic elsewhere.
     try:
-        lower_bound = dateutil.parser.parse(since)
-    except ValueError as e:
-        if e.message.startswith('Unknown string format'):
-            raise BadRequest('Could not understand date format for '
-                             '`since=` parameter. '
-                             'Supported formats are: ISO 8601 timestamps '
-                             'and relative dates. Refer to the API docs for '
-                             'more information: '
-                             'http://partycrasher.rtfd.org/',
-                             since=since)
-        else:
-            raise BadRequest(e.message, since=since)
+        lower_bound = parse_absolute_or_relative_time(since)
+    except DateParsingError:
+        raise BadRequest('Could not understand date format for '
+                         '`since=` parameter. '
+                         'Supported formats are: ISO 8601 timestamps '
+                         'and relative dates. Refer to the API docs for '
+                         'more information: '
+                         'http://partycrasher.rtfd.org/',
+                         since=since)
+    except InvalidDateError as e:
+        raise BadRequest('Date was parsed, but yielded an invalid date',
+                         since=since,
+                         reason=e.message)
 
     buckets = crasher.top_buckets(lower_bound,
                                   project=project,
