@@ -118,7 +118,7 @@ class MLT(Bucketer):
         if self.only_stack:
             crash = {'stacktrace': crash['stacktrace']}
         body={
-            '_source': [bucket_field],
+            #'_source': [bucket_field],
             'size': self.max_buckets,
             # LOOOOL
             #'min_score': self.thresh,
