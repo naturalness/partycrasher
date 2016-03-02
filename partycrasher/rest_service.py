@@ -18,8 +18,11 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import sys
 import os
+import sys
+import time
+
+import dateutil.parser
 
 from flask import Flask, jsonify, request, url_for
 from flask.ext.cors import CORS
@@ -429,12 +432,23 @@ def query_buckets(project=None, threshold=None):
 
     """
     assert threshold is not None
-    raise NotImplementedError()
+
+    since = request.args.get('since', 'a-week-ago')
+    lower_bound = dateutil.parser.parse(since)
+    print(lower_bound)
+
+    buckets = crasher.top_buckets(lower_bound,
+                                  project=project,
+                                  threshold=threshold)
+
+    return jsonify(since=lower_bound.isoformat(),
+                   threshold=threshold,
+                   top_buckets=buckets)
 
 
 @app.route('/<project>/reports/')
 def reports_overview(project=None):
-    raise NotImplementedError()
+    raise NotImplementedError
 
 
 @app.route('/<project>/config')
@@ -517,6 +531,11 @@ def ingest_one(report, project_name):
     url = url_for('view_report',
                   project=report['project'],
                   report_id=report['database_id'])
+    # FDSAHKFJDSAJFASJLFSDJLFSDJFSDJLJALFSDJASDFJSDAFJLFSADJLAFSDJLASFD
+    # Commit things to the index such that any new inserts will bucket
+    # properly...
+    crasher.es.indices.refresh(index='crashes')
+    time.sleep(2.5)
     return report, url
 
 

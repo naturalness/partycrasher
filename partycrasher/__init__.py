@@ -34,12 +34,17 @@ class PartyCrasher(object):
             self._connect_to_elasticsearch()
         return self._bucketer
 
+    @property
+    def default_threshold(self):
+        # TODO: determine from static/dynamic configuration
+        return 4.0
+
     def _connect_to_elasticsearch(self):
         """
         Actually connects to ElasticSearch.
         """
         self._es = Elasticsearch(self.esServers)
-        self._bucketer = MLTCamelCase(thresh=4.0,
+        self._bucketer = MLTCamelCase(thresh=0.0,
                                       lowercase=False,
                                       only_stack=False,
                                       index='crashes',
@@ -55,6 +60,41 @@ class PartyCrasher(object):
             return self.bucketer.assign_save_bucket(Crash(crash))
         except NotFoundError as e:
             raise Exception(' '.join([e.error, str(e.status_code), repr(e.info)]))
+
+    def top_buckets(self, lower_bound, threshold=None, project=None):
+        if threshold is None:
+            threshold = self.default_threshold
+
+        # TODO: compute lower-bound properly
+
+        query = {
+            "aggs": {
+                "top_buckets_since_date": {
+                    "date_range": {
+                        "field":"date_bucketed",
+                        # TODO: determine date range from `since` parameter
+                        "ranges":[{"from":"now-7d"}]
+                    },
+                    "aggs": {
+                        "top_buckets": {
+                            "cardinality": {
+                                "field":"bucket","precision_threshold":0
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        response = self.es.search(body=query, index='crashes')
+        from pprint import pprint
+        pprint(response)
+
+        results = response['aggregations']['top_buckets_since_date']
+
+        return {
+            'top_buckets': results['buckets']
+        }
+
 
     # TODO catch duplicate and return 303
     def dryrun(self, crash):
