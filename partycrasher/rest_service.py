@@ -620,7 +620,7 @@ def main():
     if len(sys.argv) > 1:
         app.run(debug=True, port=int(sys.argv[1]))
     else:
-        app.run(debug=True)
+        app.run(debug=False)
 
 
 if __name__ == '__main__':

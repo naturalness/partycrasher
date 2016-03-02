@@ -59,7 +59,7 @@ def parse_absolute_or_relative_time(text):
         raise InvalidDateError(e.message)
 
     if value is None:
-        raise DateParsingError()
+        raise DateParsingError
     else:
         return value
 
@@ -75,12 +75,13 @@ def parse_absolute_date(text):
     try:
         return dateutil.parser.parse(text)
     except ValueError as e:
+        print(e)
         if e.message.startswith('Unknown string format'):
             # Unknown string format means parsing failed
             return None
         else:
             # Something with datetime failed!
-            raise e
+            raise
 
 
 def parse_relative_date(text):
@@ -106,4 +107,4 @@ def parse_relative_date(text):
     if not matches:
         return None
     else:
-        raise NotImplementedError(matches)
+        raise NotImplementedError
