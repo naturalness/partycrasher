@@ -499,6 +499,7 @@ class RestServiceTestCase(unittest.TestCase):
         database_id_a = str(uuid.uuid4())
         database_id_b = str(uuid.uuid4())
         database_id_c = str(uuid.uuid4())
+
         # This is the only content for each report, so there must only be
         # *one* bucket that contains reports A, B, and C!
         tfidf_trickery = str(uuid.uuid4())
@@ -506,7 +507,7 @@ class RestServiceTestCase(unittest.TestCase):
         create_url = self.path_to('alan_parsons', 'reports')
         assert is_cross_origin_accessible(create_url)
 
-        # Create all dem duplicated reports!
+        # Create all duplicated reports in one project!
         response = requests.post(create_url,
                                  json=[
                                      {'database_id': database_id_a,
@@ -538,10 +539,15 @@ class RestServiceTestCase(unittest.TestCase):
         now = datetime.datetime.utcnow()
 
         # Create a bunch of reports with IDENTICAL unique content
+        tfidf_trickery = str(uuid.uuid4())
+
+        # These will all go in the Alan Parsons Project
         database_id_a = str(uuid.uuid4())
         database_id_b = str(uuid.uuid4())
         database_id_c = str(uuid.uuid4())
-        tfidf_trickery = str(uuid.uuid4())
+
+        # This one will go in the Manhattan Project
+        database_id_weirdo = str(uuid.uuid4())
 
         # Add multiple reports.
         response = requests.post(self.path_to('alan_parsons', 'reports'),
@@ -551,8 +557,13 @@ class RestServiceTestCase(unittest.TestCase):
                                      {'database_id': database_id_b,
                                       'tfidf_trickery': tfidf_trickery},
                                      {'database_id': database_id_c,
-                                      'tfidf_trickery': tfidf_trickery}]
-                                 )
+                                      'tfidf_trickery': tfidf_trickery}])
+        assert response.status_code == 201
+
+        # Create one duplicate in a completely different project!
+        response = requests.post(self.path_to('manhattan', 'reports'),
+                                 json={'database_id': database_id_weirdo,
+                                      'tfidf_trickery': tfidf_trickery})
         assert response.status_code == 201
 
         wait_for_elastic_search()
@@ -634,7 +645,7 @@ def is_url(text):
     Raises AssertionError otherwise.
     """
     parse_result = urlparse(text)
-     
+
     assert parse_result.scheme in ('http', 'https')
     assert parse_result.netloc
     assert parse_result.path.startswith('/')

@@ -31,6 +31,7 @@ class Bucket(namedtuple('Bucket', 'id total')):
             kwargs.update(arg)
         return kwargs
 
+
 class PartyCrasher(object):
     def __init__(self):
         self.config = ConfigParser.SafeConfigParser({'elastic': ''})
@@ -97,41 +98,49 @@ class PartyCrasher(object):
             threshold = self.default_threshold
 
         # Filters by lower-bound by default;
-        # may filter optionally by project.
-        filters = {
+        filters = [{
             "range": {
                 "date_bucketed": {
                     "gt": milliseconds_since_epoch(lower_bound)
                 }
             }
-        }
+        }]
 
-        if False:
-            if project is not None:
-                # Filter by project if needed as well.
-                filters.update(term={'project': project})
-
-
-        # TODO: compute lower-bound properly
-        # AS UTC!
-        query = {
-            "query": {
-                "filtered": {
-                    "filter": filters
+        # May filter optionally by project name.
+        if project is not None:
+            filters.append({
+                "term": {
+                    "project": project
                 }
-            },
-            "aggregations": {
-                "top_buckets": {
-                    "terms": {
-                        "field": "bucket"
+            })
+
+        # Oh, ElasticSearch! You and your verbose query "syntax"!
+        query = {
+            "aggs": {
+                "top_buckets_filtered": {
+                    "filter": {
+                        "bool": { "must": filters }
+                    },
+                    "aggs": {
+                        "top_buckets": {
+                            "terms": {
+                                "field": "bucket",
+                                "order": {
+                                    "_count": "desc"
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
 
         response = self.es.search(body=query, index='crashes')
-        # Oh, ElasticSearch... You and your overly verbose responses...
-        top_buckets = response['aggregations']['top_buckets']['buckets']
+        # Oh, ElasticSearch! You and your verbose responses!
+        top_buckets = (response['aggregations']
+                       ['top_buckets_filtered']
+                       ['top_buckets']
+                       ['buckets'])
 
         return [Bucket(id=b['key'], total=b['doc_count'])
                 for b in top_buckets]
