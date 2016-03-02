@@ -24,7 +24,7 @@ import time
 
 import dateutil.parser
 
-from flask import Flask, jsonify, request, url_for
+from flask import Flask, jsonify, request, url_for, redirect
 from flask.ext.cors import CORS
 
 # Hacky things to add PartyCrasher to the path.
@@ -402,6 +402,24 @@ def view_bucket(project=None, threshold=None, bucket=None):
     raise NotImplementedError
 
 
+# Undoucmented endpoint:
+# Automatically redirects to the real endpoint.
+@app.route('/buckets',
+           defaults={'project': None},
+           endpoint='query_default_buckets_no_project')
+@app.route('/<project>/buckets')
+def query_default_buckets(project=None):
+    if project is None:
+        appropriate_url = url_for('query_buckets_no_project',
+                                  threshold=crasher.default_threshold)
+    else:
+        appropriate_url = url_for('query_buckets',
+                                  threshold=crasher.default_threshold,
+                                  project=project)
+    # Redirect with "Found" semantics.
+    return redirect(appropriate_url, 302)
+
+
 @app.route('/buckets/<threshold>',
            defaults={'project': None},
            endpoint='query_buckets_no_project')
@@ -441,7 +459,20 @@ def query_buckets(project=None, threshold=None):
     assert threshold is not None
 
     since = request.args.get('since', 'a-week-ago')
-    lower_bound = dateutil.parser.parse(since)
+    # TODO: encapsulate this weird logic elsewhere.
+    try:
+        lower_bound = dateutil.parser.parse(since)
+    except ValueError as e:
+        if e.message.startswith('Unknown string format'):
+            raise BadRequest('Could not understand date format for '
+                             '`since=` parameter. '
+                             'Supported formats are: ISO 8601 timestamps '
+                             'and relative dates. Refer to the API docs for '
+                             'more information: '
+                             'http://partycrasher.rtfd.org/',
+                             since=since)
+        else:
+            raise BadRequest(e.message, since=since)
 
     buckets = crasher.top_buckets(lower_bound,
                                   project=project,
