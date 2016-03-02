@@ -16,7 +16,11 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import json, uuid, time
+import os
+import json
+import uuid
+import time
+
 from crash import Crash
 from es_crash import ESCrash
 
@@ -116,7 +120,8 @@ class MLT(Bucketer):
         body={
             '_source': [bucket_field],
             'size': self.max_buckets,
-            'min_score': self.thresh,
+            # LOOOOL
+            #'min_score': self.thresh,
             'query': {
             'more_like_this': {
                 'docs': [{
@@ -151,6 +156,11 @@ class MLT(Bucketer):
                 }
             };
         matches = self.es.search(index=self.index,body=body)
+
+        if os.getenv('PARTYCRASHER_DEBUG'):
+            from pprint import pprint
+            pprint(matches)
+
         matching_buckets=[]
         if self.use_aggs:
             for match in matches['aggregations']['buckets']['buckets']:
@@ -158,6 +168,8 @@ class MLT(Bucketer):
                 matching_buckets.append(match['key'])
         else:
             for match in matches['hits']['hits']:
+                if match['_score'] < self.thresh:
+                    continue
                 try:
                     bucket = match['_source'][bucket_field]
                 except KeyError:

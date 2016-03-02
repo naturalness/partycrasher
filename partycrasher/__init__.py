@@ -6,15 +6,22 @@ from collections import namedtuple
 
 from elasticsearch import Elasticsearch, NotFoundError
 
+# Some of these imports are part of the public API...
 from partycrasher.crash import Crash
-from partycrasher.es_crash import ESCrash, ReportNotFoundError
+from partycrasher.es_crash import ESCrash
+from partycrasher.es_crash import ReportNotFoundError
 from partycrasher.bucketer import MLTCamelCase
 from partycrasher.epoch_date_library import milliseconds_since_epoch
 
 
+class BucketNotFoundError(KeyError):
+    """
+    When a particular bucket cannot be found.
+    """
+
 __version__ = u'0.1.0'
 
-class Bucket(namedtuple('Bucket', 'id project threshold total crashes')):
+class Bucket(namedtuple('Bucket', 'id project threshold total top_reports')):
     """
     Data class for buckets. Contains two identifiers:
      - id: The bucket's ID;
@@ -82,6 +89,42 @@ class PartyCrasher(object):
         except NotFoundError as e:
             raise Exception(' '.join([e.error, str(e.status_code), repr(e.info)]))
 
+    def bucket(self, threshold, bucket_id):
+        query = {
+            "filter": {
+                "term": {
+                    "bucket": bucket_id
+                }
+            }
+        }
+
+        response = self.es.search(body=query, index='crashes')
+        from pprint import pprint
+        pprint(response)
+        reports_found = response['hits']['total']
+
+        # Since no reports where found, assume the bucket does not exist (at
+        # least for this project).
+        if reports_found < 1:
+            raise BucketNotFoundError(bucket_id)
+
+        raw_reports = response['hits']['hits']
+        reports = [Crash(report) for report in raw_reports]
+
+        return Bucket(id=bucket_id,
+                      project=None,
+                      threshold=self.default_threshold,
+                      total = reports_found,
+                      top_reports=reports)
+
+
+
+
+
+
+
+
+
     def top_buckets(self, lower_bound, threshold=None, project=None):
         """
         Given a datetime lower_bound (from date), calculates the top buckets
@@ -147,7 +190,7 @@ class PartyCrasher(object):
                        total=b['doc_count'],
                        project=project,
                        threshold=threshold,
-                       crashes=[])
+                       top_reports=[])
                 for b in top_buckets]
 
 

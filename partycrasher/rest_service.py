@@ -404,12 +404,25 @@ def delete_report(project=None, report_id=None):
     assert report_id is not None
     raise NotImplementedError
 
-@app.route('/buckets/<threshold>/<bucket>',
+@app.route('/buckets/<threshold>/<bucket_id>',
            defaults={'project': None},
            endpoint='view_bucket_no_project')
-@app.route('/<project>/buckets/<threshold>/<bucket>')
-def view_bucket(project=None, threshold=None, bucket=None):
-    raise NotImplementedError
+@app.route('/<project>/buckets/<threshold>/<bucket_id>')
+def view_bucket(project=None, threshold=None, bucket_id=None):
+    """
+    .. api-doc-order: 15
+
+    [view bucket documentation pending...]
+    """
+    assert bucket_id is not None
+    assert threshold is not None
+
+    try:
+        bucket = crasher.bucket(threshold, bucket_id)
+    except partycrasher.BucketNotFoundError:
+        return jsonify(not_found=bucket_id), 404
+
+    return jsonify(bucket.to_dict())
 
 
 # Undoucmented endpoint:
@@ -536,7 +549,7 @@ def query_buckets(project=None, threshold=None):
     top_buckets = [bucket.to_dict(href('view_bucket',
                                        project=project,
                                        threshold=threshold,
-                                       bucket=bucket.id))
+                                       bucket_id=bucket.id))
                    for bucket in buckets]
 
     return jsonify(since=lower_bound.isoformat(),
