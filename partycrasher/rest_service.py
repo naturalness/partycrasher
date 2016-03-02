@@ -394,6 +394,13 @@ def delete_report(project=None, report_id=None):
     assert report_id is not None
     raise NotImplementedError
 
+@app.route('/buckets/<threshold>/<bucket>',
+           defaults={'project': None},
+           endpoint='view_bucket_no_project')
+@app.route('/<project>/buckets/<threshold>/<bucket>')
+def view_bucket(project=None, threshold=None, bucket=None):
+    raise NotImplementedError
+
 
 @app.route('/buckets/<threshold>',
            defaults={'project': None},
@@ -425,7 +432,7 @@ def query_buckets(project=None, threshold=None):
     ===========  =============  ==================================
      Parameter    Values         Description
     ===========  =============  ==================================
-    ``since``    Relative time  The time frame to rank top buckets.
+    ``since``    Start time     From when to count top buckets.
     ``project``  Project name   Limit to this project only.
     ``version``  Version id     Limit to this version only.
     ===========  =============  ==================================
@@ -435,15 +442,21 @@ def query_buckets(project=None, threshold=None):
 
     since = request.args.get('since', 'a-week-ago')
     lower_bound = dateutil.parser.parse(since)
-    print(lower_bound)
 
     buckets = crasher.top_buckets(lower_bound,
                                   project=project,
                                   threshold=threshold)
 
+    # Reformat the results...
+    top_buckets = [bucket.to_dict(href('view_bucket',
+                                       project=project,
+                                       threshold=threshold,
+                                       bucket=bucket.id))
+                   for bucket in buckets]
+
     return jsonify(since=lower_bound.isoformat(),
                    threshold=threshold,
-                   top_buckets=buckets)
+                   top_buckets=top_buckets)
 
 
 @app.route('/<project>/reports/')
@@ -531,11 +544,10 @@ def ingest_one(report, project_name):
     url = url_for('view_report',
                   project=report['project'],
                   report_id=report['database_id'])
-    # FDSAHKFJDSAJFASJLFSDJLFSDJFSDJLJALFSDJASDFJSDAFJLFSADJLAFSDJLASFD
+
     # Commit things to the index such that any new inserts will bucket
     # properly...
     crasher.es.indices.refresh(index='crashes')
-    time.sleep(2.5)
     return report, url
 
 

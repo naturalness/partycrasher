@@ -20,6 +20,7 @@
 import json, datetime
 import dateutil.parser as dateparser
 
+
 # This is the separator which is meant to be used when turning
 # stack traces into strings, between levels of the stack, going
 # DOWN from the TOP (most recent call FIRST)
@@ -29,9 +30,9 @@ class Stackframe(dict):
     pass
 
 class Stacktrace(list):
-    
+
     stackframe_class = Stackframe
-    
+
     """A list which can only contain stackframes..."""
     def __init__(self, value=[], **kwargs):
         if isinstance(value, list):
@@ -67,7 +68,7 @@ class Stacktrace(list):
 # TODO: MOVE DATE STUFF HERE.
 
 class Crash(dict):
-    
+
     stacktrace_class = Stacktrace
 
     synonyms = {
@@ -101,7 +102,7 @@ class Crash(dict):
         super(Crash, self).__init__(*args)
         if not (len(args) == 1 and isinstance(args[0], self.__class__)):
             self.normalize()
-    
+
     if False:
         def __repr__(self):
             return (self.__class__.__name__
@@ -109,7 +110,7 @@ class Crash(dict):
                     + super(Crash, self).__repr__()
                     + ")"
                     )
-        
+
     def __eq__(self, other):
         return (super(Crash, self).__eq__(other)
                 and self.__class__ == other.__class__)
@@ -130,7 +131,7 @@ class Crash(dict):
         if crash is None:
             raise NotImplementedError("I don't know how to load this!")
         return crash
-    
+
     def __getitem__(self, key):
         if key in self.synonyms:
             return super(Crash, self).__getitem__(self.synonyms[key])
@@ -190,10 +191,10 @@ class Crash(dict):
             value = self[key]
             del self[key]
             self.__setitem__(key, value)
-    
+
     def json(self):
         return json.dumps(self, cls=CrashEncoder)
-    
+
     @classmethod
     def fromjson(cls, s):
         d = json.loads(s)
@@ -208,7 +209,7 @@ class CrashEncoder(json.JSONEncoder):
             return serialized
         else:
             return json.JSONEncoder.default(self, o)
-    
+
 import unittest
 class TestCrash(unittest.TestCase):
     exampleCrash1 = Crash({
@@ -228,7 +229,7 @@ class TestCrash(unittest.TestCase):
         'cpu': 'i386',
         'date': datetime.datetime(2007, 6, 27, 12, 4, 43),
         'os': 'Ubuntu 7.10',
-        'stacktrace': Stacktrace([   
+        'stacktrace': Stacktrace([
                         Stackframe({
                             'address': u'0x0804cbd3',
                             'args': u'argc=',
@@ -270,7 +271,7 @@ class TestCrash(unittest.TestCase):
                             'function': u'??'})
                         ]),
         'type': 'Crash'})
-                        
+
     exampleJson1 = '{\n'\
         '    "CrashCounter": "1",\n'\
         '    "ExecutablePath": "/bin/nbd-server",\n'\
@@ -341,18 +342,17 @@ class TestCrash(unittest.TestCase):
         '    "type": "Crash"\n'\
         '}\n'
 
-                        
+
     def test_serdes(self):
-        serdes = Crash.fromjson(self.exampleCrash1.json()) 
+        serdes = Crash.fromjson(self.exampleCrash1.json())
         assert (self.exampleCrash1 == serdes)
         assert len(self.exampleCrash1['stacktrace']) > 1
         assert len(serdes['stacktrace']) > 1
-        
+
     def test_desser(self):
         assert (json.loads(Crash.fromjson(self.exampleJson1).json()) ==
                 json.loads(self.exampleJson1))
-    
-        
+
+
 if __name__ == '__main__':
     unittest.main()
-

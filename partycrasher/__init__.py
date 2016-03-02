@@ -1,16 +1,35 @@
 # -*- coding: UTF-8 -*-
 
 import ConfigParser
+from datetime import datetime
+from collections import namedtuple
 
 from elasticsearch import Elasticsearch, NotFoundError
 
 from partycrasher.crash import Crash
 from partycrasher.es_crash import ESCrash, ReportNotFoundError
 from partycrasher.bucketer import MLTCamelCase
+from partycrasher.epoch_date_library import milliseconds_since_epoch
 
 
 __version__ = u'0.1.0'
 
+class Bucket(namedtuple('Bucket', 'id total')):
+    """
+    Data class for buckets. Contains two identifiers:
+     - id: The bucket's ID;
+     - total: how many reports are currently in the bucket.
+    """
+
+    def to_dict(self, *args, **kwargs):
+        """
+        Converts the current object into a dictionary;
+        Any argguments are treated as in the `dict` constructor.
+        """
+        kwargs.update(self._asdict())
+        for arg in args:
+            kwargs.update(arg)
+        return kwargs
 
 class PartyCrasher(object):
     def __init__(self):
@@ -62,38 +81,60 @@ class PartyCrasher(object):
             raise Exception(' '.join([e.error, str(e.status_code), repr(e.info)]))
 
     def top_buckets(self, lower_bound, threshold=None, project=None):
+        """
+        Given a datetime lower_bound (from date), calculates the top buckets
+        in the given timeframe for the given threshold (automatically
+        determined if not given). The results can be tailed for a specific
+        project if needed.
+
+        Returns a list of {'doc_count': int, 'key': id} dictionaries.
+        """
+
+        if not isinstance(lower_bound, datetime):
+            raise TypeError('The lower bound MUST be a datetime object.')
+
         if threshold is None:
             threshold = self.default_threshold
 
-        # TODO: compute lower-bound properly
+        # Filters by lower-bound by default;
+        # may filter optionally by project.
+        filters = {
+            "range": {
+                "date_bucketed": {
+                    "gt": milliseconds_since_epoch(lower_bound)
+                }
+            }
+        }
 
+        if False:
+            if project is not None:
+                # Filter by project if needed as well.
+                filters.update(term={'project': project})
+
+
+        # TODO: compute lower-bound properly
+        # AS UTC!
         query = {
-            "aggs": {
-                "top_buckets_since_date": {
-                    "date_range": {
-                        "field":"date_bucketed",
-                        # TODO: determine date range from `since` parameter
-                        "ranges":[{"from":"now-7d"}]
-                    },
-                    "aggs": {
-                        "top_buckets": {
-                            "cardinality": {
-                                "field":"bucket","precision_threshold":0
-                            }
-                        }
+            "query": {
+                "filtered": {
+                    "filter": filters
+                }
+            },
+            "aggregations": {
+                "top_buckets": {
+                    "terms": {
+                        "field": "bucket"
                     }
                 }
             }
         }
+
         response = self.es.search(body=query, index='crashes')
-        from pprint import pprint
-        pprint(response)
+        # Oh, ElasticSearch... You and your overly verbose responses...
+        top_buckets = response['aggregations']['top_buckets']['buckets']
 
-        results = response['aggregations']['top_buckets_since_date']
-
-        return {
-            'top_buckets': results['buckets']
-        }
+        return [Bucket(id=b['key'], total=b['doc_count'])
+                for b in top_buckets]
 
 
     # TODO catch duplicate and return 303

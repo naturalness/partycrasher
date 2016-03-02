@@ -24,6 +24,7 @@ import elasticsearch
 from elasticsearch import Elasticsearch
 
 from crash import Crash, Stacktrace, Stackframe
+from epoch_date_library import milliseconds_since_epoch
 
 
 class ReportNotFoundError(KeyError):
@@ -73,7 +74,7 @@ class ESCrashMeta(type):
                 else:
                     # Ensure this is UTC time in milliseconds since the epoch.
                     now = datetime.datetime.utcnow()
-                    crash.setdefault('date_bucketed', miliseconds_since_epoch(now))
+                    crash.setdefault('date_bucketed', milliseconds_since_epoch(now))
                     try:
                         response = cls.es.create(index=index,
                                                  doc_type='crash',
@@ -184,13 +185,6 @@ class ESCrash(Crash):
         raise NotImplementedError
         # TODO: code to delete from ES
         # TODO: clear self
-
-
-def miliseconds_since_epoch(then):
-    """
-    http://stackoverflow.com/a/8160307
-    """
-    return int(time.mktime(then.timetuple())*1e3 + then.microsecond/1e3)
 
 
 import unittest

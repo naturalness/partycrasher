@@ -62,14 +62,14 @@ def jsonify_list(seq):
     return make_response((body, None, {'Content-Type': 'application/json'}))
 
 
-def href(route, *args, **kwargs):
+def href(route, **kwargs):
     """
     Like url_for(), but returns a dictionary, with a key ``href`` which is the
     external-facing URL for the service.
     """
 
     host = determine_user_agent_facing_host()
-    path = url_for(route, *args, **kwargs)
+    path = url_for(route, **kwargs)
     # TODO: Methods: can use request.endpoint to determine acceptable methods.
     return {'href': host + path, 'method': ['GET']}
 

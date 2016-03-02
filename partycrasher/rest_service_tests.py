@@ -293,20 +293,20 @@ class RestServiceTestCase(unittest.TestCase):
         database_id = str(uuid.uuid4())
         response = requests.post(create_url,
                                  json={'database_id': database_id,
-                                       'project': 'brooklyn'})
+                                       'project': 'manhattan'})
 
         # The request should have failed.
         assert response.status_code == 400
         assert response.json()['error'] == 'name_mismatch'
         assert response.json()['expected'] == 'alan_parsons'
-        assert response.json()['actual'] == 'brooklyn'
+        assert response.json()['actual'] == 'manhattan'
 
         # Now try to fetch it, globally and from either project
         assert 404 == requests.get(self.path_to('reports',
                                                database_id)).status_code
         assert 404 == requests.get(self.path_to('alan_parsons', 'reports',
                                                database_id)).status_code
-        assert 404 == requests.get(self.path_to('brooklyn', 'reports',
+        assert 404 == requests.get(self.path_to('manhattan', 'reports',
                                                database_id)).status_code
 
     @unittest.skip('Temporary')
@@ -562,8 +562,12 @@ class RestServiceTestCase(unittest.TestCase):
         bucket_url = self.path_to('alan_parsons', 'buckets', '4.0')
         response = requests.get(bucket_url, params={'since': now.isoformat()})
         assert response.json()['since'] == now.isoformat()
-        assert response.json()['top_buckets'][0]['bucket'] == database_id_a
-        assert response.json()['top_buckets'][0]['number_of_reports'] == 3
+        assert len(response.json()['top_buckets']) > 0
+        top_bucket = response.json()['top_buckets'][0]
+        assert top_bucket.get('id') is not None
+        assert top_bucket.get('href') is not None
+        assert is_url(top_bucket['href'])
+        assert top_bucket.get('total') == 3
 
     @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_get_project_config(self):
@@ -620,6 +624,20 @@ def is_allowed_origin(origin, response):
     # Or we're explicitly allowing this host.
     allowed_origins = [o.strip() for o in raw_origins.split()]
     assert origin in allowed_origins
+    return True
+
+
+def is_url(text):
+    """
+    Returns True when ``text`` is a web URL.
+
+    Raises AssertionError otherwise.
+    """
+    parse_result = urlparse(text)
+     
+    assert parse_result.scheme in ('http', 'https')
+    assert parse_result.netloc
+    assert parse_result.path.startswith('/')
     return True
 
 
