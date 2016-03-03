@@ -7,8 +7,6 @@ Contents:
    :maxdepth: 2
 
    rest-api
-   proposed-rest-api
-
 
 Indices and tables
 ==================
