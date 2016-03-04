@@ -11,7 +11,6 @@ from partycrasher.crash import Crash
 from partycrasher.es_crash import ESCrash
 from partycrasher.es_crash import ReportNotFoundError
 from partycrasher.bucketer import MLTCamelCase
-from partycrasher.epoch_date_library import milliseconds_since_epoch
 
 
 class BucketNotFoundError(KeyError):
@@ -145,7 +144,7 @@ class PartyCrasher(object):
         filters = [{
             "range": {
                 "date_bucketed": {
-                    "gt": milliseconds_since_epoch(lower_bound)
+                    "gt": lower_bound.isoformat()
                 }
             }
         }]

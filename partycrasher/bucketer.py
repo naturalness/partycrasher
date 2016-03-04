@@ -24,7 +24,6 @@ import time
 from crash import Crash
 from es_crash import ESCrash
 
-
 class Bucketer(object):
     """Superclass for bucketers which require pre-existing data to work.
     The default analyzer breaks on whitespace."""
@@ -61,7 +60,7 @@ class Bucketer(object):
             }
         }
         properties.update(common_properties())
-        self.es.indices.create(index=self.index, ignore=400,
+        self.es.indices.create(index=self.index,
         body={
             'mappings': {
                 'crash': {
@@ -416,7 +415,6 @@ def common_properties():
         },
         'date_bucketed': {
             'type': 'date',
-            'format': 'epoch_millis',
             # Do not index, because our analysis has not studied this yet!
             # Plus, Elastic won't index anyway...
             'index': 'not_analyzed'

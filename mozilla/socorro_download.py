@@ -19,7 +19,7 @@
 
 import copy, os, datetime, time, sys
 import requests, pytz
-import dateutil.parser as dateparser
+import dateparser
 import json_store
 
 def now():

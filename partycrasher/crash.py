@@ -18,7 +18,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import json, datetime
-import dateutil.parser as dateparser
+import dateparser
 
 
 # This is the separator which is meant to be used when turning
