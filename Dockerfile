@@ -11,6 +11,6 @@ FROM python:2-onbuild
 
 MAINTAINER Eddie Antonio Santos <easantos@ualberta.ca>
 
-CMD [ "python", "partycrasher/rest_service.py", "5000" ]
-
 EXPOSE 5000
+
+CMD [ "python", "partycrasher/rest_service.py", "5000" ]

@@ -498,7 +498,7 @@ def query_buckets(project=None, threshold=None):
     -------
 
     ::
-    
+
         GET /alan_parsons/buckets?since=2016-02-29 HTTP/1.1
         Host: domain.tld
 
@@ -679,10 +679,21 @@ def raise_bad_request_if_project_mismatch(report, project_name):
 
 
 def main():
+    kwargs = {
+        # Make the server publically visible. 
+        'host': '0.0.0.0',
+        'debug': True,
+    }
+
+    # TODO:
+    #  - add parameter: -c [config-file] 
+    #  - add parameter: -C [config-setting]
+
+    # Add port if required.
     if len(sys.argv) > 1:
-        app.run(debug=True, port=int(sys.argv[1]))
-    else:
-        app.run(debug=False)
+        kwargs.update(port=int(sys.argv[1]))
+
+    return app.run(**kwargs)
 
 
 if __name__ == '__main__':
