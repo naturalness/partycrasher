@@ -3,3 +3,4 @@ elasticsearch >= 2.2.0, < 3
 python-dateutil >= 2.4.0, < 3
 flask-cors >= 2.1.0, < 3
 httpheader >= 1.1, < 2
+requests
