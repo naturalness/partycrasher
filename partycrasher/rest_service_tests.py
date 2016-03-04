@@ -224,7 +224,7 @@ class RestServiceTestCase(unittest.TestCase):
         insert_date = response.json().get('date_bucketed')
         assert insert_date is not None
 
-        assert before_insert <= parse_date(insert_date) <= after_insert
+        assert before_insert <= dateparser.parse(insert_date) <= after_insert
 
     def test_add_crash_to_project(self):
         """
@@ -667,11 +667,6 @@ def is_url(text):
 
 def wait_for_elastic_search():
     time.sleep(2.5)
-
-
-def parse_date(date):
-    assert isinstance(date, int)
-    return datetime.datetime.fromtimestamp(date / 1000.0)
 
 
 def generate_a_big_random_string():

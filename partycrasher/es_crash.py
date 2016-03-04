@@ -24,7 +24,6 @@ import elasticsearch
 from elasticsearch import Elasticsearch
 
 from crash import Crash, Stacktrace, Stackframe
-from epoch_date_library import milliseconds_since_epoch
 
 
 class ReportNotFoundError(KeyError):
@@ -72,9 +71,9 @@ class ESCrashMeta(type):
                     return newish
                 # It's not in ES, so add it
                 else:
-                    # Ensure this is UTC time in milliseconds since the epoch.
+                    # Ensure this is UTC ISO format
                     now = datetime.datetime.utcnow()
-                    crash.setdefault('date_bucketed', milliseconds_since_epoch(now))
+                    crash.setdefault('date_bucketed', now.isoformat())
                     try:
                         response = cls.es.create(index=index,
                                                  doc_type='crash',

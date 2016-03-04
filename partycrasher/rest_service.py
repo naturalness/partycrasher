@@ -36,12 +36,8 @@ from partycrasher.rest_api_utils import (
     href,
     redirect_with_query_string,
 )
-from partycrasher.epoch_date_library import (
-    InvalidDateError,
-    DateParsingError,
-    parse_absolute_or_relative_time,
-)
 
+import dateparser
 
 app = make_json_app('partycrasher')
 CORS(app)
@@ -527,8 +523,10 @@ def query_buckets(project=None, threshold=None):
 
     since = request.args.get('since', 'a-week-ago')
     try:
-        lower_bound = parse_absolute_or_relative_time(since)
-    except DateParsingError:
+      lower_bound = dateparser.parse(since)
+    except:
+      lower_bound = None
+    if lower_bound is None:
         raise BadRequest('Could not understand date format for '
                          '`since=` parameter. '
                          'Supported formats are: ISO 8601 timestamps '
@@ -536,10 +534,6 @@ def query_buckets(project=None, threshold=None):
                          'more information: '
                          'http://partycrasher.rtfd.org/',
                          since=since)
-    except InvalidDateError as e:
-        raise BadRequest('Date was parsed, but yielded an invalid date',
-                         since=since,
-                         reason=e.message)
 
     buckets = crasher.top_buckets(lower_bound,
                                   project=project,

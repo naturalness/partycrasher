@@ -20,7 +20,7 @@
 from crash import Crash, Stacktrace, Stackframe
 
 import os, re, io, gzip, json
-import dateutil.parser as dateparser
+import dateparser
 import unicodedata
 from logging import critical, error, warning, info, debug
 
