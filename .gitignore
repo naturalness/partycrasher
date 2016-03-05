@@ -3,9 +3,20 @@
 __pycache__/
 
 # Distutils
-*.egg
-*.egg-info/
+.Python
+env/
+build/
+develop-eggs/
 dist/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # Get rid of cache.
 .cache/
