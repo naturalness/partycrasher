@@ -521,11 +521,11 @@ def query_buckets(project=None, threshold=None):
     """
     assert threshold is not None
 
-    since = request.args.get('since', 'a-week-ago')
+    since = request.args.get('since', '3-days-ago')
     try:
-      lower_bound = dateparser.parse(since)
-    except:
-      lower_bound = None
+        lower_bound = dateparser.parse(since.replace('-', ' '))
+    except ValueError:
+        lower_bound = None
     if lower_bound is None:
         raise BadRequest('Could not understand date format for '
                          '`since=` parameter. '

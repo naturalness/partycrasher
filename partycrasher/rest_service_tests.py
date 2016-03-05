@@ -592,9 +592,30 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.get(search_url, params={'since': '2015-02-29'})
         assert response.status_code == 400
 
-        # Search junk.
+        # Search a junk value.
         response = requests.get(search_url, params={'since': 'herp'})
         assert response.status_code == 400
+
+    def test_top_buckets_default_query(self):
+        """
+        Does it produce reasonable results for the default query?
+        """
+
+        # Upload at least one report, to ensure the database has
+        # at least one bucket.
+        response = requests.post(self.path_to('alan_parsons', 'reports'),
+                                 json=[{'database_id': str(uuid.uuid4())}])
+        assert response.status_code == 201
+
+        # Just GET the top buckets!
+        search_url = self.path_to('alan_parsons', 'buckets', '4.0')
+        response = requests.get(search_url)
+        assert response.status_code == 200
+
+        # There should be at least one top bucket...
+        assert len(response.json()['top_buckets']) >= 1
+        # It should send back a proper since date.
+        assert len(response.json().get('since')) is not None
 
     def test_get_project_config(self):
         """
