@@ -47,6 +47,7 @@ except NameError:
     xrange = range
 
 
+import dateparser
 import requests
 
 # Full path to ./rest_service.py
@@ -54,7 +55,7 @@ REST_SERVICE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                  'rest_service.py')
 
 # XXX: REMOVE THIS (Ignore the octal literals)
-PAST_DUE_DATE = datetime.datetime.today() >= datetime.datetime(2016, 03, 04)
+PAST_DUE_DATE = datetime.datetime.today() >= datetime.datetime(2016, 3, 11)
 
 # TODO: database_id => id.
 
@@ -487,7 +488,6 @@ class RestServiceTestCase(unittest.TestCase):
         # TODO: ensure if URL project and JSON project conflict HTTP 400
         #       is returned
 
-    @unittest.skipUnless(PAST_DUE_DATE, 'This feature is due')
     def test_get_project_bucket(self):
         """
         Fetch a bucket and its contents.
@@ -499,16 +499,15 @@ class RestServiceTestCase(unittest.TestCase):
 
         # This is the only content for each report, so there must only be
         # *one* bucket that contains reports A, B, and C!
-        tfidf_trickery = generate_a_big_random_string()
-        print(tfidf_trickery)
+        tfidf_trickery = str(uuid.uuid4())
 
         fake_true_date = [{'database_id': str(uuid.uuid4()),
                            'tfidf_trickery': tfidf_trickery}
                           for _ in xrange(5)]
         # Generate a bunch of FAKE data.
         fake_false_data = [{'database_id': str(uuid.uuid4()),
-                            'tfidf_trickery': generate_a_big_random_string()}
-                           for _ in xrange(1000)]
+                            'tfidf_trickery':  str(uuid.uuid4())}
+                           for _ in xrange(10)]
         response = requests.post(create_url, json=fake_false_data)
         assert response.status_code == 201
         response = requests.post(create_url, json=fake_true_date)
@@ -526,9 +525,9 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 200
         # The bucket is named after the first crash... I guess?
         #assert database_id_a in response.json().get('id')
-        assert response.json().get('total') > 1
+        assert response.json().get('total') >= 1
         # Look at the top report; it must contain tfidf_trickery.
-        assert (response.json()['top_reports'][0]['tfidf_trickery'] ==
+        assert (response.json()['top_reports'][0].get('tfidf_trickery') ==
                 tfidf_trickery)
 
     def test_get_top_buckets(self):
@@ -538,7 +537,7 @@ class RestServiceTestCase(unittest.TestCase):
         now = datetime.datetime.utcnow()
 
         # Create a bunch of reports with IDENTICAL unique content
-        tfidf_trickery = generate_a_big_random_string()
+        tfidf_trickery = str(uuid.uuid4())
 
         # These will all go in the Alan Parsons Project
         database_id_a = str(uuid.uuid4())
@@ -667,10 +666,6 @@ def is_url(text):
 
 def wait_for_elastic_search():
     time.sleep(2.5)
-
-
-def generate_a_big_random_string():
-    return ' '.join(str(uuid.uuid4()) for _ in xrange(10))
 
 
 if __name__ == '__main__':

@@ -107,22 +107,14 @@ class PartyCrasher(object):
         if reports_found < 1:
             raise BucketNotFoundError(bucket_id)
 
-        raw_reports = response['hits']['hits']
-        reports = [Crash(report) for report in raw_reports]
+        raw_hits = response['hits']['hits']
+        reports = [Crash(hit['_source']) for hit in raw_hits]
 
         return Bucket(id=bucket_id,
                       project=None,
                       threshold=self.default_threshold,
                       total = reports_found,
                       top_reports=reports)
-
-
-
-
-
-
-
-
 
     def top_buckets(self, lower_bound, threshold=None, project=None):
         """
