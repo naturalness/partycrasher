@@ -2,7 +2,7 @@
 
 import ConfigParser
 from datetime import datetime
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 from elasticsearch import Elasticsearch, NotFoundError
 
@@ -98,8 +98,6 @@ class PartyCrasher(object):
         }
 
         response = self.es.search(body=query, index='crashes')
-        from pprint import pprint
-        pprint(response)
         reports_found = response['hits']['total']
 
         # Since no reports where found, assume the bucket does not exist (at
@@ -107,8 +105,9 @@ class PartyCrasher(object):
         if reports_found < 1:
             raise BucketNotFoundError(bucket_id)
 
-        raw_hits = response['hits']['hits']
-        reports = [Crash(hit['_source']) for hit in raw_hits]
+        reports = self._get_reports_by_bucket(response,
+                                              threshold).get(bucket_id)
+        assert len(reports) > 0
 
         return Bucket(id=bucket_id,
                       project=None,
@@ -177,13 +176,14 @@ class PartyCrasher(object):
                        ['top_buckets']
                        ['buckets'])
 
+        reports_by_project = self._get_reports_by_bucket(response, threshold)
+
         return [Bucket(id=b['key'],
                        total=b['doc_count'],
                        project=project,
                        threshold=threshold,
-                       top_reports=[])
+                       top_reports=reports_by_project.get(b['key'], ()))
                 for b in top_buckets]
-
 
     # TODO catch duplicate and return 303
     def dryrun(self, crash):
@@ -198,7 +198,24 @@ class PartyCrasher(object):
         except NotFoundError as e:
             raise KeyError(database_id)
 
-    def delcrash(database_id):
+    def delete_crash(database_id):
         # TODO: we have to call ES directly here, theres nothing in Crash/ESCrash or Bucketer to handle this case
         # maybe ESCrash(database_id).delete()
         raise NotImplementedError("BUT WHY~!~~~~")
+
+    @staticmethod
+    def _get_reports_by_bucket(response, _threshold):
+        """
+        Returns a dictionary of projects => reports, from the response.
+        """
+        buckets = defaultdict(list)
+
+        raw_hits = response['hits']['hits']
+
+        for hit in raw_hits:
+            report = hit['_source']
+            # TODO: multiple threshold support.
+            bucket_id = report['bucket']
+            buckets[bucket_id].append(Crash(report))
+
+        return buckets

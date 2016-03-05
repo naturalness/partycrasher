@@ -572,11 +572,14 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.get(search_url, params={'since': now.isoformat()})
         assert response.json()['since'] == now.isoformat()
         assert len(response.json()['top_buckets']) >= 2
+
+        # Get the top bucket.
         top_bucket = response.json()['top_buckets'][0]
         assert top_bucket.get('id') is not None
         assert top_bucket.get('href') is not None
         assert is_url(top_bucket['href'])
         assert top_bucket.get('total') >= 1
+        assert len(top_bucket.get('top_reports', ())) > 0
 
     def test_top_buckets_invalid_queries(self):
         """
