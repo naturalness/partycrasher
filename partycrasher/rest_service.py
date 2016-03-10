@@ -26,7 +26,8 @@ from flask import jsonify, request, url_for, redirect
 from flask.ext.cors import CORS
 
 # Hacky things to add PartyCrasher to the path.
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+REPOSITORY_ROUTE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(REPOSITORY_ROUTE)
 import partycrasher
 
 from partycrasher.make_json_app import make_json_app
@@ -41,7 +42,10 @@ import dateparser
 
 app = make_json_app('partycrasher')
 CORS(app)
-crasher = partycrasher.PartyCrasher()
+
+# HACK! This shouldn't be hard-coded!
+with open(os.path.join(REPOSITORY_ROUTE, 'partycrasher.cfg')) as config_file:
+    crasher = partycrasher.PartyCrasher(config_file)
 
 
 @app.errorhandler(BadRequest)

@@ -1,8 +1,13 @@
 # -*- coding: UTF-8 -*-
 
-import ConfigParser
 from datetime import datetime
 from collections import namedtuple, defaultdict
+
+# Python 2/3 hack.
+try:
+    from ConfigParser import SafeConfigParser as ConfigParser
+except:
+    from configparser import ConfigParser
 
 from elasticsearch import Elasticsearch, NotFoundError
 
@@ -39,11 +44,19 @@ class Bucket(namedtuple('Bucket', 'id project threshold total top_reports')):
 
 
 class PartyCrasher(object):
-    def __init__(self):
-        self.config = ConfigParser.SafeConfigParser({'elastic': ''})
-        self.esServers = self.config.get('DEFAULT', 'elastic').split()
+    def __init__(self, config_file=None):
+        self.config = ConfigParser(default_config())
+
+        # TODO: Abstract config out.
+        if config_file is not None:
+            self.config.readfp(config_file)
+
+        self.esServers = self.config.get('partycrasher.elastic', 'hosts').split()
+
+        # Default to localhost if it's not configured.
         if len(self.esServers) < 1:
             self.esServers = ['localhost']
+
         # self.es and self.bucketer are lazy properties.
         self._es = None
         self._bucketer = None
@@ -219,3 +232,15 @@ class PartyCrasher(object):
             buckets[bucket_id].append(Crash(report))
 
         return buckets
+
+
+def default_config():
+    return {
+        'partycrasher.http': {
+            'prefix': '/'
+        },
+
+        'partycrasher.elastic': {
+            'primary': 'localhost:9200'
+        },
+    }
