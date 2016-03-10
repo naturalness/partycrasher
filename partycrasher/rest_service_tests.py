@@ -17,6 +17,8 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from __future__ import print_function
+
 """
 Integration tests for PartyCrasher's REST API.
 
@@ -27,10 +29,12 @@ import PartyCrasher in this test!
 """
 
 
+import sys
 import datetime
 import os
 import random
 import signal
+import socket
 import subprocess
 import time
 import unittest
@@ -82,7 +86,7 @@ class RestServiceTestCase(unittest.TestCase):
                                              preexec_fn=os.setsid)
 
         # Wait for the REST service to start up.
-        time.sleep(1)
+        wait_for_service_startup(self.port)
 
     #################
     # Test Utilites #
@@ -692,6 +696,34 @@ def is_url(text):
 def wait_for_elastic_search():
     time.sleep(2.5)
 
+
+ATTEMPTS = []
+
+# Adapted from: http://stackoverflow.com/a/19196218
+def wait_for_service_startup(port, timeout=5.0, delay=0.25,
+                             hostname='127.0.0.1'):
+
+    start_time = time.time()
+    max_time = start_time + timeout
+    while time.time() < max_time:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if 0 == sock.connect_ex((hostname, port)):
+            # Connected!
+            ATTEMPTS.append(time.time() - start_time)
+            return
+        time.sleep(delay)
+
+    raise RuntimeError('Could not connect to {}:{}'.format(hostname, port))
+
+
+import atexit
+
+@atexit.register
+def print_attempts():
+    print('\x1b[33mConnection attempt time\x1b[m')
+    print('Avg:', sum(ATTEMPTS) / len(ATTEMPTS))
+    print('Med:', sorted(ATTEMPTS)[len(ATTEMPTS) // 2])
+    print(ATTEMPTS)
 
 if __name__ == '__main__':
     unittest.main()
