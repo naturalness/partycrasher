@@ -212,6 +212,7 @@ class PartyCrasher(object):
 
     def get_crash(self, database_id):
         self._connect_to_elasticsearch()
+
         try:
             return ESCrash(database_id, index='crashes')
         except NotFoundError as e:

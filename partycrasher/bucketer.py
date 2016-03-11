@@ -117,10 +117,10 @@ class MLT(Bucketer):
         if self.only_stack:
             crash = {'stacktrace': crash['stacktrace']}
         body={
-            #'_source': [bucket_field],
+            '_source': [bucket_field],
             'size': self.max_buckets,
             # LOOOOL
-            #'min_score': self.thresh,
+            'min_score': self.thresh,
             'query': {
             'more_like_this': {
                 'docs': [{
@@ -129,7 +129,6 @@ class MLT(Bucketer):
                     'doc': crash,
                     }],
                 'max_query_terms': 2500,
-                'minimum_should_match': 0,
                 'min_term_freq': 0,
                 'min_doc_freq': 0,
                 },

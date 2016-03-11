@@ -134,6 +134,7 @@ class ESCrash(Crash):
         if index in cls.crashes:
             if database_id in cls.crashes[index]:
                 return cls.crashes[database_id]
+
         response = cls.es.search(index=index, body={
             'query': {
                 'filtered':{
@@ -148,6 +149,7 @@ class ESCrash(Crash):
                 }
             }
         })
+
         if response['hits']['total'] == 0:
             return None
         elif response['hits']['total'] > 1:
