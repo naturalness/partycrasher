@@ -123,11 +123,14 @@ class ESCrash(Crash):
     __metaclass__ = ESCrashMeta
 
     # Global ES connection
-    es = Elasticsearch(retry_on_timeout=True)
+    es = None
     crashes = {}
 
     @classmethod
     def getrawbyid(cls, database_id, index='crashes'):
+        if cls.es is None:
+            raise RuntimeError('Forgot to monkey-patch ES connection to ESCrash!')
+
         if index in cls.crashes:
             if database_id in cls.crashes[index]:
                 return cls.crashes[database_id]

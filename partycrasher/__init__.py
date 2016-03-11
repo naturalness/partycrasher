@@ -83,6 +83,11 @@ class PartyCrasher(object):
         Actually connects to ElasticSearch.
         """
         self._es = Elasticsearch(self.esServers)
+
+        # Monkey-patch our instance to the global. This is...
+        # naughty.
+        ESCrash.es = self._es
+
         # TODO: Have more than one bucketer.
         self._bucketer = MLTCamelCase(thresh=4.0,
                                       lowercase=False,
@@ -206,6 +211,7 @@ class PartyCrasher(object):
             raise Exception(' '.join([e.error, str(e.status_code), repr(e.info)]))
 
     def get_crash(self, database_id):
+        self._connect_to_elasticsearch()
         try:
             return ESCrash(database_id, index='crashes')
         except NotFoundError as e:
