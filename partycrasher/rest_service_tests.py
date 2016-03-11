@@ -716,14 +716,5 @@ def wait_for_service_startup(port, timeout=5.0, delay=0.25,
     raise RuntimeError('Could not connect to {}:{}'.format(hostname, port))
 
 
-import atexit
-
-@atexit.register
-def print_attempts():
-    print('\x1b[33mConnection attempt time\x1b[m')
-    print('Avg:', sum(ATTEMPTS) / len(ATTEMPTS))
-    print('Med:', sorted(ATTEMPTS)[len(ATTEMPTS) // 2])
-    print(ATTEMPTS)
-
 if __name__ == '__main__':
     unittest.main()
