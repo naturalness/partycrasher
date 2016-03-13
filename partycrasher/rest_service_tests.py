@@ -483,7 +483,7 @@ class RestServiceTestCase(unittest.TestCase):
 
         # Delete it.
         response = requests.delete(report_url)
-        assert reponse.status_code in 204
+        assert response.status_code in (200, 201, 204)
 
         # Now we should NOT be able to access it!
         response = requests.get(report_url)
