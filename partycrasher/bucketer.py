@@ -114,12 +114,14 @@ class MLT(Bucketer):
     def bucket(self, crash, bucket_field=None):
         if bucket_field is None:
             bucket_field = self.name
+
+        # Compare only the stack trace
         if self.only_stack:
             crash = {'stacktrace': crash['stacktrace']}
+
         body={
             '_source': [bucket_field],
             'size': self.max_buckets,
-            # LOOOOL
             'min_score': self.thresh,
             'query': {
             'more_like_this': {
@@ -128,6 +130,7 @@ class MLT(Bucketer):
                     '_type': 'crash',
                     'doc': crash,
                     }],
+                'minimum_should_match': 0,
                 'max_query_terms': 2500,
                 'min_term_freq': 0,
                 'min_doc_freq': 0,
@@ -153,11 +156,7 @@ class MLT(Bucketer):
                         }
                 }
             };
-        matches = self.es.search(index=self.index,body=body)
-
-        if os.getenv('PARTYCRASHER_DEBUG'):
-            from pprint import pprint
-            pprint(matches)
+        matches = self.es.search(index=self.index, body=body)
 
         matching_buckets=[]
         if self.use_aggs:
