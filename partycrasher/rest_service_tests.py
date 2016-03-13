@@ -420,7 +420,7 @@ class RestServiceTestCase(unittest.TestCase):
         database_id = str(uuid.uuid4())
         response = requests.post(url, json={'database_id': database_id})
 
-        assert response.status_code == 202
+        assert response.status_code == 201
         assert response.json()['database_id'] == database_id
         assert response.json()['bucket'] is not None
         assert response.json()['project'] == 'alan_parsons'
@@ -444,9 +444,9 @@ class RestServiceTestCase(unittest.TestCase):
 
         response = requests.post(create_url,
                                  json={'database_id': database_id})
-        assert response.status_code == 202
+        assert response.status_code == 201
 
-        report_url = self.path_to('alan_parsons/reports/', database_id)
+        report_url = self.path_to('alan_parsons', 'reports', database_id)
         assert is_cross_origin_accessible(report_url)
 
         # Delete it.
@@ -483,7 +483,7 @@ class RestServiceTestCase(unittest.TestCase):
 
         # Delete it.
         response = requests.delete(report_url)
-        assert response.status_code in (200, 201, 204)
+        assert response.status_code in (200, 204)
 
         # Now we should NOT be able to access it!
         response = requests.get(report_url)
