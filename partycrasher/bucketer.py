@@ -155,7 +155,8 @@ class MLT(Bucketer):
                             }
                         }
                 }
-            };
+            }
+
         matches = self.es.search(index=self.index, body=body)
 
         matching_buckets=[]

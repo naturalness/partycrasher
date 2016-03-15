@@ -100,9 +100,16 @@ class PartyCrasher(object):
 
     # TODO catch duplicate and return 303
     # TODO multi-bucket multi-threshold mumbo-jumbo
-    def ingest(self, crash):
+    def ingest(self, crash, dryrun=False):
+        true_crash = Crash(crash)
+
         try:
-            return self.bucketer.assign_save_bucket(Crash(crash))
+            if dryrun:
+                # HACK!
+                true_crash['bucket'] = self.bucketer.assign_bucket(true_crash)
+                return true_crash
+            else:
+                return self.bucketer.assign_save_bucket(true_crash)
         except NotFoundError as e:
             raise Exception(' '.join([e.error, str(e.status_code), repr(e.info)]))
 

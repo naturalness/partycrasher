@@ -370,7 +370,9 @@ def ask_about_report(project=None):
 
     """
 
-    raise NotImplementedError
+    report = request.get_json()
+    assigned_report, _url = ingest_one(report, project, dryrun=True)
+    return jsonify(assigned_report), 200
 
 
 @app.route('/reports/<report_id>', methods=['DELETE'],
@@ -627,7 +629,7 @@ if False:
 #############################################################################
 
 
-def ingest_one(report, project_name):
+def ingest_one(report, project_name, dryrun=False):
     """
     Returns a tuple of ingested report and its URL.
     """
@@ -636,7 +638,7 @@ def ingest_one(report, project_name):
     # Graft the project name onto the report.
     report.setdefault('project', project_name)
 
-    report = crasher.ingest(report)
+    report = crasher.ingest(report, dryrun=dryrun)
     url = url_for('view_report',
                   project=report['project'],
                   report_id=report['database_id'])
@@ -678,13 +680,13 @@ def raise_bad_request_if_project_mismatch(report, project_name):
 
 def main():
     kwargs = {
-        # Make the server publically visible. 
+        # Make the server publically visible.
         'host': '0.0.0.0',
         'debug': True,
     }
 
     # TODO:
-    #  - add parameter: -c [config-file] 
+    #  - add parameter: -c [config-file]
     #  - add parameter: -C [config-setting]
 
     # Add port if required.
