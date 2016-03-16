@@ -405,7 +405,6 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.json()['project'] == 'alan_parsons'
         # TODO: bucket url
 
-    @unittest.skip("ElasticSearch crashes and we don't know why")
     def test_dry_run(self):
         """
         Returns the bucket assignment were the given crash to be added.
@@ -422,7 +421,7 @@ class RestServiceTestCase(unittest.TestCase):
 
         assert response.status_code == 200
         assert response.json()['database_id'] == database_id
-        assert response.json()['bucket'] is not None
+        assert response.json().get('bucket') is not None
         assert response.json()['project'] == 'alan_parsons'
         # TODO: bucket url
 
