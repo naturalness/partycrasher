@@ -37,11 +37,14 @@ from partycrasher.rest_api_utils import (
     href,
     redirect_with_query_string,
 )
+from partycrasher.resource_encoder import ResourceEncoder
 
 import dateparser
 
+# Create and customize the Flask app.
 app = make_json_app('partycrasher')
 CORS(app)
+app.json_encoder = ResourceEncoder
 
 # HACK! This shouldn't be hard-coded!
 with open(os.path.join(REPOSITORY_ROUTE, 'partycrasher.cfg')) as config_file:
@@ -546,11 +549,12 @@ def query_buckets(project=None, threshold=None):
                                   threshold=threshold)
 
     # Reformat the results...
-    top_buckets = [bucket.to_dict(href('view_bucket',
-                                       project=project,
-                                       threshold=threshold,
-                                       bucket_id=bucket.id))
-                   for bucket in buckets]
+    #top_buckets = [bucket.to_dict(href('view_bucket',
+    #                                   project=project,
+    #                                   threshold=threshold,
+    #                                   bucket_id=bucket.id))
+    #               for bucket in buckets]
+    top_buckets = list(buckets)
 
     return jsonify(since=lower_bound.isoformat(),
                    threshold=threshold,

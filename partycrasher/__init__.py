@@ -18,12 +18,14 @@ from partycrasher.es_crash import ReportNotFoundError
 from partycrasher.bucketer import MLTCamelCase
 
 
+__version__ = u'0.1.0'
+
+
 class BucketNotFoundError(KeyError):
     """
     When a particular bucket cannot be found.
     """
 
-__version__ = u'0.1.0'
 
 class Bucket(namedtuple('Bucket', 'id project threshold total top_reports')):
     """
@@ -41,6 +43,13 @@ class Bucket(namedtuple('Bucket', 'id project threshold total top_reports')):
         for arg in args:
             kwargs.update(arg)
         return kwargs
+
+
+class Project(namedtuple('Project', 'name')):
+    """
+    """
+    pass
+
 
 
 class PartyCrasher(object):

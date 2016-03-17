@@ -180,6 +180,14 @@ class Crash(dict):
     def stacktrace(self):
         return self['stacktrace']
 
+    @property
+    def project(self):
+        return self['project']
+
+    @property
+    def id(self):
+        return self['database_id']
+
     def normalize(self):
         """
         wat.
