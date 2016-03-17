@@ -22,7 +22,7 @@ import os
 import sys
 import time
 
-from flask import jsonify, request, url_for, redirect
+from flask import current_app, json, jsonify, request, url_for, redirect
 from flask.ext.cors import CORS
 
 # Hacky things to add PartyCrasher to the path.
@@ -327,7 +327,7 @@ def view_report(project=None, report_id=None):
     except partycrasher.ReportNotFoundError:
         return jsonify(not_found=report_id), 404
     else:
-        return jsonify(report)
+        return jsonify_resource(report)
 
 
 @app.route('/reports/dry-run', methods=['POST'])
@@ -423,11 +423,11 @@ def view_bucket(project=None, threshold=None, bucket_id=None):
     assert threshold is not None
 
     try:
-        bucket = crasher.bucket(threshold, bucket_id)
+        bucket = crasher.bucket(threshold, bucket_id, project)
     except partycrasher.BucketNotFoundError:
         return jsonify(not_found=bucket_id), 404
 
-    return jsonify(bucket.to_dict())
+    return jsonify_resource(bucket)
 
 
 # Undoucmented endpoint:
@@ -680,6 +680,16 @@ def raise_bad_request_if_project_mismatch(report, project_name):
                          error="name_mismatch",
                          expected=project_name,
                          actual=report['project'])
+
+
+# Copied from: flask/json.py
+def jsonify_resource(resource):
+    indent = None
+    if current_app.config['JSONIFY_PRETTYPRINT_REGULAR'] \
+            and not request.is_xhr:
+        indent = 2
+    return current_app.response_class(json.dumps(resource, indent=indent),
+                                      mimetype='application/json')
 
 
 def main():

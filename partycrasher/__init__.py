@@ -122,7 +122,11 @@ class PartyCrasher(object):
         except NotFoundError as e:
             raise Exception(' '.join([e.error, str(e.status_code), repr(e.info)]))
 
-    def bucket(self, threshold, bucket_id):
+    def bucket(self, threshold, bucket_id, project=None):
+        """
+        Returns information for the given bucket.
+        """
+
         query = {
             "filter": {
                 "term": {
@@ -144,7 +148,7 @@ class PartyCrasher(object):
         assert len(reports) > 0
 
         return Bucket(id=bucket_id,
-                      project=None,
+                      project=project,
                       threshold=self.default_threshold,
                       total = reports_found,
                       top_reports=reports)

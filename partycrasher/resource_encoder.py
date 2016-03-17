@@ -108,10 +108,11 @@ class ResourceEncoder(json.JSONEncoder):
 
         elif isinstance(obj, Bucket):
             bucket = obj
-            serializable = bucket.to_dict(href('view_bucket',
-                                               project=bucket.project,
-                                               threshold=bucket.threshold,
-                                               bucket_id=bucket.id))
+            resource_info = href('view_bucket',
+                                 project=bucket.project,
+                                 threshold=bucket.threshold,
+                                 bucket_id=bucket.id)
+            serializable = bucket.to_dict(resource_info)
         elif isinstance(obj, Project):
             project = obj
             serializable = href('project_overview',
@@ -135,6 +136,7 @@ class ResourceEncoder(json.JSONEncoder):
                 mysocket.write(chunk)
 
         """
+
         if self.check_circular:
             markers = {}
         else:
