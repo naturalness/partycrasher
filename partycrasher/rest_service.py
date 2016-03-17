@@ -246,7 +246,7 @@ def add_report(project=None):
         return jsonify_list(ingest_multiple(report, project)), 201
     else:
         report, url = ingest_one(report, project)
-        return jsonify(report), 201, {
+        return jsonify_resource(report), 201, {
             'Location': url
         }
 
@@ -375,7 +375,7 @@ def ask_about_report(project=None):
 
     report = request.get_json()
     assigned_report, _url = ingest_one(report, project, dryrun=True)
-    return jsonify(assigned_report), 200
+    return jsonify_resource(assigned_report), 200
 
 
 @app.route('/reports/<report_id>', methods=['DELETE'],
@@ -548,17 +548,9 @@ def query_buckets(project=None, threshold=None):
                                   project=project,
                                   threshold=threshold)
 
-    # Reformat the results...
-    #top_buckets = [bucket.to_dict(href('view_bucket',
-    #                                   project=project,
-    #                                   threshold=threshold,
-    #                                   bucket_id=bucket.id))
-    #               for bucket in buckets]
-    top_buckets = list(buckets)
-
     return jsonify(since=lower_bound.isoformat(),
                    threshold=threshold,
-                   top_buckets=top_buckets)
+                   top_buckets=list(buckets))
 
 
 @app.route('/<project>/reports/')
