@@ -115,7 +115,9 @@ class ResourceEncoder(json.JSONEncoder):
             serializable = bucket.to_dict(resource_info)
         elif isinstance(obj, Project):
             project = obj
-            serializable = href('project_overview',
+            serializable = href('query_buckets',
+                                # TODO: unhardcode this number!
+                                threshold='4.0',
                                 project=project.name)
             serializable.update(name=project.name)
         else:

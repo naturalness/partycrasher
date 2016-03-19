@@ -9,7 +9,7 @@ try:
 except:
     from configparser import ConfigParser
 
-from elasticsearch import Elasticsearch, NotFoundError
+from elasticsearch import Elasticsearch, NotFoundError, TransportError
 
 # Some of these imports are part of the public API...
 from partycrasher.crash import Crash
@@ -132,7 +132,7 @@ class PartyCrasher(object):
         else:
             return self.bucketer.assign_save_bucket(true_crash)
 
-    def bucket(self, threshold, bucket_id, project=None):
+    def get_bucket(self, threshold, bucket_id, project=None):
         """
         Returns information for the given bucket.
         """
@@ -241,7 +241,32 @@ class PartyCrasher(object):
         except NotFoundError as e:
             raise KeyError(database_id)
 
-    def delete_crash(database_id):
+    def get_projects(self):
+        """
+        Returns the list of all projects found in Elasticsearch.
+        """
+
+        query = {
+            "aggs": {
+                "projects": {
+                    "terms": {
+                        "field":"project"
+                    }
+                }
+            }
+        }
+
+        try:
+            results = self.es.search(body=query, index='crashes')
+        except TransportError:
+            # Occurs when the index has just been freshly created.
+            return None
+
+        raw_projects = results['aggregations']['projects']['buckets']
+        return [Project(project['key']) for project in raw_projects]
+        
+
+    def delete_crash(self, database_id):
         # TODO: we have to call ES directly here, theres nothing in
         # Crash/ESCrash or Bucketer to handle this case maybe
         # ESCrash(database_id).delete()

@@ -46,7 +46,7 @@ app = make_json_app('partycrasher')
 CORS(app)
 app.json_encoder = ResourceEncoder
 
-# HACK! This shouldn't be hard-coded!
+# XXX: This shouldn't be hard-coded!
 with open(os.path.join(REPOSITORY_ROUTE, 'partycrasher.cfg')) as config_file:
     crasher = partycrasher.PartyCrasher(config_file)
 
@@ -107,24 +107,17 @@ def root():
         └── reports
             └── dry_run
 
-    .. The root route; I'm really rooting for it.
-
     """
 
-    # Projects query:
-    #
-    #   {"aggs":{"projects":{"terms":{"field":"project"}}}}
-    #
-    #   result['aggregations']['projects']['buckets']
+    projects = crasher.get_projects()
 
     # This should be a tree for all of the services available.
     return jsonify(self=dict(href('root'), rel='canonical'),
                    partycrasher={
                        'version': partycrasher.__version__,
                        'elastic': crasher.esServers,
-                       'elastic_health': crasher.es.cluster.health()
                    },
-                   projects="NOT-IMPLEMENTED",
+                   projects=projects,
                    config={
                        'default_threshold': 4.0
                    })
@@ -423,7 +416,7 @@ def view_bucket(project=None, threshold=None, bucket_id=None):
     assert threshold is not None
 
     try:
-        bucket = crasher.bucket(threshold, bucket_id, project)
+        bucket = crasher.get_bucket(threshold, bucket_id, project)
     except partycrasher.BucketNotFoundError:
         return jsonify(not_found=bucket_id), 404
 
@@ -551,11 +544,6 @@ def query_buckets(project=None, threshold=None):
     return jsonify(since=lower_bound.isoformat(),
                    threshold=threshold,
                    top_buckets=list(buckets))
-
-
-@app.route('/<project>/reports/')
-def reports_overview(project=None):
-    raise NotImplementedError
 
 
 @app.route('/<project>/config')
