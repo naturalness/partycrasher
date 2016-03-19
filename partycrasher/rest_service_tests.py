@@ -643,6 +643,10 @@ class RestServiceTestCase(unittest.TestCase):
         os.killpg(os.getpgid(self.rest_service.pid), signal.SIGTERM)
         self.rest_service.wait()
 
+######################
+# More Test Utilites #
+######################
+
 
 def is_cross_origin_accessible(path, origin='http://example.org'):
     """
@@ -696,8 +700,6 @@ def wait_for_elastic_search():
     time.sleep(2.5)
 
 
-ATTEMPTS = []
-
 # Adapted from: http://stackoverflow.com/a/19196218
 def wait_for_service_startup(port, timeout=5.0, delay=0.25,
                              hostname='127.0.0.1'):
@@ -708,7 +710,6 @@ def wait_for_service_startup(port, timeout=5.0, delay=0.25,
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if 0 == sock.connect_ex((hostname, port)):
             # Connected!
-            ATTEMPTS.append(time.time() - start_time)
             return
         time.sleep(delay)
 

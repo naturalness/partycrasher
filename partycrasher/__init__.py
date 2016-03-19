@@ -47,8 +47,8 @@ class Bucket(namedtuple('Bucket', 'id project threshold total top_reports')):
 
 class Project(namedtuple('Project', 'name')):
     """
+    Metadata about a project.
     """
-    pass
 
 
 
@@ -72,29 +72,38 @@ class PartyCrasher(object):
 
     @property
     def es(self):
+        """
+        ElasticSearch instance.
+
+        """
         if not self._es:
             self._connect_to_elasticsearch()
         return self._es
 
     @property
     def bucketer(self):
+        """
+        Bucketer instance.
+        """
         if not self._bucketer:
             self._connect_to_elasticsearch()
         return self._bucketer
 
     @property
     def default_threshold(self):
+        """
+        Default threshould to use if none are provided.
+        """
         # TODO: determine from static/dynamic configuration
         return 4.0
 
     def _connect_to_elasticsearch(self):
         """
-        Actually connects to ElasticSearch.
+        Establishes a connection to ElasticSearch. given configuration.
         """
         self._es = Elasticsearch(self.esServers)
 
-        # Monkey-patch our instance to the global. This is...
-        # naughty.
+        # XXX: Monkey-patch our instance to the global.
         ESCrash.es = self._es
 
         # TODO: Have more than one bucketer.
@@ -107,20 +116,21 @@ class PartyCrasher(object):
         self._bucketer.create_index()
         return self._es
 
-    # TODO catch duplicate and return 303
+    # TODO catch duplicate and return DuplicateRecordError
     # TODO multi-bucket multi-threshold mumbo-jumbo
     def ingest(self, crash, dryrun=False):
+        """
+        Ingest a crash; the Crash may be a simple dictionary, or a
+        pre-existing Crash instance.
+        """
         true_crash = Crash(crash)
 
-        try:
-            if dryrun:
-                # HACK!
-                true_crash['bucket'] = self.bucketer.assign_bucket(true_crash)
-                return true_crash
-            else:
-                return self.bucketer.assign_save_bucket(true_crash)
-        except NotFoundError as e:
-            raise Exception(' '.join([e.error, str(e.status_code), repr(e.info)]))
+        if dryrun:
+            # HACK!
+            true_crash['bucket'] = self.bucketer.assign_bucket(true_crash)
+            return true_crash
+        else:
+            return self.bucketer.assign_save_bucket(true_crash)
 
     def bucket(self, threshold, bucket_id, project=None):
         """
@@ -223,13 +233,6 @@ class PartyCrasher(object):
                        top_reports=reports_by_project.get(b['key'], ()))
                 for b in top_buckets]
 
-    # TODO catch duplicate and return 303
-    def dryrun(self, crash):
-        try:
-            return self.bucketer.assign_bucket(Crash(crash))
-        except NotFoundError as e:
-            raise Exception(' '.join([e.error, str(e.status_code), repr(e.info)]))
-
     def get_crash(self, database_id):
         self._connect_to_elasticsearch()
 
@@ -239,8 +242,9 @@ class PartyCrasher(object):
             raise KeyError(database_id)
 
     def delete_crash(database_id):
-        # TODO: we have to call ES directly here, theres nothing in Crash/ESCrash or Bucketer to handle this case
-        # maybe ESCrash(database_id).delete()
+        # TODO: we have to call ES directly here, theres nothing in
+        # Crash/ESCrash or Bucketer to handle this case maybe
+        # ESCrash(database_id).delete()
         raise NotImplementedError("BUT WHY~!~~~~")
 
     @staticmethod
