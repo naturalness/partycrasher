@@ -221,8 +221,11 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.headers.get('Location') == report_url
         assert response.status_code == 201
         assert response.json().get('database_id') == database_id
-        assert response.json().get('buckets') is not None
         assert response.json().get('project') == 'alan_parsons'
+        buckets = response.json().get('buckets') is not None
+        assert isinstance(buckets, dict)
+        assert isinstance(buckets.get('4.0'), dict)
+        assert isinstance(buckets.get('4.0').get('id'), str)
         # TODO: bucket url
 
         insert_date = response.json().get('date_bucketed')

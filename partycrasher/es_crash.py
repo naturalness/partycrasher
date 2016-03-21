@@ -197,23 +197,6 @@ class ESCrash(Crash):
             # should this be ESCrash.__base__?
             return Crash(response['hits']['hits'][0]['_source'])
 
-    @staticmethod
-    def threshold_to_elasticsearch(threshold):
-        """
-        Convert threshold value to an allowable string for use in ElasticSearch.
-        """
-        if not isinstance(threshold, Threshold):
-            raise TypeError('{} must be a threshold instance; '
-                            'got {} instead'.format(threshold, type(threshold)))
-        return threshold.to_elasticsearch()
-
-    @staticmethod
-    def threshold_from_elasticsearch(str_threshold):
-        """
-        Convert threshold value to an allowable string for use in ElasticSearch.
-        """
-        return Threshold(str_threshold)
-
     def __init__(self, index='crashes', crash=None):
         self.index = index
         self.hot = False
@@ -248,6 +231,18 @@ class ESCrash(Crash):
                                 }
                             }
                         )
+
+    def get_bucket_id(self, threshold):
+        key = Threshold(threshold).to_elasticsearch()
+        try:
+            buckets = self['buckets']
+        except KeyError:
+            raise Exception('No assigned buckets for: {!r}'.format(self))
+        try:
+            return buckets[threshold]['id']
+        except KeyError:
+            raise Exception('Buckets threshold {} not assigned for: '
+                            '{!r}'.format(key, self))
 
     def delete():
         del _cached[self['database_id']]

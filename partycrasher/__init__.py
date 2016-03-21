@@ -13,7 +13,7 @@ from elasticsearch import Elasticsearch, NotFoundError, TransportError
 
 # Some of these imports are part of the public API...
 from partycrasher.crash import Crash
-from partycrasher.es_crash import ESCrash
+from partycrasher.es_crash import ESCrash, Threshold
 from partycrasher.es_crash import ReportNotFoundError
 from partycrasher.bucketer import MLTCamelCase
 
@@ -95,7 +95,7 @@ class PartyCrasher(object):
         Default threshould to use if none are provided.
         """
         # TODO: determine from static/dynamic configuration
-        return 4.0
+        return Threshold(4.0)
 
     def _connect_to_elasticsearch(self):
         """
@@ -260,7 +260,7 @@ class PartyCrasher(object):
 
         raw_projects = results['aggregations']['projects']['buckets']
         return [Project(project['key']) for project in raw_projects]
-        
+
 
     def delete_crash(self, database_id):
         # TODO: we have to call ES directly here, theres nothing in
@@ -269,7 +269,7 @@ class PartyCrasher(object):
         raise NotImplementedError("BUT WHY~!~~~~")
 
     @staticmethod
-    def _get_reports_by_bucket(response, _threshold):
+    def _get_reports_by_bucket(response, threshold):
         """
         Returns a dictionary of projects => reports, from the response.
         """
@@ -279,9 +279,9 @@ class PartyCrasher(object):
 
         for hit in raw_hits:
             report = hit['_source']
-            # TODO: multiple threshold support.
-            bucket_id = report['bucket']
-            buckets[bucket_id].append(Crash(report))
+            crash = ESCrash(Crash(report))
+            bucket_id = crash.get_bucket_id(threshold)
+            buckets[bucket_id].append(crash)
 
         return buckets
 
