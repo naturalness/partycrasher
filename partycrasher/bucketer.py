@@ -25,12 +25,6 @@ from crash import Crash
 from es_crash import ESCrash
 
 
-class DeprecatedMethodError(Exception):
-    """
-    Temprorary exception for methods that should no longer be used...
-    """
-
-
 class Bucketer(object):
     """
     Superclass for bucketers which require pre-existing data to work.
@@ -94,7 +88,6 @@ class Bucketer(object):
         )
 
     def assign_bucket(self, crash):
-        #raise DeprecatedMethodError
         buckets = self.bucket(crash)
         if len(buckets) > 0:
             bucket = buckets[0]
@@ -103,20 +96,15 @@ class Bucketer(object):
         return bucket
 
     def assign_save_bucket(self, crash, bucket=None):
-        #raise DeprecatedMethodError
         if bucket is None:
             bucket = self.assign_bucket(crash)
-        savedata = ESCrash(crash, index=self.index)
+
+        saved_crash = ESCrash(crash, index=self.index)
 
         # This should be more complicated....
-        savedata[self.name] = bucket
+        saved_crash[self.name] = bucket
 
-        return savedata
-
-    def fetch_bucket_assignments(self):
-        """
-        Fetches bucket assignements.
-        """
+        return saved_crash
 
 
 class MLT(Bucketer):

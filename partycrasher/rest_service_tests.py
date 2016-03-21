@@ -220,9 +220,9 @@ class RestServiceTestCase(unittest.TestCase):
         report_url = self.path_to('alan_parsons', 'reports', database_id)
         assert response.headers.get('Location') == report_url
         assert response.status_code == 201
-        assert response.json()['database_id'] == database_id
-        assert response.json()['bucket'] is not None
-        assert response.json()['project'] == 'alan_parsons'
+        assert response.json().get('database_id') == database_id
+        assert response.json().get('buckets') is not None
+        assert response.json().get('project') == 'alan_parsons'
         # TODO: bucket url
 
         insert_date = response.json().get('date_bucketed')
@@ -245,9 +245,9 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(url, json={'database_id': database_id})
 
         assert response.status_code == 201
-        assert response.json()['database_id'] == database_id
-        assert response.json()['bucket'] is not None
-        assert response.json()['project'] == 'alan_parsons'
+        assert response.json().get('database_id') == database_id
+        assert response.json().get('buckets') is not None
+        assert response.json().get('project') == 'alan_parsons'
         # TODO: bucket url
 
     @unittest.skip('This feature is not yet implemented')
@@ -270,9 +270,9 @@ class RestServiceTestCase(unittest.TestCase):
 
         # Check that it's created.
         assert response.status_code == 201
-        assert response.json()['database_id'] == database_id
-        assert response.json()['bucket'] is not None
-        assert response.json()['project'] == 'alan_parsons'
+        assert response.json().get('database_id') == database_id
+        assert response.json().get('buckets') is not None
+        assert response.json().get('project') == 'alan_parsons'
         # TODO: bucket url
         report_url = response.headers.get('Location')
         assert report_url is not None
@@ -304,9 +304,9 @@ class RestServiceTestCase(unittest.TestCase):
 
         # The request should have failed.
         assert response.status_code == 400
-        assert response.json()['error'] == 'name_mismatch'
-        assert response.json()['expected'] == 'alan_parsons'
-        assert response.json()['actual'] == 'manhattan'
+        assert response.json().get('error') == 'name_mismatch'
+        assert response.json().get('expected') == 'alan_parsons'
+        assert response.json().get('actual') == 'manhattan'
 
         # Now try to fetch it, globally and from either project
         assert 404 == requests.get(self.path_to('reports',
@@ -340,17 +340,17 @@ class RestServiceTestCase(unittest.TestCase):
         assert len(response.json()) == 3
 
         assert response.json()[0]['database_id'] == database_id_a
-        assert response.json()[0]['bucket'] is not None
+        assert response.json()[0]['buckets'] is not None
         assert response.json()[0]['project'] == 'alan_parsons'
         # TODO: bucket url
 
         assert response.json()[1]['database_id'] == database_id_b
-        assert response.json()[1]['bucket'] is not None
+        assert response.json()[1]['buckets'] is not None
         assert response.json()[1]['project'] == 'alan_parsons'
         # TODO: bucket url
 
         assert response.json()[2]['database_id'] == database_id_c
-        assert response.json()[2]['bucket'] is not None
+        assert response.json()[2]['buckets'] is not None
         assert response.json()[2]['project'] == 'alan_parsons'
         # TODO: bucket url
         # TODO: ensure if URL project and JSON project conflict HTTP 400
@@ -382,9 +382,9 @@ class RestServiceTestCase(unittest.TestCase):
 
         # All kinds of URL assertions.
         assert response.status_code == 200
-        assert response.json()['database_id'] == database_id
-        assert response.json()['bucket'] is not None
-        assert response.json()['project'] == 'alan_parsons'
+        assert response.json().get('database_id') == database_id
+        assert response.json().get('buckets') is not None
+        assert response.json().get('project') == 'alan_parsons'
         # TODO: bucket url
 
     @unittest.skip('temporary')
@@ -407,9 +407,9 @@ class RestServiceTestCase(unittest.TestCase):
         report_url = self.path_to('alan_parsons', 'reports', database_id)
         response = requests.get(report_url)
         assert response.status_code == 200
-        assert response.json()['database_id'] == database_id
-        assert response.json()['bucket'] is not None
-        assert response.json()['project'] == 'alan_parsons'
+        assert response.json().get('database_id') == database_id
+        assert response.json().get('buckets') is not None
+        assert response.json().get('project') == 'alan_parsons'
         # TODO: bucket url
 
     @unittest.skip('temporary')
@@ -428,9 +428,9 @@ class RestServiceTestCase(unittest.TestCase):
         wait_for_elastic_search()
 
         assert response.status_code == 200
-        assert response.json()['database_id'] == database_id
-        assert response.json().get('bucket') is not None
-        assert response.json()['project'] == 'alan_parsons'
+        assert response.json().get('database_id') == database_id
+        assert response.json().get('buckets') is not None
+        assert response.json().get('project') == 'alan_parsons'
         # TODO: bucket url
 
         # Try to find this crash... and fail!
@@ -528,7 +528,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert is_cross_origin_accessible(create_url)
 
         # TODO: use bucket URL...
-        bucket_id = response.json()[0]['bucket']
+        bucket_id = response.json().get(0)['buckets']
 
         bucket_url = self.path_to('alan_parsons', 'buckets', '4.0',
                                   bucket_id)
@@ -539,7 +539,7 @@ class RestServiceTestCase(unittest.TestCase):
         #assert database_id_a in response.json().get('id')
         assert response.json().get('total') >= 1
         # Look at the top report; it must contain tfidf_trickery.
-        assert (response.json()['top_reports'][0].get('tfidf_trickery') ==
+        assert (response.json().get('top_reports')[0].get('tfidf_trickery') ==
                 tfidf_trickery)
 
     @unittest.skip('temporary')
@@ -583,11 +583,11 @@ class RestServiceTestCase(unittest.TestCase):
         # bucket.
         search_url = self.path_to('alan_parsons', 'buckets', '4.0')
         response = requests.get(search_url, params={'since': now.isoformat()})
-        assert response.json()['since'] == now.isoformat()
-        assert len(response.json()['top_buckets']) >= 2
+        assert response.json().get('since') == now.isoformat()
+        assert len(response.json().get('top_buckets')) >= 2
 
         # Get the top bucket.
-        top_bucket = response.json()['top_buckets'][0]
+        top_bucket = response.json().get('top_buckets')[0]
         assert top_bucket.get('id') is not None
         assert top_bucket.get('href') is not None
         assert is_url(top_bucket['href'])
@@ -629,7 +629,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 200
 
         # There should be at least one top bucket...
-        assert len(response.json()['top_buckets']) >= 1
+        assert len(response.json().get('top_buckets')) >= 1
         # It should send back a proper since date.
         assert len(response.json().get('since')) is not None
 
@@ -640,7 +640,7 @@ class RestServiceTestCase(unittest.TestCase):
         """
         response = requests.get(self.path_to('alan_parsons', 'config'))
         assert response.status_code == 200
-        assert 0.0 <= float(response.json()['default_threshold']) <= 10.0
+        assert 0.0 <= float(response.json().get('default_threshold')) <= 10.0
 
     @unittest.skip('This feature is incomplete and under-specified')
     def test_change_project_config(self):
