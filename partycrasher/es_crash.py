@@ -167,12 +167,23 @@ class ESCrash(Crash):
         self.hot = True
 
     def __setitem__(self, key, val):
-        if key in self:
-            oldval = self[key]
-        else:
-            oldval = None
+        """
+        crash[key] = value
+
+        Updates the crash; propegates the update to ElasticSearch.
+        Currently, there's no batching of requests, so try to avoid changing values.
+        """
+
+        # Keep the old value of the key, if it exists,
+        oldval = self.get(key, None)
+
+        # Let the super class do weird value remapping stuff.
         super(ESCrash, self).__setitem__(key, val)
+        # After the super class is done its magic, the value may have
+        # changed...
         newval = self[key]
+
+        # Update the crash in ElasticSearch.
         if (oldval != newval) and self.hot:
             r = self.es.update(index=self.index,
                         doc_type='crash',
