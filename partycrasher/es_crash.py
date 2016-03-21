@@ -34,12 +34,16 @@ class ReportNotFoundError(KeyError):
 
 class Threshold(object):
     """
-    A wrapper for a threshold. 
+    A wrapper for a threshold value. Ensures proper serialization between
+    ElasticSearch and users.
     """
     __slots__ = '_value'
 
     def __init__(self, value):
-        if isinstance(value, str):
+        if isinstance(value, Threshold):
+            self._value = value._value
+            return
+        elif isinstance(value, str):
             assert str_value.count('.') == 1, 'Invalid decimal number'
             value = value.replace(',', '.')
 
@@ -55,8 +59,8 @@ class Threshold(object):
     def to_float(self):
         return float(self._value)
 
-    def __getattr__(self, name):
-        return getattr(self._value, name)
+    def __getattr__(self, attr):
+        return getattr(self._value, attr)
 
     def to_elasticsearch(self):
         str_value = str(self)

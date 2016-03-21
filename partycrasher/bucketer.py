@@ -111,13 +111,17 @@ class MLT(Bucketer):
     def __init__(self, thresholds=(4.0,), use_aggs=False, only_stack=False,
                  *args, **kwargs):
         super(MLT, self).__init__(*args, **kwargs)
-        self.thresholds = tuple(thresholds)
+        self.thresholds = tuple(Threshold(value) for value in sorted(thresholds))
         self.use_aggs = use_aggs
         self.only_stack = only_stack
 
     @property
     def thresh(self):
-        return Threshold(self.thresholds[0])
+        return self.thresholds[0]
+
+    @property
+    def min_threshold(self):
+        return self.thresholds[0]
 
     def bucket(self, crash, bucket_field=None):
         if bucket_field is None:
@@ -130,7 +134,7 @@ class MLT(Bucketer):
         body={
             '_source': [bucket_field],
             'size': self.max_buckets,
-            'min_score': self.thresh.to_float(),
+            'min_score': self.min_threshold.to_float(),
             'query': {
             'more_like_this': {
                 'docs': [{
