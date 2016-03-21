@@ -106,13 +106,9 @@ class PartyCrasher(object):
         # XXX: Monkey-patch our instance to the global.
         ESCrash.es = self._es
 
-        # TODO: Have more than one bucketer.
-        self._bucketer = MLTCamelCase(thresh=4.0,
-                                      lowercase=False,
-                                      only_stack=False,
-                                      index='crashes',
-                                      es=self.es,
-                                      name="bucket")
+        self._bucketer = MLTCamelCase(name="buckets", thresholds=(4.0,),
+                                      lowercase=False, only_stack=False,
+                                      index='crashes', elasticsearch=self.es)
         self._bucketer.create_index()
         return self._es
 

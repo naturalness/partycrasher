@@ -24,23 +24,34 @@ import time
 from crash import Crash
 from es_crash import ESCrash
 
-class Bucketer(object):
-    """Superclass for bucketers which require pre-existing data to work.
-    The default analyzer breaks on whitespace."""
 
-    def __init__(self,
-                 max_buckets=1,
-                 name=None,
-                 index='crashes',
-                 es=None,
-                 lowercase=False,
-                 ):
+class DeprecatedMethodError(Exception):
+    """
+    Temprorary exception for methods that should no longer be used...
+    """
+
+
+class Bucketer(object):
+    """
+    Superclass for bucketers which require pre-existing data to work.
+    The default analyzer breaks on whitespace.
+    """
+
+    def __init__(self, max_buckets=1, name=None, index='crashes',
+                 elasticsearch=None, lowercase=False):
+
         self.max_buckets = max_buckets
+
+        # Autogenerate the name from the class's name.
         if name is None:
             name = self.__class__.__name__.lower()
+
+        if elasticsearch is None:
+            raise ValueError('No ElasticSearch instance specified!')
+
         self.name = name
         self.index = index
-        self.es = es
+        self.es = elasticsearch
         self.lowercase = lowercase
 
     def bucket(self, crash):
@@ -83,6 +94,7 @@ class Bucketer(object):
         )
 
     def assign_bucket(self, crash):
+        #raise DeprecatedMethodError
         buckets = self.bucket(crash)
         if len(buckets) > 0:
             bucket = buckets[0]
@@ -91,25 +103,34 @@ class Bucketer(object):
         return bucket
 
     def assign_save_bucket(self, crash, bucket=None):
+        #raise DeprecatedMethodError
         if bucket is None:
             bucket = self.assign_bucket(crash)
         savedata = ESCrash(crash, index=self.index)
+
+        # This should be more complicated....
         savedata[self.name] = bucket
+
         return savedata
+
+    def fetch_bucket_assignments(self):
+        """
+        Fetches bucket assignements.
+        """
 
 
 class MLT(Bucketer):
 
-    def __init__(self,
-                 thresh=1.0,
-                 use_aggs=False,
-                 only_stack=False,
-                 *args,
-                 **kwargs):
+    def __init__(self, thresholds=(4.0,), use_aggs=False, only_stack=False,
+                 *args, **kwargs):
         super(MLT, self).__init__(*args, **kwargs)
-        self.thresh = thresh
+        self.thresholds = tuple(thresholds)
         self.use_aggs = use_aggs
         self.only_stack = only_stack
+
+    @property
+    def thresh(self):
+        return self.thresholds[0]
 
     def bucket(self, crash, bucket_field=None):
         if bucket_field is None:
@@ -175,8 +196,6 @@ class MLT(Bucketer):
                     print "Force waiting for refresh on " + crash['database_id']
                     time.sleep(1)
                     return self.bucket(crash, bucket_field)
-                    #print json.dumps(matches, indent=4)
-                    #raise
                 if bucket not in matching_buckets:
                     matching_buckets.append(bucket)
         return matching_buckets
@@ -281,7 +300,7 @@ class MLTIdentifier(MLT):
 class MLTCamelCase(MLT):
     """MLT intended to break up identifiers into sub-words"""
     def create_index(self):
-        print "Creating index: %s" % self.index
+        # Ignore 400 -- index already created.
         self.es.indices.create(index=self.index, ignore=400,
         body={
             'mappings': {

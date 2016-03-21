@@ -157,7 +157,7 @@ class ESCrash(Crash):
                             "possible, since they are all supposed to be stored "
                             "with their document ID equal to the database ID.")
         else:
-            # should this be ESCRash.__base__?
+            # should this be ESCrash.__base__?
             return Crash(response['hits']['hits'][0]['_source'])
 
     def __init__(self, index='crashes', crash=None):
