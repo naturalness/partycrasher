@@ -22,7 +22,7 @@ import uuid
 import time
 
 from crash import Crash
-from es_crash import ESCrash
+from es_crash import ESCrash, Threshold
 
 
 class Bucketer(object):
@@ -101,7 +101,6 @@ class Bucketer(object):
 
         saved_crash = ESCrash(crash, index=self.index)
 
-        # This should be more complicated....
         saved_crash[self.name] = bucket
 
         return saved_crash
@@ -118,7 +117,7 @@ class MLT(Bucketer):
 
     @property
     def thresh(self):
-        return self.thresholds[0]
+        return Threshold(self.thresholds[0])
 
     def bucket(self, crash, bucket_field=None):
         if bucket_field is None:
@@ -131,7 +130,7 @@ class MLT(Bucketer):
         body={
             '_source': [bucket_field],
             'size': self.max_buckets,
-            'min_score': self.thresh,
+            'min_score': self.thresh.to_float(),
             'query': {
             'more_like_this': {
                 'docs': [{
@@ -187,6 +186,14 @@ class MLT(Bucketer):
                 if bucket not in matching_buckets:
                     matching_buckets.append(bucket)
         return matching_buckets
+
+    def assign_save_bucket(self, crash):
+        bucket = self.assign_bucket(crash)
+        assert isinstance(bucket, str)
+        bucket = {
+            self.thresh.to_elasticsearch(): bucket
+        }
+        return super(MLT, self).assign_save_bucket(crash, bucket)
 
     def alt_bucket(self, crash, bucket_field='bucket'):
         return self.bucket(crash, bucket_field)
@@ -426,3 +433,6 @@ def common_properties():
             'index': 'not_analyzed'
         }
     }
+
+
+

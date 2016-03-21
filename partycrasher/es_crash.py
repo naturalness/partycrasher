@@ -19,6 +19,7 @@
 import datetime
 import time
 from weakref import WeakValueDictionary
+from decimal import Decimal
 
 import elasticsearch
 from elasticsearch import Elasticsearch
@@ -30,6 +31,38 @@ class ReportNotFoundError(KeyError):
     """
     Raised when... the crash is not found!
     """
+
+class Threshold(object):
+    """
+    A wrapper for a threshold. 
+    """
+    __slots__ = '_value'
+
+    def __init__(self, value):
+        if isinstance(value, str):
+            assert str_value.count('.') == 1, 'Invalid decimal number'
+            value = value.replace(',', '.')
+
+        self._value = Decimal(value)
+
+    def __str__(self):
+        result = str(self._value)
+        assert ',' not in result
+        if '.' not in result:
+            return result + '.0'
+        return result
+
+    def to_float(self):
+        return float(self._value)
+
+    def __getattr__(self, name):
+        return getattr(self._value, name)
+
+    def to_elasticsearch(self):
+        str_value = str(self)
+        assert isinstance(self._value, Decimal)
+        assert str_value.count('.') == 1, 'Invalid decimal number'
+        return str_value.replace('.', ',')
 
 
 class ESCrashMeta(type):
@@ -159,6 +192,23 @@ class ESCrash(Crash):
         else:
             # should this be ESCrash.__base__?
             return Crash(response['hits']['hits'][0]['_source'])
+
+    @staticmethod
+    def threshold_to_elasticsearch(threshold):
+        """
+        Convert threshold value to an allowable string for use in ElasticSearch.
+        """
+        if not isinstance(threshold, Threshold):
+            raise TypeError('{} must be a threshold instance; '
+                            'got {} instead'.format(threshold, type(threshold)))
+        return threshold.to_elasticsearch()
+
+    @staticmethod
+    def threshold_from_elasticsearch(str_threshold):
+        """
+        Convert threshold value to an allowable string for use in ElasticSearch.
+        """
+        return Threshold(str_threshold)
 
     def __init__(self, index='crashes', crash=None):
         self.index = index
