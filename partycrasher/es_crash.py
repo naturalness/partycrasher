@@ -44,7 +44,6 @@ class Threshold(object):
             self._value = value._value
             return
         elif isinstance(value, str):
-            assert str_value.count('.') == 1, 'Invalid decimal number'
             value = value.replace(',', '.')
 
         self._value = Decimal(value)

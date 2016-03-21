@@ -100,7 +100,6 @@ class Bucketer(object):
             bucket = self.assign_bucket(crash)
 
         saved_crash = ESCrash(crash, index=self.index)
-
         saved_crash[self.name] = bucket
 
         return saved_crash
@@ -201,6 +200,7 @@ class MLT(Bucketer):
 
     def alt_bucket(self, crash, bucket_field='bucket'):
         return self.bucket(crash, bucket_field)
+
 
 class MLTStandardUnicode(MLT):
     """MLT with an analyzer breaking on spaces and then lowercasing"""

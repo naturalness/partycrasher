@@ -18,7 +18,7 @@
 
 import re
 
-from partycrasher import Crash, Bucket, Project
+from partycrasher import Crash, Bucket, Project, Threshold
 from rest_api_utils import href
 
 from flask import json, request, redirect, make_response
@@ -105,6 +105,7 @@ class ResourceEncoder(json.JSONEncoder):
             crash = obj
             serializable = href('view_report', project=crash.project, report_id=crash.id)
             serializable.update(crash)
+            fix_buckets(serializable)
 
         elif isinstance(obj, Bucket):
             bucket = obj
@@ -373,3 +374,20 @@ def _make_iterencode(markers, _default, _encoder, _indent, _floatstr,
                 del markers[markerid]
 
     return _iterencode
+
+
+def fix_buckets(crash_dict):
+    """
+    Fixes the keys from a crash dictionary.
+    """
+    if 'buckets' not in crash_dict:
+        return
+
+    project = crash_dict['project']
+
+    fixed_buckets = {}
+    for key, bucket_id in crash_dict['buckets'].items():
+        threshold = str(Threshold(key))
+        fixed_buckets[threshold] = Bucket(bucket_id, project, threshold, None, None)
+
+    crash_dict['buckets' ] = fixed_buckets

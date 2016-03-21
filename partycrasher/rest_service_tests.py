@@ -40,6 +40,8 @@ import time
 import unittest
 import uuid
 
+
+# Terrible Python 2/3 hacks
 try:
     from urlparse import urlparse
 except ImportError:
@@ -49,6 +51,14 @@ try:
     xrange
 except NameError:
     xrange = range
+
+try:
+  unicode
+except NameError:
+  StringType = str
+else:
+  StringType = unicode
+
 
 
 import dateparser
@@ -222,11 +232,12 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 201
         assert response.json().get('database_id') == database_id
         assert response.json().get('project') == 'alan_parsons'
-        buckets = response.json().get('buckets') is not None
+        buckets = response.json().get('buckets')
+        assert buckets is not None
         assert isinstance(buckets, dict)
         assert isinstance(buckets.get('4.0'), dict)
-        assert isinstance(buckets.get('4.0').get('id'), str)
-        # TODO: bucket url
+        assert isinstance(buckets.get('4.0').get('id'), StringType)
+        assert buckets.get('4.0').get('href', '').startswith('http://')
 
         insert_date = response.json().get('date_bucketed')
         assert insert_date is not None
