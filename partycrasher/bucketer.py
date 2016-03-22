@@ -92,7 +92,7 @@ class Bucketer(object):
         if len(buckets) > 0:
             bucket = buckets[0]
         else:
-            bucket = 'bucket:' + crash['database_id'] # Make a new bucket
+            bucket = crash['database_id'] # Make a new bucket
         return bucket
 
     def assign_save_bucket(self, crash, bucket=None):
@@ -188,6 +188,7 @@ class MLT(Bucketer):
                     return self.bucket(crash, bucket_field)
                 if bucket not in matching_buckets:
                     matching_buckets.append(bucket)
+
         return matching_buckets
 
     def assign_save_bucket(self, crash):
@@ -420,10 +421,15 @@ def common_properties():
             'type': 'string',
             'index': 'not_analyzed'
         },
-        # TODO: Deprecate: use multi-tier bucket... thing.
-        'bucket': {
-            'type': 'string',
-            'index': 'not_analyzed',
+        'buckets': {
+            "properties": {
+
+                # Ugh... either I have to create dynamic propers or... ugh...
+                "4_0": {
+                    'type': "string",
+                    'index': 'not_analyzed',
+                }
+            }
         },
         # TODO: convert into _type
         'project': {

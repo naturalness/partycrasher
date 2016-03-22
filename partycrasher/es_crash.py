@@ -26,6 +26,14 @@ from elasticsearch import Elasticsearch
 
 from crash import Crash, Stacktrace, Stackframe
 
+# Python 2/3 non-sense.
+try:
+    unicode
+except NameError:
+    StringTypes = (str,)
+else:
+    StringTypes = (str, unicode)
+
 
 class ReportNotFoundError(KeyError):
     """
@@ -41,16 +49,17 @@ class Threshold(object):
 
     def __init__(self, value):
         if isinstance(value, Threshold):
+            # Clone the other Threshold.
             self._value = value._value
             return
-        elif isinstance(value, str):
-            value = value.replace(',', '.')
+        elif isinstance(value, StringTypes):
+            value = value.replace('_', '.')
 
         self._value = Decimal(value)
 
     def __str__(self):
         result = str(self._value)
-        assert ',' not in result
+        assert '_' not in result
         if '.' not in result:
             return result + '.0'
         return result
@@ -65,7 +74,7 @@ class Threshold(object):
         str_value = str(self)
         assert isinstance(self._value, Decimal)
         assert str_value.count('.') == 1, 'Invalid decimal number'
-        return str_value.replace('.', ',')
+        return str_value.replace('.', '_')
 
 
 class ESCrashMeta(type):

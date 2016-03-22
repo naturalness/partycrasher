@@ -206,9 +206,7 @@ class PartyCrasher(object):
                         "top_buckets": {
                             "terms": {
                                 "field": "buckets." + threshold.to_elasticsearch(),
-                                "order": {
-                                    "_count": "desc"
-                                }
+                                "order": { "_count": "desc" }
                             }
                         }
                     }
@@ -225,14 +223,10 @@ class PartyCrasher(object):
 
         reports_by_project = self._get_reports_by_bucket(response, threshold)
 
-        return [Bucket(id=b['key'],
-                       total=b['doc_count'],
-                       project=project,
-                       threshold=threshold,
-                       top_reports=reports_by_project.get(b['key'], ()))
-                for b in top_buckets]
-        raise Exception(repr(ress))
-        return ress
+        return [Bucket(id=bucket['key'], project=project, threshold=threshold,
+                       total=bucket['doc_count'],
+                       top_reports=reports_by_project.get(bucket['key'], ()))
+                for bucket in top_buckets]
 
     def get_crash(self, database_id):
         self._connect_to_elasticsearch()
