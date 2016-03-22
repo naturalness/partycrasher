@@ -121,6 +121,9 @@ class ResourceEncoder(json.JSONEncoder):
                                 threshold='4.0',
                                 project=project.name)
             serializable.update(name=project.name)
+        elif isinstance(obj, Threshold):
+            # The str output is the JSON output.
+            return str(obj)
         else:
             raise TypeError('No idea how to encode {!r} object: '
                             '{!r}'.format(type(obj), obj))

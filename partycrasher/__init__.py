@@ -172,8 +172,11 @@ class PartyCrasher(object):
         if not isinstance(lower_bound, datetime):
             raise TypeError('The lower bound MUST be a datetime object.')
 
+        # Get the default threshold.
         if threshold is None:
             threshold = self.default_threshold
+        if not isinstance(threshold, Threshold):
+            threshold = Threshold(threshold)
 
         # Filters by lower-bound by default;
         filters = [{
@@ -202,7 +205,7 @@ class PartyCrasher(object):
                     "aggs": {
                         "top_buckets": {
                             "terms": {
-                                "field": "bucket",
+                                "field": "buckets." + threshold.to_elasticsearch(),
                                 "order": {
                                     "_count": "desc"
                                 }
@@ -228,6 +231,8 @@ class PartyCrasher(object):
                        threshold=threshold,
                        top_reports=reports_by_project.get(b['key'], ()))
                 for b in top_buckets]
+        raise Exception(repr(ress))
+        return ress
 
     def get_crash(self, database_id):
         self._connect_to_elasticsearch()

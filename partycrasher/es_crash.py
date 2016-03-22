@@ -238,7 +238,7 @@ class ESCrash(Crash):
         except KeyError:
             raise Exception('No assigned buckets for: {!r}'.format(self))
         try:
-            return buckets[threshold]['id']
+            return buckets[key]
         except KeyError:
             raise Exception('Buckets threshold {} not assigned for: '
                             '{!r}'.format(key, self))
