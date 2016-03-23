@@ -82,8 +82,8 @@ def href(route, **kwargs):
 
     host = determine_user_agent_facing_host()
     path = url_for(route, **kwargs)
-    # TODO: Methods: can use request.endpoint to determine acceptable methods.
-    return {'href': host + path, 'method': ['GET']}
+    # TODO: List allowed methods, so we don't have to do an OPTIONS request. 
+    return {'href': host + path}
 
 
 # So that `determine user agent facing host` only needs to figure out the host
