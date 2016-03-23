@@ -76,7 +76,7 @@ class RestServiceTestCase(unittest.TestCase):
         requests.delete('http://localhost:9200/crashes')
 
     def setUp(self):
-        self.port = random.randint(5000, 5999)
+        self.port = random.randint(5001, 5999)
         self.origin = 'http://localhost:' + str(self.port)
 
         # Use currently activated Python (system-wide or in virtualenv).
@@ -150,7 +150,6 @@ class RestServiceTestCase(unittest.TestCase):
         assert href.netloc == urlparse(self.origin).netloc
         assert href.scheme == 'http'
 
-    @unittest.skip('temporary')
     def test_absolute_url_behind_older_proxy(self):
         """
         Does the server return User-Agent-facing absolute URIs behind proxies?
@@ -181,7 +180,6 @@ class RestServiceTestCase(unittest.TestCase):
         assert href.netloc == 'example.org'
         assert href.scheme == 'https'
 
-    @unittest.skip('temporary')
     def test_absolute_url_behind_newer_proxy(self):
         """
         Does the server return User-Agent-facing absolute URIs behind proxies?
@@ -244,7 +242,6 @@ class RestServiceTestCase(unittest.TestCase):
 
         assert before_insert <= dateparser.parse(insert_date) <= after_insert
 
-    @unittest.skip('temporary')
     def test_add_crash_to_project(self):
         """
         Add a single crash to a project;
@@ -301,7 +298,6 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 303
         assert response.headers.get('Location') == report_url
 
-    @unittest.skip('temporary')
     def test_add_crash_project_name_mismatch(self):
         """
         Add a single crash to the _wrong_ project.
@@ -330,7 +326,6 @@ class RestServiceTestCase(unittest.TestCase):
         assert 404 == requests.get(self.path_to('manhattan', 'reports',
                                                database_id)).status_code
 
-    @unittest.skip('temporary')
     def test_add_multiple(self):
         """
         Add multiple crashes to a single project;
@@ -370,7 +365,6 @@ class RestServiceTestCase(unittest.TestCase):
         # TODO: ensure if URL project and JSON project conflict HTTP 400
         #       is returned
 
-    @unittest.skip('temporary')
     def test_get_crash(self):
         """
         Fetch a report globally.
@@ -401,7 +395,6 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.json().get('project') == 'alan_parsons'
         # TODO: bucket url
 
-    @unittest.skip('temporary')
     def test_get_crash_from_project(self):
         """
         Fetch a report from a project.
@@ -426,7 +419,6 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.json().get('project') == 'alan_parsons'
         # TODO: bucket url
 
-    @unittest.skip('temporary')
     def test_dry_run(self):
         """
         Returns the bucket assignment were the given crash to be added.
@@ -513,7 +505,6 @@ class RestServiceTestCase(unittest.TestCase):
         # TODO: ensure if URL project and JSON project conflict HTTP 400
         #       is returned
 
-    @unittest.skip('temporary')
     def test_get_project_bucket(self):
         """
         Fetch a bucket and its contents.
@@ -539,13 +530,15 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(create_url, json=fake_true_date)
         assert response.status_code == 201
 
-        assert is_cross_origin_accessible(create_url)
+        threshold = '4.0'
+        try:
+          bucket_url = response.json()[0]['buckets'][threshold]['href']
+        except (IndexError, KeyError):
+          self.fail('Could not find bucket {} in '
+                    '{!r}'.format(threshold, response.json()))
+        assert bucket_url == ''
 
-        # TODO: use bucket URL...
-        bucket_id = response.json().get(0)['buckets']
-
-        bucket_url = self.path_to('alan_parsons', 'buckets', '4.0',
-                                  bucket_id)
+        assert is_cross_origin_accessible(bucket_url)
         response = requests.get(bucket_url)
 
         assert response.status_code == 200
@@ -556,7 +549,6 @@ class RestServiceTestCase(unittest.TestCase):
         assert (response.json().get('top_reports')[0].get('tfidf_trickery') ==
                 tfidf_trickery)
 
-    @unittest.skip('temporary')
     def test_get_top_buckets(self):
         """
         Get top buckets for a given time frame.
