@@ -256,9 +256,10 @@ class RestServiceTestCase(unittest.TestCase):
 
         assert response.status_code == 201
         assert response.json().get('database_id') == database_id
-        assert response.json().get('buckets') is not None
         assert response.json().get('project') == 'alan_parsons'
-        # TODO: bucket url
+        assert isinstance(response.json().get('buckets'), dict)
+        buckets = response.json().get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
 
     @unittest.skip('This feature is not yet implemented')
     def test_add_identical_crash_to_project(self):
@@ -281,9 +282,11 @@ class RestServiceTestCase(unittest.TestCase):
         # Check that it's created.
         assert response.status_code == 201
         assert response.json().get('database_id') == database_id
-        assert response.json().get('buckets') is not None
         assert response.json().get('project') == 'alan_parsons'
-        # TODO: bucket url
+        assert isinstance(response.json().get('buckets'), dict)
+        buckets = response.json().get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
+
         report_url = response.headers.get('Location')
         assert report_url is not None
 
@@ -348,19 +351,25 @@ class RestServiceTestCase(unittest.TestCase):
         assert len(response.json()) == 3
 
         assert response.json()[0]['database_id'] == database_id_a
-        assert response.json()[0]['buckets'] is not None
         assert response.json()[0]['project'] == 'alan_parsons'
-        # TODO: bucket url
+        assert isinstance(response.json()[0].get('buckets'), dict)
+        buckets = response.json()[0].get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
 
         assert response.json()[1]['database_id'] == database_id_b
-        assert response.json()[1]['buckets'] is not None
         assert response.json()[1]['project'] == 'alan_parsons'
-        # TODO: bucket url
+        assert isinstance(response.json()[1].get('buckets'), dict)
+        buckets = response.json()[1].get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
+
 
         assert response.json()[2]['database_id'] == database_id_c
         assert response.json()[2]['buckets'] is not None
         assert response.json()[2]['project'] == 'alan_parsons'
-        # TODO: bucket url
+        assert isinstance(response.json()[2].get('buckets'), dict)
+        buckets = response.json()[2].get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
+
         # TODO: ensure if URL project and JSON project conflict HTTP 400
         #       is returned
 
@@ -390,9 +399,10 @@ class RestServiceTestCase(unittest.TestCase):
         # All kinds of URL assertions.
         assert response.status_code == 200
         assert response.json().get('database_id') == database_id
-        assert response.json().get('buckets') is not None
         assert response.json().get('project') == 'alan_parsons'
-        # TODO: bucket url
+        assert isinstance(response.json().get('buckets'), dict)
+        buckets = response.json().get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
 
     def test_get_crash_from_project(self):
         """
@@ -414,11 +424,11 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.get(report_url)
         assert response.status_code == 200
         assert response.json().get('database_id') == database_id
-        assert response.json().get('buckets') is not None
         assert response.json().get('project') == 'alan_parsons'
-        # TODO: bucket url
+        assert isinstance(response.json().get('buckets'), dict)
+        buckets = response.json().get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
 
-    @unittest.skip('temporary')
     def test_dry_run(self):
         """
         Returns the bucket assignment were the given crash to be added.
@@ -435,9 +445,10 @@ class RestServiceTestCase(unittest.TestCase):
 
         assert response.status_code == 200
         assert response.json().get('database_id') == database_id
-        assert response.json().get('buckets') is not None
         assert response.json().get('project') == 'alan_parsons'
-        # TODO: bucket url
+        assert isinstance(response.json().get('buckets'), dict)
+        buckets = response.json().get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
 
         # Try to find this crash... and fail!
         response = requests.get(self.path_to('alan_parsons', 'reports',
@@ -492,7 +503,9 @@ class RestServiceTestCase(unittest.TestCase):
         # We can access it now...
         response = requests.get(report_url)
         assert response.status_code == 200
-        # TODO: bucket url
+        assert isinstance(response.json().get('buckets'), dict)
+        buckets = response.json().get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
 
         # Delete it.
         response = requests.delete(report_url)
