@@ -418,7 +418,7 @@ def view_bucket(project=None, threshold=None, bucket_id=None):
     try:
         bucket = crasher.get_bucket(threshold, bucket_id, project)
     except partycrasher.BucketNotFoundError:
-        return jsonify(not_found=bucket_id), 404
+        return jsonify(error="not_found", bucket_id=bucket_id), 404
 
     return jsonify_resource(bucket)
 
@@ -512,8 +512,8 @@ def query_buckets(project=None, threshold=None):
             "threshold": "4.0",
             "top_buckets": [
                 {
-                    "href": "http://domain.tld/alan_parsons/buckets/4.0/bucket:c29a81a0-5a53-4ba0-8123-5e96685a5895",
-                    "id": "bucket:c29a81a0-5a53-4ba0-8123-5e96685a5895",
+                    "href": "http://domain.tld/alan_parsons/buckets/4.0/c29a81a0-5a53-4ba0-8123-5e96685a5895",
+                    "id": "c29a81a0-5a53-4ba0-8123-5e96685a5895",
                     "method": [ "GET" ],
                     "total": 253
                 }

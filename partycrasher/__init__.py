@@ -132,11 +132,13 @@ class PartyCrasher(object):
         """
         Returns information for the given bucket.
         """
+        # Coerce to a Threshold object.
+        threshold = Threshold(threshold)
 
         query = {
             "filter": {
                 "term": {
-                    "bucket": bucket_id
+                    "buckets." + threshold.to_elasticsearch(): bucket_id
                 }
             }
         }
