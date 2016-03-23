@@ -107,11 +107,10 @@ class Bucketer(object):
 
 class MLT(Bucketer):
 
-    def __init__(self, thresholds=(4.0,), use_aggs=False, only_stack=False,
+    def __init__(self, thresholds=(4.0,), only_stack=False,
                  *args, **kwargs):
         super(MLT, self).__init__(*args, **kwargs)
         self.thresholds = tuple(Threshold(value) for value in sorted(thresholds))
-        self.use_aggs = use_aggs
         self.only_stack = only_stack
 
     @property
@@ -139,11 +138,7 @@ class MLT(Bucketer):
 
         body = self.make_more_like_this_query(crash, bucket_field)
         matches = self.es.search(index=self.index, body=body)
-
-        if self.use_aggs:
-            return self.make_matching_buckets_from_aggregations(matches)
-        else:
-            return self.make_matching_buckets(matches)
+        return self.make_matching_buckets(matches)
 
     def make_more_like_this_query(self, crash, bucket_field):
         # TODO: make this acknowledge buckets.4_0, buckets.3_5, buckets.4_5,
@@ -169,25 +164,6 @@ class MLT(Bucketer):
             },
         }
 
-        if self.use_aggs:
-            body['aggregations'] ={
-                'buckets': {
-                    'terms': {
-                        'field': bucket_field,
-                        'size': self.max_buckets
-                    },
-                    'aggs': {
-                        'top': {
-                            'top_hits': {
-                                'size': 1,
-                                '_source': {
-                                    'include': ['database_id'],
-                                    }
-                                }
-                            }
-                        }
-                }
-            }
         return body
 
     def make_matching_buckets(self, matches):
@@ -204,15 +180,6 @@ class MLT(Bucketer):
                 return self.bucket(crash, bucket_field)
             if bucket not in matching_buckets:
                 matching_buckets.append(bucket)
-        return matching_buckets
-
-
-
-    def make_matching_buckets_from_aggregations(self, matches):
-        matching_buckets = []
-        for match in matches['aggregations']['buckets']['buckets']:
-            assert match['top']['hits']['max_score'] >= self.thresh
-            matching_buckets.append(match['key'])
         return matching_buckets
 
     def assign_save_bucket(self, crash):
