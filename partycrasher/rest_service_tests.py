@@ -191,10 +191,9 @@ class RestServiceTestCase(unittest.TestCase):
         """
 
         proxy_headers = {
-            #'Forwarded': ('for = 0.0.0.0, for = 127.0.0;'
-            'Forwarded': ('for = 0.0.0.0;'
+            'Forwarded': ('for = 127.0.0;'
                           'host = example.org;'
-                          'proto = https')
+                          'proto = https, for=198.51.100.17')
         }
         response = requests.get(self.root_url, headers=proxy_headers)
 
