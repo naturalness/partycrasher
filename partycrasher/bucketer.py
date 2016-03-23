@@ -137,13 +137,10 @@ class MLT(Bucketer):
             }
 
         body = self.make_more_like_this_query(crash, bucket_field)
-        matches = self.es.search(index=self.index, body=body)
-        return self.make_matching_buckets(matches)
+        response = self.es.search(index=self.index, body=body)
+        return self.make_matching_buckets(response)
 
     def make_more_like_this_query(self, crash, bucket_field):
-        # TODO: make this acknowledge buckets.4_0, buckets.3_5, buckets.4_5,
-        # etc..
-
         body =  {
             '_source': [bucket_field],
             # What do we need max buckets for?
@@ -167,10 +164,20 @@ class MLT(Bucketer):
         return body
 
     def make_matching_buckets(self, matches):
+        # TODO: make this acknowledge buckets.4_0, buckets.3_5, buckets.4_5,
+        # etc..
+
+        # Have the matches in ascending order.
+        raw_matches = list(sorted(matches['hits']['hits'], by_score))
+
+        # Make a stack of thresholds, in ascending order
+        thresholds_left = list(sorted(self.thresholds))
+
         matching_buckets = []
-        for match in matches['hits']['hits']:
+        for match in raw_matches:
             if match['_score'] < self.thresh:
                 continue
+
             try:
                 bucket = match['_source'][bucket_field]
             except KeyError:
@@ -178,8 +185,10 @@ class MLT(Bucketer):
                 print "Force waiting for refresh on " + crash['database_id']
                 time.sleep(1)
                 return self.bucket(crash, bucket_field)
+
             if bucket not in matching_buckets:
                 matching_buckets.append(bucket)
+
         return matching_buckets
 
     def assign_save_bucket(self, crash):
@@ -400,6 +409,11 @@ class MLTNGram(MLT):
             }
         )
 
+def by_score(match):
+    """
+    Sorting key function. Matches by MoreLikeThis score.
+    """
+    return match['_score']
 
 def common_properties(thresholds):
     """
