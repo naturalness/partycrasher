@@ -13,9 +13,10 @@ from elasticsearch import Elasticsearch, NotFoundError, TransportError
 
 # Some of these imports are part of the public API...
 from partycrasher.crash import Crash
-from partycrasher.es_crash import ESCrash, Threshold
+from partycrasher.es_crash import ESCrash
 from partycrasher.es_crash import ReportNotFoundError
 from partycrasher.bucketer import MLTCamelCase
+from partycrasher.threshold import Threshold
 
 
 __version__ = u'0.1.0'

@@ -19,81 +19,17 @@
 import datetime
 import time
 from weakref import WeakValueDictionary
-from decimal import Decimal
 
 import elasticsearch
 from elasticsearch import Elasticsearch
 
 from crash import Crash, Stacktrace, Stackframe
-
-# Python 2/3 non-sense.
-try:
-    unicode
-except NameError:
-    StringTypes = (str,)
-else:
-    StringTypes = (str, unicode)
-
+from threshold import Threshold
 
 class ReportNotFoundError(KeyError):
     """
     Raised when... the crash is not found!
     """
-
-class Threshold(object):
-    """
-    A wrapper for a bucket threshold value. Ensures proper serialization
-    between ElasticSearch and the JSON API endpoints.
-    """
-    __slots__ = '_value'
-
-    def __init__(self, value):
-        if isinstance(value, Threshold):
-            assert isinstance(value._value, Decimal)
-            # Clone the other Threshold.
-            self._value = value._value
-            return
-        elif isinstance(value, StringTypes):
-            value = value.replace('_', '.')
-
-        self._value = Decimal(value)
-
-    def __str__(self):
-        result = str(self._value)
-        assert '_' not in result
-        # Ensure that rounded values are always displayed with at least one
-        # decimal, for aesthetics.
-        if '.' not in result:
-            return result + '.0'
-        return result
-
-    def __repr__(self):
-        return 'Threshold(' + str(self) + ')'
-
-    def to_float(self):
-        """
-        Convert the threshold to a floating point number, for comparisons.
-        Note that this should NOT be converted back to a threshold, as there
-        may be a loss of data by doing the round trip.
-        """
-        return float(self._value)
-
-    def __getattr__(self, attr):
-        # Delegate everything (i.e, comparisons) to the actual Threshold
-        # value.
-        return getattr(self._value, attr)
-
-    def to_elasticsearch(self):
-        """
-        Converts the threshold to a string, suitable for serialization as an
-        ElasticSearch field name. Note that full stops ('.') are verbotten in
-        ElasticSearch field names.
-        """
-        str_value = str(self)
-        assert isinstance(self._value, Decimal)
-        assert str_value.count('.') == 1, 'Invalid decimal number'
-        return str_value.replace('.', '_')
-
 
 class ESCrashMeta(type):
     # The purpose of all of this shit is to ensure that we don't

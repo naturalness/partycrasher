@@ -24,8 +24,8 @@ import time
 from collections import OrderedDict
 
 from crash import Crash
-from es_crash import ESCrash, Threshold
-
+from es_crash import ESCrash
+from threshold import Threshold
 
 class Bucketer(object):
     """
