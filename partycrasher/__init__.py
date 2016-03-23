@@ -122,11 +122,10 @@ class PartyCrasher(object):
         true_crash = Crash(crash)
 
         if dryrun:
-            # HACK!
-            true_crash['bucket'] = self.bucketer.assign_bucket(true_crash)
+            true_crash['buckets'] = self.bucketer.assign_buckets(true_crash)
             return true_crash
         else:
-            return self.bucketer.assign_save_bucket(true_crash)
+            return self.bucketer.assign_save_buckets(true_crash)
 
     def get_bucket(self, threshold, bucket_id, project=None):
         """

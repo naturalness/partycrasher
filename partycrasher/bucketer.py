@@ -21,6 +21,8 @@ import json
 import uuid
 import time
 
+from collections import OrderedDict
+
 from crash import Crash
 from es_crash import ESCrash, Threshold
 
@@ -87,20 +89,27 @@ class Bucketer(object):
             }
         )
 
-    def assign_bucket(self, crash):
-        buckets = self.bucket(crash)
-        if len(buckets) > 0:
-            bucket = buckets[0]
-        else:
-            bucket = crash['database_id'] # Make a new bucket
-        return bucket
+    def assign_buckets(self, crash):
+        """
+        Returns a dictionary of type to value.
+        """
+        return self.bucket(crash)
 
-    def assign_save_bucket(self, crash, bucket=None):
-        if bucket is None:
-            bucket = self.assign_bucket(crash)
+    def assign_save_buckets(self, crash, buckets=None):
+        """
+        Adds a dictionary of buckets assignments to the given crash in
+        ElasticSearch.
+        """
+
+        if buckets is None:
+            buckets = self.assign_buckets(crash)
 
         saved_crash = ESCrash(crash, index=self.index)
-        saved_crash[self.name] = bucket
+
+        # Learned the hard way that we can't use setdefault...
+        saved_buckets = saved_crash.get(self.name, {}).copy()
+        saved_buckets.update(buckets)
+        saved_crash[self.name] = saved_buckets
 
         return saved_crash
 
@@ -125,6 +134,7 @@ class MLT(Bucketer):
         """
         Queries ElasticSearch with MoreLikeThis.
         Returns the bucket assignment for each threshold.
+        Returns an OrderedDict of {Threshold(...): 'id'}
         """
         if bucket_field is None:
             bucket_field = self.name
@@ -138,7 +148,7 @@ class MLT(Bucketer):
 
         body = self.make_more_like_this_query(crash, bucket_field)
         response = self.es.search(index=self.index, body=body)
-        return self.make_matching_buckets(response)
+        return self.make_matching_buckets(response, default=crash['database_id'])
 
     def make_more_like_this_query(self, crash, bucket_field):
         body =  {
@@ -163,9 +173,13 @@ class MLT(Bucketer):
 
         return body
 
-    def make_matching_buckets(self, matches):
+    def make_matching_buckets(self, matches, default=None):
+        if default is None:
+            raise ValueError('Must provide a string default bucket name')
+
         # TODO: make this acknowledge buckets.4_0, buckets.3_5, buckets.4_5,
         # etc..
+        matching_buckets = OrderedDict()
 
         # Have the matches in ascending order.
         raw_matches = list(sorted(matches['hits']['hits'], by_score))
@@ -173,31 +187,47 @@ class MLT(Bucketer):
         # Make a stack of thresholds, in ascending order
         thresholds_left = list(sorted(self.thresholds))
 
-        matching_buckets = []
-        for match in raw_matches:
-            if match['_score'] < self.thresh:
-                continue
+        while raw_matches and thresholds_left:
+            threshold = thresholds_left[0]
+            match = None
 
+            # Discard all matches lower than this threshold.
+            while raw_matches:
+                match = raw_matches[0]
+                if match['_score'] < threshold.to_float():
+                    raw_matches.pop(0)
+                else:
+                    break
+
+            # We may have discarded all matches in the previous step.
+            if len(raw_matches) == 0:
+                break
+
+            # At this point, we must have the first match.
+            assert match is not None
+            assert match['_score'] >= threshold.to_float()
+
+            # Fail if we can't find the bucket field
             try:
-                bucket = match['_source'][bucket_field]
+                bucket = match['_source'][bucket_field][threshold.to_elasticsearch()]
             except KeyError:
-                self.es.indices.flush(index=self.index)
-                print "Force waiting for refresh on " + crash['database_id']
-                time.sleep(1)
-                return self.bucket(crash, bucket_field)
+                raise Exception('Matching crash does not have an assignment '
+                                'for {!s}: {!r}'.format(threshold, match))
 
-            if bucket not in matching_buckets:
-                matching_buckets.append(bucket)
+            matching_buckets[threshold] = bucket
+
+        # Make this crash the start of a new bucket for all unfulfilled
+        # threshold values.
+        if not raw_matches and thresholds_left:
+            for threshold in thresholds_left:
+                matching_buckets[threshold] = default
 
         return matching_buckets
 
-    def assign_save_bucket(self, crash):
-        bucket = self.assign_bucket(crash)
-        assert isinstance(bucket, str)
-        bucket = {
-            self.thresh.to_elasticsearch(): bucket
-        }
-        return super(MLT, self).assign_save_bucket(crash, bucket)
+    def assign_save_buckets(self, crash):
+        bucket = self.assign_buckets(crash)
+        assert isinstance(bucket, dict)
+        return super(MLT, self).assign_save_buckets(crash, bucket)
 
     def alt_bucket(self, crash, bucket_field='bucket'):
         return self.bucket(crash, bucket_field)
