@@ -123,31 +123,52 @@ class MLT(Bucketer):
         return self.thresholds[0]
 
     def bucket(self, crash, bucket_field=None):
+        """
+        Queries ElasticSearch with MoreLikeThis.
+        Returns the bucket assignment for each threshold.
+        """
         if bucket_field is None:
             bucket_field = self.name
 
         # Compare only the stack trace
         if self.only_stack:
-            crash = {'stacktrace': crash['stacktrace']}
+            crash = {
+                'stacktrace': crash['stacktrace'],
+                'database_id': crash['database_id']
+            }
 
-        body={
+        body = self.make_more_like_this_query(crash, bucket_field)
+        matches = self.es.search(index=self.index, body=body)
+
+        if self.use_aggs:
+            return self.make_matching_buckets_from_aggregations(matches)
+        else:
+            return self.make_matching_buckets(matches)
+
+    def make_more_like_this_query(self, crash, bucket_field):
+        # TODO: make this acknowledge buckets.4_0, buckets.3_5, buckets.4_5,
+        # etc..
+
+        body =  {
             '_source': [bucket_field],
-            'size': self.max_buckets,
+            # What do we need max buckets for?
+            #'size': self.max_buckets,
             'min_score': self.min_threshold.to_float(),
             'query': {
-            'more_like_this': {
-                'docs': [{
-                    '_index': self.index,
-                    '_type': 'crash',
-                    'doc': crash,
+                'more_like_this': {
+                    'docs': [{
+                        '_index': self.index,
+                        '_type': 'crash',
+                        'doc': crash,
                     }],
-                'minimum_should_match': 0,
-                'max_query_terms': 2500,
-                'min_term_freq': 0,
-                'min_doc_freq': 0,
+                    'minimum_should_match': 0,
+                    'max_query_terms': 2500,
+                    'min_term_freq': 0,
+                    'min_doc_freq': 0,
                 },
             },
         }
+
         if self.use_aggs:
             body['aggregations'] ={
                 'buckets': {
@@ -167,28 +188,31 @@ class MLT(Bucketer):
                         }
                 }
             }
+        return body
 
-        matches = self.es.search(index=self.index, body=body)
+    def make_matching_buckets(self, matches):
+        matching_buckets = []
+        for match in matches['hits']['hits']:
+            if match['_score'] < self.thresh:
+                continue
+            try:
+                bucket = match['_source'][bucket_field]
+            except KeyError:
+                self.es.indices.flush(index=self.index)
+                print "Force waiting for refresh on " + crash['database_id']
+                time.sleep(1)
+                return self.bucket(crash, bucket_field)
+            if bucket not in matching_buckets:
+                matching_buckets.append(bucket)
+        return matching_buckets
 
-        matching_buckets=[]
-        if self.use_aggs:
-            for match in matches['aggregations']['buckets']['buckets']:
-                assert match['top']['hits']['max_score'] >= self.thresh
-                matching_buckets.append(match['key'])
-        else:
-            for match in matches['hits']['hits']:
-                if match['_score'] < self.thresh:
-                    continue
-                try:
-                    bucket = match['_source'][bucket_field]
-                except KeyError:
-                    self.es.indices.flush(index=self.index)
-                    print "Force waiting for refresh on " + crash['database_id']
-                    time.sleep(1)
-                    return self.bucket(crash, bucket_field)
-                if bucket not in matching_buckets:
-                    matching_buckets.append(bucket)
 
+
+    def make_matching_buckets_from_aggregations(self, matches):
+        matching_buckets = []
+        for match in matches['aggregations']['buckets']['buckets']:
+            assert match['top']['hits']['max_score'] >= self.thresh
+            matching_buckets.append(match['key'])
         return matching_buckets
 
     def assign_save_bucket(self, crash):
@@ -232,6 +256,7 @@ class MLTStandardUnicode(MLT):
                 }
             }
         )
+
 
 class MLTLetters(MLT):
     """MLT with a diffrent analyzer (capture letter strings then optionally make them lowercase)"""
@@ -305,7 +330,7 @@ class MLTCamelCase(MLT):
         body={
             'mappings': {
                 'crash': {
-                    'properties': common_properties()
+                    'properties': common_properties(self.thresholds)
                 }
             },
             'settings': {
@@ -409,9 +434,10 @@ class MLTNGram(MLT):
         )
 
 
-def common_properties():
+def common_properties(thresholds):
     """
-    Returns properties common to all indexes.
+    Returns properties common to all indexes;
+    must provide the threshold values
     """
     # Database ID, the primary bucket, and the project,
     # and the version are all literals.
@@ -422,13 +448,14 @@ def common_properties():
             'index': 'not_analyzed'
         },
         'buckets': {
+            # Do not allow arbitrary properties being added to buckets...
+            "dynamic" : "strict",
+            # Create all the subfield appropriate for buckets
             "properties": {
-
-                # Ugh... either I have to create dynamic propers or... ugh...
-                "4_0": {
+                threshold.to_elasticsearch(): {
                     'type': "string",
                     'index': 'not_analyzed',
-                }
+                } for threshold in thresholds
             }
         },
         # TODO: convert into _type
