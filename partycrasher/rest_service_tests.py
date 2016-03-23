@@ -601,7 +601,6 @@ class RestServiceTestCase(unittest.TestCase):
         # The results from ElasticSearch are more-or-less unpredictable...
         assert len(top_bucket.get('top_reports')) is not None
 
-    @unittest.skip('temporary')
     def test_top_buckets_invalid_queries(self):
         """
         Send some invalid queries to top buckets.
@@ -617,7 +616,6 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.get(search_url, params={'since': 'herp'})
         assert response.status_code == 400
 
-    @unittest.skip('temporary')
     def test_top_buckets_default_query(self):
         """
         Does it produce reasonable results for the default query?
@@ -639,7 +637,6 @@ class RestServiceTestCase(unittest.TestCase):
         # It should send back a proper since date.
         assert len(response.json().get('since')) is not None
 
-    @unittest.skip('temporary')
     def test_get_project_config(self):
         """
         Fetch per-project configuration.
