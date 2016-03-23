@@ -235,6 +235,8 @@ class RestServiceTestCase(unittest.TestCase):
         assert isinstance(buckets.get('4.0'), dict)
         assert isinstance(buckets.get('4.0').get('id'), StringType)
         assert buckets.get('4.0').get('href', '').startswith('http://')
+        # Ensure that other values exist too!
+        assert isinstance(buckets.get('3.75'), dict)
 
         insert_date = response.json().get('date_bucketed')
         assert insert_date is not None

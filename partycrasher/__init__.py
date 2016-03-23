@@ -106,7 +106,9 @@ class PartyCrasher(object):
         # XXX: Monkey-patch our instance to the global.
         ESCrash.es = self._es
 
-        self._bucketer = MLTCamelCase(name="buckets", thresholds=(4.0,),
+        thresholds = ('2.75', '3.0', '3.25', '3.5', '3.75', '4.0', '4.5',
+                      '5.0', '5.5', '6.0')
+        self._bucketer = MLTCamelCase(name="buckets", thresholds=thresholds,
                                       lowercase=False, only_stack=False,
                                       index='crashes', elasticsearch=self.es)
         self._bucketer.create_index()
