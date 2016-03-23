@@ -22,25 +22,30 @@ import uuid
 import time
 
 from crash import Crash
-from es_crash import ESCrash
+from es_crash import ESCrash, Threshold
+
 
 class Bucketer(object):
-    """Superclass for bucketers which require pre-existing data to work.
-    The default analyzer breaks on whitespace."""
+    """
+    Superclass for bucketers which require pre-existing data to work.
+    The default analyzer breaks on whitespace.
+    """
 
-    def __init__(self,
-                 max_buckets=1,
-                 name=None,
-                 index='crashes',
-                 es=None,
-                 lowercase=False,
-                 ):
+    def __init__(self, max_buckets=1, name=None, index='crashes',
+                 elasticsearch=None, lowercase=False):
+
         self.max_buckets = max_buckets
+
+        # Autogenerate the name from the class's name.
         if name is None:
             name = self.__class__.__name__.lower()
+
+        if elasticsearch is None:
+            raise ValueError('No ElasticSearch instance specified!')
+
         self.name = name
         self.index = index
-        self.es = es
+        self.es = elasticsearch
         self.lowercase = lowercase
 
     def bucket(self, crash):
@@ -87,40 +92,48 @@ class Bucketer(object):
         if len(buckets) > 0:
             bucket = buckets[0]
         else:
-            bucket = 'bucket:' + crash['database_id'] # Make a new bucket
+            bucket = crash['database_id'] # Make a new bucket
         return bucket
 
     def assign_save_bucket(self, crash, bucket=None):
         if bucket is None:
             bucket = self.assign_bucket(crash)
-        savedata = ESCrash(crash, index=self.index)
-        savedata[self.name] = bucket
-        return savedata
+
+        saved_crash = ESCrash(crash, index=self.index)
+        saved_crash[self.name] = bucket
+
+        return saved_crash
 
 
 class MLT(Bucketer):
 
-    def __init__(self,
-                 thresh=1.0,
-                 use_aggs=False,
-                 only_stack=False,
-                 *args,
-                 **kwargs):
+    def __init__(self, thresholds=(4.0,), use_aggs=False, only_stack=False,
+                 *args, **kwargs):
         super(MLT, self).__init__(*args, **kwargs)
-        self.thresh = thresh
+        self.thresholds = tuple(Threshold(value) for value in sorted(thresholds))
         self.use_aggs = use_aggs
         self.only_stack = only_stack
+
+    @property
+    def thresh(self):
+        return self.thresholds[0]
+
+    @property
+    def min_threshold(self):
+        return self.thresholds[0]
 
     def bucket(self, crash, bucket_field=None):
         if bucket_field is None:
             bucket_field = self.name
+
+        # Compare only the stack trace
         if self.only_stack:
             crash = {'stacktrace': crash['stacktrace']}
+
         body={
-            #'_source': [bucket_field],
+            '_source': [bucket_field],
             'size': self.max_buckets,
-            # LOOOOL
-            #'min_score': self.thresh,
+            'min_score': self.min_threshold.to_float(),
             'query': {
             'more_like_this': {
                 'docs': [{
@@ -128,8 +141,8 @@ class MLT(Bucketer):
                     '_type': 'crash',
                     'doc': crash,
                     }],
-                'max_query_terms': 2500,
                 'minimum_should_match': 0,
+                'max_query_terms': 2500,
                 'min_term_freq': 0,
                 'min_doc_freq': 0,
                 },
@@ -153,12 +166,9 @@ class MLT(Bucketer):
                             }
                         }
                 }
-            };
-        matches = self.es.search(index=self.index,body=body)
+            }
 
-        if os.getenv('PARTYCRASHER_DEBUG'):
-            from pprint import pprint
-            pprint(matches)
+        matches = self.es.search(index=self.index, body=body)
 
         matching_buckets=[]
         if self.use_aggs:
@@ -176,14 +186,22 @@ class MLT(Bucketer):
                     print "Force waiting for refresh on " + crash['database_id']
                     time.sleep(1)
                     return self.bucket(crash, bucket_field)
-                    #print json.dumps(matches, indent=4)
-                    #raise
                 if bucket not in matching_buckets:
                     matching_buckets.append(bucket)
+
         return matching_buckets
+
+    def assign_save_bucket(self, crash):
+        bucket = self.assign_bucket(crash)
+        assert isinstance(bucket, str)
+        bucket = {
+            self.thresh.to_elasticsearch(): bucket
+        }
+        return super(MLT, self).assign_save_bucket(crash, bucket)
 
     def alt_bucket(self, crash, bucket_field='bucket'):
         return self.bucket(crash, bucket_field)
+
 
 class MLTStandardUnicode(MLT):
     """MLT with an analyzer breaking on spaces and then lowercasing"""
@@ -282,7 +300,7 @@ class MLTIdentifier(MLT):
 class MLTCamelCase(MLT):
     """MLT intended to break up identifiers into sub-words"""
     def create_index(self):
-        print "Creating index: %s" % self.index
+        # Ignore 400 -- index already created.
         self.es.indices.create(index=self.index, ignore=400,
         body={
             'mappings': {
@@ -403,10 +421,15 @@ def common_properties():
             'type': 'string',
             'index': 'not_analyzed'
         },
-        # TODO: Deprecate: use multi-tier bucket... thing.
-        'bucket': {
-            'type': 'string',
-            'index': 'not_analyzed',
+        'buckets': {
+            "properties": {
+
+                # Ugh... either I have to create dynamic propers or... ugh...
+                "4_0": {
+                    'type': "string",
+                    'index': 'not_analyzed',
+                }
+            }
         },
         # TODO: convert into _type
         'project': {
@@ -420,3 +443,6 @@ def common_properties():
             'index': 'not_analyzed'
         }
     }
+
+
+

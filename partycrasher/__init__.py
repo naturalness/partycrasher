@@ -1,16 +1,24 @@
 # -*- coding: UTF-8 -*-
 
-import ConfigParser
 from datetime import datetime
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
-from elasticsearch import Elasticsearch, NotFoundError
+# Python 2/3 hack.
+try:
+    from ConfigParser import SafeConfigParser as ConfigParser
+except:
+    from configparser import ConfigParser
+
+from elasticsearch import Elasticsearch, NotFoundError, TransportError
 
 # Some of these imports are part of the public API...
 from partycrasher.crash import Crash
-from partycrasher.es_crash import ESCrash
+from partycrasher.es_crash import ESCrash, Threshold
 from partycrasher.es_crash import ReportNotFoundError
 from partycrasher.bucketer import MLTCamelCase
+
+
+__version__ = u'0.1.0'
 
 
 class BucketNotFoundError(KeyError):
@@ -18,7 +26,6 @@ class BucketNotFoundError(KeyError):
     When a particular bucket cannot be found.
     """
 
-__version__ = u'0.1.0'
 
 class Bucket(namedtuple('Bucket', 'id project threshold total top_reports')):
     """
@@ -38,68 +45,105 @@ class Bucket(namedtuple('Bucket', 'id project threshold total top_reports')):
         return kwargs
 
 
+class Project(namedtuple('Project', 'name')):
+    """
+    Metadata about a project.
+    """
+
+
+
 class PartyCrasher(object):
-    def __init__(self):
-        self.config = ConfigParser.SafeConfigParser({'elastic': ''})
-        self.esServers = self.config.get('DEFAULT', 'elastic').split()
+    def __init__(self, config_file=None):
+        self.config = ConfigParser(default_config())
+
+        # TODO: Abstract config out.
+        if config_file is not None:
+            self.config.readfp(config_file)
+
+        self.esServers = self.config.get('partycrasher.elastic', 'hosts').split()
+
+        # Default to localhost if it's not configured.
         if len(self.esServers) < 1:
             self.esServers = ['localhost']
+
         # self.es and self.bucketer are lazy properties.
         self._es = None
         self._bucketer = None
 
     @property
     def es(self):
+        """
+        ElasticSearch instance.
+
+        """
         if not self._es:
             self._connect_to_elasticsearch()
         return self._es
 
     @property
     def bucketer(self):
+        """
+        Bucketer instance.
+        """
         if not self._bucketer:
             self._connect_to_elasticsearch()
         return self._bucketer
 
     @property
     def default_threshold(self):
+        """
+        Default threshould to use if none are provided.
+        """
         # TODO: determine from static/dynamic configuration
-        return 4.0
+        return Threshold(4.0)
 
     def _connect_to_elasticsearch(self):
         """
-        Actually connects to ElasticSearch.
+        Establishes a connection to ElasticSearch. given configuration.
         """
         self._es = Elasticsearch(self.esServers)
-        # TODO: Have more than one bucketer.
-        self._bucketer = MLTCamelCase(thresh=4.0,
-                                      lowercase=False,
-                                      only_stack=False,
-                                      index='crashes',
-                                      es=self.es,
-                                      name="bucket")
+
+        # XXX: Monkey-patch our instance to the global.
+        ESCrash.es = self._es
+
+        self._bucketer = MLTCamelCase(name="buckets", thresholds=(4.0,),
+                                      lowercase=False, only_stack=False,
+                                      index='crashes', elasticsearch=self.es)
         self._bucketer.create_index()
         return self._es
 
-    # TODO catch duplicate and return 303
+    # TODO catch duplicate and return DuplicateRecordError
     # TODO multi-bucket multi-threshold mumbo-jumbo
-    def ingest(self, crash):
-        try:
-            return self.bucketer.assign_save_bucket(Crash(crash))
-        except NotFoundError as e:
-            raise Exception(' '.join([e.error, str(e.status_code), repr(e.info)]))
+    def ingest(self, crash, dryrun=False):
+        """
+        Ingest a crash; the Crash may be a simple dictionary, or a
+        pre-existing Crash instance.
+        """
+        true_crash = Crash(crash)
 
-    def bucket(self, threshold, bucket_id):
+        if dryrun:
+            # HACK!
+            true_crash['bucket'] = self.bucketer.assign_bucket(true_crash)
+            return true_crash
+        else:
+            return self.bucketer.assign_save_bucket(true_crash)
+
+    def get_bucket(self, threshold, bucket_id, project=None):
+        """
+        Returns information for the given bucket.
+        """
+        # Coerce to a Threshold object.
+        threshold = Threshold(threshold)
+
         query = {
             "filter": {
                 "term": {
-                    "bucket": bucket_id
+                    "buckets." + threshold.to_elasticsearch(): bucket_id
                 }
             }
         }
 
         response = self.es.search(body=query, index='crashes')
-        from pprint import pprint
-        pprint(response)
         reports_found = response['hits']['total']
 
         # Since no reports where found, assume the bucket does not exist (at
@@ -107,22 +151,15 @@ class PartyCrasher(object):
         if reports_found < 1:
             raise BucketNotFoundError(bucket_id)
 
-        raw_reports = response['hits']['hits']
-        reports = [Crash(report) for report in raw_reports]
+        reports = self._get_reports_by_bucket(response,
+                                              threshold).get(bucket_id)
+        assert len(reports) > 0
 
         return Bucket(id=bucket_id,
-                      project=None,
+                      project=project,
                       threshold=self.default_threshold,
                       total = reports_found,
                       top_reports=reports)
-
-
-
-
-
-
-
-
 
     def top_buckets(self, lower_bound, threshold=None, project=None):
         """
@@ -137,8 +174,11 @@ class PartyCrasher(object):
         if not isinstance(lower_bound, datetime):
             raise TypeError('The lower bound MUST be a datetime object.')
 
+        # Get the default threshold.
         if threshold is None:
             threshold = self.default_threshold
+        if not isinstance(threshold, Threshold):
+            threshold = Threshold(threshold)
 
         # Filters by lower-bound by default;
         filters = [{
@@ -167,10 +207,8 @@ class PartyCrasher(object):
                     "aggs": {
                         "top_buckets": {
                             "terms": {
-                                "field": "bucket",
-                                "order": {
-                                    "_count": "desc"
-                                }
+                                "field": "buckets." + threshold.to_elasticsearch(),
+                                "order": { "_count": "desc" }
                             }
                         }
                     }
@@ -185,28 +223,77 @@ class PartyCrasher(object):
                        ['top_buckets']
                        ['buckets'])
 
-        return [Bucket(id=b['key'],
-                       total=b['doc_count'],
-                       project=project,
-                       threshold=threshold,
-                       top_reports=[])
-                for b in top_buckets]
+        reports_by_project = self._get_reports_by_bucket(response, threshold)
 
-
-    # TODO catch duplicate and return 303
-    def dryrun(self, crash):
-        try:
-            return self.bucketer.assign_bucket(Crash(crash))
-        except NotFoundError as e:
-            raise Exception(' '.join([e.error, str(e.status_code), repr(e.info)]))
+        return [Bucket(id=bucket['key'], project=project, threshold=threshold,
+                       total=bucket['doc_count'],
+                       top_reports=reports_by_project.get(bucket['key'], ()))
+                for bucket in top_buckets]
 
     def get_crash(self, database_id):
+        self._connect_to_elasticsearch()
+
         try:
             return ESCrash(database_id, index='crashes')
         except NotFoundError as e:
             raise KeyError(database_id)
 
-    def delcrash(database_id):
-        # TODO: we have to call ES directly here, theres nothing in Crash/ESCrash or Bucketer to handle this case
-        # maybe ESCrash(database_id).delete()
+    def get_projects(self):
+        """
+        Returns the list of all projects found in Elasticsearch.
+        """
+
+        query = {
+            "aggs": {
+                "projects": {
+                    "terms": {
+                        "field":"project"
+                    }
+                }
+            }
+        }
+
+        try:
+            results = self.es.search(body=query, index='crashes')
+        except TransportError:
+            # Occurs when the index has just been freshly created.
+            return None
+
+        raw_projects = results['aggregations']['projects']['buckets']
+        return [Project(project['key']) for project in raw_projects]
+
+
+    def delete_crash(self, database_id):
+        # TODO: we have to call ES directly here, theres nothing in
+        # Crash/ESCrash or Bucketer to handle this case maybe
+        # ESCrash(database_id).delete()
         raise NotImplementedError("BUT WHY~!~~~~")
+
+    @staticmethod
+    def _get_reports_by_bucket(response, threshold):
+        """
+        Returns a dictionary of projects => reports, from the response.
+        """
+        buckets = defaultdict(list)
+
+        raw_hits = response['hits']['hits']
+
+        for hit in raw_hits:
+            report = hit['_source']
+            crash = ESCrash(Crash(report))
+            bucket_id = crash.get_bucket_id(threshold)
+            buckets[bucket_id].append(crash)
+
+        return buckets
+
+
+def default_config():
+    return {
+        'partycrasher.http': {
+            'prefix': '/'
+        },
+
+        'partycrasher.elastic': {
+            'primary': 'localhost:9200'
+        },
+    }

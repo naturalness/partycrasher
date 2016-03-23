@@ -19,17 +19,62 @@
 import datetime
 import time
 from weakref import WeakValueDictionary
+from decimal import Decimal
 
 import elasticsearch
 from elasticsearch import Elasticsearch
 
 from crash import Crash, Stacktrace, Stackframe
 
+# Python 2/3 non-sense.
+try:
+    unicode
+except NameError:
+    StringTypes = (str,)
+else:
+    StringTypes = (str, unicode)
+
 
 class ReportNotFoundError(KeyError):
     """
     Raised when... the crash is not found!
     """
+
+class Threshold(object):
+    """
+    A wrapper for a threshold value. Ensures proper serialization between
+    ElasticSearch and users.
+    """
+    __slots__ = '_value'
+
+    def __init__(self, value):
+        if isinstance(value, Threshold):
+            # Clone the other Threshold.
+            self._value = value._value
+            return
+        elif isinstance(value, StringTypes):
+            value = value.replace('_', '.')
+
+        self._value = Decimal(value)
+
+    def __str__(self):
+        result = str(self._value)
+        assert '_' not in result
+        if '.' not in result:
+            return result + '.0'
+        return result
+
+    def to_float(self):
+        return float(self._value)
+
+    def __getattr__(self, attr):
+        return getattr(self._value, attr)
+
+    def to_elasticsearch(self):
+        str_value = str(self)
+        assert isinstance(self._value, Decimal)
+        assert str_value.count('.') == 1, 'Invalid decimal number'
+        return str_value.replace('.', '_')
 
 
 class ESCrashMeta(type):
@@ -123,14 +168,18 @@ class ESCrash(Crash):
     __metaclass__ = ESCrashMeta
 
     # Global ES connection
-    es = Elasticsearch(retry_on_timeout=True)
+    es = None
     crashes = {}
 
     @classmethod
     def getrawbyid(cls, database_id, index='crashes'):
+        if cls.es is None:
+            raise RuntimeError('Forgot to monkey-patch ES connection to ESCrash!')
+
         if index in cls.crashes:
             if database_id in cls.crashes[index]:
                 return cls.crashes[database_id]
+
         response = cls.es.search(index=index, body={
             'query': {
                 'filtered':{
@@ -145,6 +194,7 @@ class ESCrash(Crash):
                 }
             }
         })
+
         if response['hits']['total'] == 0:
             return None
         elif response['hits']['total'] > 1:
@@ -152,7 +202,7 @@ class ESCrash(Crash):
                             "possible, since they are all supposed to be stored "
                             "with their document ID equal to the database ID.")
         else:
-            # should this be ESCRash.__base__?
+            # should this be ESCrash.__base__?
             return Crash(response['hits']['hits'][0]['_source'])
 
     def __init__(self, index='crashes', crash=None):
@@ -162,12 +212,23 @@ class ESCrash(Crash):
         self.hot = True
 
     def __setitem__(self, key, val):
-        if key in self:
-            oldval = self[key]
-        else:
-            oldval = None
+        """
+        crash[key] = value
+
+        Updates the crash; propegates the update to ElasticSearch.
+        Currently, there's no batching of requests, so try to avoid changing values.
+        """
+
+        # Keep the old value of the key, if it exists,
+        oldval = self.get(key, None)
+
+        # Let the super class do weird value remapping stuff.
         super(ESCrash, self).__setitem__(key, val)
+        # After the super class is done its magic, the value may have
+        # changed...
         newval = self[key]
+
+        # Update the crash in ElasticSearch.
         if (oldval != newval) and self.hot:
             r = self.es.update(index=self.index,
                         doc_type='crash',
@@ -178,6 +239,18 @@ class ESCrash(Crash):
                                 }
                             }
                         )
+
+    def get_bucket_id(self, threshold):
+        key = Threshold(threshold).to_elasticsearch()
+        try:
+            buckets = self['buckets']
+        except KeyError:
+            raise Exception('No assigned buckets for: {!r}'.format(self))
+        try:
+            return buckets[key]
+        except KeyError:
+            raise Exception('Buckets threshold {} not assigned for: '
+                            '{!r}'.format(key, self))
 
     def delete():
         del _cached[self['database_id']]

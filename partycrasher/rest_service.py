@@ -22,11 +22,12 @@ import os
 import sys
 import time
 
-from flask import jsonify, request, url_for, redirect
+from flask import current_app, json, jsonify, request, url_for, redirect
 from flask.ext.cors import CORS
 
 # Hacky things to add PartyCrasher to the path.
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+REPOSITORY_ROUTE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(REPOSITORY_ROUTE)
 import partycrasher
 
 from partycrasher.make_json_app import make_json_app
@@ -36,12 +37,18 @@ from partycrasher.rest_api_utils import (
     href,
     redirect_with_query_string,
 )
+from partycrasher.resource_encoder import ResourceEncoder
 
 import dateparser
 
+# Create and customize the Flask app.
 app = make_json_app('partycrasher')
 CORS(app)
-crasher = partycrasher.PartyCrasher()
+app.json_encoder = ResourceEncoder
+
+# XXX: This shouldn't be hard-coded!
+with open(os.path.join(REPOSITORY_ROUTE, 'partycrasher.cfg')) as config_file:
+    crasher = partycrasher.PartyCrasher(config_file)
 
 
 @app.errorhandler(BadRequest)
@@ -100,24 +107,17 @@ def root():
         └── reports
             └── dry_run
 
-    .. The root route; I'm really rooting for it.
-
     """
 
-    # Projects query:
-    #
-    #   {"aggs":{"projects":{"terms":{"field":"project"}}}}
-    #
-    #   result['aggregations']['projects']['buckets']
+    projects = crasher.get_projects()
 
     # This should be a tree for all of the services available.
     return jsonify(self=dict(href('root'), rel='canonical'),
                    partycrasher={
                        'version': partycrasher.__version__,
                        'elastic': crasher.esServers,
-                       'elastic_health': crasher.es.cluster.health()
                    },
-                   projects="NOT-IMPLEMENTED",
+                   projects=projects,
                    config={
                        'default_threshold': 4.0
                    })
@@ -239,7 +239,7 @@ def add_report(project=None):
         return jsonify_list(ingest_multiple(report, project)), 201
     else:
         report, url = ingest_one(report, project)
-        return jsonify(report), 201, {
+        return jsonify_resource(report), 201, {
             'Location': url
         }
 
@@ -320,7 +320,7 @@ def view_report(project=None, report_id=None):
     except partycrasher.ReportNotFoundError:
         return jsonify(not_found=report_id), 404
     else:
-        return jsonify(report)
+        return jsonify_resource(report)
 
 
 @app.route('/reports/dry-run', methods=['POST'])
@@ -366,7 +366,9 @@ def ask_about_report(project=None):
 
     """
 
-    raise NotImplementedError
+    report = request.get_json()
+    assigned_report, _url = ingest_one(report, project, dryrun=True)
+    return jsonify_resource(assigned_report), 200
 
 
 @app.route('/reports/<report_id>', methods=['DELETE'],
@@ -414,11 +416,11 @@ def view_bucket(project=None, threshold=None, bucket_id=None):
     assert threshold is not None
 
     try:
-        bucket = crasher.bucket(threshold, bucket_id)
+        bucket = crasher.get_bucket(threshold, bucket_id, project)
     except partycrasher.BucketNotFoundError:
-        return jsonify(not_found=bucket_id), 404
+        return jsonify(error="not_found", bucket_id=bucket_id), 404
 
-    return jsonify(bucket.to_dict())
+    return jsonify_resource(bucket)
 
 
 # Undoucmented endpoint:
@@ -510,8 +512,8 @@ def query_buckets(project=None, threshold=None):
             "threshold": "4.0",
             "top_buckets": [
                 {
-                    "href": "http://domain.tld/alan_parsons/buckets/4.0/bucket:c29a81a0-5a53-4ba0-8123-5e96685a5895",
-                    "id": "bucket:c29a81a0-5a53-4ba0-8123-5e96685a5895",
+                    "href": "http://domain.tld/alan_parsons/buckets/4.0/c29a81a0-5a53-4ba0-8123-5e96685a5895",
+                    "id": "c29a81a0-5a53-4ba0-8123-5e96685a5895",
                     "method": [ "GET" ],
                     "total": 253
                 }
@@ -521,11 +523,11 @@ def query_buckets(project=None, threshold=None):
     """
     assert threshold is not None
 
-    since = request.args.get('since', 'a-week-ago')
+    since = request.args.get('since', '3-days-ago')
     try:
-      lower_bound = dateparser.parse(since)
-    except:
-      lower_bound = None
+        lower_bound = dateparser.parse(since.replace('-', ' '))
+    except ValueError:
+        lower_bound = None
     if lower_bound is None:
         raise BadRequest('Could not understand date format for '
                          '`since=` parameter. '
@@ -539,21 +541,9 @@ def query_buckets(project=None, threshold=None):
                                   project=project,
                                   threshold=threshold)
 
-    # Reformat the results...
-    top_buckets = [bucket.to_dict(href('view_bucket',
-                                       project=project,
-                                       threshold=threshold,
-                                       bucket_id=bucket.id))
-                   for bucket in buckets]
-
     return jsonify(since=lower_bound.isoformat(),
                    threshold=threshold,
-                   top_buckets=top_buckets)
-
-
-@app.route('/<project>/reports/')
-def reports_overview(project=None):
-    raise NotImplementedError
+                   top_buckets=list(buckets))
 
 
 @app.route('/<project>/config')
@@ -623,7 +613,7 @@ if False:
 #############################################################################
 
 
-def ingest_one(report, project_name):
+def ingest_one(report, project_name, dryrun=False):
     """
     Returns a tuple of ingested report and its URL.
     """
@@ -632,7 +622,7 @@ def ingest_one(report, project_name):
     # Graft the project name onto the report.
     report.setdefault('project', project_name)
 
-    report = crasher.ingest(report)
+    report = crasher.ingest(report, dryrun=dryrun)
     url = url_for('view_report',
                   project=report['project'],
                   report_id=report['database_id'])
@@ -672,15 +662,25 @@ def raise_bad_request_if_project_mismatch(report, project_name):
                          actual=report['project'])
 
 
+# Copied from: flask/json.py
+def jsonify_resource(resource):
+    indent = None
+    if current_app.config['JSONIFY_PRETTYPRINT_REGULAR'] \
+            and not request.is_xhr:
+        indent = 2
+    return current_app.response_class(json.dumps(resource, indent=indent),
+                                      mimetype='application/json')
+
+
 def main():
     kwargs = {
-        # Make the server publically visible. 
+        # Make the server publically visible.
         'host': '0.0.0.0',
         'debug': True,
     }
 
     # TODO:
-    #  - add parameter: -c [config-file] 
+    #  - add parameter: -c [config-file]
     #  - add parameter: -C [config-setting]
 
     # Add port if required.
