@@ -83,7 +83,7 @@ def root():
 
         {
             "resource": {
-                "href": "http://domain.tld/path/to/resource",
+                "href": "http://domain.tld/path/to/resource"
             }
         }
 
@@ -169,10 +169,10 @@ def add_report(project=None):
         {
             "database_id": "<report-id>",
             "project": "<project>",
-            "href": "https://domain.tld/<project>/reports/<report-id>"
+            "href": "https://domain.tld/<project>/reports/<report-id>",
             "buckets": {
                 "4.0": {
-                    "bucket_id": "<bucket-id @ 4.0>"
+                    "bucket_id": "<bucket-id @ 4.0>",
                     "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
                 }
             }
@@ -219,10 +219,10 @@ def add_report(project=None):
             {
                 "database_id": "<report-id 1>",
                 "project": "<project>",
-                "href": "https://domain.tld/<project>/reports/<report-id 1>"
+                "href": "https://domain.tld/<project>/reports/<report-id 1>",
                 "buckets": {
                     "4.0": {
-                        "bucket_id": "<bucket-id @ 4.0>"
+                        "bucket_id": "<bucket-id @ 4.0>",
                         "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
                     }
                 }
@@ -230,14 +230,14 @@ def add_report(project=None):
             {
                 "database_id": "<report-id 2>",
                 "project": "<project>",
-                "href": "https://domain.tld/<project>/reports/<report-id 2>"
+                "href": "https://domain.tld/<project>/reports/<report-id 2>",
                 "buckets": {
                     "4.0": {
-                        "bucket_id": "<bucket-id @ 4.0>"
+                        "bucket_id": "<bucket-id @ 4.0>",
                         "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
                     }
                 }
-            },
+            }
         ]
 
     Errors
@@ -384,7 +384,7 @@ def ask_about_report(project=None):
             "href": "https://domain.tld/<project>/reports/<report-id>"
             "buckets": {
                 "4.0": {
-                    "bucket_id": "<bucket-id @ 4.0>"
+                    "bucket_id": "<bucket-id @ 4.0>",
                     "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
                 }
             }
@@ -453,17 +453,17 @@ def view_bucket(project=None, threshold=None, bucket_id=None):
 
         HTTP/1.1 200 OK
 
-    .. code-block:: json
-
+    .. code-block:: JSON
 
         {
-            id: "<bucket-id>",
-            project: "<project>",
-            href: "http://domain.tld/<project>/buckets/<threshold>/<bucket-id>",
-            threshold: "4.0",
-            top_reports: ["..."],
-            total: 3279
+            "id": "<bucket-id>",
+            "project": "<project>",
+            "href": "http://domain.tld/<project>/buckets/<threshold>/<bucket-id>",
+            "threshold": "4.0",
+            "top_reports": ["..."],
+            "total": 3279
         }
+
     """
     assert bucket_id is not None
     assert threshold is not None
@@ -548,7 +548,7 @@ def query_buckets(project=None, threshold=None):
                 {
                     "id": "c29a81a0-5a53-4ba0-8123-5e96685a5895",
                     "href": "http://domain.tld/alan_parsons/buckets/4.0/c29a81a0-5a53-4ba0-8123-5e96685a5895",
-                    "total": 253
+                    "total": 253,
                     "top_reports": ["..."]
                 }
             ]
