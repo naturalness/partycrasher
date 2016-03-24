@@ -184,6 +184,16 @@ class MLT(Bucketer):
         # Have the matches in ascending order.
         raw_matches = list(sorted(matches['hits']['hits'], by_score))
 
+        # DEBUG STUFF
+        if raw_matches:
+            first = raw_matches[0]
+            report_id = first['_source']['database_id']
+            project = first['_source']['project']
+            score = str(first['_score'])
+            matching_buckets['__debug__'] = ':'.join((score, project, report_id))
+        else:
+            matching_buckets['__debug__'] = 'None'
+
         # Make a stack of thresholds, in ascending order
         thresholds_left = list(sorted(self.thresholds))
 
@@ -450,6 +460,19 @@ def common_properties(thresholds):
     Returns properties common to all indexes;
     must provide the threshold values
     """
+
+    bucket_properties = {
+        threshold.to_elasticsearch(): {
+            'type': "string",
+            'index': 'not_analyzed',
+        } for threshold in thresholds
+    }
+
+    bucket_properties['__debug__'] = {
+        'type': 'string',
+        'index': 'not_analyzed'
+    }
+
     # Database ID, the primary bucket, and the project,
     # and the version are all literals.
     return {
@@ -462,12 +485,7 @@ def common_properties(thresholds):
             # Do not allow arbitrary properties being added to buckets...
             "dynamic" : "strict",
             # Create all the subfield appropriate for buckets
-            "properties": {
-                threshold.to_elasticsearch(): {
-                    'type': "string",
-                    'index': 'not_analyzed',
-                } for threshold in thresholds
-            }
+            "properties": bucket_properties
         },
         # TODO: convert into _type
         'project': {

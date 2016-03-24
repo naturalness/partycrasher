@@ -21,6 +21,9 @@ from partycrasher.threshold import Threshold
 
 __version__ = u'0.1.0'
 
+DEFAULT_THRESHOLDS = ('2.75', '3.0', '3.25', '3.5', '3.75', '4.0', '4.5',
+                      '5.0', '5.5', '6.0')
+
 
 class BucketNotFoundError(KeyError):
     """
@@ -54,8 +57,9 @@ class Project(namedtuple('Project', 'name')):
 
 
 class PartyCrasher(object):
-    def __init__(self, config_file=None):
+    def __init__(self, config_file=None, thresholds=DEFAULT_THRESHOLDS):
         self.config = ConfigParser(default_config())
+        self.thresholds = thresholds
 
         # TODO: Abstract config out.
         if config_file is not None:
@@ -107,9 +111,8 @@ class PartyCrasher(object):
         # XXX: Monkey-patch our instance to the global.
         ESCrash.es = self._es
 
-        thresholds = ('2.75', '3.0', '3.25', '3.5', '3.75', '4.0', '4.5',
-                      '5.0', '5.5', '6.0')
-        self._bucketer = MLTCamelCase(name="buckets", thresholds=thresholds,
+        self._bucketer = MLTCamelCase(name="buckets",
+                                      thresholds=self.thresholds,
                                       lowercase=False, only_stack=False,
                                       index='crashes', elasticsearch=self.es)
         self._bucketer.create_index()

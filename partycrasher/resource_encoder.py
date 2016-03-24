@@ -390,7 +390,20 @@ def fix_buckets(crash_dict):
 
     fixed_buckets = {}
     for key, bucket_id in crash_dict['buckets'].items():
-        threshold = str(Threshold(key))
-        fixed_buckets[threshold] = Bucket(bucket_id, project, threshold, None, None)
+        # Hacky debug stuff... :c
+        # See: bucketer.MLT.make_matching_buckets()
+        if key == '__debug__':
+            if ':' in bucket_id:
+                score, project, report_id = bucket_id.split(':')
+                fixed_buckets['__debug__'] = {
+                    'score': score,
+                    'href': href('view_report',
+                                 project=project, report_id=report_id)
+                }
+            else:
+                fixed_buckets['__debug__'] = 'No reports matched :c'
+        else:
+            threshold = str(Threshold(key))
+            fixed_buckets[threshold] = Bucket(bucket_id, project, threshold, None, None)
 
     crash_dict['buckets' ] = fixed_buckets
