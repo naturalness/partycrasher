@@ -160,11 +160,14 @@ class MLT(Bucketer):
             '_source': [bucket_field, 'database_id', 'project'],
             'query': {
                 'more_like_this': {
-                    'docs': [{
-                        '_index': self.index,
-                        '_type': 'crash',
-                        'doc': crash,
-                    }],
+                    # NOTE: This style only works in ElasticSearch 1.x...
+                    'docs': [
+                        {
+                            '_index': self.index,
+                            '_type': 'crash',
+                            'doc': crash,
+                        }
+                    ],
                     'max_query_terms': 2500,
                     'min_term_freq': 0,
                     'min_doc_freq': 0,
@@ -241,9 +244,9 @@ class MLT(Bucketer):
         return matching_buckets
 
     def assign_save_buckets(self, crash):
-        bucket = self.assign_buckets(crash)
-        assert isinstance(bucket, dict)
-        return super(MLT, self).assign_save_buckets(crash, bucket)
+        buckets = self.assign_buckets(crash)
+        assert isinstance(buckets, dict)
+        return super(MLT, self).assign_save_buckets(crash, buckets)
 
     def alt_bucket(self, crash, bucket_field='bucket'):
         return self.bucket(crash, bucket_field)
