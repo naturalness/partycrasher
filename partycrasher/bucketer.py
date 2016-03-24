@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 
 #  Copyright (C) 2016 Joshua Charles Campbell
 
@@ -147,15 +148,16 @@ class MLT(Bucketer):
             }
 
         body = self.make_more_like_this_query(crash, bucket_field)
+        debug_print_json(body)
         response = self.es.search(index=self.index, body=body)
+        debug_print_json(response, header='🔹 🔷 🔹 🔷 🔹 🔷 🔹 ')
         return self.make_matching_buckets(response, default=crash['database_id'])
 
-    def make_more_like_this_query(self, crash, bucket_field):
+    def make_more_like_this_query(self, crash, bucket_field,
+                                  has_zero_threshold=False,
+                                  have_minimum_score=False):
         body =  {
-            '_source': [bucket_field],
-            # What do we need max buckets for?
-            #'size': self.max_buckets,
-            'min_score': self.min_threshold.to_float(),
+            '_source': [bucket_field, 'database_id', 'project'],
             'query': {
                 'more_like_this': {
                     'docs': [{
@@ -163,13 +165,17 @@ class MLT(Bucketer):
                         '_type': 'crash',
                         'doc': crash,
                     }],
-                    'minimum_should_match': 0,
                     'max_query_terms': 2500,
                     'min_term_freq': 0,
                     'min_doc_freq': 0,
                 },
             },
         }
+
+        if has_zero_threshold:
+            body['query'].update(min_score=self.min_threshold.to_float())
+        if have_minimum_score:
+            body.update(min_score=self.max_buckets)
 
         return body
 
@@ -182,7 +188,7 @@ class MLT(Bucketer):
         matching_buckets = OrderedDict()
 
         # Have the matches in ascending order.
-        raw_matches = list(sorted(matches['hits']['hits'], by_score))
+        raw_matches = list(sorted(matches['hits']['hits'], key=by_score))
 
         # DEBUG STUFF
         if raw_matches:
@@ -499,6 +505,13 @@ def common_properties(thresholds):
             'index': 'not_analyzed'
         }
     }
+
+def debug_print_json(body, header='🔅 🔆 🔅 🔆 🔅 🔆 🔅 '):
+    import sys, json
+    # Write the query!
+    sys.stderr.write('\n{header}\n\n'
+                     '{json}\n\n'.format(header=header,
+                                         json=json.dumps(body, indent=4)))
 
 
 

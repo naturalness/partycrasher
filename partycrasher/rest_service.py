@@ -126,10 +126,11 @@ def root():
 
 @app.route('/demo')
 def demo():
-    from decimal import Decimal
+    thresholds = crasher.thresholds
     return render_template('demo.html',
-                           thresholds=tuple(Decimal(t) for t in crasher.thresholds),
-                           min=min, max=max)
+                           thresholds=json.dumps(thresholds),
+                           min_threshold=thresholds[0],
+                           max_threshold=thresholds[-1])
 
 @app.route('/reports', methods=['POST'], endpoint='add_report_no_project')
 @app.route('/<project>/reports', methods=['POST'])
