@@ -395,11 +395,11 @@ def fix_buckets(crash_dict):
         if key == '__debug__':
             if ':' in bucket_id:
                 score, project, report_id = bucket_id.split(':')
-                fixed_buckets['__debug__'] = {
-                    'score': score,
-                    'href': href('view_report',
-                                 project=project, report_id=report_id)
-                }
+                fixed_buckets['__debug__'] = href('view_report',
+                                                  project=project,
+                                                  report_id=report_id)
+                fixed_buckets['__debug__'].update(score=score,
+                                                  best_match=report_id)
             else:
                 fixed_buckets['__debug__'] = 'No reports matched :c'
         else:
