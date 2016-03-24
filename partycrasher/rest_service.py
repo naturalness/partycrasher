@@ -23,6 +23,7 @@ import sys
 import time
 
 from flask import current_app, json, jsonify, request, url_for, redirect
+from flask import render_template
 from flask.ext.cors import CORS
 
 # Hacky things to add PartyCrasher to the path.
@@ -123,7 +124,11 @@ def root():
                    })
 
 
-@app.route('/reports', methods=['POST'])
+@app.route('/demo')
+def demo():
+    return render_template('demo.html')
+
+@app.route('/reports', methods=['POST'], endpoint='add_report_no_project')
 @app.route('/<project>/reports', methods=['POST'])
 def add_report(project=None):
     """
@@ -234,6 +239,10 @@ def add_report(project=None):
     """
 
     report = request.get_json()
+
+    if not report:
+        raise BadRequest('No usable report data provided.',
+                         error='no_report_data_provided')
 
     if isinstance(report, list):
         return jsonify_list(ingest_multiple(report, project)), 201
@@ -401,6 +410,7 @@ def delete_report(project=None, report_id=None):
     # Ignore project.
     assert report_id is not None
     raise NotImplementedError
+
 
 @app.route('/buckets/<threshold>/<bucket_id>',
            defaults={'project': None},
