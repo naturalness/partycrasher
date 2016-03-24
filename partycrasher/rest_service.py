@@ -74,36 +74,35 @@ def root():
 
     Resources may be projects, buckets, reports, and other such entities.
 
-    A resources contains its hyperlink reference (i.e., URL), acceptable HTTP
-    methods, and (sometimes) its `link relation`_.
+    A resource contains its hyperlink reference (i.e., URL), and (sometimes)
+    its `link relation`_.
 
     .. _link relation: http://www.iana.org/assignments/link-relations/link-relations.xhtml
-
-    ``methods`` lists any allowable HTTP methods *in addition* to ``OPTIONS``.
-    The same information can be obtained by issuing an ``OPTIONS`` request to
-    the ``href`` and parsing the ``ALLOW`` field in the response.
 
     .. code-block:: json
 
         {
             "resource": {
                 "href": "http://domain.tld/path/to/resource",
-                "rel": "",
-                "methods": [
-                    "GET"
-                ]
             }
         }
+
+    Endpoints at a glance
+    =====================
 
     .. code-block:: none
 
         partycrasher
-        ├── alan_parsons
+        ├── <project name>
         │   ├── buckets
+        │   |   └── <threshold>
+        │   |       └── <bucket id>
         │   ├── config
         │   └── reports
         │       └── dry_run
         ├── buckets
+        |   └── <threshold>
+        |       └── <bucket id>
         ├── config
         └── reports
             └── dry_run
@@ -154,7 +153,8 @@ def add_report(project=None):
 
     Uploads a new report. The report should be sent as a JSON Object with at
     least a unique ``database_id`` property. If uploaded to
-    ``/:project/reports``, the ``project`` property will automatically be set.
+    ``/:project/reports``, the ``project`` property will automatically be set;
+    otherwise, the ``project`` property is also mandatory.
 
     The response contains the bucket assignments, as well as the canonical URL
     to access the report.
@@ -167,14 +167,14 @@ def add_report(project=None):
     .. code-block:: JSON
 
         {
-            "id": "<report-id>",
-            "self": {
-                "href": "https://domain.tld/<project>/reports/<bucket-id>"
-            },
-            "bucket": {
-                "id": "<bucket-id>",
-                "href": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>"
-                "rel": "canonical"
+            "database_id": "<report-id>",
+            "project": "<project>",
+            "href": "https://domain.tld/<project>/reports/<report-id>"
+            "buckets": {
+                "4.0": {
+                    "bucket_id": "<bucket-id @ 4.0>"
+                    "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                }
             }
         }
 
@@ -217,15 +217,27 @@ def add_report(project=None):
 
         [
             {
-                "id": "<report-id 1>",
-                "bucket_id": "<bucket-id 1>",
-                "bucket_url": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id 1>"
+                "database_id": "<report-id 1>",
+                "project": "<project>",
+                "href": "https://domain.tld/<project>/reports/<report-id 1>"
+                "buckets": {
+                    "4.0": {
+                        "bucket_id": "<bucket-id @ 4.0>"
+                        "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                    }
+                }
             },
             {
-                "id": "<report-id 2>",
-                "bucket_id": "<bucket-id 2>",
-                "bucket_url": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id 2>"
-            }
+                "database_id": "<report-id 2>",
+                "project": "<project>",
+                "href": "https://domain.tld/<project>/reports/<report-id 2>"
+                "buckets": {
+                    "4.0": {
+                        "bucket_id": "<bucket-id @ 4.0>"
+                        "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                    }
+                }
+            },
         ]
 
     Errors
@@ -300,6 +312,7 @@ def view_report(project=None, report_id=None):
 
         {
             "database_id": "<report-id>",
+            "project": "<project>",
             "buckets": {
                 "3.5": {
                     "id": "<bucket-id, T=3.5>",
@@ -314,6 +327,7 @@ def view_report(project=None, report_id=None):
                     "url": "https://domain.tld/<project>/buckets/4.5/<bucket-id>"
                 }
             },
+
             "threads": [
                 {
                     "stacktrace": ["..."]
@@ -355,9 +369,9 @@ def ask_about_report(project=None):
 
         POST /reports/dry-run HTTP/1.1
 
-    Answers the question: what bucket would this report be assigned to? This
-    does **NOT** store or keep track of the report! Use :ref:`upload-single`
-    to commit reports to the database.
+    Answers the question: “What bucket would this report be assigned to?” This
+    does **NOT** store or track the report! Use :ref:`upload-single` to commit
+    reports to the database.
 
     ::
 
@@ -366,14 +380,13 @@ def ask_about_report(project=None):
     .. code-block:: JSON
 
         {
-            "id": "<report-id>",
-            "self": {
-                "href": "https://domain.tld/<project>/reports/<bucket-id>"
-            },
-            "bucket": {
-                "id": "<bucket-id>",
-                "href": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>"
-                "rel": "canonical"
+            "database_id": "<report-id>",
+            "href": "https://domain.tld/<project>/reports/<report-id>"
+            "buckets": {
+                "4.0": {
+                    "bucket_id": "<bucket-id @ 4.0>"
+                    "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                }
             }
         }
 
@@ -384,36 +397,37 @@ def ask_about_report(project=None):
     return jsonify_resource(assigned_report), 200
 
 
-@app.route('/reports/<report_id>', methods=['DELETE'],
-           defaults={'project': None},
-           endpoint='delete_report_no_project')
-@app.route('/<project>/reports/<report_id>', methods=['DELETE'])
-def delete_report(project=None, report_id=None):
-    """
-    .. api-doc-order: 3
+def not_available_in_this_release():
+    @app.route('/reports/<report_id>', methods=['DELETE'],
+               defaults={'project': None},
+               endpoint='delete_report_no_project')
+    @app.route('/<project>/reports/<report_id>', methods=['DELETE'])
+    def delete_report(project=None, report_id=None):
+        """
+        .. api-doc-order: 3
 
-    Delete an existing report
-    =========================
-    ::
+        Delete an existing report
+        =========================
+        ::
 
-        DELETE /:project/reports/:report_id HTTP/1.1
+            DELETE /:project/reports/:report_id HTTP/1.1
 
-    or
+        or
 
-    ::
+        ::
 
-        DELETE /reports/:report_id HTTP/1.1
+            DELETE /reports/:report_id HTTP/1.1
 
-    Deletes an existing report from the database.
+        Deletes an existing report from the database.
 
-    ::
+        ::
 
-        HTTP/1.1 200 OK
+            HTTP/1.1 200 OK
 
-    """
-    # Ignore project.
-    assert report_id is not None
-    raise NotImplementedError
+        """
+        # Ignore project.
+        assert report_id is not None
+        raise NotImplementedError
 
 
 @app.route('/buckets/<threshold>/<bucket_id>',
@@ -424,7 +438,32 @@ def view_bucket(project=None, threshold=None, bucket_id=None):
     """
     .. api-doc-order: 15
 
-    [view bucket documentation pending...]
+    View reports in a bucket
+    ========================
+    ::
+
+        GET /:project/buckets/:threshold/:bucket_id HTTP/1.1
+
+    Fetches the bucket in given project, for the given threshold.
+    Returns with a list of top reports (a semi-arbitrary list), and the amount
+    of reports ingested into this bucket.
+
+
+    ::
+
+        HTTP/1.1 200 OK
+
+    .. code-block:: json
+
+
+        {
+            id: "<bucket-id>",
+            project: "<project>",
+            href: "http://domain.tld/<project>/buckets/<threshold>/<bucket-id>",
+            threshold: "4.0",
+            top_reports: ["..."],
+            total: 3279
+        }
     """
     assert bucket_id is not None
     assert threshold is not None
@@ -468,50 +507,31 @@ def query_buckets(project=None, threshold=None):
 
     ::
 
-        GET /:project/buckets HTTP/1.1
+        GET /:project/buckets/:threshold HTTP/1.1
 
     or
 
     ::
 
-        GET /:project/buckets HTTP/1.1
+        GET /buckets/:threshold HTTP/1.1
 
-    Find top buckets for a given time-frame. If queried  on a ``:project``
+    Finds the top buckets for a given time-frame. If queried on a ``:project``
     route, implicitly filters by project.
 
     Query parameters
     ----------------
 
-    .. this is the proposed version of this table:
-        +-------------+--------------+-------------------------------------------+
-        | Parameter   | Values       | Description                               |
-        +-------------+--------------+-------------------------------------------+
-        | ``since``   | Start time   | From when to count top buckets.           |
-        +-------------+--------------+-------------------------------------------+
-        | ``project`` | Project name | Limit to this project only; implied if    |
-        |             |              | using a ``/:project/`` endpoint.          |
-        +-------------+--------------+-------------------------------------------+
-        | ``version`` | Version id   | Limit to this version only.               |
-        +------------------------------------------------------------------------+
-
-    +-------------+--------------+-------------------------------------------+
-    | Parameter   | Values       | Description                               |
-    +-------------+--------------+-------------------------------------------+
-    | ``since``   | Start date   | Grab buckets since this date, represented |
-    |             |              | as an ISO 8601 date/time value            |
-    |             |              | (i.e, YYYY-MM-DD).                        |
-    +-------------+--------------+-------------------------------------------+
-    | ``project`` | Project name | Limit to this project only; implied if    |
-    |             |              | using a ``/:project/`` endpoint.          |
-    +-------------+--------------+-------------------------------------------+
-
+    ``since``
+        **Required**. Grab buckets since this date, represented as an ISO 8601
+        date/time value (i.e, ``YYYY-MM-DD``), or a relative offset such as
+        ``5-hours-ago``, ``3-days-ago`` or ``1-week-ago``, etc.
 
     Example
     -------
 
     ::
 
-        GET /alan_parsons/buckets?since=2016-02-29 HTTP/1.1
+        GET /alan_parsons/buckets/4.0?since=2016-02-29 HTTP/1.1
         Host: domain.tld
 
     ::
@@ -526,10 +546,10 @@ def query_buckets(project=None, threshold=None):
             "threshold": "4.0",
             "top_buckets": [
                 {
-                    "href": "http://domain.tld/alan_parsons/buckets/4.0/c29a81a0-5a53-4ba0-8123-5e96685a5895",
                     "id": "c29a81a0-5a53-4ba0-8123-5e96685a5895",
-                    "method": [ "GET" ],
+                    "href": "http://domain.tld/alan_parsons/buckets/4.0/c29a81a0-5a53-4ba0-8123-5e96685a5895",
                     "total": 253
+                    "top_reports": ["..."]
                 }
             ]
         }
