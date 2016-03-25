@@ -151,7 +151,8 @@ class MLT(Bucketer):
         debug_print_json(body)
         response = self.es.search(index=self.index, body=body)
         debug_print_json(response, header='🔹 🔷 🔹 🔷 🔹 🔷 🔹 ')
-        return self.make_matching_buckets(response, default=crash['database_id'])
+        return self.make_matching_buckets(response, bucket_field,
+                                          default=crash['database_id'])
 
     def make_more_like_this_query(self, crash, bucket_field,
                                   has_zero_threshold=False,
@@ -182,12 +183,10 @@ class MLT(Bucketer):
 
         return body
 
-    def make_matching_buckets(self, matches, default=None):
+    def make_matching_buckets(self, matches, bucket_field, default=None):
         if default is None:
             raise ValueError('Must provide a string default bucket name')
 
-        # TODO: make this acknowledge buckets.4_0, buckets.3_5, buckets.4_5,
-        # etc..
         matching_buckets = OrderedDict()
 
         # Have the matches in ascending order.
@@ -234,6 +233,8 @@ class MLT(Bucketer):
                                 'for {!s}: {!r}'.format(threshold, match))
 
             matching_buckets[threshold] = bucket
+            # This threshold has been assigned! Remove it!
+            thresholds_left.pop(0)
 
         # Make this crash the start of a new bucket for all unfulfilled
         # threshold values.
