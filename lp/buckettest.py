@@ -27,7 +27,7 @@ import elasticsearch.helpers
 from bucketer import MLT, MLTStandardUnicode, MLTLetters, MLTIdentifier, MLTCamelCase, MLTLerch, MLTNGram
 from threshold import Threshold
 
-es = Elasticsearch()
+es = Elasticsearch(["localhost"], retry_on_timeout=True)
 ESCrash.es = es
 
 mode = sys.argv[1]
@@ -285,12 +285,12 @@ for database_id in sorted(all_ids.keys()):
         elif mode == 'purity':
             simulationdata = bucketer.assign_save_buckets(crashdata)
             simbuckets = simulationdata[comparison]
-            print repr(simbuckets)
-            for k in simbuckets.keys():
-                print k.__hash__()
-            print repr(comparison_data['threshold'].__hash__())
+            #print repr(simbuckets)
+            #for k in simbuckets.keys():
+                #print k.__hash__()
+            #print repr(comparison_data['threshold'].__hash__())
             simbucket = simbuckets[comparison_data['threshold']]
-            print repr(simbucket)
+            #print repr(simbucket)
             obucket = oracledata['bucket']
             bcubed[database_id] = (simbucket, obucket)
             #print simbucket + " // " + obucket

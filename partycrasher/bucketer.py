@@ -21,6 +21,7 @@ import os
 import json
 import uuid
 import time
+import sys
 
 from collections import OrderedDict
 
@@ -146,11 +147,18 @@ class MLT(Bucketer):
             }
 
         body = self.make_more_like_this_query(crash, bucket_field)
-        debug_print_json(body)
+        #debug_print_json(body)
         response = self.es.search(index=self.index, body=body)
-        debug_print_json(response, header='🔹 🔷 🔹 🔷 🔹 🔷 🔹 ')
-        return self.make_matching_buckets(response, bucket_field,
-                                          default=crash['database_id'])
+        print response['hits']['max_score']
+        #debug_print_json(response, header='🔹 🔷 🔹 🔷 🔹 🔷 🔹 ')
+        try:
+            matching_buckets = self.make_matching_buckets(response, bucket_field,
+                                            default=crash['database_id'])
+            return matching_buckets
+        except Exception as e:
+            print e
+            time.sleep(1)
+            return self.bucket(crash, bucket_field)
 
     def make_more_like_this_query(self, crash, bucket_field,
                                   has_zero_threshold=False):
@@ -193,7 +201,10 @@ class MLT(Bucketer):
         if raw_matches:
             first = raw_matches[0]
             report_id = first['_source']['database_id']
-            project = first['_source']['project']
+            if 'project' in first['_source']:
+                project = first['_source']['project']
+            else:
+                project = 'No Project' # That's going to cause a bug later
             score = str(first['_score'])
             matching_buckets['__debug__'] = ':'.join((score, project, report_id))
         else:
@@ -226,6 +237,7 @@ class MLT(Bucketer):
             try:
                 bucket = match['_source'][bucket_field][threshold.to_elasticsearch()]
             except KeyError:
+                # TODO make an exception class for this 
                 raise Exception('Matching crash does not have an assignment '
                                 'for {!s}: {!r}'.format(threshold, match))
 
