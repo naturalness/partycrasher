@@ -34,10 +34,8 @@ class Bucketer(object):
     The default analyzer breaks on whitespace.
     """
 
-    def __init__(self, max_buckets=1, name=None, index='crashes',
+    def __init__(self, name=None, index='crashes',
                  elasticsearch=None, lowercase=False):
-
-        self.max_buckets = max_buckets
 
         # Autogenerate the name from the class's name.
         if name is None:
@@ -155,8 +153,7 @@ class MLT(Bucketer):
                                           default=crash['database_id'])
 
     def make_more_like_this_query(self, crash, bucket_field,
-                                  has_zero_threshold=False,
-                                  have_minimum_score=False):
+                                  has_zero_threshold=False):
         body =  {
             '_source': [bucket_field, 'database_id', 'project'],
             'query': {
@@ -174,12 +171,12 @@ class MLT(Bucketer):
                     'min_doc_freq': 0,
                 },
             },
+            'size': 1,
+            'min_score': 0,
         }
 
         if has_zero_threshold:
             body['query'].update(min_score=self.min_threshold.to_float())
-        if have_minimum_score:
-            body.update(min_score=self.max_buckets)
 
         return body
 
@@ -515,7 +512,7 @@ def debug_print_json(body, header='🔅 🔆 🔅 🔆 🔅 🔆 🔅 '):
     # Write the query!
     sys.stderr.write('\n{header}\n\n'
                      '{json}\n\n'.format(header=header,
-                                         json=json.dumps(body, indent=4)))
+                                         json=json.dumps(body, indent=4, default=repr)))
 
 
 

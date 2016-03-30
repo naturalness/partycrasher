@@ -69,6 +69,12 @@ class Threshold(object):
         # Delegate everything (i.e, comparisons) to the actual Threshold
         # value.
         return getattr(self._value, attr)
+    
+    def __hash__(self):
+        return self._value.__hash__()
+    
+    def __eq__(self, otter):
+        return self._value == otter._value
 
     def to_elasticsearch(self):
         """

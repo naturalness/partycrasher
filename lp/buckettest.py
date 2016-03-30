@@ -25,8 +25,10 @@ from es_crash import ESCrash
 from elasticsearch import Elasticsearch
 import elasticsearch.helpers
 from bucketer import MLT, MLTStandardUnicode, MLTLetters, MLTIdentifier, MLTCamelCase, MLTLerch, MLTNGram
+from threshold import Threshold
 
-es = ESCrash.es
+es = Elasticsearch()
+ESCrash.es = es
 
 mode = sys.argv[1]
 assert mode in ['purity', 'accuracy']
@@ -34,58 +36,58 @@ assert mode in ['purity', 'accuracy']
 beta = 1.0
 
 comparisons = {
-    #'ccx0.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':0.0, 'lowercase':False, 'only_stack':False}},
-    #'ccx1.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':1.0, 'lowercase':False, 'only_stack':False}},
-    #'ccx2.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':2.0, 'lowercase':False, 'only_stack':False}},
-    'ccx3.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':3.0, 'lowercase':False, 'only_stack':False}},
-    'ccx4.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':4.0, 'lowercase':False, 'only_stack':False}},
-    #'ccx5.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':5.0, 'lowercase':False, 'only_stack':False}},
-    #'ccx6.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':6.0, 'lowercase':False, 'only_stack':False}},
-    #'ccx7.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':7.0, 'lowercase':False, 'only_stack':False}},
-    #'ccx8.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':8.0, 'lowercase':False, 'only_stack':False}},
-    #'ccx10.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':10.0, 'lowercase':False, 'only_stack':False}},
-    #'spcs': {'bucketer': MLT, 'kwargs': {'thresh':4.0, 'lowercase':False, 'only_stack': True}},
-    #'cc': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':4.0, 'lowercase':False}},
-    #'ngram5l': {'bucketer': MLTNGram, 'kwargs': {'thresh':4.0, 'lowercase':True, 'n':5}},
+    #'ccx0.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[0.0, 'lowercase':False, 'only_stack':False}},
+    #'ccx1.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[1.0, 'lowercase':False, 'only_stack':False}},
+    #'ccx2.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[2.0, 'lowercase':False, 'only_stack':False}},
+    #'ccx3.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[3.0, 'lowercase':False, 'only_stack':False}},
+    'ccx4.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[4.0], 'lowercase':False, 'only_stack':False}},
+    #'ccx5.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[5.0, 'lowercase':False, 'only_stack':False}},
+    #'ccx6.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[6.0, 'lowercase':False, 'only_stack':False}},
+    #'ccx7.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[7.0, 'lowercase':False, 'only_stack':False}},
+    #'ccx8.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[8.0, 'lowercase':False, 'only_stack':False}},
+    #'ccx10.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[10.0, 'lowercase':False, 'only_stack':False}},
+    #'spcs': {'bucketer': MLT, 'kwargs': {'thresholds':[4.0, 'lowercase':False, 'only_stack': True}},
+    #'cc': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[4.0, 'lowercase':False}},
+    #'ngram5l': {'bucketer': MLTNGram, 'kwargs': {'thresholds':[4.0, 'lowercase':True, 'n':5}},
     # done vvvv
-    #'ids': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':False, 'only_stack':True}},
-    #'idls': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':True, 'only_stack':True}},
-    #'ngram3l': {'bucketer': MLTNGram, 'kwargs': {'thresh':4.0, 'lowercase':True, 'n':3}},
-    #'spc': {'bucketer': MLT, 'kwargs': {'thresh':4.0, 'lowercase':False}},
-    #'spcl': {'bucketer': MLT, 'kwargs': {'thresh':4.0, 'lowercase':True}},
-    #'uni': {'bucketer': MLTStandardUnicode, 'kwargs': {'thresh':4.0, 'lowercase':False}},
-    #'unil': {'bucketer': MLTStandardUnicode, 'kwargs': {'thresh':4.0, 'lowercase':True}},
-    #'let': {'bucketer': MLTLetters, 'kwargs': {'thresh':4.0, 'lowercase':False}},
-    #'letl': {'bucketer': MLTLetters, 'kwargs': {'thresh':4.0, 'lowercase':True}},
-    #'id': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':False}},
-    #'idl': {'bucketer': MLTIdentifier, 'kwargs': {'thresh':4.0, 'lowercase':True}},
-    #'ccl': {'bucketer': MLTCamelCase, 'kwargs': {'thresh':4.0, 'lowercase':True}},
-    #'lerch0.25': {'bucketer': MLTLerch, 'kwargs': {'thresh':0.25, 'only_stack':True}},
-    #'lerch0.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':0.0, 'only_stack':True}},
-    #'lerch0.5': {'bucketer': MLTLerch, 'kwargs': {'thresh':0.5, 'only_stack':True}},
-    #'lerch1.5': {'bucketer': MLTLerch, 'kwargs': {'thresh':1.5, 'only_stack':True}},
-    #'lerch1.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':1.0, 'only_stack':True}},
-    #'lerch2.25': {'bucketer': MLTLerch, 'kwargs': {'thresh':2.25, 'only_stack':True}},
-    #'lerch3.25': {'bucketer': MLTLerch, 'kwargs': {'thresh':3.25, 'only_stack':True}},
-    #'lerch3.5': {'bucketer': MLTLerch, 'kwargs': {'thresh':3.5, 'only_stack':True}},
-    #'lerch3.75': {'bucketer': MLTLerch, 'kwargs': {'thresh':3.75, 'only_stack':True}},
-    #'lerch4.5': {'bucketer': MLTLerch, 'kwargs': {'thresh':4.5, 'only_stack':True}},
-    #'lerch5.5': {'bucketer': MLTLerch, 'kwargs': {'thresh':5.5, 'only_stack':True}},
-    #'lerch7.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':7.0, 'only_stack':True}},
-    #'lerch2.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':2.0, 'only_stack':True}},
-    #'lerch2.5': {'bucketer': MLTLerch, 'kwargs': {'thresh':2.5, 'only_stack':True}},
-    #'lerch2.75': {'bucketer': MLTLerch, 'kwargs': {'thresh':2.75, 'only_stack':True}},
-    #'lerch3.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':3.0, 'only_stack':True}},
-    #'lerch4.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':4.0, 'only_stack':True}},
-    #'lerchc': {'bucketer': MLTLerch, 'kwargs': {'thresh':4.0, 'only_stack':False}},
-    #'lerch5.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':5.0, 'only_stack':True}},
-    #'lerch6.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':6.0, 'only_stack':True}},
-    #'lerch8.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':8.0, 'only_stack':True}},
-    #'lerch10.0': {'bucketer': MLTLerch, 'kwargs': {'thresh':10.0, 'only_stack':True}},
+    #'ids': {'bucketer': MLTIdentifier, 'kwargs': {'thresholds':[4.0, 'lowercase':False, 'only_stack':True}},
+    #'idls': {'bucketer': MLTIdentifier, 'kwargs': {'thresholds':[4.0, 'lowercase':True, 'only_stack':True}},
+    #'ngram3l': {'bucketer': MLTNGram, 'kwargs': {'thresholds':[4.0, 'lowercase':True, 'n':3}},
+    #'spc': {'bucketer': MLT, 'kwargs': {'thresholds':[4.0, 'lowercase':False}},
+    #'spcl': {'bucketer': MLT, 'kwargs': {'thresholds':[4.0, 'lowercase':True}},
+    #'uni': {'bucketer': MLTStandardUnicode, 'kwargs': {'thresholds':[4.0, 'lowercase':False}},
+    #'unil': {'bucketer': MLTStandardUnicode, 'kwargs': {'thresholds':[4.0, 'lowercase':True}},
+    #'let': {'bucketer': MLTLetters, 'kwargs': {'thresholds':[4.0, 'lowercase':False}},
+    #'letl': {'bucketer': MLTLetters, 'kwargs': {'thresholds':[4.0, 'lowercase':True}},
+    #'id': {'bucketer': MLTIdentifier, 'kwargs': {'thresholds':[4.0, 'lowercase':False}},
+    #'idl': {'bucketer': MLTIdentifier, 'kwargs': {'thresholds':[4.0, 'lowercase':True}},
+    #'ccl': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[4.0, 'lowercase':True}},
+    #'lerch0.25': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[0.25, 'only_stack':True}},
+    #'lerch0.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[0.0, 'only_stack':True}},
+    #'lerch0.5': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[0.5, 'only_stack':True}},
+    #'lerch1.5': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[1.5, 'only_stack':True}},
+    #'lerch1.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[1.0, 'only_stack':True}},
+    #'lerch2.25': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[2.25, 'only_stack':True}},
+    #'lerch3.25': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[3.25, 'only_stack':True}},
+    #'lerch3.5': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[3.5, 'only_stack':True}},
+    #'lerch3.75': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[3.75, 'only_stack':True}},
+    #'lerch4.5': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[4.5, 'only_stack':True}},
+    #'lerch5.5': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[5.5, 'only_stack':True}},
+    #'lerch7.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[7.0, 'only_stack':True}},
+    #'lerch2.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[2.0, 'only_stack':True}},
+    #'lerch2.5': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[2.5, 'only_stack':True}},
+    #'lerch2.75': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[2.75, 'only_stack':True}},
+    #'lerch3.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[3.0, 'only_stack':True}},
+    #'lerch4.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[4.0, 'only_stack':True}},
+    #'lerchc': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[4.0, 'only_stack':False}},
+    #'lerch5.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[5.0, 'only_stack':True}},
+    #'lerch6.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[6.0, 'only_stack':True}},
+    #'lerch8.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[8.0, 'only_stack':True}},
+    #'lerch10.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[10.0, 'only_stack':True}},
     #'top1': {'comparer': TopN, 'kwargs': {'n':1}}, 
     #'top2': {'comparer': TopN, 'kwargs': {'n':2}},
     #'top3': {'comparer': TopN, 'kwargs': {'n':3}},
-    #'lerchcx': {'bucketer': MLTLerch, 'kwargs': {'thresh':4.0, 'only_stack':False}},
+    #'lerchcx': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[4.0, 'only_stack':False}},
     #'top1a': {'comparer': TopNAddress, 'kwargs': {'n':1}},
     #'top1f' : {'comparer': TopNFile, 'kwargs': {'n':1}},
     #'top1m' : {'comparer': TopNModule, 'kwargs': {'n':1}},
@@ -114,10 +116,9 @@ for comparison in comparisons:
         kwargs = comparison_data['kwargs']
         comparison_data['comparer'] = (
             comparison_data['comparer'](
-                es=es,
+                elasticsearch=es,
                 name=comparison,
                 index=comparison,
-                max_buckets=max_buckets,
                 **kwargs)
             )
         comparison_data['bucketer'] = comparison_data['comparer']
@@ -125,12 +126,12 @@ for comparison in comparisons:
         kwargs = comparison_data['kwargs']
         comparison_data['bucketer'] = (
             comparison_data['bucketer'](
-                es=es,
+                elasticsearch=es,
                 index=comparison,
                 name=comparison,
-                max_buckets=max_buckets,
                 **kwargs)
             )
+        comparison_data['threshold'] = Threshold(kwargs['thresholds'][0])
 
 oracle_all = elasticsearch.helpers.scan(es,
     index='oracle',
@@ -279,11 +280,17 @@ for database_id in sorted(all_ids.keys()):
                     assign = simulation_buckets[0]
                 else:
                     assign = 'bucket:' + crashdata['database_id'] # Make a new bucket
-                simulationdata = bucketer.assign_save_bucket(crashdata, bucket=assign)
+                simulationdata = bucketer.assign_save_buckets(crashdata, bucket=[assign])
             simulationdata['bucket'] = oracledata['bucket']
         elif mode == 'purity':
-            simulationdata = bucketer.assign_save_bucket(crashdata)
-            simbucket = simulationdata[comparison]
+            simulationdata = bucketer.assign_save_buckets(crashdata)
+            simbuckets = simulationdata[comparison]
+            print repr(simbuckets)
+            for k in simbuckets.keys():
+                print k.__hash__()
+            print repr(comparison_data['threshold'].__hash__())
+            simbucket = simbuckets[comparison_data['threshold']]
+            print repr(simbucket)
             obucket = oracledata['bucket']
             bcubed[database_id] = (simbucket, obucket)
             #print simbucket + " // " + obucket
