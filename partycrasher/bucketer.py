@@ -29,6 +29,14 @@ from crash import Crash
 from es_crash import ESCrash
 from threshold import Threshold
 
+
+class IndexNotUpdatedError(Exception):
+    """
+    When ElasticSearch has not yet propegated a required update. The solution
+    to this is usually to just retry the query.
+    """
+
+
 class Bucketer(object):
     """
     Superclass for bucketers which require pre-existing data to work.
@@ -155,7 +163,7 @@ class MLT(Bucketer):
             matching_buckets = self.make_matching_buckets(response, bucket_field,
                                             default=crash['database_id'])
             return matching_buckets
-        except Exception as e:
+        except IndexNotUpdatedError as e:
             print e
             time.sleep(1)
             return self.bucket(crash, bucket_field)
@@ -179,6 +187,7 @@ class MLT(Bucketer):
                     'min_doc_freq': 0,
                 },
             },
+            # Must fetch exactly ONE result at most.
             'size': 1,
             'min_score': 0,
         }
@@ -234,12 +243,15 @@ class MLT(Bucketer):
             assert match['_score'] >= threshold.to_float()
 
             # Fail if we can't find the bucket field
+            bucket_source = match['_source']
             try:
-                bucket = match['_source'][bucket_field][threshold.to_elasticsearch()]
+                buckets = bucket_source[bucket_field]
             except KeyError:
-                # TODO make an exception class for this 
-                raise Exception('Matching crash does not have an assignment '
-                                'for {!s}: {!r}'.format(threshold, match))
+                message = ('Matching crash does not have an assignment for '
+                           '{!s}: {!r}'.format(threshold, match))
+                raise IndexNotUpdatedError(message)
+            else:
+                bucket = buckets[threshold.to_elasticsearch()]
 
             matching_buckets[threshold] = bucket
             # This threshold has been assigned! Remove it!
