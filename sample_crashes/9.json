@@ -1,0 +1,428 @@
+{
+  "stacktrace": [
+    {
+      "function": "link_before",
+      "depth": 0,
+      "args": "link=0x9992508, before_this_link=0x625f6d65, list=0x998f6fc",
+      "file": "../../dbus/dbus-list.c:120",
+      "extra": [
+        "#0  link_before (link=0x9992508, before_this_link=0x625f6d65, list=0x998f6fc) at ../../dbus/dbus-list.c:120",
+        "No locals."
+      ]
+    },
+    {
+      "function": "_dbus_list_prepend_link",
+      "depth": 1,
+      "args": "list=0x998f6fc, link=0x9992508",
+      "file": "../../dbus/dbus-list.c:313",
+      "extra": [
+        "#1  _dbus_list_prepend_link (list=0x998f6fc, link=0x9992508) at ../../dbus/dbus-list.c:313",
+        "No locals."
+      ]
+    },
+    {
+      "function": "_dbus_list_append_link",
+      "extra": [
+        "#2  0xb54dca6a in _dbus_list_append_link (list=0x998f6fc, link=0x9992508) at ../../dbus/dbus-list.c:295",
+        "No locals."
+      ],
+      "args": "list=0x998f6fc, link=0x9992508",
+      "depth": 2,
+      "file": "../../dbus/dbus-list.c:295",
+      "address": "0xb54dca6a"
+    },
+    {
+      "function": "_dbus_message_add_counter_link",
+      "extra": [
+        "#3  0xb54cb568 in _dbus_message_add_counter_link (message=0x998f6a0, link=0x9992508) at ../../dbus/dbus-message.c:249",
+        "No locals."
+      ],
+      "args": "message=0x998f6a0, link=0x9992508",
+      "depth": 3,
+      "file": "../../dbus/dbus-message.c:249",
+      "address": "0xb54cb568"
+    },
+    {
+      "function": "_dbus_message_add_counter",
+      "extra": [
+        "#4  0xb54cb606 in _dbus_message_add_counter (message=0x998f6a0, counter=0x9997090) at ../../dbus/dbus-message.c:278",
+        "        link = 0x9992508"
+      ],
+      "args": "message=0x998f6a0, counter=0x9997090",
+      "depth": 4,
+      "file": "../../dbus/dbus-message.c:278",
+      "address": "0xb54cb606"
+    },
+    {
+      "function": "_dbus_transport_queue_messages",
+      "extra": [
+        "#5  0xb54d8be7 in _dbus_transport_queue_messages (transport=0x9996d30) at ../../dbus/dbus-transport.c:1138",
+        "        message = <optimized out>",
+        "        link = 0x99924f0",
+        "        status = <optimized out>"
+      ],
+      "args": "transport=0x9996d30",
+      "depth": 5,
+      "file": "../../dbus/dbus-transport.c:1138",
+      "address": "0xb54d8be7"
+    },
+    {
+      "function": "do_reading",
+      "extra": [
+        "#6  0xb54d9827 in do_reading (transport=0x9996d30) at ../../dbus/dbus-transport-socket.c:851",
+        "        buffer = 0x9996e24",
+        "        bytes_read = 260",
+        "        total = 260",
+        "        oom = <optimized out>"
+      ],
+      "args": "transport=0x9996d30",
+      "depth": 6,
+      "file": "../../dbus/dbus-transport-socket.c:851",
+      "address": "0xb54d9827"
+    },
+    {
+      "function": "do_reading",
+      "extra": [
+        "#7  0xb54d9f17 in do_reading (transport=0x9996d30) at ../../dbus/dbus-transport-socket.c:706",
+        "        socket_transport = 0x9996d30"
+      ],
+      "args": "transport=0x9996d30",
+      "depth": 7,
+      "file": "../../dbus/dbus-transport-socket.c:706",
+      "address": "0xb54d9f17"
+    },
+    {
+      "function": "socket_do_iteration",
+      "depth": 8,
+      "args": "transport=0x9996d30, flags=6, timeout_milliseconds=25000",
+      "file": "../../dbus/dbus-transport-socket.c:1162",
+      "extra": [
+        "#8  socket_do_iteration (transport=0x9996d30, flags=6, timeout_milliseconds=25000) at ../../dbus/dbus-transport-socket.c:1162",
+        "        need_read = 1",
+        "        need_write = 0",
+        "        authentication_completed = 0",
+        "        socket_transport = 0x9996d30",
+        "        poll_fd = {fd = 13, events = 1, revents = 1}",
+        "        poll_res = <optimized out>",
+        "        poll_timeout = <optimized out>"
+      ]
+    },
+    {
+      "function": "_dbus_transport_do_iteration",
+      "extra": [
+        "#9  0xb54d890d in _dbus_transport_do_iteration (transport=0x9996d30, flags=6, timeout_milliseconds=25000) at ../../dbus/dbus-transport.c:974",
+        "No locals."
+      ],
+      "args": "transport=0x9996d30, flags=6, timeout_milliseconds=25000",
+      "depth": 9,
+      "file": "../../dbus/dbus-transport.c:974",
+      "address": "0xb54d890d"
+    },
+    {
+      "function": "_dbus_connection_do_iteration_unlocked",
+      "extra": [
+        "#10 0xb54c0614 in _dbus_connection_do_iteration_unlocked (connection=0x99971a8, pending=0x9996c58, flags=6, timeout_milliseconds=25000) at ../../dbus/dbus-connection.c:1215",
+        "No locals."
+      ],
+      "args": "connection=0x99971a8, pending=0x9996c58, flags=6, timeout_milliseconds=25000",
+      "depth": 10,
+      "file": "../../dbus/dbus-connection.c:1215",
+      "address": "0xb54c0614"
+    },
+    {
+      "function": "_dbus_connection_block_pending_call",
+      "extra": [
+        "#11 0xb54c1b14 in _dbus_connection_block_pending_call (pending=0x9996c58) at ../../dbus/dbus-connection.c:2404",
+        "        start_tv_sec = 39",
+        "        start_tv_usec = 526607",
+        "        tv_sec = 161049688",
+        "        tv_usec = -1079918980",
+        "        status = <optimized out>",
+        "        connection = 0x99971a8",
+        "        client_serial = 1",
+        "        timeout = 0x9997260",
+        "        timeout_milliseconds = 25000",
+        "        elapsed_milliseconds = <optimized out>"
+      ],
+      "args": "pending=0x9996c58",
+      "depth": 11,
+      "file": "../../dbus/dbus-connection.c:2404",
+      "address": "0xb54c1b14"
+    },
+    {
+      "function": "dbus_pending_call_block",
+      "extra": [
+        "#12 0xb54d237f in dbus_pending_call_block (pending=0x9996c58) at ../../dbus/dbus-pending-call.c:705",
+        "        __FUNCTION__ = \"dbus_pending_call_block\""
+      ],
+      "args": "pending=0x9996c58",
+      "depth": 12,
+      "file": "../../dbus/dbus-pending-call.c:705",
+      "address": "0xb54d237f"
+    },
+    {
+      "function": "dbus_connection_send_with_reply_and_block",
+      "extra": [
+        "#13 0xb54c0f4b in dbus_connection_send_with_reply_and_block (connection=0x99971a8, message=0x998fa00, timeout_milliseconds=-1, error=0xb4cb116c) at ../../dbus/dbus-connection.c:3515",
+        "        reply = <optimized out>",
+        "        pending = 0x9996c58",
+        "        __FUNCTION__ = \"dbus_connection_send_with_reply_and_block\""
+      ],
+      "args": "connection=0x99971a8, message=0x998fa00, timeout_milliseconds=-1, error=0xb4cb116c",
+      "depth": 13,
+      "file": "../../dbus/dbus-connection.c:3515",
+      "address": "0xb54c0f4b"
+    },
+    {
+      "function": "dbus_bus_register",
+      "extra": [
+        "#14 0xb54bba34 in dbus_bus_register (connection=0x99971a8, error=0xb4cb116c) at ../../dbus/dbus-bus.c:698",
+        "        message = <optimized out>",
+        "        reply = <optimized out>",
+        "        name = <optimized out>",
+        "        bd = <optimized out>",
+        "        retval = 0",
+        "        __FUNCTION__ = \"dbus_bus_register\""
+      ],
+      "args": "connection=0x99971a8, error=0xb4cb116c",
+      "depth": 14,
+      "file": "../../dbus/dbus-bus.c:698",
+      "address": "0xb54bba34"
+    },
+    {
+      "function": "internal_bus_get",
+      "extra": [
+        "#15 0xb54bbd5f in internal_bus_get (type=DBUS_BUS_SYSTEM, private=0, error=0xb4cb116c) at ../../dbus/dbus-bus.c:491",
+        "        address = <optimized out>",
+        "        connection = 0x99971a8",
+        "        bd = <optimized out>",
+        "        address_type = DBUS_BUS_SYSTEM",
+        "        __FUNCTION__ = \"internal_bus_get\""
+      ],
+      "args": "type=DBUS_BUS_SYSTEM, private=0, error=0xb4cb116c",
+      "depth": 15,
+      "file": "../../dbus/dbus-bus.c:491",
+      "address": "0xb54bbd5f"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#16 0xb4c9166c in ?? () from /tmp/tmpoqDoof/usr/lib/sane/libsane-hpaio.so.1",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 16,
+      "dylib": "/tmp/tmpoqDoof/usr/lib/sane/libsane-hpaio.so.1",
+      "address": "0xb4c9166c"
+    },
+    {
+      "function": "sane_hpaio_init",
+      "extra": [
+        "#17 0xb4c8da77 in sane_hpaio_init () from /tmp/tmpoqDoof/usr/lib/sane/libsane-hpaio.so.1",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 17,
+      "dylib": "/tmp/tmpoqDoof/usr/lib/sane/libsane-hpaio.so.1",
+      "address": "0xb4c8da77"
+    },
+    {
+      "function": "init",
+      "extra": [
+        "#18 0xb777b492 in init (be=be@entry=0x995a700) at dll.c:612",
+        "        status = <optimized out>",
+        "        version = -1216876556"
+      ],
+      "args": "be=be@entry=0x995a700",
+      "depth": 18,
+      "file": "dll.c:612",
+      "address": "0xb777b492"
+    },
+    {
+      "function": "sane_dll_get_devices",
+      "extra": [
+        "#19 0xb777bf40 in sane_dll_get_devices (device_list=device_list@entry=0xbfa1c0ec, local_only=local_only@entry=1) at dll.c:1053",
+        "        be_list = 0xb55421d8",
+        "        be = 0x995a700",
+        "        status = <optimized out>",
+        "        full_name = <optimized out>",
+        "        i = <optimized out>",
+        "        num_devs = <optimized out>",
+        "        len = <optimized out>"
+      ],
+      "args": "device_list=device_list@entry=0xbfa1c0ec, local_only=local_only@entry=1",
+      "depth": 19,
+      "file": "dll.c:1053",
+      "address": "0xb777bf40"
+    },
+    {
+      "function": "sane_get_devices",
+      "extra": [
+        "#20 0xb77795f3 in sane_get_devices (dl=dl@entry=0xbfa1c0ec, local=local@entry=1) at dll-s.c:17",
+        "No locals."
+      ],
+      "args": "dl=dl@entry=0xbfa1c0ec, local=local@entry=1",
+      "depth": 20,
+      "file": "dll-s.c:17",
+      "address": "0xb77795f3"
+    },
+    {
+      "function": "cd_sane_client_refresh",
+      "extra": [
+        "#21 0x08049dc9 in cd_sane_client_refresh (priv=priv@entry=0x994d6f0) at cd-main.c:303",
+        "        tmp = <optimized out>",
+        "        device_list = 0x0",
+        "        i = <optimized out>",
+        "        status = <optimized out>"
+      ],
+      "args": "priv=priv@entry=0x994d6f0",
+      "depth": 21,
+      "file": "cd-main.c:303",
+      "address": "0x08049dc9"
+    },
+    {
+      "function": "cd_main_colord_connect_cb",
+      "extra": [
+        "#22 0x0804a1c5 in cd_main_colord_connect_cb (source_object=0x9954990, res=0x9957950, user_data=user_data@entry=0x994d6f0) at cd-main.c:446",
+        "        priv = 0x994d6f0",
+        "        ret = <optimized out>",
+        "        error = 0x0"
+      ],
+      "args": "source_object=0x9954990, res=0x9957950, user_data=user_data@entry=0x994d6f0",
+      "depth": 22,
+      "file": "cd-main.c:446",
+      "address": "0x0804a1c5"
+    },
+    {
+      "function": "g_simple_async_result_complete",
+      "extra": [
+        "#23 0xb767b1f0 in g_simple_async_result_complete (simple=0x9957950) at /build/buildd/glib2.0-2.33.6/./gio/gsimpleasyncresult.c:775",
+        "        current_source = <optimized out>",
+        "        current_context = <optimized out>",
+        "        __PRETTY_FUNCTION__ = \"g_simple_async_result_complete\""
+      ],
+      "args": "simple=0x9957950",
+      "depth": 23,
+      "file": "/build/buildd/glib2.0-2.33.6/./gio/gsimpleasyncresult.c:775",
+      "address": "0xb767b1f0"
+    },
+    {
+      "function": "complete_in_idle_cb",
+      "extra": [
+        "#24 0xb767b31c in complete_in_idle_cb (data=data@entry=0x9957950) at /build/buildd/glib2.0-2.33.6/./gio/gsimpleasyncresult.c:787",
+        "        simple = <optimized out>"
+      ],
+      "args": "data=data@entry=0x9957950",
+      "depth": 24,
+      "file": "/build/buildd/glib2.0-2.33.6/./gio/gsimpleasyncresult.c:787",
+      "address": "0xb767b31c"
+    },
+    {
+      "function": "g_idle_dispatch",
+      "extra": [
+        "#25 0xb75071c0 in g_idle_dispatch (source=source@entry=0x995b368, callback=0xb767b2f0 <complete_in_idle_cb>, user_data=0x9957950) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:4781",
+        "No locals."
+      ],
+      "args": "source=source@entry=0x995b368, callback=0xb767b2f0 <complete_in_idle_cb>, user_data=0x9957950",
+      "depth": 25,
+      "file": "/build/buildd/glib2.0-2.33.6/./glib/gmain.c:4781",
+      "address": "0xb75071c0"
+    },
+    {
+      "function": "g_main_dispatch",
+      "extra": [
+        "#26 0xb7509ef3 in g_main_dispatch (context=0x994d738) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:2691",
+        "        dispatch = 0xb75071a0 <g_idle_dispatch>",
+        "        was_in_call = 0",
+        "        user_data = 0x9957950",
+        "        callback = 0xb767b2f0 <complete_in_idle_cb>",
+        "        cb_funcs = 0xb75bd4f8",
+        "        cb_data = 0x995c6a8",
+        "        current_source_link = {data = 0x995b368, next = 0x0}",
+        "        need_destroy = <optimized out>",
+        "        source = 0x995b368",
+        "        current = 0x994c8a0",
+        "        i = <optimized out>"
+      ],
+      "args": "context=0x994d738",
+      "depth": 26,
+      "file": "/build/buildd/glib2.0-2.33.6/./glib/gmain.c:2691",
+      "address": "0xb7509ef3"
+    },
+    {
+      "function": "g_main_context_dispatch",
+      "depth": 27,
+      "args": "context=context@entry=0x994d738",
+      "file": "/build/buildd/glib2.0-2.33.6/./glib/gmain.c:3195",
+      "extra": [
+        "#27 g_main_context_dispatch (context=context@entry=0x994d738) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:3195",
+        "No locals."
+      ]
+    },
+    {
+      "function": "g_main_context_iterate",
+      "extra": [
+        "#28 0xb750a290 in g_main_context_iterate (context=0x994d738, block=block@entry=1, dispatch=dispatch@entry=1, self=<error reading variable: Unhandled dwarf expression opcode 0xfa>) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:3266",
+        "        max_priority = 0",
+        "        timeout = 0",
+        "        some_ready = 1",
+        "        nfds = 2",
+        "        allocated_nfds = <optimized out>",
+        "        fds = <optimized out>"
+      ],
+      "args": "context=0x994d738, block=block@entry=1, dispatch=dispatch@entry=1, self=<error reading variable: Unhandled dwarf expression opcode 0xfa>",
+      "depth": 28,
+      "file": "/build/buildd/glib2.0-2.33.6/./glib/gmain.c:3266",
+      "address": "0xb750a290"
+    },
+    {
+      "function": "g_main_loop_run",
+      "extra": [
+        "#29 0xb750a6eb in g_main_loop_run (loop=0x994d6d0) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:3460",
+        "        __PRETTY_FUNCTION__ = \"g_main_loop_run\""
+      ],
+      "args": "loop=0x994d6d0",
+      "depth": 29,
+      "file": "/build/buildd/glib2.0-2.33.6/./glib/gmain.c:3460",
+      "address": "0xb750a6eb"
+    },
+    {
+      "function": "main",
+      "extra": [
+        "#30 0x080497d4 in main (argc=1, argv=0xbfa1c3f4) at cd-main.c:617",
+        "        priv = 0x994d6f0",
+        "        immediate_exit = 0",
+        "        timed_exit = 0",
+        "        error = 0x0",
+        "        context = <optimized out>",
+        "        retval = 1",
+        "        options = {{long_name = 0x804a609 \"timed-exit\", short_name = 0 '\\000', flags = 0, arg = G_OPTION_ARG_NONE, arg_data = 0xbfa1c2e0, description = 0x804a614 \"Exit after a small delay\", arg_description = 0x0}, {long_name = 0x804a62d \"immediate-exit\", short_name = 0 '\\000', flags = 0, arg = G_OPTION_ARG_NONE, arg_data = 0xbfa1c2dc, description = 0x804a6e4 \"Exit after the engine has loaded\", arg_description = 0x0}, {long_name = 0x0, short_name = 0 '\\000', flags = 0, arg = G_OPTION_ARG_NONE, arg_data = 0x0, description = 0x0, arg_description = 0x0}}"
+      ],
+      "args": "argc=1, argv=0xbfa1c3f4",
+      "depth": 30,
+      "file": "cd-main.c:617",
+      "address": "0x080497d4"
+    }
+  ],
+  "NonfreeKernelModules": "nvidia",
+  "extra": "crash at login time on quantal i386 logged as gnome-classic with nvidia-current graphic\n\nStacktraceTop:  ?? () from /lib/i386-linux-gnu/libdbus-1.so.3\n ?? () from /lib/i386-linux-gnu/libdbus-1.so.3\n ?? () from /lib/i386-linux-gnu/libdbus-1.so.3\n ?? () from /lib/i386-linux-gnu/libdbus-1.so.3\n ?? () from /lib/i386-linux-gnu/libdbus-1.so.3\n\n",
+  "ProcCmdline": "/usr/lib/i386-linux-gnu/colord/colord-sane",
+  "SegvReason": "reading unknown VMA",
+  "SourcePackage": "colord",
+  "Title": "colord-sane crashed with SIGSEGV",
+  "ProcEnviron": " \n",
+  "os_version": "Ubuntu 3.5.0-6.6-generic 3.5.0",
+  "type": "Crash",
+  "ApportVersion": "2.4-0ubuntu5",
+  "Package": "colord 0.1.21-1",
+  "Signal": "11",
+  "date": "2012-07-26T07:20:50",
+  "UserGroups": "scanner",
+  "UpgradeStatus": "No upgrade log present (probably fresh install)",
+  "Uname": "Linux 3.5.0-6-generic i686",
+  "database_id": "launchpad:0001029264",
+  "SegvAnalysis": " Segfault happened at: 0xb54dca12:?mov    (%edx),%esi\n PC (0xb54dca12) ok\n source \"(%edx)\" (0x625f6d65) not located in a known VMA region (needed readable region)!\n destination \"%esi\" ok\n",
+  "ExecutablePath": "/usr/lib/i386-linux-gnu/colord/colord-sane",
+  "os": "Ubuntu 12.10",
+  "cpu": "i386"
+}

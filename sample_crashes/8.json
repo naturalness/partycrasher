@@ -1,0 +1,585 @@
+{
+  "stacktrace": [
+    {
+      "function": "g_value_init",
+      "extra": [
+        "#0  0xb73aac51 in g_value_init () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 0,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb73aac51"
+    },
+    {
+      "function": "bonobo_dock_item_set_orientation",
+      "depth": 1,
+      "args": "",
+      "extra": [
+        "#1  0xb7e37996 in bonobo_dock_item_set_orientation ()",
+        "   from /usr/lib/libbonoboui-2.so.0"
+      ],
+      "address": "0xb7e37996"
+    },
+    {
+      "function": "bonobo_dock_band_insert",
+      "extra": [
+        "#2  0xb7e3cbb5 in bonobo_dock_band_insert () from /usr/lib/libbonoboui-2.so.0"
+      ],
+      "args": "",
+      "depth": 2,
+      "dylib": "/usr/lib/libbonoboui-2.so.0",
+      "address": "0xb7e3cbb5"
+    },
+    {
+      "function": "bonobo_dock_add_item",
+      "extra": [
+        "#3  0xb7e35429 in bonobo_dock_add_item () from /usr/lib/libbonoboui-2.so.0"
+      ],
+      "args": "",
+      "depth": 3,
+      "dylib": "/usr/lib/libbonoboui-2.so.0",
+      "address": "0xb7e35429"
+    },
+    {
+      "function": "bonobo_dock_layout_add_to_dock",
+      "depth": 4,
+      "args": "",
+      "extra": [
+        "#4  0xb7e3e1d0 in bonobo_dock_layout_add_to_dock ()",
+        "   from /usr/lib/libbonoboui-2.so.0"
+      ],
+      "address": "0xb7e3e1d0"
+    },
+    {
+      "function": "bonobo_dock_add_from_layout",
+      "depth": 5,
+      "args": "",
+      "extra": [
+        "#5  0xb7e345a4 in bonobo_dock_add_from_layout ()",
+        "   from /usr/lib/libbonoboui-2.so.0"
+      ],
+      "address": "0xb7e345a4"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#6  0xb7eba0c4 in ?? () from /usr/lib/libgnomeui-2.so.0"
+      ],
+      "args": "",
+      "depth": 6,
+      "dylib": "/usr/lib/libgnomeui-2.so.0",
+      "address": "0xb7eba0c4"
+    },
+    {
+      "function": "g_cclosure_marshal_VOID__VOID",
+      "depth": 7,
+      "args": "",
+      "extra": [
+        "#7  0xb73953d4 in g_cclosure_marshal_VOID__VOID ()",
+        "   from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "address": "0xb73953d4"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#8  0xb73863c9 in ?? () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 8,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb73863c9"
+    },
+    {
+      "function": "g_closure_invoke",
+      "extra": [
+        "#9  0xb7387c4b in g_closure_invoke () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 9,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb7387c4b"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#10 0xb739d8ee in ?? () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 10,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb739d8ee"
+    },
+    {
+      "function": "g_signal_emit_valist",
+      "extra": [
+        "#11 0xb739f7ac in g_signal_emit_valist () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 11,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb739f7ac"
+    },
+    {
+      "function": "g_signal_emit",
+      "extra": [
+        "#12 0xb739fc26 in g_signal_emit () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 12,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb739fc26"
+    },
+    {
+      "function": "gtk_widget_show",
+      "extra": [
+        "#13 0xb7c21fbc in gtk_widget_show () from /usr/lib/libgtk-x11-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 13,
+      "dylib": "/usr/lib/libgtk-x11-2.0.so.0",
+      "address": "0xb7c21fbc"
+    },
+    {
+      "function": "gtk_window_present",
+      "extra": [
+        "#14 0xb7c2b789 in gtk_window_present () from /usr/lib/libgtk-x11-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 14,
+      "dylib": "/usr/lib/libgtk-x11-2.0.so.0",
+      "address": "0xb7c2b789"
+    },
+    {
+      "function": null,
+      "depth": 15,
+      "args": "",
+      "extra": [
+        "#15 0x080cb647 in ?? ()"
+      ],
+      "address": "0x080cb647"
+    },
+    {
+      "function": null,
+      "depth": 16,
+      "args": "",
+      "extra": [
+        "#16 0x08093532 in ?? ()"
+      ],
+      "address": "0x08093532"
+    },
+    {
+      "function": null,
+      "depth": 17,
+      "args": "",
+      "extra": [
+        "#17 0x0808693c in ?? ()"
+      ],
+      "address": "0x0808693c"
+    },
+    {
+      "function": "g_cclosure_marshal_VOID__OBJECT",
+      "depth": 18,
+      "args": "",
+      "extra": [
+        "#18 0xb73948dc in g_cclosure_marshal_VOID__OBJECT ()",
+        "   from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "address": "0xb73948dc"
+    },
+    {
+      "function": "g_closure_invoke",
+      "extra": [
+        "#19 0xb7387c4b in g_closure_invoke () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 19,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb7387c4b"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#20 0xb739e095 in ?? () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 20,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb739e095"
+    },
+    {
+      "function": "g_signal_emit_valist",
+      "extra": [
+        "#21 0xb739f7ac in g_signal_emit_valist () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 21,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb739f7ac"
+    },
+    {
+      "function": "g_signal_emit",
+      "extra": [
+        "#22 0xb739fc26 in g_signal_emit () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 22,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb739fc26"
+    },
+    {
+      "function": "gnome_druid_page_finish",
+      "extra": [
+        "#23 0xb7ed09c2 in gnome_druid_page_finish () from /usr/lib/libgnomeui-2.so.0"
+      ],
+      "args": "",
+      "depth": 23,
+      "dylib": "/usr/lib/libgnomeui-2.so.0",
+      "address": "0xb7ed09c2"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#24 0xb7ecf518 in ?? () from /usr/lib/libgnomeui-2.so.0"
+      ],
+      "args": "",
+      "depth": 24,
+      "dylib": "/usr/lib/libgnomeui-2.so.0",
+      "address": "0xb7ecf518"
+    },
+    {
+      "function": "g_cclosure_marshal_VOID__VOID",
+      "depth": 25,
+      "args": "",
+      "extra": [
+        "#25 0xb73953d4 in g_cclosure_marshal_VOID__VOID ()",
+        "   from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "address": "0xb73953d4"
+    },
+    {
+      "function": "g_closure_invoke",
+      "extra": [
+        "#26 0xb7387c4b in g_closure_invoke () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 26,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb7387c4b"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#27 0xb739e095 in ?? () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 27,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb739e095"
+    },
+    {
+      "function": "g_signal_emit_valist",
+      "extra": [
+        "#28 0xb739f7ac in g_signal_emit_valist () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 28,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb739f7ac"
+    },
+    {
+      "function": "g_signal_emit",
+      "extra": [
+        "#29 0xb739fc26 in g_signal_emit () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 29,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb739fc26"
+    },
+    {
+      "function": "gtk_button_clicked",
+      "extra": [
+        "#30 0xb7a4ef0a in gtk_button_clicked () from /usr/lib/libgtk-x11-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 30,
+      "dylib": "/usr/lib/libgtk-x11-2.0.so.0",
+      "address": "0xb7a4ef0a"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#31 0xb7a4ffb8 in ?? () from /usr/lib/libgtk-x11-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 31,
+      "dylib": "/usr/lib/libgtk-x11-2.0.so.0",
+      "address": "0xb7a4ffb8"
+    },
+    {
+      "function": "g_cclosure_marshal_VOID__VOID",
+      "depth": 32,
+      "args": "",
+      "extra": [
+        "#32 0xb73953d4 in g_cclosure_marshal_VOID__VOID ()",
+        "   from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "address": "0xb73953d4"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#33 0xb73863c9 in ?? () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 33,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb73863c9"
+    },
+    {
+      "function": "g_closure_invoke",
+      "extra": [
+        "#34 0xb7387c4b in g_closure_invoke () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 34,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb7387c4b"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#35 0xb739d8ee in ?? () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 35,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb739d8ee"
+    },
+    {
+      "function": "g_signal_emit_valist",
+      "extra": [
+        "#36 0xb739f7ac in g_signal_emit_valist () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 36,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb739f7ac"
+    },
+    {
+      "function": "g_signal_emit",
+      "extra": [
+        "#37 0xb739fc26 in g_signal_emit () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 37,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb739fc26"
+    },
+    {
+      "function": "gtk_button_released",
+      "extra": [
+        "#38 0xb7a4efaa in gtk_button_released () from /usr/lib/libgtk-x11-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 38,
+      "dylib": "/usr/lib/libgtk-x11-2.0.so.0",
+      "address": "0xb7a4efaa"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#39 0xb7a4efe3 in ?? () from /usr/lib/libgtk-x11-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 39,
+      "dylib": "/usr/lib/libgtk-x11-2.0.so.0",
+      "address": "0xb7a4efe3"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#40 0xb7b02ed6 in ?? () from /usr/lib/libgtk-x11-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 40,
+      "dylib": "/usr/lib/libgtk-x11-2.0.so.0",
+      "address": "0xb7b02ed6"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#41 0xb73863c9 in ?? () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 41,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb73863c9"
+    },
+    {
+      "function": "g_closure_invoke",
+      "extra": [
+        "#42 0xb7387c4b in g_closure_invoke () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 42,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb7387c4b"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#43 0xb739dd3d in ?? () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 43,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb739dd3d"
+    },
+    {
+      "function": "g_signal_emit_valist",
+      "extra": [
+        "#44 0xb739f62b in g_signal_emit_valist () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 44,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb739f62b"
+    },
+    {
+      "function": "g_signal_emit",
+      "extra": [
+        "#45 0xb739fc26 in g_signal_emit () from /usr/lib/libgobject-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 45,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0xb739fc26"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#46 0xb7c1800e in ?? () from /usr/lib/libgtk-x11-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 46,
+      "dylib": "/usr/lib/libgtk-x11-2.0.so.0",
+      "address": "0xb7c1800e"
+    },
+    {
+      "function": "gtk_propagate_event",
+      "extra": [
+        "#47 0xb7afb9ec in gtk_propagate_event () from /usr/lib/libgtk-x11-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 47,
+      "dylib": "/usr/lib/libgtk-x11-2.0.so.0",
+      "address": "0xb7afb9ec"
+    },
+    {
+      "function": "gtk_main_do_event",
+      "extra": [
+        "#48 0xb7afcd97 in gtk_main_do_event () from /usr/lib/libgtk-x11-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 48,
+      "dylib": "/usr/lib/libgtk-x11-2.0.so.0",
+      "address": "0xb7afcd97"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#49 0xb799351a in ?? () from /usr/lib/libgdk-x11-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 49,
+      "dylib": "/usr/lib/libgdk-x11-2.0.so.0",
+      "address": "0xb799351a"
+    },
+    {
+      "function": "g_main_context_dispatch",
+      "extra": [
+        "#50 0xb72dd6f8 in g_main_context_dispatch () from /usr/lib/libglib-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 50,
+      "dylib": "/usr/lib/libglib-2.0.so.0",
+      "address": "0xb72dd6f8"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#51 0xb72e0da3 in ?? () from /usr/lib/libglib-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 51,
+      "dylib": "/usr/lib/libglib-2.0.so.0",
+      "address": "0xb72e0da3"
+    },
+    {
+      "function": "g_main_loop_run",
+      "extra": [
+        "#52 0xb72e12c2 in g_main_loop_run () from /usr/lib/libglib-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 52,
+      "dylib": "/usr/lib/libglib-2.0.so.0",
+      "address": "0xb72e12c2"
+    },
+    {
+      "function": "gtk_main",
+      "extra": [
+        "#53 0xb7afd249 in gtk_main () from /usr/lib/libgtk-x11-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 53,
+      "dylib": "/usr/lib/libgtk-x11-2.0.so.0",
+      "address": "0xb7afd249"
+    },
+    {
+      "function": null,
+      "depth": 54,
+      "args": "",
+      "extra": [
+        "#54 0x080922a1 in ?? ()"
+      ],
+      "address": "0x080922a1"
+    },
+    {
+      "function": "__libc_start_main",
+      "extra": [
+        "#55 0xb617c685 in __libc_start_main () from /lib/tls/i686/cmov/libc.so.6"
+      ],
+      "args": "",
+      "depth": 55,
+      "dylib": "/lib/tls/i686/cmov/libc.so.6",
+      "address": "0xb617c685"
+    },
+    {
+      "function": null,
+      "depth": 56,
+      "args": "",
+      "extra": [
+        "#56 0x08069191 in ?? ()"
+      ],
+      "address": "0x08069191"
+    }
+  ],
+  "UserGroups": "adm admin audio cdrom dialout fuse lpadmin netdev plugdev sambashare video",
+  "NonfreeKernelModules": "nvidia",
+  "SourcePackage": "ekiga",
+  "extra": "StacktraceTop:  g_value_init () from /usr/lib/libgobject-2.0.so.0\n bonobo_dock_item_set_orientation ()\n bonobo_dock_band_insert () from /usr/lib/libbonoboui-2.so.0\n bonobo_dock_add_item () from /usr/lib/libbonoboui-2.so.0\n bonobo_dock_layout_add_to_dock ()\n\nBinary package hint: ekiga\nI'm not sure what happened but ekiga crashed after i hit apply at the end of the first run configuration wizard tool\n\n\n",
+  "type": "Crash",
+  "Signal": "11",
+  "Package": "ekiga 2.0.12-0ubuntu5",
+  "ProcEnviron": " PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games\n LANG=en_US.UTF-8\n SHELL=/bin/bash\n",
+  "Uname": "Linux 2.6.27-4-generic i686",
+  "database_id": "launchpad:0000273409",
+  "ProcAttrCurrent": "unconfined",
+  "ProcCmdline": "ekiga",
+  "Title": "ekiga crashed with SIGSEGV in g_value_init()",
+  "ExecutablePath": "/usr/bin/ekiga",
+  "os": "Ubuntu 8.10",
+  "cpu": "i386"
+}

@@ -1,0 +1,243 @@
+{
+  "stacktrace": [
+    {
+      "function": null,
+      "depth": 0,
+      "args": "",
+      "extra": [
+        "#0  0x00000000004cc5be in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x00000000004cc5be"
+    },
+    {
+      "function": null,
+      "depth": 1,
+      "args": "",
+      "extra": [
+        "#1  0x00000000004cc739 in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x00000000004cc739"
+    },
+    {
+      "function": null,
+      "depth": 2,
+      "args": "",
+      "extra": [
+        "#2  0x0000000000440309 in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x0000000000440309"
+    },
+    {
+      "function": "g_closure_invoke",
+      "depth": 3,
+      "args": "",
+      "extra": [
+        "#3  0x00007f669943060e in g_closure_invoke ()",
+        "   from /usr/lib/libgobject-2.0.so.0",
+        "No symbol table info available."
+      ],
+      "address": "0x00007f669943060e"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#4  0x00007f6699445933 in ?? () from /usr/lib/libgobject-2.0.so.0",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 4,
+      "dylib": "/usr/lib/libgobject-2.0.so.0",
+      "address": "0x00007f6699445933"
+    },
+    {
+      "function": "g_signal_emit_valist",
+      "depth": 5,
+      "args": "",
+      "extra": [
+        "#5  0x00007f6699446ce9 in g_signal_emit_valist ()",
+        "   from /usr/lib/libgobject-2.0.so.0",
+        "No symbol table info available."
+      ],
+      "address": "0x00007f6699446ce9"
+    },
+    {
+      "function": "g_signal_emit_by_name",
+      "depth": 6,
+      "args": "",
+      "extra": [
+        "#6  0x00007f6699447054 in g_signal_emit_by_name ()",
+        "   from /usr/lib/libgobject-2.0.so.0",
+        "No symbol table info available."
+      ],
+      "address": "0x00007f6699447054"
+    },
+    {
+      "function": null,
+      "depth": 7,
+      "args": "",
+      "extra": [
+        "#7  0x000000000046fa43 in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x000000000046fa43"
+    },
+    {
+      "function": null,
+      "depth": 8,
+      "args": "",
+      "extra": [
+        "#8  0x000000000047449b in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x000000000047449b"
+    },
+    {
+      "function": "g_main_context_dispatch",
+      "depth": 9,
+      "args": "",
+      "extra": [
+        "#9  0x00007f6698d56bbe in g_main_context_dispatch ()",
+        "   from /lib/libglib-2.0.so.0",
+        "No symbol table info available."
+      ],
+      "address": "0x00007f6698d56bbe"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#10 0x00007f6698d5a588 in ?? () from /lib/libglib-2.0.so.0",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 10,
+      "dylib": "/lib/libglib-2.0.so.0",
+      "address": "0x00007f6698d5a588"
+    },
+    {
+      "function": "g_main_loop_run",
+      "extra": [
+        "#11 0x00007f6698d5a9e5 in g_main_loop_run () from /lib/libglib-2.0.so.0",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 11,
+      "dylib": "/lib/libglib-2.0.so.0",
+      "address": "0x00007f6698d5a9e5"
+    },
+    {
+      "function": "gtk_main",
+      "extra": [
+        "#12 0x00007f669a6010a7 in gtk_main () from /usr/lib/libgtk-x11-2.0.so.0",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 12,
+      "dylib": "/usr/lib/libgtk-x11-2.0.so.0",
+      "address": "0x00007f669a6010a7"
+    },
+    {
+      "function": null,
+      "depth": 13,
+      "args": "",
+      "extra": [
+        "#13 0x0000000000443807 in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x0000000000443807"
+    },
+    {
+      "function": "__libc_start_main",
+      "extra": [
+        "#14 0x00007f669797eabd in __libc_start_main () from /lib/libc.so.6",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 14,
+      "dylib": "/lib/libc.so.6",
+      "address": "0x00007f669797eabd"
+    },
+    {
+      "function": null,
+      "depth": 15,
+      "args": "",
+      "extra": [
+        "#15 0x00000000004302d9 in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x00000000004302d9"
+    },
+    {
+      "function": null,
+      "depth": 16,
+      "args": "",
+      "extra": [
+        "#16 0x00007fffdab2d518 in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x00007fffdab2d518"
+    },
+    {
+      "function": null,
+      "depth": 17,
+      "args": "",
+      "extra": [
+        "#17 0x000000000000001c in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x000000000000001c"
+    },
+    {
+      "function": null,
+      "depth": 18,
+      "args": "",
+      "extra": [
+        "#18 0x0000000000000001 in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x0000000000000001"
+    },
+    {
+      "function": null,
+      "depth": 19,
+      "args": "",
+      "extra": [
+        "#19 0x00007fffdab2db5c in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x00007fffdab2db5c"
+    },
+    {
+      "function": null,
+      "depth": 20,
+      "args": "",
+      "extra": [
+        "#20 0x0000000000000000 in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x0000000000000000"
+    }
+  ],
+  "NonfreeKernelModules": "nvidia",
+  "extra": "StacktraceTop:  ?? ()\n ?? ()\n ?? ()\n g_closure_invoke ()\n ?? () from /usr/lib/libgobject-2.0.so.0\n\nBinary package hint: nautilus\nnautilis\n\n\n",
+  "ProcCmdline": "nautilus",
+  "CrashCounter": "1",
+  "SegvReason": "reading NULL VMA",
+  "SourcePackage": "nautilus",
+  "Title": "nautilus crashed with SIGSEGV in g_closure_invoke()",
+  "ProcEnviron": " PATH=(custom, user)\n LANG=de_DE.UTF-8\n SHELL=/bin/bash\n",
+  "os_version": "Ubuntu 2.6.31-11.38-generic",
+  "type": "Crash",
+  "Package": "nautilus 1:2.28.0-0ubuntu4",
+  "Signal": "11",
+  "date": "2009-10-05T22:19:04",
+  "UserGroups": "adm admin cdrom dialout lpadmin plugdev sambashare",
+  "Uname": "Linux 2.6.31-11-generic x86_64",
+  "database_id": "launchpad:0000443987",
+  "SegvAnalysis": " Segfault happened at: 0x4cc5be:?mov    0x18(%rdi),%rdx\n PC (0x004cc5be) ok\n source \"0x18(%rdi)\" (0x00000018) not located in a known VMA region (needed readable region)!\n destination \"%rdx\" ok\n",
+  "ExecutablePath": "/usr/bin/nautilus",
+  "os": "Ubuntu 9.10",
+  "cpu": "amd64"
+}
