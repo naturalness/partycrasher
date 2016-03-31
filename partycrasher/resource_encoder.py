@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
+from datetime import datetime
 
 from partycrasher import Crash, Bucket, Project, Threshold
 from rest_api_utils import href
@@ -124,6 +125,8 @@ class ResourceEncoder(json.JSONEncoder):
         elif isinstance(obj, Threshold):
             # The str output is the JSON output.
             return str(obj)
+        elif isinstance(obj, datetime):
+            return obj.isoformat()
         else:
             raise TypeError('No idea how to encode {!r} object: '
                             '{!r}'.format(type(obj), obj))
@@ -394,7 +397,7 @@ def fix_buckets(crash_dict):
         # See: bucketer.MLT.make_matching_buckets()
         if key == '__debug__':
             if ':' in bucket_id:
-                score, project, report_id = bucket_id.split(':')
+                score, project, report_id = bucket_id.split(':', 2)
                 fixed_buckets['__debug__'] = href('view_report',
                                                   project=project,
                                                   report_id=report_id)

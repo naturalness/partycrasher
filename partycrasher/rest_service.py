@@ -707,6 +707,7 @@ def jsonify_resource(resource):
 
 
 def main():
+    crasher.ensure_index_created()
     kwargs = {
         # Make the server publically visible.
         'host': '0.0.0.0',

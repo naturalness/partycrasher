@@ -267,6 +267,12 @@ class PartyCrasher(object):
         raw_projects = results['aggregations']['projects']['buckets']
         return [Project(project['key']) for project in raw_projects]
 
+    def ensure_index_created(self):
+        """
+        Ensure that the index exists.
+        """
+        self._connect_to_elasticsearch()
+        return self
 
     def delete_crash(self, database_id):
         # TODO: we have to call ES directly here, theres nothing in
