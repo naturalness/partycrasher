@@ -121,6 +121,8 @@ class Bucketer(object):
 
         return saved_crash
 
+DEBUG_MLT = True
+
 
 class MLT(Bucketer):
 
@@ -155,22 +157,23 @@ class MLT(Bucketer):
             }
 
         body = self.make_more_like_this_query(crash, bucket_field)
-        #debug_print_json(body)
+        debug_print_json(body)
         response = self.es.search(index=self.index, body=body)
-        print response['hits']['max_score']
-        #debug_print_json(response, header='🔹 🔷 🔹 🔷 🔹 🔷 🔹 ')
+        debug_print_json({
+            'max_score': response['hits']['max_score']
+        })
+        debug_print_json(response, header='🔹 🔷 🔹 🔷 🔹 🔷 🔹 ')
         try:
             matching_buckets = self.make_matching_buckets(response, bucket_field,
-                                            default=crash['database_id'])
+                                                          default=crash['database_id'])
             return matching_buckets
-        except IndexNotUpdatedError as e:
-            print e
+        except IndexNotUpdatedError:
             time.sleep(1)
             return self.bucket(crash, bucket_field)
 
-    def make_more_like_this_query(self, crash, bucket_field,
-                                  has_zero_threshold=False):
+    def make_more_like_this_query(self, crash, bucket_field):
         body =  {
+            # Only fetch database ID, buckets, and project.
             '_source': [bucket_field, 'database_id', 'project'],
             'query': {
                 'more_like_this': {
@@ -182,18 +185,20 @@ class MLT(Bucketer):
                             'doc': crash,
                         }
                     ],
+                    # Avoid some ElasticSearch optimizations:
+                    #
+                    # Search for WAY more terms than ElasticSearch would
+                    # normally construct.
                     'max_query_terms': 2500,
+                    # Force ElasticSearch to query... like, all the things.
                     'min_term_freq': 0,
                     'min_doc_freq': 0,
                 },
             },
-            # Must fetch exactly ONE result at most.
+            # Must fetch the TOP matching result only.
             'size': 1,
             'min_score': 0,
         }
-
-        if has_zero_threshold:
-            body['query'].update(min_score=self.min_threshold.to_float())
 
         return body
 
@@ -203,67 +208,78 @@ class MLT(Bucketer):
 
         matching_buckets = OrderedDict()
 
-        # Have the matches in ascending order.
-        raw_matches = list(sorted(matches['hits']['hits'], key=by_score))
+        # Have the matches in descending order of score.
+        if not "I'm right about how this algorithm works...":
+            raw_matches = list(sorted(matches['hits']['hits'], key=by_score,
+                                      resvesred=True))
 
-        # DEBUG STUFF
-        if raw_matches:
-            first = raw_matches[0]
-            report_id = first['_source']['database_id']
-            if 'project' in first['_source']:
-                project = first['_source']['project']
-            else:
-                project = 'No Project' # That's going to cause a bug later
-            score = str(first['_score'])
-            matching_buckets['__debug__'] = ':'.join((score, project, report_id))
-        else:
-            matching_buckets['__debug__'] = 'None'
+        raw_matches = matches['hits']['hits']
+        assert len(raw_matches) in (0, 1), 'Unexpected amount of matches...'
 
         # Make a stack of thresholds, in ascending order
         thresholds_left = list(sorted(self.thresholds))
 
-        while raw_matches and thresholds_left:
-            threshold = thresholds_left[0]
-            match = None
+        # Assign this crash to the bucket of the top match.
+        if raw_matches:
+            top_match = raw_matches[0]
+            score = top_match['_score']
 
-            # Discard all matches lower than this threshold.
-            while raw_matches:
-                match = raw_matches[0]
-                if match['_score'] < threshold.to_float():
-                    raw_matches.pop(0)
-                else:
+            while thresholds_left:
+                threshold = thresholds_left[0]
+
+                # When the score does not exceed the threshold, stop.
+                if score < threshold.to_float():
                     break
 
-            # We may have discarded all matches in the previous step.
-            if len(raw_matches) == 0:
-                break
+                bucket_id = self.get_bucket_id(top_match['_source'],
+                                               threshold, bucket_field)
+                matching_buckets[threshold] = bucket_id
 
-            # At this point, we must have the first match.
-            assert match is not None
-            assert match['_score'] >= threshold.to_float()
+                thresholds_left.pop(0)
+                    
+        # For every unmatched threshold, assign the default bucket.
+        for threshold in thresholds_left:
+            matching_buckets[threshold] = default
 
-            # Fail if we can't find the bucket field
-            bucket_source = match['_source']
-            try:
-                buckets = bucket_source[bucket_field]
-            except KeyError:
-                message = ('Matching crash does not have an assignment for '
-                           '{!s}: {!r}'.format(threshold, match))
-                raise IndexNotUpdatedError(message)
+        # Add some debug information
+        if DEBUG_MLT:
+            if raw_matches:
+                first = raw_matches[0]
+                report_id = first['_source']['database_id']
+                if 'project' in first['_source']:
+                    project = first['_source']['project']
+                else:
+                    project = 'No Project (ERROR!)'
+                score = str(first['_score'])
+                matching_buckets['__debug__'] = ':'.join((score, project, report_id))
             else:
-                bucket = buckets[threshold.to_elasticsearch()]
-
-            matching_buckets[threshold] = bucket
-            # This threshold has been assigned! Remove it!
-            thresholds_left.pop(0)
-
-        # Make this crash the start of a new bucket for all unfulfilled
-        # threshold values.
-        if not raw_matches and thresholds_left:
-            for threshold in thresholds_left:
-                matching_buckets[threshold] = default
+                matching_buckets['__debug__'] = 'None'
 
         return matching_buckets
+
+    def get_bucket_id(self, crash, threshold, bucket_field='buckets'):
+        """
+        Given a crash JSON, returns the bucket field associated with this
+        particular threshold.
+        """
+
+        try:
+            buckets = crash[bucket_field]
+        except KeyError:
+            # We couldn't find the bucket field. ASSUME that this means that
+            # its bucket assignment has not yet propegated to whatever shard
+            # returned the results.
+            message = ('Bucket field {!r} not found in crash: '
+                       '{!r}'.format(bucket_field, crash))
+            raise IndexNotUpdatedError(message)
+
+        try:
+           return buckets[threshold.to_elasticsearch()]
+        except KeyError:
+            message = ('Crash does not have an assignment for '
+                       '{!s}: {!r}'.format(threshold, match))
+            # TODO: Custom exception for this?
+            raise Exception(message)
 
     def assign_save_buckets(self, crash):
         buckets = self.assign_buckets(crash)
