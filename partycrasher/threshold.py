@@ -74,6 +74,8 @@ class Threshold(object):
         return self._value.__hash__()
     
     def __eq__(self, otter):
+        if not isinstance(otter, Threshold):
+            return False
         return self._value == otter._value
 
     def to_elasticsearch(self):
