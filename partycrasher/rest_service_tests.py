@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 
 #  Copyright (C) 2016 Joshua Charles Campbell
 #  Copyright (C) 2016 Eddie Antonio Santos
@@ -40,7 +41,6 @@ import time
 import unittest
 import uuid
 
-
 # Terrible Python 2/3 hacks
 try:
     from urlparse import urlparse
@@ -60,9 +60,10 @@ else:
   StringType = unicode
 
 
-
 import dateparser
 import requests
+
+import sample_crashes
 
 # Full path to ./rest_service.py
 REST_SERVICE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -242,7 +243,6 @@ class RestServiceTestCase(unittest.TestCase):
         assert insert_date is not None
 
         assert before_insert <= dateparser.parse(insert_date) <= after_insert
-
     def test_add_crash_to_project(self):
         """
         Add a single crash to a project;
@@ -374,6 +374,46 @@ class RestServiceTestCase(unittest.TestCase):
 
         # TODO: ensure if URL project and JSON project conflict HTTP 400
         #       is returned
+
+    def test_multiple_bucketing(self):
+        """
+        Check if adding an identical crash results in the same bucket
+        assignment.
+        """
+
+        create_url = self.path_to('reports')
+        assert is_cross_origin_accessible(create_url)
+
+        first_id = str(uuid.uuid4())
+        second_id = str(uuid.uuid4())
+        assert first_id != second_id
+
+        # Add a full SAMPLE crash.
+        report = sample_crashes.CRASH_1.copy()
+        report['database_id'] = first_id
+        response = requests.post(create_url, json=report)
+        assert response.status_code == 201
+
+        # Wait a bit...
+        wait_for_elastic_search()
+
+        # Add The SAME crash.
+        report = sample_crashes.CRASH_1.copy()
+        report['database_id'] = second_id
+        response = requests.post(create_url, json=report)
+        assert response.status_code == 201
+
+        assert response.json().get('database_id') == second_id
+        buckets = response.json().get('buckets') 
+        assert len(buckets) > 0
+        # Get the first threshold
+        first_threshold = next(iter(sorted((key for key in buckets if key != '__debug__'), key=float)))
+
+        # The first id matches the second id.
+        assert first_id in buckets[first_threshold].get('id')  
+
+        # TODO: Add a DIFFERENT crash, choose the LAST bucket, ensure 
+        # that they're different.
 
     def test_get_crash(self):
         """
