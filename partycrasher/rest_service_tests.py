@@ -381,12 +381,12 @@ class RestServiceTestCase(unittest.TestCase):
         assignment.
         """
 
-        create_url = self.path_to('reports')
+        create_url = self.path_to('ubuntu', 'reports')
         assert is_cross_origin_accessible(create_url)
 
         first_id = str(uuid.uuid4())
         second_id = str(uuid.uuid4())
-        assert first_id != second_id
+        third_id = str(uuid.uuid4())
 
         # Add a full SAMPLE crash.
         report = sample_crashes.CRASH_1.copy()
@@ -397,23 +397,35 @@ class RestServiceTestCase(unittest.TestCase):
         # Wait a bit...
         wait_for_elastic_search()
 
-        # Add The SAME crash.
+        # Add the SAME crash.
         report = sample_crashes.CRASH_1.copy()
         report['database_id'] = second_id
         response = requests.post(create_url, json=report)
         assert response.status_code == 201
 
         assert response.json().get('database_id') == second_id
-        buckets = response.json().get('buckets') 
+        buckets = response.json().get('buckets')
         assert len(buckets) > 0
-        # Get the first threshold
+        # Get the first (most inclusive) threshold
         first_threshold = next(iter(sorted((key for key in buckets if key != '__debug__'), key=float)))
 
         # The first id matches the second id.
-        assert first_id in buckets[first_threshold].get('id')  
+        assert first_id in buckets[first_threshold].get('id')
 
-        # TODO: Add a DIFFERENT crash, choose the LAST bucket, ensure 
-        # that they're different.
+        # Add a DIFFERENT crash.
+        report = sample_crashes.CRASH_2.copy()
+        report['database_id'] = third_id
+        response = requests.post(create_url, json=report)
+        assert response.status_code == 201
+
+        assert response.json().get('database_id') == third_id
+        buckets = response.json().get('buckets')
+        assert len(buckets) > 0
+        # Get the LAST (pickiest) threshold.
+        last_threshold = next(iter(sorted((key for key in buckets if key != '__debug__'), key=float, reverse=True)))
+
+        # Ensure that it's not in the same bucket as the last two.
+        assert first_id != buckets[last_threshold].get('id')
 
     def test_get_crash(self):
         """
