@@ -154,7 +154,11 @@ def add_report(project=None):
     Uploads a new report. The report should be sent as a JSON Object with at
     least a unique ``database_id`` property. If uploaded to
     ``/:project/reports``, the ``project`` property will automatically be set;
-    otherwise, the ``project`` property is also mandatory.
+    otherwise, the ``project`` property is also mandatory. 
+
+    The report may also have a ``date`` property, which will be used to group
+    crashes by date. If not specified, this is set as the insertion date
+    (which may not always be what you want).
 
     The response contains the bucket assignments, as well as the canonical URL
     to access the report.

@@ -121,7 +121,7 @@ class Bucketer(object):
 
         return saved_crash
 
-DEBUG_MLT = True
+DEBUG_MLT = False
 
 
 class MLT(Bucketer):
@@ -236,7 +236,7 @@ class MLT(Bucketer):
                 matching_buckets[threshold] = bucket_id
 
                 thresholds_left.pop(0)
-                    
+
         # For every unmatched threshold, assign the default bucket.
         for threshold in thresholds_left:
             matching_buckets[threshold] = default
@@ -539,7 +539,7 @@ def common_properties(thresholds):
             'type': 'string',
             'index': 'not_analyzed',
         },
-        'date_bucketed': {
+        'date': {
             'type': 'date',
             # Do not index, because our analysis has not studied this yet!
             # Plus, Elastic won't index anyway...

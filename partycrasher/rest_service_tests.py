@@ -239,7 +239,7 @@ class RestServiceTestCase(unittest.TestCase):
         # Ensure that other values exist too!
         assert isinstance(buckets.get('3.75'), dict)
 
-        insert_date = response.json().get('date_bucketed')
+        insert_date = response.json().get('date')
         assert insert_date is not None
 
         assert before_insert <= dateparser.parse(insert_date) <= after_insert

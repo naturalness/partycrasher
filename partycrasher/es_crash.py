@@ -72,7 +72,7 @@ class ESCrashMeta(type):
                 else:
                     # Ensure this is UTC ISO format
                     now = datetime.datetime.utcnow()
-                    crash.setdefault('date_bucketed', now.isoformat())
+                    crash.setdefault('date', now.isoformat())
                     try:
                         response = cls.es.create(index=index,
                                                  doc_type='crash',

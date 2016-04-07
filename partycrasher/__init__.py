@@ -119,7 +119,6 @@ class PartyCrasher(object):
         return self._es
 
     # TODO catch duplicate and return DuplicateRecordError
-    # TODO multi-bucket multi-threshold mumbo-jumbo
     def ingest(self, crash, dryrun=False):
         """
         Ingest a crash; the Crash may be a simple dictionary, or a
@@ -188,7 +187,7 @@ class PartyCrasher(object):
         # Filters by lower-bound by default;
         filters = [{
             "range": {
-                "date_bucketed": {
+                "date": {
                     "gt": lower_bound.isoformat()
                 }
             }
