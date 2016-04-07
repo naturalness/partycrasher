@@ -409,7 +409,7 @@ class RestServiceTestCase(unittest.TestCase):
         # Get the first (most inclusive) threshold
         first_threshold = next(iter(sorted((key for key in buckets if key != '__debug__'), key=float)))
 
-        # The first id matches the second id.
+        # The first crash should matche the second (identical) crash.
         assert first_id in buckets[first_threshold].get('id')
 
         # Add a DIFFERENT crash.
@@ -597,7 +597,7 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(create_url, json=fake_true_date)
         assert response.status_code == 201
 
-        threshold = '4.0'
+        threshold = '3.75'
         try:
           bucket_url = response.json()[0]['buckets'][threshold]['href']
         except (IndexError, KeyError):
@@ -611,6 +611,7 @@ class RestServiceTestCase(unittest.TestCase):
         # The bucket is named after the first crash... I guess?
         #assert database_id_a in response.json().get('id')
         assert response.json().get('total') >= 1
+        assert response.json().get('threshold') == '3.75'
         # Look at the top report; it must contain tfidf_trickery.
         assert (response.json().get('top_reports')[0].get('tfidf_trickery') ==
                 tfidf_trickery)

@@ -162,7 +162,7 @@ class PartyCrasher(object):
 
         return Bucket(id=bucket_id,
                       project=project,
-                      threshold=self.default_threshold,
+                      threshold=threshold,
                       total = reports_found,
                       top_reports=reports)
 
