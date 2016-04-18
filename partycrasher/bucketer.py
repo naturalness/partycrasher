@@ -121,7 +121,7 @@ class Bucketer(object):
 
         return saved_crash
 
-DEBUG_MLT = False
+DEBUG_MLT = True
 
 
 class MLT(Bucketer):
@@ -157,12 +157,14 @@ class MLT(Bucketer):
             }
 
         body = self.make_more_like_this_query(crash, bucket_field)
-        debug_print_json(body)
         response = self.es.search(index=self.index, body=body)
         debug_print_json({
-            'max_score': response['hits']['max_score']
+            'id': crash['database_id'],
+            'matches': {
+                'max_score': response['hits']['max_score'],
+                'report': response['hits']['hits'][0]
+            } if response['hits']['max_score'] else None
         })
-        debug_print_json(response, header='🔹 🔷 🔹 🔷 🔹 🔷 🔹 ')
         try:
             matching_buckets = self.make_matching_buckets(response, bucket_field,
                                                           default=crash['database_id'])
@@ -254,6 +256,8 @@ class MLT(Bucketer):
                 matching_buckets['__debug__'] = ':'.join((score, project, report_id))
             else:
                 matching_buckets['__debug__'] = 'None'
+
+            debug_print_json(repr(matching_buckets))
 
         return matching_buckets
 
