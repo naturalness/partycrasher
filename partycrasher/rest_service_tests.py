@@ -412,6 +412,9 @@ class RestServiceTestCase(unittest.TestCase):
         # The first crash should matche the second (identical) crash.
         assert first_id in buckets[first_threshold].get('id')
 
+        # Wait a bit...
+        wait_for_elastic_search()
+
         # Add a DIFFERENT crash.
         report = sample_crashes.CRASH_2.copy()
         report['database_id'] = third_id
@@ -425,7 +428,8 @@ class RestServiceTestCase(unittest.TestCase):
         last_threshold = next(iter(sorted((key for key in buckets if key != '__debug__'), key=float, reverse=True)))
 
         # Ensure that it's not in the same bucket as the last two.
-        assert first_id != buckets[last_threshold].get('id')
+        assert first_id != buckets[last_threshold].get('id'), \
+          'The different bug was found in the same bucket! t={}'.format(last_threshold)
 
     def test_get_crash(self):
         """
