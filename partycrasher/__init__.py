@@ -21,8 +21,8 @@ from partycrasher.threshold import Threshold
 
 __version__ = u'0.1.0'
 
-DEFAULT_THRESHOLDS = ('2.75', '3.0', '3.25', '3.5', '3.75', '4.0', '4.5',
-                      '5.0', '5.5', '6.0')
+DEFAULT_THRESHOLDS = ('1.0', '1.5', '2.0', '2.75', '3.0', '3.25', '3.5',
+                      '3.75', '4.0', '4.5', '5.0', '5.5', '6.0')
 
 
 class BucketNotFoundError(KeyError):
