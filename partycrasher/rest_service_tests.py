@@ -409,8 +409,9 @@ class RestServiceTestCase(unittest.TestCase):
         # Get the first (most inclusive) threshold
         first_threshold = next(iter(sorted((key for key in buckets if key != '__debug__'), key=float)))
 
-        # The first crash should matche the second (identical) crash.
-        assert first_id in buckets[first_threshold].get('id')
+        # The first crash should matches the second (identical) crash.
+        assert first_id in buckets[first_threshold].get('id'), \
+          'The identical bug was not in the same bucket!  t={}'.format(first_threshold)
 
         # Wait a bit...
         wait_for_elastic_search()
