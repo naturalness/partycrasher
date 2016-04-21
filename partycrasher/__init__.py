@@ -118,11 +118,14 @@ class PartyCrasher(object):
         self._bucketer.create_index()
         return self._es
 
-    # TODO catch duplicate and return DuplicateRecordError
     def ingest(self, crash, dryrun=False):
         """
         Ingest a crash; the Crash may be a simple dictionary, or a
         pre-existing Crash instance.
+
+        :return: the saved crash
+        :rtype Crash:
+        :raises IdenticalReportError:
         """
         true_crash = Crash(crash)
 

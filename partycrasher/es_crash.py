@@ -23,6 +23,7 @@ from weakref import WeakValueDictionary
 import elasticsearch
 from elasticsearch import Elasticsearch
 
+from .exceptions import IdenticalReportError
 from crash import Crash, Stacktrace, Stackframe
 from threshold import Threshold
 
@@ -61,9 +62,16 @@ class ESCrashMeta(type):
                 else:
                     existing = None
                 if not existing is None:
+
+                    if existing != crash:
+                        # We already know of it! Raise an identical report
+                        # error.
+                        # TODO: not resilient to multiple running instances of
+                        # PartyCrasher :c
+                        raise IdenticalReportError(existing)
+
                     # It is already in elastic search
                     # make sure its the same data
-                    assert(existing == crash)
                     newish = super(ESCrashMeta, cls).__call__(crash=existing, index=index)
                     # cache it as a weak reference
                     cls._cached[index][crash['database_id']] = newish

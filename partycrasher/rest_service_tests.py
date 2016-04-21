@@ -243,6 +243,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert insert_date is not None
 
         assert before_insert <= dateparser.parse(insert_date) <= after_insert
+
     def test_add_crash_to_project(self):
         """
         Add a single crash to a project;
@@ -263,7 +264,6 @@ class RestServiceTestCase(unittest.TestCase):
         buckets = response.json().get('buckets')
         assert buckets.get('4.0', {}).get('href', '').startswith('http://')
 
-    @unittest.skip('This feature is not yet implemented')
     def test_add_identical_crash_to_project(self):
         """
         Adds an IDENTICAL report to a project;
@@ -296,7 +296,9 @@ class RestServiceTestCase(unittest.TestCase):
         wait_for_elastic_search()
 
         # Now insert it again!
-        response = requests.post(url, json=report)
+        # Note: allow_redirect must be False; Requests will automatically
+        # follow redirects if not explictly told not to!
+        response = requests.post(url, json=report, allow_redirects=False)
 
         # Must be a redirect.
         assert response.status_code == 303

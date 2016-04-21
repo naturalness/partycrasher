@@ -39,6 +39,7 @@ from partycrasher.rest_api_utils import (
     redirect_with_query_string,
 )
 from partycrasher.resource_encoder import ResourceEncoder
+from partycrasher.exceptions import IdenticalReportError
 
 import dateparser
 
@@ -154,7 +155,7 @@ def add_report(project=None):
     Uploads a new report. The report should be sent as a JSON Object with at
     least a unique ``database_id`` property. If uploaded to
     ``/:project/reports``, the ``project`` property will automatically be set;
-    otherwise, the ``project`` property is also mandatory. 
+    otherwise, the ``project`` property is also mandatory.
 
     The report may also have a ``date`` property, which will be used to group
     crashes by date. If not specified, this is set as the insertion date
@@ -267,10 +268,15 @@ def add_report(project=None):
     if isinstance(report, list):
         return jsonify_list(ingest_multiple(report, project)), 201
     else:
-        report, url = ingest_one(report, project)
-        return jsonify_resource(report), 201, {
-            'Location': url
-        }
+        try:
+            report, url = ingest_one(report, project)
+        except IdenticalReportError as error:
+            # Ingested a duplicate report.
+            return '', 303, { 'Location': url_for_report(error.report) }
+        else:
+            return jsonify_resource(report), 201, {
+                'Location': url
+            }
 
 
 @app.route('/reports/<report_id>',
@@ -397,8 +403,13 @@ def ask_about_report(project=None):
     """
 
     report = request.get_json()
-    assigned_report, _url = ingest_one(report, project, dryrun=True)
-    return jsonify_resource(assigned_report), 200
+    try:
+        assigned_report, _url = ingest_one(report, project, dryrun=True)
+    except IdenticalReportError as error:
+        # Already ingested report; no need to dry-run.
+        return '', 303, { 'Location': url_for_report(error.report) }
+    else:
+        return jsonify_resource(assigned_report), 200
 
 
 def not_available_in_this_release():
@@ -654,6 +665,9 @@ if False:
 def ingest_one(report, project_name, dryrun=False):
     """
     Returns a tuple of ingested report and its URL.
+
+    :raises BadRequest: When project is off.
+    :raises IdenticalReportError: When report is identical to existing report.
     """
 
     raise_bad_request_if_project_mismatch(report, project_name)
@@ -661,9 +675,7 @@ def ingest_one(report, project_name, dryrun=False):
     report.setdefault('project', project_name)
 
     report = crasher.ingest(report, dryrun=dryrun)
-    url = url_for('view_report',
-                  project=report['project'],
-                  report_id=report['database_id'])
+    url = url_for_report(report)
 
     # Commit things to the index such that any new inserts will bucket
     # properly...
@@ -677,6 +689,12 @@ def ingest_multiple(reports, project_name):
     reports.
     """
     return [ingest_one(report, project_name)[0] for report in reports]
+
+
+def url_for_report(report):
+    return url_for('view_report',
+                   project=report['project'],
+                   report_id=report['database_id'])
 
 
 def raise_bad_request_if_project_mismatch(report, project_name):
