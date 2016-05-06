@@ -208,40 +208,38 @@ class MLT(Bucketer):
         if default is None:
             raise ValueError('Must provide a string default bucket name')
 
-        matching_buckets = OrderedDict()
-
-        # Have the matches in descending order of score.
-        if not "I'm right about how this algorithm works...":
-            raw_matches = list(sorted(matches['hits']['hits'], key=by_score,
-                                      resvesred=True))
-
         raw_matches = matches['hits']['hits']
         assert len(raw_matches) in (0, 1), 'Unexpected amount of matches...'
 
-        # Make a stack of thresholds, in ascending order
-        thresholds_left = list(sorted(self.thresholds))
-
-        # Assign this crash to the bucket of the top match.
-        if raw_matches:
+        if len(raw_matches) == 1:
             top_match = raw_matches[0]
-            score = top_match['_score']
+        else:
+            # Sentinel object; this will never match a threshold.
+            top_match = { '_score': -float('inf') }
 
-            while thresholds_left:
-                threshold = thresholds_left[0]
+        # JSON structure:
+        # matches['hit']['hits] ~> [
+        #   {
+        #       "_score": 8.9,
+        #       "_source": {
+        #           "buckets": {
+        #               "1.0": "***bucket-id-1***",
+        #               "9.0": "***bucket-id-2***"
+        #           }
+        #       }
+        #   }
 
-                # When the score does not exceed the threshold, stop.
-                if score < threshold.to_float():
-                    break
+        def assign_buckets_per_threshold():
+            similarity = top_match['_score']
+            assert isinstance(similarity, (float, int))
 
-                bucket_id = self.get_bucket_id(top_match['_source'],
-                                               threshold, bucket_field)
-                matching_buckets[threshold] = bucket_id
+            for threshold in sorted(self.thresholds, key=float):
+                if similarity >= float(threshold):
+                    yield threshold, get_bucket_id(top_match, threshold, bucket_field)
+                else:
+                    yield threshold, default
 
-                thresholds_left.pop(0)
-
-        # For every unmatched threshold, assign the default bucket.
-        for threshold in thresholds_left:
-            matching_buckets[threshold] = default
+        matching_buckets = OrderedDict(assign_buckets_per_threshold())
 
         # Add some debug information
         if DEBUG_MLT:
@@ -260,30 +258,6 @@ class MLT(Bucketer):
             debug_print_json(repr(matching_buckets))
 
         return matching_buckets
-
-    def get_bucket_id(self, crash, threshold, bucket_field='buckets'):
-        """
-        Given a crash JSON, returns the bucket field associated with this
-        particular threshold.
-        """
-
-        try:
-            buckets = crash[bucket_field]
-        except KeyError:
-            # We couldn't find the bucket field. ASSUME that this means that
-            # its bucket assignment has not yet propegated to whatever shard
-            # returned the results.
-            message = ('Bucket field {!r} not found in crash: '
-                       '{!r}'.format(bucket_field, crash))
-            raise IndexNotUpdatedError(message)
-
-        try:
-           return buckets[threshold.to_elasticsearch()]
-        except KeyError:
-            message = ('Crash does not have an assignment for '
-                       '{!s}: {!r}'.format(threshold, match))
-            # TODO: Custom exception for this?
-            raise Exception(message)
 
     def assign_save_buckets(self, crash):
         buckets = self.assign_buckets(crash)
@@ -500,11 +474,33 @@ class MLTNGram(MLT):
             }
         )
 
-def by_score(match):
+
+def get_bucket_id(result, threshold, bucket_field='buckets'):
     """
-    Sorting key function. Matches by MoreLikeThis score.
+    Given a crash JSON, returns the bucket field associated with this
+    particular threshold.
     """
-    return match['_score']
+
+    crash = result['_source']
+
+    try:
+        buckets = crash[bucket_field]
+    except KeyError:
+        # We couldn't find the bucket field. ASSUME that this means that
+        # its bucket assignment has not yet propegated to whatever shard
+        # returned the results.
+        message = ('Bucket field {!r} not found in crash: '
+                   '{!r}'.format(bucket_field, crash))
+        raise IndexNotUpdatedError(message)
+
+    try:
+       return buckets[threshold.to_elasticsearch()]
+    except KeyError:
+        message = ('Crash does not have an assignment for '
+                   '{!s}: {!r}'.format(threshold, match))
+        # TODO: Custom exception for this?
+        raise Exception(message)
+
 
 def common_properties(thresholds):
     """

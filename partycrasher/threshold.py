@@ -2,17 +2,17 @@
 # -*- coding: UTF-8 -*-
 
 # Copyright (C) 2016  Eddie Antonio Santos <easantos@ualberta.ca>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -58,6 +58,9 @@ class Threshold(object):
         return "Threshold('" + str(self) + "')"
 
     def to_float(self):
+        return float(self)
+
+    def __float__(self):
         """
         Convert the threshold to a floating point number, for comparisons.
         Note that this should NOT be converted back to a threshold, as there
@@ -69,10 +72,10 @@ class Threshold(object):
         # Delegate everything (i.e, comparisons) to the actual Threshold
         # value.
         return getattr(self._value, attr)
-    
+
     def __hash__(self):
         return self._value.__hash__()
-    
+
     def __eq__(self, otter):
         if not isinstance(otter, Threshold):
             return False
