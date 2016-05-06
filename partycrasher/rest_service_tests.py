@@ -408,12 +408,20 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.json().get('database_id') == second_id
         buckets = response.json().get('buckets')
         assert len(buckets) > 0
+
         # Get the first (most inclusive) threshold
-        first_threshold = next(iter(sorted((key for key in buckets if key != '__debug__'), key=float)))
+        first_threshold = next(iter(sorted_thresholds(buckets)))
 
         # The first crash should matches the second (identical) crash.
         assert first_id in buckets[first_threshold].get('id'), \
-          'The identical bug was not in the same bucket!  t={}'.format(first_threshold)
+          'The identical bug was not in the same bucket!  t={0}'.format(first_threshold)
+
+        # Check that it contains top_match with id, project, href, and score
+        assert 'top_match' in buckets
+        assert buckets['top_match'].get('report_id') == first_id
+        assert first_id in buckets['top_match'].get('href', ())
+        assert buckets['top_match'].get('project') == 'ubuntu'
+        assert float(buckets['top_match'].get('score', 'NaN')) > 0
 
         # Wait a bit...
         wait_for_elastic_search()
@@ -428,7 +436,7 @@ class RestServiceTestCase(unittest.TestCase):
         buckets = response.json().get('buckets')
         assert len(buckets) > 0
         # Get the LAST (pickiest) threshold.
-        last_threshold = next(iter(sorted((key for key in buckets if key != '__debug__'), key=float, reverse=True)))
+        last_threshold = next(iter(reversed(sorted_thresholds(buckets))))
 
         # Ensure that it's not in the same bucket as the last two.
         assert first_id != buckets[last_threshold].get('id'), \
@@ -721,6 +729,10 @@ def is_url(text):
     assert parse_result.netloc
     assert parse_result.path.startswith('/')
     return True
+
+
+def sorted_thresholds(buckets):
+    return sorted((key for key in buckets if key != 'top_match'), key=float)
 
 
 def wait_for_elastic_search():

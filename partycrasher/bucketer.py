@@ -241,21 +241,15 @@ class MLT(Bucketer):
 
         matching_buckets = OrderedDict(assign_buckets_per_threshold())
 
-        # Add some debug information
-        if DEBUG_MLT:
-            if raw_matches:
-                first = raw_matches[0]
-                report_id = first['_source']['database_id']
-                if 'project' in first['_source']:
-                    project = first['_source']['project']
-                else:
-                    project = 'No Project (ERROR!)'
-                score = str(first['_score'])
-                matching_buckets['__debug__'] = ':'.join((score, project, report_id))
-            else:
-                matching_buckets['__debug__'] = 'None'
-
-            debug_print_json(repr(matching_buckets))
+        # Add the top match.
+        if raw_matches:
+            matching_buckets['top_match'] = {
+                'report_id': top_match['_source']['database_id'],
+                'project': top_match['_source']['project'],
+                'score': top_match['_score']
+            }
+        else:
+            matching_buckets['top_match'] = None
 
         return matching_buckets
 
@@ -508,6 +502,11 @@ def common_properties(thresholds):
     must provide the threshold values
     """
 
+    string_not_analyzed = {
+        'type': "string",
+        'index': 'not_analyzed',
+    }
+
     bucket_properties = {
         threshold.to_elasticsearch(): {
             'type': "string",
@@ -515,9 +514,17 @@ def common_properties(thresholds):
         } for threshold in thresholds
     }
 
-    bucket_properties['__debug__'] = {
-        'type': 'string',
-        'index': 'not_analyzed'
+    bucket_properties['top_match'] = {
+        'dynamic': 'strict',
+        'properties': {
+            'report_id': string_not_analyzed,
+            'href': string_not_analyzed,
+            'project': string_not_analyzed,
+            'score': {
+                'type': 'float',
+                'index': 'not_analyzed'
+            }
+        }
     }
 
     # Database ID, the primary bucket, and the project,

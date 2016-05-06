@@ -18,6 +18,7 @@
 
 import re
 from datetime import datetime
+from collections import OrderedDict
 
 from partycrasher import Crash, Bucket, Project, Threshold
 from rest_api_utils import href
@@ -393,20 +394,27 @@ def fix_buckets(crash_dict):
 
     fixed_buckets = {}
     for key, bucket_id in crash_dict['buckets'].items():
-        # Hacky debug stuff... :c
-        # See: bucketer.MLT.make_matching_buckets()
-        if key == '__debug__':
-            if ':' in bucket_id:
-                score, project, report_id = bucket_id.split(':', 2)
-                fixed_buckets['__debug__'] = href('view_report',
-                                                  project=project,
-                                                  report_id=report_id)
-                fixed_buckets['__debug__'].update(score=score,
-                                                  best_match=report_id)
-            else:
-                fixed_buckets['__debug__'] = 'No reports matched :c'
+        if key == 'top_match':
+            fixed_buckets['top_match'] = serialize_top_match(bucket_id)
         else:
             threshold = str(Threshold(key))
             fixed_buckets[threshold] = Bucket(bucket_id, project, threshold, None, None)
 
     crash_dict['buckets' ] = fixed_buckets
+
+
+def serialize_top_match(info):
+    # See: bucketer.MLT.make_matching_buckets()
+    if info is not None:
+        match_url = href('view_report',
+                         project=info['project'],
+                         report_id=info['report_id'])
+        return OrderedDict([
+            ('report_id', info['report_id']),
+            ('href', match_url['href']),
+            ('project', info['project']),
+            ('score', info['score']),
+        ])
+    else:
+        return None
+
