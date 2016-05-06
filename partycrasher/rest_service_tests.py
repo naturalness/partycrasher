@@ -516,69 +516,6 @@ class RestServiceTestCase(unittest.TestCase):
                                              database_id))
         assert response.status_code == 404
 
-    @unittest.skip('This feature is not yet implemented')
-    def test_delete_crash(self):
-        """
-        Remove a report globally.
-        """
-
-        # Create a unique crash report.
-        database_id = str(uuid.uuid4())
-        create_url = self.path_to('alan_parsons', 'reports')
-        assert is_cross_origin_accessible(create_url)
-
-        response = requests.post(create_url,
-                                 json={'database_id': database_id})
-        assert response.status_code == 201
-
-        report_url = self.path_to('alan_parsons', 'reports', database_id)
-        assert is_cross_origin_accessible(report_url)
-
-        # Delete it.
-        response = requests.delete(report_url)
-        assert response.status_code == 204
-
-        # Try to access it; you just can't do it!
-        response = requests.get(report_url)
-        assert response.status_code == 404
-
-    @unittest.skip('This feature is not yet completed')
-    def test_delete_crash_from_project(self):
-        """
-        Remove a report, referenced through its project.
-
-        Note that this should also delete the report globally.
-        """
-
-        create_url = self.path_to('alan_parsons', 'reports')
-        assert is_cross_origin_accessible(create_url)
-
-        # Insert a new crash with a unique database ID.
-        database_id = str(uuid.uuid4())
-        response = requests.post(create_url, json={'database_id': database_id})
-        assert response.status_code == 201
-
-        report_url = self.path_to('alan_parsons', 'reports', database_id)
-        assert is_cross_origin_accessible(report_url)
-
-        # We can access it now...
-        response = requests.get(report_url)
-        assert response.status_code == 200
-        assert isinstance(response.json().get('buckets'), dict)
-        buckets = response.json().get('buckets')
-        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
-
-        # Delete it.
-        response = requests.delete(report_url)
-        assert response.status_code in (200, 204)
-
-        # Now we should NOT be able to access it!
-        response = requests.get(report_url)
-        assert response.status_code == 404
-
-        # TODO: ensure if URL project and JSON project conflict HTTP 400
-        #       is returned
-
     def test_get_project_bucket(self):
         """
         Fetch a bucket and its contents.
