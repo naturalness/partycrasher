@@ -23,7 +23,7 @@ from weakref import WeakValueDictionary
 import elasticsearch
 from elasticsearch import Elasticsearch
 
-from .exceptions import IdenticalReportError
+from pc_exceptions import IdenticalReportError
 from crash import Crash, Stacktrace, Stackframe
 from threshold import Threshold
 
@@ -141,21 +141,23 @@ class ESCrash(Crash):
         if index in cls.crashes:
             if database_id in cls.crashes[index]:
                 return cls.crashes[database_id]
-
-        response = cls.es.search(index=index, body={
-            'query': {
-                'filtered':{
-                    'query': {
-                        'match_all': {}
-                    },
-                    'filter': {
-                        'term': {
-                            'database_id': database_id,
+        try:
+            response = cls.es.search(index=index, body={
+                'query': {
+                    'filtered':{
+                        'query': {
+                            'match_all': {}
+                        },
+                        'filter': {
+                            'term': {
+                                'database_id': database_id,
+                            }
                         }
                     }
                 }
-            }
-        })
+            })
+        except elasticsearch.exceptions.NotFoundError:
+            return None
 
         if response['hits']['total'] == 0:
             return None

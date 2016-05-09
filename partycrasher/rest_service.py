@@ -39,7 +39,7 @@ from partycrasher.rest_api_utils import (
     redirect_with_query_string,
 )
 from partycrasher.resource_encoder import ResourceEncoder
-from partycrasher.exceptions import IdenticalReportError
+from partycrasher.pc_exceptions import IdenticalReportError
 
 import dateparser
 

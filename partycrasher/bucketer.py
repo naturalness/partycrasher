@@ -555,6 +555,7 @@ def common_properties(thresholds):
     }
 
 def debug_print_json(body, header='🔅 🔆 🔅 🔆 🔅 🔆 🔅 '):
+    return
     import sys, json
     # Write the query!
     sys.stderr.write('\n{header}\n\n'

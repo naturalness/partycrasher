@@ -30,9 +30,6 @@ from threshold import Threshold
 es = Elasticsearch(["localhost"], retry_on_timeout=True)
 ESCrash.es = es
 
-mode = sys.argv[1]
-assert mode in ['purity', 'accuracy']
-
 beta = 1.0
 
 comparisons = {
@@ -40,7 +37,7 @@ comparisons = {
     #'ccx1.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[1.0, 'lowercase':False, 'only_stack':False}},
     #'ccx2.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[2.0, 'lowercase':False, 'only_stack':False}},
     #'ccx3.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[3.0, 'lowercase':False, 'only_stack':False}},
-    'ccx4.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[4.0], 'lowercase':False, 'only_stack':False}},
+    'ccx4_0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[4.0], 'lowercase':False, 'only_stack':False}},
     #'ccx5.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[5.0, 'lowercase':False, 'only_stack':False}},
     #'ccx6.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[6.0, 'lowercase':False, 'only_stack':False}},
     #'ccx7.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[7.0, 'lowercase':False, 'only_stack':False}},
@@ -194,190 +191,121 @@ for database_id in sorted(all_ids.keys()):
             print_after += interval
         do_print = True
         print "in %i/%i crashes and %i/%i bugkets:" % (crashes_so_far, len(all_ids), len(seen_buckets), len(all_buckets))
-        if mode == 'purity':
-            print "\tb3_P\tb3_R\tb3_F\tpurity\tinvpur\tpurF\tbuckets"
+        print "\tb3_P\tb3_R\tb3_F\tpurity\tinvpur\tpurF\tbuckets"
     for comparison in sorted(comparisons.keys()):
         comparison_data = comparisons[comparison]
-        if mode == 'accuracy':
-            if not ('tp' in comparison_data):
-                comparison_data['tp'] = 0
-            if not ('fp' in comparison_data):
-                comparison_data['fp'] = 0
-            if not ('tn' in comparison_data):
-                comparison_data['tn'] = 0
-            if not ('fn' in comparison_data):
-                comparison_data['fn'] = 0
-        elif mode == 'purity':
-            if not ('oracle_to_assigned' in comparison_data):
-                comparison_data['oracle_to_assigned'] = {}
-                comparison_data['assigned_to_oracle'] = {}
-                comparison_data['oracle_totals'] = {}
-                comparison_data['assigned_totals'] = {}
-                comparison_data['bcubed'] = {}
-            oracle_to_assigned = comparison_data['oracle_to_assigned']
-            assigned_to_oracle = comparison_data['assigned_to_oracle']
-            oracle_totals = comparison_data['oracle_totals']
-            assigned_totals = comparison_data['assigned_totals']
-            bcubed = comparison_data['bcubed']
+        if not ('oracle_to_assigned' in comparison_data):
+            comparison_data['oracle_to_assigned'] = {}
+            comparison_data['assigned_to_oracle'] = {}
+            comparison_data['oracle_totals'] = {}
+            comparison_data['assigned_totals'] = {}
+            comparison_data['bcubed'] = {}
+        oracle_to_assigned = comparison_data['oracle_to_assigned']
+        assigned_to_oracle = comparison_data['assigned_to_oracle']
+        oracle_totals = comparison_data['oracle_totals']
+        assigned_totals = comparison_data['assigned_totals']
+        bcubed = comparison_data['bcubed']
         if 'comparer' in comparison_data:
             bucketer = comparison_data['comparer']
             comparer = comparison_data['comparer']
         else:
             bucketer = comparison_data['bucketer']
             comparer = None
-        if mode == 'accuracy':
-            simulation_buckets = bucketer.alt_bucket(crashdata, bucket_field='bucket')
-            for bucket in seen_buckets:
-                if bucket == 'new':
-                    if len(simulation_buckets) == 0:
-                        if not (oracledata['bucket'] in seen_buckets):
-                            comparison_data['tp'] += 1
-                        else:
-                            comparison_data['fp'] += 1
-                    else:
-                        if not (oracledata['bucket'] in seen_buckets):
-                            comparison_data['fn'] += 1
-                        else:
-                            comparison_data['tn'] += 1
-                else:
-                    if bucket in simulation_buckets:
-                        if bucket == oracledata['bucket']:
-                            comparison_data['tp'] += 1
-                        else:
-                            comparison_data['fp'] += 1
-                    else:
-                        if bucket == oracledata['bucket']:
-                            comparison_data['fn'] += 1
-                        else:
-                            comparison_data['tn'] += 1
-            #print "%s: tp %i, fp %i, tn %i, fn %i" \
-                #% (comparison,
-                    #comparison_data['tp'],
-                    #comparison_data['fp'],
-                    #comparison_data['tn'],
-                    #comparison_data['fn'],
-                    #)
-            if do_print:
-                try:
-                    precision = comparison_data['tp']/(comparison_data['tp']+comparison_data['fp'])
-                    recall = comparison_data['tp']/(comparison_data['tp']+comparison_data['fn'])
-                    specificity = comparison_data['tn']/(comparison_data['fp']+comparison_data['tn'])
-                    fscore = (1.0+(beta**2.0))*((precision*recall)/((beta**2.0)*precision+recall))
-                    print "%s: precision %f, recall %f, specificity %f, f-score %f" \
-                        % (comparison,
-                        precision,
-                        recall,
-                        specificity,
-                        fscore,
-                        )
-                except ZeroDivisionError:
-                    pass
-            # add to the simulation data set now that we've seen it
-            if comparer is not None:
-                simulationdata = comparer.save_signature(crashdata)
-            else:
-                if len(simulation_buckets) > 0:
-                    assign = simulation_buckets[0]
-                else:
-                    assign = 'bucket:' + crashdata['database_id'] # Make a new bucket
-                simulationdata = bucketer.assign_save_buckets(crashdata, bucket=[assign])
-            simulationdata['bucket'] = oracledata['bucket']
-        elif mode == 'purity':
-            simulationdata = bucketer.assign_save_buckets(crashdata)
-            simbuckets = simulationdata[comparison]
-            #print repr(simbuckets)
-            #for k in simbuckets.keys():
-                #print k.__hash__()
-            #print repr(comparison_data['threshold'].__hash__())
-            simbucket = simbuckets[comparison_data['threshold']]
-            #print repr(simbucket)
-            obucket = oracledata['bucket']
-            bcubed[database_id] = (simbucket, obucket)
-            #print simbucket + " // " + obucket
-            if not (obucket in oracle_to_assigned):
-                oracle_to_assigned[obucket] = {}
-                oracle_totals[obucket] = 0
-            if not (simbucket in oracle_to_assigned[obucket]):
-                oracle_to_assigned[obucket][simbucket] = 0
-            oracle_to_assigned[obucket][simbucket] += 1
-            oracle_totals[obucket] += 1
-            if not (simbucket in assigned_to_oracle):
-                assigned_to_oracle[simbucket] = {}
-                assigned_totals[simbucket] = 0
-            if not (obucket in assigned_to_oracle[simbucket]):
-                assigned_to_oracle[simbucket][obucket] = 0
-            assigned_to_oracle[simbucket][obucket] += 1
-            assigned_totals[simbucket] += 1
-            if do_print:
-                purity = 0.0
-                N = crashes_so_far + 1
-                for clustername, cluster in assigned_to_oracle.iteritems():
+        simulationdata = bucketer.assign_save_buckets(crashdata)
+        simbuckets = simulationdata[comparison]
+        #print repr(simbuckets)
+        #for k in simbuckets.keys():
+            #print k.__hash__()
+        #print repr(comparison_data['threshold'].__hash__())
+        simbucket = simbuckets[comparison_data['threshold']]
+        #print repr(simbucket)
+        obucket = oracledata['bucket']
+        bcubed[database_id] = (simbucket, obucket)
+        #print simbucket + " // " + obucket
+        if not (obucket in oracle_to_assigned):
+            oracle_to_assigned[obucket] = {}
+            oracle_totals[obucket] = 0
+        if not (simbucket in oracle_to_assigned[obucket]):
+            oracle_to_assigned[obucket][simbucket] = 0
+        oracle_to_assigned[obucket][simbucket] += 1
+        oracle_totals[obucket] += 1
+        if not (simbucket in assigned_to_oracle):
+            assigned_to_oracle[simbucket] = {}
+            assigned_totals[simbucket] = 0
+        if not (obucket in assigned_to_oracle[simbucket]):
+            assigned_to_oracle[simbucket][obucket] = 0
+        assigned_to_oracle[simbucket][obucket] += 1
+        assigned_totals[simbucket] += 1
+        if do_print:
+            purity = 0.0
+            N = crashes_so_far + 1
+            for clustername, cluster in assigned_to_oracle.iteritems():
+                C = assigned_totals[clustername]
+                intersection = max(cluster.values())
+                purity += (C/N) * (intersection/C)
+            ipurity = 0.0
+            F = 0.0
+            for categoryname, category in oracle_to_assigned.iteritems():
+                L = oracle_totals[categoryname]
+                intersection = max(category.values())
+                ipurity += (L/N) * (intersection/L)
+                Fmax = 0.0
+                for clustername, cluster in category.iteritems():
                     C = assigned_totals[clustername]
-                    intersection = max(cluster.values())
-                    purity += (C/N) * (intersection/C)
-                ipurity = 0.0
-                F = 0.0
-                for categoryname, category in oracle_to_assigned.iteritems():
-                    L = oracle_totals[categoryname]
-                    intersection = max(category.values())
-                    ipurity += (L/N) * (intersection/L)
-                    Fmax = 0.0
-                    for clustername, cluster in category.iteritems():
-                        C = assigned_totals[clustername]
-                        intersection = cluster
-                        precision = intersection/C
-                        recall = intersection/L
-                        fscore = (1.0+(beta**2.0))*((precision*recall)/((beta**2.0)*precision+recall))                    
-                        if fscore > Fmax:
-                            Fmax = fscore
-                    F += (L/N) * Fmax
-                #print "%s:\t\tpurity\t%0.3f,\tinvpur\t%0.3f,\tf-score\t%0.3f" \
-                    #% (comparison,
-                    #purity,
-                    #ipurity,
-                    #F,
-                    #)
-                precision = 0.0
-                recall = 0.0
-                for e in bcubed.values():
-                    c = 0
-                    pn = 0
-                    rn = 0
-                    for ep in bcubed.values():
-                        #correct = (e[0] == ep[0]) == (e[1] == ep[1])
-                        if (e[0] == ep[0]) and (e[1] == ep[1]):
-                            c += 1
-                        if (e[0] == ep[0]):
-                            pn += 1
-                        if (e[1] == ep[1]):
-                            rn += 1
-                    precision += (c/pn)
-                    recall += (c/rn)
-                precision = precision/N
-                recall = recall/N
-                fscore = (1.0+(beta**2.0))*((precision*recall)/((beta**2.0)*precision+recall))                    
-                print "%s:\t%0.3f\t%0.3f\t%0.3f\t%0.3f\t%0.3f\t%0.3f\t%0.3f" \
-                    % (comparison,
-                    precision,
-                    recall,
-                    fscore,
-                    purity,
-                    ipurity,
-                    F,
-                    len(assigned_totals)/len(oracle_totals)
-                    )
-                comparison_data['csvfile'].writerow([
-                    N,
-                    precision,
-                    recall,
-                    fscore,
-                    purity,
-                    ipurity,
-                    F,
-                    len(assigned_totals),
-                    len(oracle_totals),
-                    ])
-                comparison_data['csvfileh'].flush()
+                    intersection = cluster
+                    precision = intersection/C
+                    recall = intersection/L
+                    fscore = (1.0+(beta**2.0))*((precision*recall)/((beta**2.0)*precision+recall))                    
+                    if fscore > Fmax:
+                        Fmax = fscore
+                F += (L/N) * Fmax
+            #print "%s:\t\tpurity\t%0.3f,\tinvpur\t%0.3f,\tf-score\t%0.3f" \
+                #% (comparison,
+                #purity,
+                #ipurity,
+                #F,
+                #)
+            precision = 0.0
+            recall = 0.0
+            for e in bcubed.values():
+                c = 0
+                pn = 0
+                rn = 0
+                for ep in bcubed.values():
+                    #correct = (e[0] == ep[0]) == (e[1] == ep[1])
+                    if (e[0] == ep[0]) and (e[1] == ep[1]):
+                        c += 1
+                    if (e[0] == ep[0]):
+                        pn += 1
+                    if (e[1] == ep[1]):
+                        rn += 1
+                precision += (c/pn)
+                recall += (c/rn)
+            precision = precision/N
+            recall = recall/N
+            fscore = (1.0+(beta**2.0))*((precision*recall)/((beta**2.0)*precision+recall))                    
+            print "%s:\t%0.3f\t%0.3f\t%0.3f\t%0.3f\t%0.3f\t%0.3f\t%0.3f" \
+                % (comparison,
+                precision,
+                recall,
+                fscore,
+                purity,
+                ipurity,
+                F,
+                len(assigned_totals)/len(oracle_totals)
+                )
+            comparison_data['csvfile'].writerow([
+                N,
+                precision,
+                recall,
+                fscore,
+                purity,
+                ipurity,
+                F,
+                len(assigned_totals),
+                len(oracle_totals),
+                ])
+            comparison_data['csvfileh'].flush()
         #es.indices.refresh(index=comparison)
         #es.indices.flush(index=comparison)
     crashes_so_far += 1

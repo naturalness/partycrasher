@@ -434,6 +434,27 @@ class RestServiceTestCase(unittest.TestCase):
 
         assert response.json().get('database_id') == third_id
         buckets = response.json().get('buckets')
+        top_match_score = float(buckets['top_match']['score'])
+        for key, value in buckets.iteritems():
+            try:
+                threshhold = float(key)
+            except ValueError:
+                threshhold = None
+            if threshhold is not None:
+                if top_match_score > threshhold:
+                    assert value is not None
+                    try:
+                        assert value['id'] == self.get_crash_bucket(buckets['top_match']['report_id'], key)
+                    except:
+                        print(key)
+                        print(value)
+                        print(self.get_crash_bucket(buckets['top_match']['report_id'], threshhold))
+                        print(buckets['top_match']['report_id'])
+                        print(threshhold)
+                        raise
+                else:
+                    pass # check bucket size == 1?
+            
         assert len(buckets) > 0
         # Get the LAST (pickiest) threshold.
         last_threshold = next(iter(reversed(sorted_thresholds(buckets))))
@@ -678,6 +699,21 @@ class RestServiceTestCase(unittest.TestCase):
         os.killpg(os.getpgid(self.rest_service.pid), signal.SIGTERM)
         self.rest_service.wait()
 
+    def get_crash_bucket(self, database_id, threshhold):
+        """
+        Fetch a report and then return the bucket id
+        """
+
+        # Now fetch it! Globally!
+        report_url = self.path_to('reports', database_id)
+        response = requests.get(report_url)
+        try:
+            assert response.json().get('buckets').get(threshhold) is not None
+        except:
+            print(response.json().get('buckets'))
+            raise
+        return response.json().get('buckets').get(threshhold).get('id')
+
 ######################
 # More Test Utilites #
 ######################
@@ -753,7 +789,6 @@ def wait_for_service_startup(port, timeout=5.0, delay=0.25,
         time.sleep(delay)
 
     raise RuntimeError('Could not connect to {}:{}'.format(hostname, port))
-
 
 if __name__ == '__main__':
     unittest.main()
