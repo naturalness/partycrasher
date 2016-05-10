@@ -26,6 +26,7 @@ from elasticsearch import Elasticsearch
 import elasticsearch.helpers
 from bucketer import MLT, MLTStandardUnicode, MLTLetters, MLTIdentifier, MLTCamelCase, MLTLerch, MLTNGram
 from threshold import Threshold
+import json
 
 es = Elasticsearch(["localhost"], retry_on_timeout=True)
 ESCrash.es = es
@@ -130,25 +131,25 @@ for comparison in comparisons:
             )
         comparison_data['threshold'] = Threshold(kwargs['thresholds'][0])
 
-oracle_all = elasticsearch.helpers.scan(es,
-    index='oracle',
-    query={
-        '_source': ['database_id', 'bucket']
-    })
-    
+with open(sys.argv[1], mode='r') as oracle_file:
+    oracle_file_data = json.load(oracle_file)
+
+crashes = oracle_file_data['crashes']
+oracle_all = oracle_file_data['oracle']
 all_ids = {}
 all_buckets = {}
 seen_buckets = {'new':True}
 
-for i in oracle_all:
-    database_id = i['_source']['database_id']
-    bucket = i['_source']['bucket']
+del oracle_file_data
+
+for k, v in oracle_all.iteritems():
+    database_id = v['database_id']
+    bucket = v['bucket']
     all_ids[database_id] = bucket
     if not bucket in all_buckets:
         all_buckets[bucket] = [database_id]
     else:
         all_buckets[bucket].append(database_id)
-del oracle_all
 
 print str(len(all_ids)) + " IDs found in oracle"
 crashes_so_far = 0
@@ -177,11 +178,12 @@ print "Running simulations..."
 interval = print_after
 
 for database_id in sorted(all_ids.keys()):
-    oracledata = ESCrash(database_id, index='oracle')
-    crashdata = ESCrash(database_id)
+    oracledata = oracle_all[database_id]
+    crashdata = crashes[database_id]
+    #print json.dumps(crashdata, indent=2)
     if len(crashdata['stacktrace']) < 1:
+        print "Skipping: " + database_id
         continue
-    #print database_id
     do_print = False
     if ((crashes_so_far >= print_after)
         or (crashes_so_far >= (len(all_ids)-2))):
@@ -211,7 +213,7 @@ for database_id in sorted(all_ids.keys()):
         else:
             bucketer = comparison_data['bucketer']
             comparer = None
-        simulationdata = bucketer.assign_save_buckets(crashdata)
+        simulationdata = bucketer.assign_save_buckets(crash.Crash(crashdata))
         simbuckets = simulationdata[comparison]
         #print repr(simbuckets)
         #for k in simbuckets.keys():
