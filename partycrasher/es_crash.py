@@ -27,6 +27,8 @@ from pc_exceptions import IdenticalReportError
 from crash import Crash, Stacktrace, Stackframe
 from threshold import Threshold
 
+import json # For debugging
+
 class ReportNotFoundError(KeyError):
     """
     Raised when... the crash is not found!
@@ -137,37 +139,16 @@ class ESCrash(Crash):
     def getrawbyid(cls, database_id, index='crashes'):
         if cls.es is None:
             raise RuntimeError('Forgot to monkey-patch ES connection to ESCrash!')
-
+        
         if index in cls.crashes:
             if database_id in cls.crashes[index]:
                 return cls.crashes[database_id]
         try:
-            response = cls.es.search(index=index, body={
-                'query': {
-                    'filtered':{
-                        'query': {
-                            'match_all': {}
-                        },
-                        'filter': {
-                            'term': {
-                                'database_id': database_id,
-                            }
-                        }
-                    }
-                }
-            })
+            response = cls.es.get(index=index, id=database_id)
         except elasticsearch.exceptions.NotFoundError:
             return None
 
-        if response['hits']['total'] == 0:
-            return None
-        elif response['hits']['total'] > 1:
-            raise Exception("The ID occurs in ES twice, which shouldn't be "
-                            "possible, since they are all supposed to be stored "
-                            "with their document ID equal to the database ID.")
-        else:
-            # should this be ESCrash.__base__?
-            return Crash(response['hits']['hits'][0]['_source'])
+        return Crash(response['_source'])
 
     def __init__(self, index='crashes', crash=None):
         self.index = index

@@ -368,6 +368,7 @@ class LaunchpadCrash(Crash):
                 skip_files.append(stack_path)
                 return cls.load_from_file(path, skip_files)
             crash['stacktrace'] = trace
+            crash['project'] = 'Ubuntu'
             #print json.dumps(crash, indent=4, default=repr)
         else:
             raise NotImplementedError("Not a directory, I don't know how to load this.")

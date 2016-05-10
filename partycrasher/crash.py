@@ -96,6 +96,10 @@ class Crash(dict):
             'type': bytes,
             'converter': bytes,
             },
+        'project': {
+            'type': bytes,
+            'converter': bytes,
+            },
     }
 
     def __init__(self, *args):
