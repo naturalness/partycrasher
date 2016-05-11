@@ -26,7 +26,6 @@ except NameError:
 else:
     StringTypes = (str, unicode)
 
-
 class Threshold(object):
     """
     A wrapper for a bucket threshold value. Ensures proper serialization
@@ -91,6 +90,4 @@ class Threshold(object):
         assert isinstance(self._value, Decimal)
         assert str_value.count('.') == 1, 'Invalid decimal number'
         return str_value.replace('.', '_')
-
-
 

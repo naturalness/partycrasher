@@ -90,7 +90,8 @@ class RestServiceTestCase(unittest.TestCase):
         # os.setsid() is required to start the server in a new session in
         # Unix; Windows needs something else...
         self.rest_service = subprocess.Popen([python_cmd, REST_SERVICE_PATH,
-                                              str(self.port)],
+                                              '--port', str(self.port), 
+                                              '--debug'],
                                              preexec_fn=os.setsid)
 
         # Wait for the REST service to start up.

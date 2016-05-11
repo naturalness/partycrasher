@@ -16,6 +16,8 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from __future__ import print_function
+import sys
 import datetime
 import time
 from weakref import WeakValueDictionary
@@ -24,7 +26,7 @@ import elasticsearch
 from elasticsearch import Elasticsearch
 
 from pc_exceptions import IdenticalReportError
-from crash import Crash, Stacktrace, Stackframe
+from crash import Crash, Stacktrace, Stackframe, CrashEncoder, Buckets
 from threshold import Threshold
 
 import json # For debugging
@@ -83,15 +85,16 @@ class ESCrashMeta(type):
                     # Ensure this is UTC ISO format
                     now = datetime.datetime.utcnow()
                     crash.setdefault('date', now.isoformat())
+                    crash_es_safe = crash.copy()
                     try:
                         response = cls.es.create(index=index,
                                                  doc_type='crash',
-                                                 body=crash,
+                                                 body=json.dumps(crash, cls=ESCrashEncoder),
                                                  id=crash['database_id'])
                         assert response['created']
                     except elasticsearch.exceptions.ConflictError as e:
                         if 'DocumentAlreadyExistsException' in e.error:
-                            print "Got DocumentAlreadyExistsException on create!"
+                            print("Got DocumentAlreadyExistsException on create!", file=stderr)
                             time.sleep(5) # Let ES think about its life...
                             already = cls.getrawbyid(crash['database_id'], index=index)
                             if not already is None:
@@ -175,14 +178,16 @@ class ESCrash(Crash):
 
         # Update the crash in ElasticSearch.
         if (oldval != newval) and self.hot:
+            body={
+                'doc': {
+                        key: newval
+                    }
+                }
             r = self.es.update(index=self.index,
                         doc_type='crash',
                         id=self['database_id'],
-                        body={
-                            'doc': {
-                                    key: hacky_serialize_thresholds(newval)
-                                }
-                            }
+                        # use our own serializer instead of py-elasticsearch
+                        body=json.dumps(body, cls=ESCrashEncoder)
                         )
 
     def get_bucket_id(self, threshold):
@@ -204,22 +209,34 @@ class ESCrash(Crash):
         # TODO: clear self
 
 
-def hacky_serialize_thresholds(value):
-    """
-    Must serialize thresholds, but ElasticSearch is all like... nah.
-    """
-    if not isinstance(value, dict):
-        return value
 
-    new_dict = value.copy()
-    for key in value.keys():
-        if not isinstance(key, Threshold):
-            continue
-        # Change threshold to saner value.
-        new_dict[key.to_elasticsearch()] = value[key]
-        del new_dict[key]
-    return new_dict
+class ESCrashEncoder(CrashEncoder):
+    
+    @staticmethod
+    def hacky_serialize_thresholds(value):
+        """
+        Must serialize thresholds, but ElasticSearch is all like... nah.
+        Actually the problem is that python dumps doesn't allow non-string keys?
+        """
+        assert isinstance(value, Buckets)
 
+        new_dict = value._od.copy()
+        for key in value.keys():
+            if not isinstance(key, Threshold):
+                continue
+            # Change threshold to saner value.
+            new_dict[key.to_elasticsearch()] = value[key]
+            del new_dict[key]
+        return new_dict
+
+    def default(self, o):
+        #assert False
+        #print(type(o), file=sys.stderr)
+        if isinstance(o, Buckets):
+            return self.hacky_serialize_thresholds(o)
+        else:
+            return CrashEncoder.default(self, o)
+    
 
 
 import unittest

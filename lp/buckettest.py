@@ -27,6 +27,16 @@ import elasticsearch.helpers
 from bucketer import MLT, MLTStandardUnicode, MLTLetters, MLTIdentifier, MLTCamelCase, MLTLerch, MLTNGram
 from threshold import Threshold
 import json
+import requests
+from rest_client import RestClient
+
+if len(sys.argv) < 2+1:
+    print "Usage: " + sys.argv[0] + "oracle.json http://restservicehost:port/"
+    
+oracle_file_path = sys.argv[1]
+rest_service_url = sys.argv[2]
+
+client = RestClient(rest_service_url)
 
 es = Elasticsearch(["localhost"], retry_on_timeout=True)
 ESCrash.es = es
@@ -38,7 +48,7 @@ comparisons = {
     #'ccx1.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[1.0, 'lowercase':False, 'only_stack':False}},
     #'ccx2.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[2.0, 'lowercase':False, 'only_stack':False}},
     #'ccx3.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[3.0, 'lowercase':False, 'only_stack':False}},
-    'ccx4_0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[4.0], 'lowercase':False, 'only_stack':False}},
+    #'ccx4_0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[4.0], 'lowercase':False, 'only_stack':False}},
     #'ccx5.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[5.0, 'lowercase':False, 'only_stack':False}},
     #'ccx6.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[6.0, 'lowercase':False, 'only_stack':False}},
     #'ccx7.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[7.0, 'lowercase':False, 'only_stack':False}},
@@ -93,6 +103,18 @@ comparisons = {
     #'top1l': {'comparer': TopNLoose, 'kwargs': {'n':1}},
 }
 
+response = requests.get(client.root_url)
+thresholds = response.json()['config']['thresholds']
+#except:
+    #raise
+    #print response.status_code
+    #print response.text
+    #raise
+
+for threshold in thresholds:
+    name = "T" + threshold
+    comparisons[name] = {'threshold': threshold}
+
 max_buckets = 1
 
 for comparison in comparisons:
@@ -110,28 +132,8 @@ for comparison in comparisons:
         'buckets',
         'obuckets',
         ])
-    if 'comparer' in comparison_data:
-        kwargs = comparison_data['kwargs']
-        comparison_data['comparer'] = (
-            comparison_data['comparer'](
-                elasticsearch=es,
-                name=comparison,
-                index=comparison,
-                **kwargs)
-            )
-        comparison_data['bucketer'] = comparison_data['comparer']
-    elif 'bucketer' in comparison_data:
-        kwargs = comparison_data['kwargs']
-        comparison_data['bucketer'] = (
-            comparison_data['bucketer'](
-                elasticsearch=es,
-                index=comparison,
-                name=comparison,
-                **kwargs)
-            )
-        comparison_data['threshold'] = Threshold(kwargs['thresholds'][0])
 
-with open(sys.argv[1], mode='r') as oracle_file:
+with open(oracle_file_path, mode='r') as oracle_file:
     oracle_file_data = json.load(oracle_file)
 
 crashes = oracle_file_data['crashes']
@@ -167,13 +169,21 @@ def argmax(d):
 
 # reset simulation index for each comparison type
 # for time-travel prevention
-print "Resetting indices..."
-for comparison in sorted(comparisons.keys()):
-    print "Deleting index %s" % comparison
-    es.indices.delete(index=comparison, ignore=[400, 404])
-    comparisons[comparison]['bucketer'].create_index()
-es.cluster.health(wait_for_status='yellow')
-print "Running simulations..."
+#print "Resetting indices..."
+#for comparison in sorted(comparisons.keys()):
+    #print "Deleting index %s" % comparison
+    #es.indices.delete(index=comparison, ignore=[400, 404])
+    #comparisons[comparison]['bucketer'].create_index()
+#es.cluster.health(wait_for_status='yellow')
+#print "Running simulations..."
+try: 
+    response = requests.delete(client.path_to('reports'))
+    assert response.status_code == 200
+    del response
+except:
+    print response.status_code
+    print response.text
+    raise
 
 interval = print_after
 
@@ -194,6 +204,8 @@ for database_id in sorted(all_ids.keys()):
         do_print = True
         print "in %i/%i crashes and %i/%i bugkets:" % (crashes_so_far, len(all_ids), len(seen_buckets), len(all_buckets))
         print "\tb3_P\tb3_R\tb3_F\tpurity\tinvpur\tpurF\tbuckets"
+    response = requests.post(client.path_to('reports'), json=crashdata)
+    simulationdata = response.json()
     for comparison in sorted(comparisons.keys()):
         comparison_data = comparisons[comparison]
         if not ('oracle_to_assigned' in comparison_data):
@@ -207,19 +219,15 @@ for database_id in sorted(all_ids.keys()):
         oracle_totals = comparison_data['oracle_totals']
         assigned_totals = comparison_data['assigned_totals']
         bcubed = comparison_data['bcubed']
-        if 'comparer' in comparison_data:
-            bucketer = comparison_data['comparer']
-            comparer = comparison_data['comparer']
-        else:
-            bucketer = comparison_data['bucketer']
-            comparer = None
-        simulationdata = bucketer.assign_save_buckets(crash.Crash(crashdata))
-        simbuckets = simulationdata[comparison]
+        #print json.dumps(response.json(), indent=2)
+        #sys.exit(1)
+        #simulationdata = bucketer.assign_save_buckets(crash.Crash(crashdata))
+        simbuckets = simulationdata['buckets']
         #print repr(simbuckets)
         #for k in simbuckets.keys():
             #print k.__hash__()
         #print repr(comparison_data['threshold'].__hash__())
-        simbucket = simbuckets[comparison_data['threshold']]
+        simbucket = simbuckets[str(comparison_data['threshold'])]['id']
         #print repr(simbucket)
         obucket = oracledata['bucket']
         bcubed[database_id] = (simbucket, obucket)

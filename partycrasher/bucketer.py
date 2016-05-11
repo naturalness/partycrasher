@@ -17,15 +17,17 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from __future__ import print_function
+
 import os
 import json
 import uuid
 import time
 import sys
 
-from collections import OrderedDict
 
-from crash import Crash
+
+from crash import Crash, Buckets
 from es_crash import ESCrash
 from threshold import Threshold
 
@@ -112,12 +114,13 @@ class Bucketer(object):
         if buckets is None:
             buckets = self.assign_buckets(crash)
 
-        saved_crash = ESCrash(crash, index=self.index)
-
-        # Learned the hard way that we can't use setdefault...
-        saved_buckets = saved_crash.get(self.name, {}).copy()
+        ## Learned the hard way that we can't use setdefault...
+        saved_buckets = crash.get(self.name, Buckets()).copy()
         saved_buckets.update(buckets)
-        saved_crash[self.name] = saved_buckets
+        crash[self.name] = saved_buckets
+        
+        saved_crash = ESCrash(crash, index=self.index)
+        
 
         return saved_crash
 
@@ -239,7 +242,7 @@ class MLT(Bucketer):
                 else:
                     yield threshold, default
 
-        matching_buckets = OrderedDict(assign_buckets_per_threshold())
+        matching_buckets = Buckets(assign_buckets_per_threshold())
 
         # Add the top match.
         if raw_matches:
@@ -255,7 +258,7 @@ class MLT(Bucketer):
 
     def assign_save_buckets(self, crash):
         buckets = self.assign_buckets(crash)
-        assert isinstance(buckets, dict)
+        assert isinstance(buckets, Buckets)
         return super(MLT, self).assign_save_buckets(crash, buckets)
 
     def alt_bucket(self, crash, bucket_field='bucket'):
@@ -269,7 +272,7 @@ class MLTStandardUnicode(MLT):
             filter_ = ['lowercase']
         else:
             filter_ = []
-        print "Creating index: %s" % self.index
+        print("Creating index: %s" % self.index)
         self.es.indices.create(index=self.index, ignore=400,
         body={
             'mappings': {
@@ -300,7 +303,7 @@ class MLTLetters(MLT):
             tokenizer = 'lowercase'
         else:
             tokenizer = 'letter'
-        print "Creating index: %s" % self.index
+        print("Creating index: %s" % self.index)
         self.es.indices.create(index=self.index, ignore=400,
         body={
             'mappings': {
@@ -327,7 +330,7 @@ class MLTLetters(MLT):
 class MLTIdentifier(MLT):
     """MLT with an analyzer intended to capture programming words"""
     def create_index(self):
-        print "Creating index: %s" % self.index
+        print("Creating index: %s" % self.index)
         self.es.indices.create(index=self.index, ignore=400,
         body={
             'mappings': {
@@ -387,7 +390,7 @@ class MLTCamelCase(MLT):
 class MLTLerch(MLT):
     """MLT with an analyzer as described in Lerch, 2013"""
     def create_index(self):
-        print "Creating index: %s" % self.index
+        print("Creating index: %s" % self.index)
         self.es.indices.create(index=self.index, ignore=400,
         body={
             'mappings': {
@@ -438,7 +441,7 @@ class MLTNGram(MLT):
             filter_ = ['lowercase']
         else:
             filter_ = []
-        print "Creating index: %s" % self.index
+        print("Creating index: %s" % self.index)
         self.es.indices.create(index=self.index, ignore=400,
         body={
             'mappings': {

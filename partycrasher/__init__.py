@@ -65,15 +65,24 @@ class PartyCrasher(object):
         if config_file is not None:
             self.config.readfp(config_file)
 
-        self.esServers = self.config.get('partycrasher.elastic', 'hosts').split()
-
-        # Default to localhost if it's not configured.
-        if len(self.esServers) < 1:
-            self.esServers = ['localhost']
-
         # self.es and self.bucketer are lazy properties.
         self._es = None
         self._bucketer = None
+        
+        
+    @property
+    def es_servers(self):
+        """
+        Configured ES server list
+        """
+        return self.config.get('partycrasher.elastic', 'hosts').split()
+        
+    @property
+    def allow_delete_all(self):
+        """
+        Whether or not the instance should allow all data to be deleted at once
+        """
+        return self.config.getboolean('partycrasher.elastic', 'allow_delete_all')
 
     @property
     def es(self):
@@ -101,12 +110,24 @@ class PartyCrasher(object):
         """
         # TODO: determine from static/dynamic configuration
         return Threshold(4.0)
+    
+    def delete_and_recreate_index(self):
+        """
+        Deletes the entire index and recreates it. This destroys all of the
+        reports.
+        """
+        assert self.allow_delete_all
+        self.es.indices.delete(index='crashes')
+        self.es.cluster.health(wait_for_status='yellow')
+        self._bucketer.create_index()
+        self.es.cluster.health(wait_for_status='yellow')
+        
 
     def _connect_to_elasticsearch(self):
         """
         Establishes a connection to ElasticSearch. given configuration.
         """
-        self._es = Elasticsearch(self.esServers)
+        self._es = Elasticsearch(self.es_servers)
 
         # XXX: Monkey-patch our instance to the global.
         ESCrash.es = self._es
@@ -116,6 +137,7 @@ class PartyCrasher(object):
                                       lowercase=False, only_stack=False,
                                       index='crashes', elasticsearch=self.es)
         self._bucketer.create_index()
+        self.es.cluster.health(wait_for_status='yellow')
         return self._es
 
     def ingest(self, crash, dryrun=False):
@@ -305,8 +327,10 @@ def default_config():
         'partycrasher.http': {
             'prefix': '/'
         },
-
         'partycrasher.elastic': {
             'primary': 'localhost:9200'
+        },
+        'partycrasher': {
+            'allow_delete_all': False,
         },
     }

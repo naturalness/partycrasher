@@ -19,12 +19,43 @@
 
 import json, datetime
 import dateparser
+from collections import OrderedDict
 
 
 # This is the separator which is meant to be used when turning
 # stack traces into strings, between levels of the stack, going
 # DOWN from the TOP (most recent call FIRST)
 STACK_SEPARATOR = u' ≻ '
+
+class Buckets(object):
+    """Proxy for OrderedDict"""
+    def __init__(self, *args, **kwargs):
+        self._od = OrderedDict(*args, **kwargs)
+    
+    def __getattr__(self, a):
+        return getattr(self._od, a)
+    
+    def __setitem__(self, *args, **kwargs):
+        return self._od.__setitem__(*args, **kwargs)
+
+    def __getitem__(self, *args, **kwargs):
+        return self._od.__getitem__(*args, **kwargs)
+    
+    def __delitem__(self, *args, **kwargs):
+        return self._od.__delitem__(*args, **kwargs)
+
+    def __eq__(self, other):
+        if isinstance(other, Buckets):
+            return self._od.__eq__(other._od)
+        else:
+            return self._od.__eq__(other)
+
+    def copy(self, *args, **kwargs):
+        new = Buckets()
+        new._od = self._od.copy()
+        return new
+    
+    # TODO: automatically convert keys of wrong type to Threshold
 
 class Stackframe(dict):
     pass
@@ -99,6 +130,10 @@ class Crash(dict):
         'project': {
             'type': bytes,
             'converter': bytes,
+            },
+        'buckets': {
+            'type': Buckets,
+            'converter': Buckets,
             },
     }
 
@@ -175,8 +210,12 @@ class Crash(dict):
             if isinstance(val, self.canonical_fields[key]['type']):
                 return super(Crash, self).__setitem__(key, val)
             else:
-                return super(Crash, self).__setitem__(key,
-                    self.canonical_fields[key]['converter'](val))
+                if self.canonical_fields[key]['converter'] is not None:
+                    return super(Crash, self).__setitem__(key,
+                        self.canonical_fields[key]['converter'](val))
+                else:
+                    raise ValueError(key + " must be of type " +
+                             self.canonical_fields[key]['type'].__name__)
         else:
             return super(Crash, self).__setitem__(key, val)
 

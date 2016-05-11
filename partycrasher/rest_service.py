@@ -21,6 +21,7 @@
 import os
 import sys
 import time
+import argparse
 
 from flask import current_app, json, jsonify, request, url_for, redirect
 from flask import render_template
@@ -48,9 +49,7 @@ app = make_json_app('partycrasher')
 CORS(app)
 app.json_encoder = ResourceEncoder
 
-# XXX: This shouldn't be hard-coded!
-with open(os.path.join(REPOSITORY_ROUTE, 'partycrasher.cfg')) as config_file:
-    crasher = partycrasher.PartyCrasher(config_file)
+crasher = None
 
 
 @app.errorhandler(BadRequest)
@@ -116,11 +115,12 @@ def root():
     return jsonify(self=dict(href('root'), rel='canonical'),
                    partycrasher={
                        'version': partycrasher.__version__,
-                       'elastic': crasher.esServers,
+                       'elastic': crasher.es_servers,
                    },
                    projects=projects,
                    config={
-                       'default_threshold': 4.0
+                       'default_threshold': 4.0,
+                       'thresholds': crasher.thresholds
                    })
 
 
@@ -419,7 +419,7 @@ def not_available_in_this_release():
     @app.route('/<project>/reports/<report_id>', methods=['DELETE'])
     def delete_report(project=None, report_id=None):
         """
-        .. api-doc-order: 3
+        .. api-doc-order: 200
 
         Delete an existing report
         =========================
@@ -595,6 +595,37 @@ def query_buckets(project=None, threshold=None):
                    top_buckets=list(buckets))
 
 
+@app.route('/reports', methods=['DELETE'])
+def delete_reports_no_project():
+    """
+    .. api-doc-order: 100
+
+    Delete every report in the database
+    ==============================
+    
+    ::
+
+        DELETE /reports HTTP/1.1
+
+    Deletes every report in the database. Requires that 
+    ``partycrasher.elastic.allow_delete_all`` be set in the configuration.
+    
+    .. warning::
+
+        Issuing this command deletes every report in the database. All of them.
+
+    ::
+
+        HTTP/1.1 200 OK
+
+    """
+    if crasher.allow_delete_all:
+        crasher.delete_and_recreate_index()
+        return jsonify(status="All reports deleted"), 200
+    else:
+        return jsonify(error="Deleting all reports not enabled"), 403
+
+
 @app.route('/<project>/config')
 def get_project_config(project=None):
     """
@@ -729,22 +760,53 @@ def jsonify_resource(resource):
 
 
 def main():
+    global crasher
+    parser = argparse.ArgumentParser(description="Run PartyCrasher REST service.")
+    parser.add_argument('--port', type=int, default=5000,
+                        help='port to run the REST HTTP service on')
+    parser.add_argument('--host', type=str, default='0.0.0.0',
+                        help='port to run the REST HTTP service on')
+    parser.add_argument('--debug', action='store_true',
+                        help='enable Flask debugging mode')
+    parser.add_argument('--profile', action='store_true',
+                        help='enable profiling')
+    parser.add_argument('--config-file', type=str,
+                        default=
+                          os.path.join(REPOSITORY_ROUTE, 'partycrasher.cfg'),
+                        help='specify location of PartyCrasher config file')
+    parser.add_argument('--allow-delete-all', action='store_true',
+                        help='allow users of the REST interface to delete all data')
+
+    kwargs = vars(parser.parse_args())
+
+    with open(kwargs['config_file']) as config_file:
+        crasher = partycrasher.PartyCrasher(config_file)
+    del kwargs['config_file']
+    
+    if kwargs['allow_delete_all']:
+        crasher.config.set('partycrasher.elastic', 'allow_delete_all', 'yes')
+    del kwargs['allow_delete_all']
+
     crasher.ensure_index_created()
-    kwargs = {
-        # Make the server publically visible.
-        'host': '0.0.0.0',
-        'debug': True,
-    }
 
     # TODO:
-    #  - add parameter: -c [config-file]
     #  - add parameter: -C [config-setting]
+    
+    profile = kwargs['profile']
+    
+    #global app
+    #if kwargs['profile']:
+        #from werkzeug.contrib.profiler import ProfilerMiddleware
+        #app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30])
+    del kwargs['profile']
 
-    # Add port if required.
-    if len(sys.argv) > 1:
-        kwargs.update(port=int(sys.argv[1]))
-
-    return app.run(**kwargs)
+    if profile:
+        import cProfile
+        global run_kwargs
+        run_kwargs = kwargs
+        cProfile.run('app.run(**run_kwargs)', sort='cumtime')
+    else:
+        return app.run(**kwargs)
 
 
 if __name__ == '__main__':
