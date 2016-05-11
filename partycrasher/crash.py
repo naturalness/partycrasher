@@ -142,14 +142,6 @@ class Crash(dict):
         if not (len(args) == 1 and isinstance(args[0], self.__class__)):
             self.normalize()
 
-    if False:
-        def __repr__(self):
-            return (self.__class__.__name__
-                    + "("
-                    + super(Crash, self).__repr__()
-                    + ")"
-                    )
-
     def __eq__(self, other):
         return (super(Crash, self).__eq__(other)
                 and self.__class__ == other.__class__)

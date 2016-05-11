@@ -24,7 +24,7 @@ import time
 import argparse
 
 from flask import current_app, json, jsonify, request, url_for, redirect
-from flask import render_template
+from flask import render_template, send_file, send_from_directory
 from flask.ext.cors import CORS
 
 # Hacky things to add PartyCrasher to the path.
@@ -123,6 +123,19 @@ def root():
                        'thresholds': crasher.thresholds
                    })
 
+
+@app.route('/ui/', methods=['GET'])
+def home():
+    return send_file('ngapp/app/index.html')
+
+@app.route('/ui/bower_components/<path:filename>', methods=['GET'])
+def bower_components(filename):
+    return send_from_directory('ngapp/bower_components/', filename)
+
+@app.route('/ui/<path:filename>', methods=['GET'])
+def ui(filename):
+    print("ui " + filename)
+    return send_from_directory('ngapp/app/', filename)
 
 @app.route('/demo')
 def demo():
