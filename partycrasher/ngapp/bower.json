@@ -13,7 +13,8 @@
     "angular-sanitize": "^1.4.0",
     "angular-touch": "^1.4.0",
     "lodash": "~4.12.0",
-    "restangular": "~1.5.2"
+    "restangular": "~1.5.2",
+    "bootstrap-combobox": "~1.1.7"
   },
   "devDependencies": {
     "angular-mocks": "^1.4.0"
