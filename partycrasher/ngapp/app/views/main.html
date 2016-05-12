@@ -1,45 +1,6 @@
-<script type="text/ng-template" id="stuffValue">
-  <span ng-switch="displayType(key, value)">
-    <span ng-switch-when="link">
-      <a href="{{uiLink(value)}}">{{value}}</a>
-    </span>
-    <span ng-switch-when="array">
-      <span ng-include="'stuffArray'"></span>
-    </span>
-    <span ng-switch-when="dict">
-      <span ng-include="'stuffTree'"></span>
-    </span>
-    <span ng-switch-default class="stuffValue">
-      {{value}}
-    </span>
-  </span>
-</script>
+<div ng-controller="MainCtrl as vm">
+    This is the main view.
 
-<script type="text/ng-template" id="stuffArray">
-  <ol start="0" ng-init="prevTreeIndex = treeIndex;" class="stuffTree">
-    <li ng-repeat="(key, value) in value"
-      ng-init="treeIndex = treeIndex + '_' + $index;">
-      {{key}}.
-      <span class="glyphicon glyphicon-collapse-down"
-      id="{{treeIndex}}" ng-click="clicked($event)"></span>
-      <span ng-include="'stuffValue'" id="{{treeIndex}}_content" collapsible></span>
-    </li>
-  </ol>
-</script>
-
-<script type="text/ng-template" id="stuffTree">
-  <ul ng-init="prevTreeIndex = treeIndex;" class="stuffTree">
-    <li ng-repeat="(key, value) in value" 
-        ng-init="treeIndex = treeIndex + '_' + $index;">
-        {{key}}:
-        <span class="glyphicon glyphicon-collapse-down"
-        id="{{treeIndex}}" ng-click="clicked($event)"></span>
-      <span ng-include="'stuffValue'" id="{{treeIndex}}_content" collapsible></span>
-    </li>
-  </ul>
-<!--  <span ng-init="treeIndex = prevTreeIndex"></span>-->
-</script>
-
-<div ng-include="'stuffValue'" ng-init="treeIndex = 'tree'"></div>
-
+    <div ng-include="'views/tree.html'"></div>
+</div>
 

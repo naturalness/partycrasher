@@ -43,8 +43,8 @@ data = NULL
 data = lapply(setNames(methods, make.names(mnames)), 
          read.csv)
 allcolors <- gray.colors(7, start=0.0, end=1.0)
-colors <- rep(allcolors[1:3], each=3)
-fcolors <- rep(allcolors[5:7], times=3)
+colors <- rep(allcolors[1:3], each=3, times=2)
+fcolors <- rep(allcolors[5:7], times=6)
 linetype <- rep(c(1,2), each=10)
 plotchar <- rep(c(22, 21, 24, 23, 25), 10)
 
@@ -70,6 +70,7 @@ plota<-function(data, metric, y, l, ylim=c(0.2,1.0), lpos="bottomleft",
     }
     if (!is.null(oracle)) {
         i = nmethods+1
+        print(i)
         method <- data[[1]]
         lnames=c(lnames, oracle)
         lines(method[["n"]], method[["obuckets"]], type='o', cex=linesx,
