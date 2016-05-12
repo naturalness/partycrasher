@@ -1,1 +1,17 @@
-<p>This is the topBuckets view.</p>
+<div ng-controller="TopbucketsCtrl as topBuckets">
+    Threshold: <select ng-model="currentThreshold">
+        <option></option>
+        <option value="1.0">1.0</option>
+        <option value="2.0">2.0</option>
+        <option value="3.0">3.0</option>
+        <option value="4.0">4.0</option>
+        <option value="5.0">5.0</option>
+    </select>
+
+    <div ng-include="'views/tree.html'"></div>
+</div>
+<!--<script type="text/javascript">
+  $(document).ready(function(){
+    $('.combobox').combobox({bsVersion: 2});
+  });
+</script>-->

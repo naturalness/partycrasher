@@ -33,8 +33,8 @@ angular
         controllerAs: 'about'
       })
       .when('/:project?/buckets/:threshold?', {
-        templateUrl: 'views/main.html',
-        controller: 'MainCtrl',
+        templateUrl: 'views/topbuckets.html',
+        controller: 'TopbucketsCtrl',
         controllerAs: 'main'
       })
       .when('/:project?/buckets/:threshold?/:id', {
