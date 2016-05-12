@@ -1,11 +1,7 @@
 <div ng-controller="TopbucketsCtrl as topBuckets">
     Threshold: <select ng-model="currentThreshold">
-        <option></option>
-        <option value="1.0">1.0</option>
-        <option value="2.0">2.0</option>
-        <option value="3.0">3.0</option>
-        <option value="4.0">4.0</option>
-        <option value="5.0">5.0</option>
+        <option ng-repeat="option in availableThresholds" value="{{option}}">{{option}}</option>
+        </select>
     </select>
 
     <div ng-include="'views/tree.html'"></div>

@@ -10,11 +10,15 @@
 angular.module('ngappApp')
   .factory('restService', ['Restangular', function (Restangular) {
     var service = {
-      getRest: getRest
+      getRest: getRest,
+      getRoot: getRoot
     };
     
     function getRest(url){
       return Restangular.one(url).get();
+    }
+    function getRoot(){
+      return Restangular.one("/").get();
     }
     
     return service;
