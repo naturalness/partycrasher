@@ -32,6 +32,21 @@ angular
         controller: 'AboutCtrl',
         controllerAs: 'about'
       })
+      .when('/:project?/buckets/:threshold?', {
+        templateUrl: 'views/main.html',
+        controller: 'MainCtrl',
+        controllerAs: 'main'
+      })
+      .when('/:project?/buckets/:threshold?/:id', {
+        templateUrl: 'views/main.html',
+        controller: 'MainCtrl',
+        controllerAs: 'main'
+      })
+      .when('/:project?/reports/:id', {
+        templateUrl: 'views/main.html',
+        controller: 'MainCtrl',
+        controllerAs: 'main'
+      })
       .otherwise({
         redirectTo: '/'
       });

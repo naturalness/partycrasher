@@ -150,7 +150,13 @@ def bower_components(filename):
 @app.route('/ui/<path:filename>', methods=['GET'])
 def ui(filename):
     print("ui " + filename)
-    return send_from_directory('ngapp/app/', filename)
+    if os.path.exists('ngapp/app/' + filename):
+        return send_from_directory('ngapp/app/', filename)
+    else:
+        return render_template('index.html',
+                           basehref=full_url_for('home'),
+                           restbase=full_url_for('root'))
+      
 
 @app.route('/demo')
 def demo():

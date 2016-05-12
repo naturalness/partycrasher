@@ -81,3 +81,20 @@ body {
     border-bottom: 0;
   }
 }
+
+
+.stuffTree {
+     list-style: none;
+     display: inline-block;
+     vertical-align: top;
+}
+
+.stuffTree li {
+    display: block;
+}
+
+.stuffValue {
+     list-style: none;
+     display: inline-block;
+     margin-left: 1em;
+}

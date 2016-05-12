@@ -9,29 +9,37 @@
     <span ng-switch-when="dict">
       <span ng-include="'stuffTree'"></span>
     </span>
-    <span ng-switch-default>
+    <span ng-switch-default class="stuffValue">
       {{value}}
     </span>
   </span>
 </script>
 
 <script type="text/ng-template" id="stuffArray">
-  <ol start="0">
-    <li ng-repeat="(key, value) in value"> 
-      <span ng-include="'stuffValue'"></span>
+  <ol start="0" ng-init="prevTreeIndex = treeIndex;" class="stuffTree">
+    <li ng-repeat="(key, value) in value"
+      ng-init="treeIndex = treeIndex + '_' + $index;">
+      {{key}}.
+      <span class="glyphicon glyphicon-collapse-down"
+      id="{{treeIndex}}" ng-click="clicked($event)"></span>
+      <span ng-include="'stuffValue'" id="{{treeIndex}}_content" collapsible></span>
     </li>
   </ol>
 </script>
 
 <script type="text/ng-template" id="stuffTree">
-  <ul>
-    <li ng-repeat="(key, value) in value"> 
-      {{key}}:
-      <span ng-include="'stuffValue'"></span>
+  <ul ng-init="prevTreeIndex = treeIndex;" class="stuffTree">
+    <li ng-repeat="(key, value) in value" 
+        ng-init="treeIndex = treeIndex + '_' + $index;">
+        {{key}}:
+        <span class="glyphicon glyphicon-collapse-down"
+        id="{{treeIndex}}" ng-click="clicked($event)"></span>
+      <span ng-include="'stuffValue'" id="{{treeIndex}}_content" collapsible></span>
     </li>
   </ul>
+<!--  <span ng-init="treeIndex = prevTreeIndex"></span>-->
 </script>
 
-<div ng-include="'stuffTree'"></div>
+<div ng-include="'stuffValue'" ng-init="treeIndex = 'tree'"></div>
 
 
