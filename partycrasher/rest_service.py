@@ -145,18 +145,19 @@ def home():
 
 @app.route('/ui/bower_components/<path:filename>', methods=['GET'])
 def bower_components(filename):
-    return send_from_directory('ngapp/bower_components/', filename)
+    return send_from_directory(relative('ngapp/bower_components/'), filename)
 
 @app.route('/ui/<path:filename>', methods=['GET'])
 def ui(filename):
-    print("ui " + filename)
-    if os.path.exists('ngapp/app/' + filename):
-        return send_from_directory('ngapp/app/', filename)
+    if os.path.exists(relative('ngapp/app/') + filename):
+        # It's a static file.
+        return send_from_directory(relative('ngapp/app/'), filename)
     else:
+        # Otherwise, it's a route in the web app.
         return render_template('index.html',
                            basehref=full_url_for('home'),
                            restbase=full_url_for('root'))
-      
+
 
 @app.route('/demo')
 def demo():
@@ -636,14 +637,14 @@ def delete_reports_no_project():
 
     Delete every report in the database
     ==============================
-    
+
     ::
 
         DELETE /reports HTTP/1.1
 
-    Deletes every report in the database. Requires that 
+    Deletes every report in the database. Requires that
     ``partycrasher.elastic.allow_delete_all`` be set in the configuration.
-    
+
     .. warning::
 
         Issuing this command deletes every report in the database. All of them.
@@ -793,6 +794,12 @@ def jsonify_resource(resource):
                                       mimetype='application/json')
 
 
+def relative(*args):
+    """
+    Return a path relative to the directory containing this very script!
+    """
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), *args)
+
 def main():
     global crasher
     parser = argparse.ArgumentParser(description="Run PartyCrasher REST service.")
@@ -816,7 +823,7 @@ def main():
     with open(kwargs['config_file']) as config_file:
         crasher = partycrasher.PartyCrasher(config_file)
     del kwargs['config_file']
-    
+
     if kwargs['allow_delete_all']:
         crasher.config.set('partycrasher.elastic', 'allow_delete_all', 'yes')
     del kwargs['allow_delete_all']
@@ -825,9 +832,9 @@ def main():
 
     # TODO:
     #  - add parameter: -C [config-setting]
-    
+
     profile = kwargs['profile']
-    
+
     #global app
     #if kwargs['profile']:
         #from werkzeug.contrib.profiler import ProfilerMiddleware
