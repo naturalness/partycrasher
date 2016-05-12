@@ -1,23 +1,37 @@
-<div class="jumbotron">
-  <h1>'Allo, 'Allo!</h1>
-  <p class="lead">
-    <img src="images/yeoman.png" alt="I'm Yeoman"><br>
-    Always a pleasure scaffolding your apps.
-  </p>
-  <p><a class="btn btn-lg btn-success" ng-href="#/">Splendid!<span class="glyphicon glyphicon-ok"></span></a></p>
-</div>
+<script type="text/ng-template" id="stuffValue">
+  <span ng-switch="displayType(key, value)">
+    <span ng-switch-when="link">
+      <a href="{{uiLink(value)}}">{{value}}</a>
+    </span>
+    <span ng-switch-when="array">
+      <span ng-include="'stuffArray'"></span>
+    </span>
+    <span ng-switch-when="dict">
+      <span ng-include="'stuffTree'"></span>
+    </span>
+    <span ng-switch-default>
+      {{value}}
+    </span>
+  </span>
+</script>
 
-<div class="row marketing">
-  <h4>HTML5 Boilerplate</h4>
-  <p>
-    HTML5 Boilerplate is a professional front-end template for building fast, robust, and adaptable web apps or sites.
-  </p>
+<script type="text/ng-template" id="stuffArray">
+  <ol start="0">
+    <li ng-repeat="(key, value) in value"> 
+      <span ng-include="'stuffValue'"></span>
+    </li>
+  </ol>
+</script>
 
-  <h4>Angular</h4>
-  <p>
-    AngularJS is a toolset for building the framework most suited to your application development.
-  </p>
+<script type="text/ng-template" id="stuffTree">
+  <ul>
+    <li ng-repeat="(key, value) in value"> 
+      {{key}}:
+      <span ng-include="'stuffValue'"></span>
+    </li>
+  </ul>
+</script>
 
-  <h4>Karma</h4>
-  <p>Spectacular Test Runner for JavaScript.</p>
-</div>
+<div ng-include="'stuffTree'"></div>
+
+

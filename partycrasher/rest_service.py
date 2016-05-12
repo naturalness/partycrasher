@@ -38,6 +38,7 @@ from partycrasher.rest_api_utils import (
     jsonify_list,
     href,
     redirect_with_query_string,
+    full_url_for
 )
 from partycrasher.resource_encoder import ResourceEncoder
 from partycrasher.pc_exceptions import IdenticalReportError
@@ -45,9 +46,21 @@ from partycrasher.pc_exceptions import IdenticalReportError
 import dateparser
 
 # Create and customize the Flask app.
-app = make_json_app('partycrasher')
+app = make_json_app('partycrasher', template_folder='ngapp/app')
 CORS(app)
 app.json_encoder = ResourceEncoder
+# From http://stackoverflow.com/questions/30362950/is-it-possible-to-use-angular-with-the-jinja2-template-engine
+jinja_options = app.jinja_options.copy()
+
+jinja_options.update(dict(
+    block_start_string='<%',
+    block_end_string='%>',
+    variable_start_string='%%',
+    variable_end_string='%%',
+    comment_start_string='<#',
+    comment_end_string='#>'
+))
+app.jinja_options = jinja_options
 
 crasher = None
 
@@ -126,7 +139,9 @@ def root():
 
 @app.route('/ui/', methods=['GET'])
 def home():
-    return send_file('ngapp/app/index.html')
+    return render_template('index.html',
+                           basehref=full_url_for('home'),
+                           restbase=full_url_for('root'))
 
 @app.route('/ui/bower_components/<path:filename>', methods=['GET'])
 def bower_components(filename):
