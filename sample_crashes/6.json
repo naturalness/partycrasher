@@ -1,0 +1,756 @@
+{
+  "ProcEnviron": " LANGUAGE=en_GB:en\n PATH=(custom, user)\n XDG_RUNTIME_DIR=<set>\n LANG=en_GB.UTF-8\n SHELL=/bin/bash\n",
+  "UserGroups": "adm cdrom dip lpadmin plugdev sambashare sudo wireshark www-data",
+  "ExecutablePath": "/usr/bin/compiz",
+  "SourcePackage": "unity",
+  "Package": "unity 7.2.2+14.04.20140714-0ubuntu1.1",
+  "stacktrace": [
+    {
+      "function": "__GI_raise",
+      "extra": [
+        "#0  0x00007fc9f51eebb9 in __GI_raise (sig=sig@entry=6) at ../nptl/sysdeps/unix/sysv/linux/raise.c:56",
+        "        resultvar = 0",
+        "        pid = 3741",
+        "        selftid = 5107"
+      ],
+      "args": "sig=sig@entry=6",
+      "depth": 0,
+      "file": "../nptl/sysdeps/unix/sysv/linux/raise.c:56",
+      "address": "0x00007fc9f51eebb9"
+    },
+    {
+      "function": "__GI_abort",
+      "extra": [
+        "#1  0x00007fc9f51f1fc8 in __GI_abort () at abort.c:89",
+        "        save_stage = 2",
+        "        act = {__sigaction_handler = {sa_handler = 0x0, sa_sigaction = 0x0}, sa_mask = {__val = {0 <repeats 16 times>}}, sa_flags = 0, sa_restorer = 0x0}",
+        "        sigs = {__val = {32, 0 <repeats 15 times>}}"
+      ],
+      "args": "",
+      "depth": 1,
+      "file": "abort.c:89",
+      "address": "0x00007fc9f51f1fc8"
+    },
+    {
+      "function": "__libc_message",
+      "extra": [
+        "#2  0x00007fc9f522be14 in __libc_message (do_abort=do_abort@entry=1, fmt=fmt@entry=0x7fc9f533a668 \"*** Error in `%s': %s: 0x%s ***\\n\") at ../sysdeps/posix/libc_fatal.c:175",
+        "        ap = {{gp_offset = 40, fp_offset = 0, overflow_arg_area = 0x7fc99efeaee0, reg_save_area = 0x7fc99efeae70}}",
+        "        fd = 2",
+        "        on_2 = <optimized out>",
+        "        list = <optimized out>",
+        "        nlist = <optimized out>",
+        "        cp = <optimized out>",
+        "        written = <optimized out>"
+      ],
+      "args": "do_abort=do_abort@entry=1, fmt=fmt@entry=0x7fc9f533a668 \"*** Error in `%s': %s: 0x%s ***\\n\"",
+      "depth": 2,
+      "file": "../sysdeps/posix/libc_fatal.c:175",
+      "address": "0x00007fc9f522be14"
+    },
+    {
+      "function": "malloc_printerr",
+      "extra": [
+        "#3  0x00007fc9f52380ee in malloc_printerr (ptr=<optimized out>, str=0x7fc9f533a830 \"double free or corruption (fasttop)\", action=1) at malloc.c:4996",
+        "        buf = \"00007fc9b0073a20\"",
+        "        cp = <optimized out>"
+      ],
+      "args": "ptr=<optimized out>, str=0x7fc9f533a830 \"double free or corruption (fasttop)\", action=1",
+      "depth": 3,
+      "file": "malloc.c:4996",
+      "address": "0x00007fc9f52380ee"
+    },
+    {
+      "function": "_int_free",
+      "depth": 4,
+      "args": "av=<optimized out>, p=<optimized out>, have_lock=0",
+      "file": "malloc.c:3840",
+      "extra": [
+        "#4  _int_free (av=<optimized out>, p=<optimized out>, have_lock=0) at malloc.c:3840",
+        "        size = <optimized out>",
+        "        fb = <optimized out>",
+        "        nextchunk = <optimized out>",
+        "        nextsize = <optimized out>",
+        "        nextinuse = <optimized out>",
+        "        prevsize = <optimized out>",
+        "        bck = <optimized out>",
+        "        fwd = <optimized out>",
+        "        errstr = <optimized out>",
+        "        locked = <optimized out>"
+      ]
+    },
+    {
+      "function": "ft_glyphslot_free_bitmap",
+      "extra": [
+        "#5  0x00007fc9d9f2a19f in ft_glyphslot_free_bitmap (slot=0x7fc9b0076290) at /build/buildd/freetype-2.5.2/freetype-2.5.2/src/base/ftobjs.c:295",
+        "        memory = <optimized out>",
+        "        slot = 0x7fc9b0076290"
+      ],
+      "args": "slot=0x7fc9b0076290",
+      "depth": 5,
+      "file": "/build/buildd/freetype-2.5.2/freetype-2.5.2/src/base/ftobjs.c:295",
+      "address": "0x00007fc9d9f2a19f"
+    },
+    {
+      "function": "ft_glyphslot_clear",
+      "extra": [
+        "#6  0x00007fc9d9f2c195 in ft_glyphslot_clear (slot=0x7fc9b0076290) at /build/buildd/freetype-2.5.2/freetype-2.5.2/src/base/ftobjs.c:341",
+        "No locals."
+      ],
+      "args": "slot=0x7fc9b0076290",
+      "depth": 6,
+      "file": "/build/buildd/freetype-2.5.2/freetype-2.5.2/src/base/ftobjs.c:341",
+      "address": "0x00007fc9d9f2c195"
+    },
+    {
+      "function": "FT_Load_Glyph",
+      "depth": 7,
+      "args": "face=face@entry=0x7fc9b0073ac0, glyph_index=glyph_index@entry=20, load_flags=load_flags@entry=66056",
+      "file": "/build/buildd/freetype-2.5.2/freetype-2.5.2/src/base/ftobjs.c:608",
+      "extra": [
+        "#7  FT_Load_Glyph (face=face@entry=0x7fc9b0073ac0, glyph_index=glyph_index@entry=20, load_flags=load_flags@entry=66056) at /build/buildd/freetype-2.5.2/freetype-2.5.2/src/base/ftobjs.c:608",
+        "        driver = <optimized out>",
+        "        slot = 0x7fc9b0076290",
+        "        library = <optimized out>",
+        "        autohint = <optimized out>",
+        "        hinter = <optimized out>",
+        "        error = <optimized out>",
+        "        load_flags = <optimized out>",
+        "        face = 0x7fc9b0073ac0",
+        "        ttface = 0x7fc9b0073ac0"
+      ]
+    },
+    {
+      "function": "_cairo_ft_scaled_glyph_init",
+      "extra": [
+        "#8  0x00007fc9da750f7b in _cairo_ft_scaled_glyph_init (abstract_font=0x7fc9b00ba1e0, scaled_glyph=0x7fc9b00ba6b8, info=CAIRO_SCALED_GLYPH_INFO_PATH) at /build/buildd/cairo-1.13.0~20140204/src/cairo-ft-font.c:2249",
+        "        fs_metrics = {x_bearing = 0, y_bearing = 6.941830741568977e-310, width = 6.941830741568977e-310, height = 20, x_advance = 0, y_advance = 0}",
+        "        scaled_font = 0x7fc9b00ba1e0",
+        "        unscaled = 0x7fc9b00736f0",
+        "        glyph = <optimized out>",
+        "        face = 0x7fc9b0073ac0",
+        "        error = <optimized out>",
+        "        load_flags = 66056",
+        "        metrics = <optimized out>",
+        "        x_factor = <optimized out>",
+        "        y_factor = <optimized out>",
+        "        vertical_layout = 0",
+        "        status = CAIRO_STATUS_SUCCESS"
+      ],
+      "args": "abstract_font=0x7fc9b00ba1e0, scaled_glyph=0x7fc9b00ba6b8, info=CAIRO_SCALED_GLYPH_INFO_PATH",
+      "depth": 8,
+      "file": "/build/buildd/cairo-1.13.0~20140204/src/cairo-ft-font.c:2249",
+      "address": "0x00007fc9da750f7b"
+    },
+    {
+      "function": "_cairo_scaled_glyph_lookup",
+      "extra": [
+        "#9  0x00007fc9da701788 in _cairo_scaled_glyph_lookup (scaled_font=scaled_font@entry=0x7fc9b00ba1e0, index=20, info=info@entry=CAIRO_SCALED_GLYPH_INFO_PATH, scaled_glyph_ret=scaled_glyph_ret@entry=0x7fc99efeb2c8) at /build/buildd/cairo-1.13.0~20140204/src/cairo-scaled-font.c:3004",
+        "        status = <optimized out>",
+        "        scaled_glyph = 0x7fc9b00ba6b8",
+        "        need_info = <optimized out>",
+        "        __PRETTY_FUNCTION__ = \"_cairo_scaled_glyph_lookup\""
+      ],
+      "args": "scaled_font=scaled_font@entry=0x7fc9b00ba1e0, index=20, info=info@entry=CAIRO_SCALED_GLYPH_INFO_PATH, scaled_glyph_ret=scaled_glyph_ret@entry=0x7fc99efeb2c8",
+      "depth": 9,
+      "file": "/build/buildd/cairo-1.13.0~20140204/src/cairo-scaled-font.c:3004",
+      "address": "0x00007fc9da701788"
+    },
+    {
+      "function": "_cairo_scaled_font_glyph_path",
+      "extra": [
+        "#10 0x00007fc9da702bff in _cairo_scaled_font_glyph_path (scaled_font=0x7fc9b00ba1e0, glyphs=glyphs@entry=0x7fc99efeb340, num_glyphs=<optimized out>, path=path@entry=0x2323028) at /build/buildd/cairo-1.13.0~20140204/src/cairo-scaled-font.c:2647",
+        "        scaled_glyph = 0x0",
+        "        status = CAIRO_INT_STATUS_SUCCESS",
+        "        i = <optimized out>"
+      ],
+      "args": "scaled_font=0x7fc9b00ba1e0, glyphs=glyphs@entry=0x7fc99efeb340, num_glyphs=<optimized out>, path=path@entry=0x2323028",
+      "depth": 10,
+      "file": "/build/buildd/cairo-1.13.0~20140204/src/cairo-scaled-font.c:2647",
+      "address": "0x00007fc9da702bff"
+    },
+    {
+      "function": "_cairo_gstate_glyph_path",
+      "extra": [
+        "#11 0x00007fc9da6cd58a in _cairo_gstate_glyph_path (gstate=0x7fc9b00ba040, glyphs=0x7fc99efebbe0, num_glyphs=2, path=0x2323028) at /build/buildd/cairo-1.13.0~20140204/src/cairo-gstate.c:2090",
+        "        stack_transformed_glyphs = {{index = 20, x = 30.0859375, y = 13.971354166666664}, {index = 21, x = 33.294270833333329, y = 13.971354166666664}, {index = 1, x = 2.1244822771173601e-322, y = 6.9418166226392057e-310}, {index = 140504218417856, x = 6.9418307415753011e-310, y = 6.9418166226392057e-310}, {index = 140504218417856, x = 6.9418654916066622e-310, y = 6.9418166226392057e-310}, {index = 140503932646832, x = 0, y = 6.9418307416037592e-310}, {index = 0, x = 6.9418654881164837e-310, y = 6.9418166226392057e-310}, {index = 140504921794164, x = 4.9406564584124654e-324, y = 4.5454039417394682e-322}, {index = 65536, x = 3.2379086165851934e-319, y = 0}, {index = 0, x = 0, y = 0}, {index = 0, x = 0, y = 0}, {index = 0, x = 0, y = 0}, {index = 0, x = 0, y = 0}, {index = 0, x = 0, y = 0}, {index = 0, x = 0, y = 0}, {index = 140503932646832, x = 6.9418307421365596e-310, y = 6.9418654928057101e-310}, {index = 140504218417280, x = 0, y = 0}, {index = 0, x = 0, y = 0}, {index = 0, x = 0, y = 0}, {index = 0, x = 0, y = 6.9418307421073109e-310}, {index = 140504218428640, x = 4.5454039417394682e-322, y = 4.9406564584124654e-324}, {index = 11, x = 6.9418307421073109e-310, y = 6.9418654931914766e-310}, {index = 0, x = 3.2379086165851934e-319, y = 6.9418307416037592e-310}, {index = 140504218428640, x = 7.9050503334599447e-323, y = -nan(0xffffffffffe57)}, {index = 1128, x = 5.3457902880022876e-321, y = 0}, {index = 0, x = 0, y = 0}, {index = 140504218417856, x = 6.9418307421365596e-310, y = 6.9418307421073109e-310}, {index = 140504218428448, x = 5.434722104253712e-323, y = 4.5454039417394682e-322}, {index = 140504218417280, x = 2.1219960518319333e-314, y = 7.9050503334599447e-323}, {index = 18446744073709551191, x = 5.573060485089261e-321, y = 5.3457902880022876e-321}, {index = 4891967750160, x = 2.1219963537060429e-314, y = 0}, {index = 0, x = 5.6274077061317981e-321, y = 0}, {index = 26608, x = 0, y = 0}, {index = 0, x = 0, y = 0}, {index = 0, x = 0, y = 0}, {index = 0, x = 0, y = 0}, {index = 140503932647148, x = 6.9418307415753011e-310, y = 6.9418307415753011e-310}, {index = 140504921946127, x = 0, y = 6.9418166226577826e-310}, {index = 140503932647212, x = 0, y = 0}, {index = 409, x = 6.9418166226826835e-310, y = 6.9418307416037592e-310}, {index = 140504218417280, x = 6.9418166226826835e-310, y = 6.9418307416037592e-310}, {index = 140504921765745, x = 6.9418166226826835e-310, y = 6.9418166226826835e-310}, {index = 0, x = 6.9418307416037592e-310, y = 0}, {index = 140504921695103, x = 6.9418166226826835e-310, y = 6.9418654930107474e-310}, {index = 1, x = 6.9416848309857329e-310, y = 3.2379086165851934e-319}, {index = 65536, x = 7.9050503334599447e-323, y = 6.9418307432859539e-310}, {index = 18446744073709551615, x = 6.9418307416037592e-310, y = 6.8181059126092023e-322}, {index = 140504921974157, x = 0, y = 6.9418307416037592e-310}, {index = 140501265154048, x = 0, y = 6.9418655095083898e-310}, {index = 0, x = 6.9418655095190122e-310, y = 1.0375378562666177e-322}, {index = 140504218700304, x = 0, y = 6.941816622691379e-310}, {index = 140503932647472, x = 6.9418307556621007e-310, y = 6.9418166226826835e-310}, {index = 140504218428640, x = 6.9418654928057101e-310, y = 6.9418307415753011e-310}, {index = 18446744073709551191, x = 0, y = 7.3319341842840987e-321}, {index = 1484, x = 7.3319341842840987e-321, y = 0}, {index = 0, x = 0, y = 0}, {index = 0, x = 6.9418307421073109e-310, y = 6.9418307421365596e-310}, {index = 21, x = 4.9406564584124654e-324, y = 3.769671471204127e-319}, {index = 140504218428048, x = 6.9418654931914766e-310, y = 0}, {index = 65536, x = 6.9418307416037592e-310, y = 6.9418307421365596e-310}, {index = 71, x = 0, y = 5.222273876541976e-321}, {index = 1430, x = 0, y = 0}, {index = 0, x = 0, y = 8.8384905344103952e-317}, {index = 140504218428640, x = 8.8085422512220822e-317, y = 6.9418166226856479e-310}, {index = 17889304, x = 8.7538788281662066e-317, y = 6.9418307415753011e-310}, {index = 152, x = 0, y = 0}, {index = 0, x = 0, y = 1.8158430254329835e-316}, {index = 36753072, x = 4.5108193465305809e-321, y = 6.9418654875836833e-310}, {index = 896, x = 1.8158493494732502e-316, y = 0}, {index = 18446744073709550851, x = 0, y = 1.8158114052316496e-316}, {index = 36753152, x = 1.8158548830084837e-316, y = 6.3240402667679558e-322}, {index = 17889296, x = 1.8157442123038152e-316, y = 6.9418654875991475e-310}, {index = 36751152, x = 8.8384905344103952e-317, y = 1.8157442123038152e-316}, {index = 36751072, x = 2.1308385976571648e-314, y = 1.8158588355336504e-316}, {index = 0, x = 2.0157878350322859e-321, y = -nan(0xf803661014541)}, {index = 26, x = 2.9643938750474793e-323, y = 1.7782464532208274e-84}, {index = 140503932648128, x = 0, y = 1.9310161697783978e-312}, {index = 0, x = 0, y = 2.5251749917921463e-312}, {index = 0, x = 6.9418166227031872e-310, y = 8.7539736887702082e-317}, {index = 1, x = 6.1264140084314571e-322, y = 4.9406564584124654e-324}, {index = 29, x = 6.941865489133419e-310, y = 0}, {index = 464, x = 6.9418166227094618e-310, y = 6.9418307181969052e-310}, {index = 408, x = 6.9418307558391739e-310, y = 6.9418307558470789e-310}, {index = 140504929718013, x = 6.9418307421650178e-310, y = 1.8202706441247544e-316}, {index = 0, x = 6.9418658833021533e-310, y = 1.8202706441247544e-316}}",
+        "        transformed_glyphs = 0x7fc99efeb340",
+        "        status = <optimized out>"
+      ],
+      "args": "gstate=0x7fc9b00ba040, glyphs=0x7fc99efebbe0, num_glyphs=2, path=0x2323028",
+      "depth": 11,
+      "file": "/build/buildd/cairo-1.13.0~20140204/src/cairo-gstate.c:2090",
+      "address": "0x00007fc9da6cd58a"
+    },
+    {
+      "function": "cairo_glyph_path",
+      "extra": [
+        "#12 0x00007fc9da6c02f0 in cairo_glyph_path (cr=0x2322cc0, glyphs=<optimized out>, num_glyphs=<optimized out>) at /build/buildd/cairo-1.13.0~20140204/src/cairo.c:3552",
+        "        status = <optimized out>"
+      ],
+      "args": "cr=0x2322cc0, glyphs=<optimized out>, num_glyphs=<optimized out>",
+      "depth": 12,
+      "file": "/build/buildd/cairo-1.13.0~20140204/src/cairo.c:3552",
+      "address": "0x00007fc9da6c02f0"
+    },
+    {
+      "function": "pango_cairo_renderer_show_text_glyphs",
+      "extra": [
+        "#13 0x00007fc9d3c75dc1 in pango_cairo_renderer_show_text_glyphs (renderer=<optimized out>, text=text@entry=0x0, text_len=text_len@entry=0, clusters=clusters@entry=0x0, num_clusters=num_clusters@entry=0, backward=backward@entry=0, font=0x7fc9a40419e0, x=0, y=19456, glyphs=<optimized out>, glyphs=<optimized out>) at /build/buildd/pango1.0-1.36.3/./pango/pangocairo-render.c:491",
+        "        crenderer = <optimized out>",
+        "        i = <optimized out>",
+        "        count = <optimized out>",
+        "        x_position = <optimized out>",
+        "        cairo_glyphs = 0x7fc99efebbe0",
+        "        stack_glyphs = {{index = 20, x = 132.77464285714282, y = 106.96464285714215}, {index = 21, x = 143.77464285714282, y = 106.96464285714215}, {index = 4294967297, x = 6.9418307555585446e-310, y = 6.9418307555585446e-310}, {index = 140504218447888, x = 0, y = 8.8085422512220822e-317}, {index = 23159795565, x = 6.9418658951118538e-310, y = 6.9418307416037592e-310}, {index = 4807592602218004480, x = 1, y = 0}, {index = 4622382067542392832, x = -14.000000000000002, y = 0}, {index = 2, x = -nan(0xf8036610142f1), y = -14.000000000000004}, {index = 0, x = 8.1224392176300932e-321, y = 6.9418672044492039e-310}, {index = 1644, x = 6.9418307396156391e-310, y = 6.9418613006377074e-310}, {index = 0, x = 6.9418592677063873e-310, y = 1.4821969375237396e-323}, {index = 0, x = 6.9418672044610615e-310, y = 4.9406564584124654e-324}, {index = 40, x = 6.9418868375923388e-310, y = 8.4879833614873476e-314}, {index = 140505353656412, x = 6.9418307365761472e-310, y = 6.9418108276942343e-310}, {index = 140503932648960, x = 6.9418858973561661e-310, y = 6.9418307365761472e-310}, {index = 140504795796574, x = 6.9418307413239205e-310, y = 1.1857575500189917e-322}, {index = 0, x = 7.9050503334599447e-323, y = 6.9418166227656865e-310}, {index = 140505353813305, x = 6.9418307407232354e-310, y = 6.941886829761003e-310}, {index = 63, x = 6.9418613005907711e-310, y = 6.9418672044492039e-310}, {index = 4294967232, x = 6.9418166227656865e-310, y = 6.941886820899244e-310}, {index = 0, x = 2.4703282292062327e-322, y = 8.4879833614873476e-314}, {index = 140503932649248, x = 6.9418166227530384e-310, y = 2.4703282292062327e-322}, {index = 140503932649144, x = 8.1589763602713451e-317, y = 6.941816622758572e-310}, {index = 140504836964241, x = 6.9418672044610615e-310, y = 6.941886829761003e-310}, {index = 0, x = 0, y = 1}, {index = 0, x = 0, y = 0}, {index = 0, x = 6.9418166228565946e-310, y = 3.9525251667299724e-323}, {index = 140505353813305, x = 0, y = 6.9418868298751816e-310}, {index = 0, x = 8.1589763602713451e-317, y = 7.9050503334599447e-323}, {index = 140504421087410, x = 6.9418166227688485e-310, y = 9.8813129168249309e-324}, {index = 1, x = 6.9418407542603719e-310, y = 4.9406564584124654e-324}, {index = 140504767027830, x = 6.941816622764896e-310, y = 1.9762625833649862e-322}, {index = 17862704, x = 6.9418592688374518e-310, y = 6.9418407548103658e-310}, {index = 1, x = 9.8813129168249309e-324, y = 6.9416848309847447e-310}, {index = 140501265154049, x = 6.9418166227688485e-310, y = 5.4535291828202751e-312}, {index = 139637976727553, x = 0, y = 0}, {index = 0, x = 4.2439915824246103e-314, y = 9.8813129168249309e-324}, {index = 140504421076284, x = 6.9418407542600755e-310, y = 9.8813129168249309e-324}, {index = 0, x = 6.9418407542603719e-310, y = 6.9418407542600755e-310}, {index = 140504767029408, x = 6.9418166227688485e-310, y = 3.4399136799276538e-314}, {index = 140504218432344, x = 8.825348388231018e-317, y = 6.9418307423804304e-310}, {index = 140504218432616, x = 6.9418166227720106e-310, y = 6.9418166227759631e-310}, {index = 4296770252, x = 6.9418307423310239e-310, y = 6.941830743218761e-310}, {index = 17862704, x = 2.121995791459338e-314, y = 6.941830743218761e-310}, {index = 140504218430576, x = 8.825348388231018e-317, y = 2.1219957929415349e-314}, {index = 140504766904216, x = 6.9418578466427119e-310, y = 9.8813129168249309e-324}, {index = 42288704, x = 1.9762625833649862e-323, y = 8.825348388231018e-317}, {index = 140503932649720, x = 2.0893419568700306e-316, y = 6.9418578404305281e-310}, {index = 140504218432576, x = 9.8813129168249309e-324, y = 8.825348388231018e-317}, {index = 24190152, x = 2.089341561617514e-316, y = 9.8813129168249309e-324}, {index = 2, x = 7.9050503334599447e-323, y = -nan(0xf803661013ee1)}, {index = 17862704, x = 6.9418166227820895e-310, y = 8.825348388231018e-317}, {index = 19847364896, x = 6.9418166227818919e-310, y = 6.9418166227820895e-310}, {index = 140504218432616, x = 6.9418307423310239e-310, y = 8.825348388231018e-317}, {index = 0, x = 0, y = 0}, {index = 2667495727, x = 6.9418166227973067e-310, y = -6.9230329997009136e+112}, {index = 6519375496193507332, x = 6.9418307422527639e-310, y = 6.941830743218761e-310}, {index = 17862704, x = 6.9418166227973067e-310, y = 6.9418307181969052e-310}, {index = 4294967296, x = 8.825348388231018e-317, y = 4.9406564584124654e-324}, {index = 2, x = 6.9418307413349875e-310, y = 6.941830743218761e-310}, {index = 140504218450552, x = 1.1951523070877922e-316, y = 6.9418207846189576e-310}, {index = 17862704, x = 4.9406564584124654e-324, y = 4.9406564584124654e-324}, {index = 140504218412416, x = 6.9418659117024794e-310, y = 1.1951523070877922e-316}, {index = 140504795816509, x = 6.941830743218761e-310, y = 6.9418307413349875e-310}, {index = 0, x = 6.9418307422322107e-310, y = 6.9418166227973067e-310}, {index = 17862704, x = 6.9418166227980972e-310, y = 8.825348388231018e-317}, {index = 140504218417856, x = 6.9418207846189576e-310, y = 2.1219957909652723e-314}, {index = 140504016886240, x = 2.1219957909652723e-314, y = 1.4588721220987254e-314}, {index = 140501265154172, x = 6.9418307181969052e-310, y = 1.9762625833649862e-322}, {index = 140503932650220, x = 6.941830740701793e-310, y = 6.9418307449056988e-310}, {index = 140504924388000, x = 6.9418307181969052e-310, y = 1.1857575500189917e-322}, {index = 140503932650280, x = 6.9418655096770638e-310, y = 6.9418656210937088e-310}, {index = 19, x = 6.941888028193659e-310, y = 6.9418307405073288e-310}, {index = 140504836976332, x = 6.9418307407231366e-310, y = 6.9418307396148486e-310}, {index = 1, x = 6.9418613021494e-310, y = 6.9418307413349875e-310}, {index = 140503681120656, x = 1.9762625833649862e-323, y = 6.9418613033420251e-310}, {index = 0, x = 6.9418041955949466e-310, y = 6.941816622839994e-310}, {index = 140504836997038, x = 0, y = 7.9050503334599447e-323}, {index = 140504352166448, x = 6.9418041955949466e-310, y = 6.9418672370686036e-310}, {index = 140505353654797, x = 6.9418041955949466e-310, y = 6.9418613024530528e-310}, {index = 26950464, x = 6.9418307396148486e-310, y = 4.9406564584124654e-324}, {index = 140504836970186, x = 4.9406564584124654e-324, y = 6.9418041955949466e-310}, {index = 4, x = 6.9418613033420251e-310, y = 3.9525251667299724e-323}, {index = 140503681120656, x = 6.9418041955949466e-310, y = 6.9418613034760651e-310}, {index = 0, x = 6.9418166228202314e-310, y = 6.9418603738406637e-310}}",
+        "        base_x = 132.77464285714282",
+        "        base_y = <optimized out>"
+      ],
+      "args": "renderer=<optimized out>, text=text@entry=0x0, text_len=text_len@entry=0, clusters=clusters@entry=0x0, num_clusters=num_clusters@entry=0, backward=backward@entry=0, font=0x7fc9a40419e0, x=0, y=19456, glyphs=<optimized out>, glyphs=<optimized out>",
+      "depth": 13,
+      "file": "/build/buildd/pango1.0-1.36.3/./pango/pangocairo-render.c:491",
+      "address": "0x00007fc9d3c75dc1"
+    },
+    {
+      "function": "pango_cairo_renderer_draw_glyphs",
+      "extra": [
+        "#14 0x00007fc9d3c76154 in pango_cairo_renderer_draw_glyphs (renderer=<optimized out>, font=<optimized out>, glyphs=<optimized out>, x=<optimized out>, y=<optimized out>) at /build/buildd/pango1.0-1.36.3/./pango/pangocairo-render.c:516",
+        "No locals."
+      ],
+      "args": "renderer=<optimized out>, font=<optimized out>, glyphs=<optimized out>, x=<optimized out>, y=<optimized out>",
+      "depth": 14,
+      "file": "/build/buildd/pango1.0-1.36.3/./pango/pangocairo-render.c:516",
+      "address": "0x00007fc9d3c76154"
+    },
+    {
+      "function": "pango_renderer_draw_glyphs",
+      "extra": [
+        "#15 0x00007fc9d4e66f0f in pango_renderer_draw_glyphs (renderer=0xf5dcc0, font=0x7fc9a40419e0, glyphs=0x7fc9b0072580, x=0, y=19456) at /build/buildd/pango1.0-1.36.3/./pango/pango-renderer.c:641",
+        "No locals."
+      ],
+      "args": "renderer=0xf5dcc0, font=0x7fc9a40419e0, glyphs=0x7fc9b0072580, x=0, y=19456",
+      "depth": 15,
+      "file": "/build/buildd/pango1.0-1.36.3/./pango/pango-renderer.c:641",
+      "address": "0x00007fc9d4e66f0f"
+    },
+    {
+      "function": "pango_renderer_draw_layout_line",
+      "extra": [
+        "#16 0x00007fc9d4e67898 in pango_renderer_draw_layout_line (renderer=renderer@entry=0xf5dcc0, line=line@entry=0x7fc9dc0e8990, x=0, y=19456) at /build/buildd/pango1.0-1.36.3/./pango/pango-renderer.c:570",
+        "        metrics = <optimized out>",
+        "        run = 0x7fc9b8001230",
+        "        logical_rect = {x = 0, y = 0, width = 22528, height = 24576}",
+        "        logical = 0x0",
+        "        rise = 0",
+        "        shape_attr = <optimized out>",
+        "        ink_rect = {x = -603514816, y = 32713, width = -630277638, height = 32713}",
+        "        ink = 0x0",
+        "        x_off = 0",
+        "        glyph_string_width = 22528",
+        "        state = {underline = PANGO_UNDERLINE_NONE, underline_rect = {x = 0, y = -723132511, width = 32713, height = -1342128768}, strikethrough = 0, strikethrough_rect = {x = -1879000688, y = 32713, width = 0, height = 0}, logical_rect_end = 22528}",
+        "        l = 0x7fc9b8001310",
+        "        got_overall = 0",
+        "        overall_rect = {x = 8, y = 0, width = -206466547, height = 19456}",
+        "        text = 0x7fc9b006f520 \"12\"",
+        "        __FUNCTION__ = \"pango_renderer_draw_layout_line\""
+      ],
+      "args": "renderer=renderer@entry=0xf5dcc0, line=line@entry=0x7fc9dc0e8990, x=0, y=19456",
+      "depth": 16,
+      "file": "/build/buildd/pango1.0-1.36.3/./pango/pango-renderer.c:570",
+      "address": "0x00007fc9d4e67898"
+    },
+    {
+      "function": "pango_renderer_draw_layout",
+      "extra": [
+        "#17 0x00007fc9d4e67bf5 in pango_renderer_draw_layout (renderer=renderer@entry=0xf5dcc0, layout=layout@entry=0x7fc99000b990, x=x@entry=0, y=y@entry=0) at /build/buildd/pango1.0-1.36.3/./pango/pango-renderer.c:194",
+        "        logical_rect = {x = 0, y = 0, width = 22528, height = 24576}",
+        "        line = 0x7fc9dc0e8990",
+        "        baseline = <optimized out>",
+        "        iter = 0x7fc9b000bd80",
+        "        __FUNCTION__ = \"pango_renderer_draw_layout\""
+      ],
+      "args": "renderer=renderer@entry=0xf5dcc0, layout=layout@entry=0x7fc99000b990, x=x@entry=0, y=y@entry=0",
+      "depth": 17,
+      "file": "/build/buildd/pango1.0-1.36.3/./pango/pango-renderer.c:194",
+      "address": "0x00007fc9d4e67bf5"
+    },
+    {
+      "function": "_pango_cairo_do_layout",
+      "extra": [
+        "#18 0x00007fc9d3c762fa in _pango_cairo_do_layout (cr=0x2322cc0, layout=0x7fc99000b990, do_path=1) at /build/buildd/pango1.0-1.36.3/./pango/pangocairo-render.c:1010",
+        "        crenderer = 0xf5dcc0",
+        "        renderer = 0xf5dcc0"
+      ],
+      "args": "cr=0x2322cc0, layout=0x7fc99000b990, do_path=1",
+      "depth": 18,
+      "file": "/build/buildd/pango1.0-1.36.3/./pango/pangocairo-render.c:1010",
+      "address": "0x00007fc9d3c762fa"
+    },
+    {
+      "function": "pango_cairo_layout_path",
+      "extra": [
+        "#19 0x00007fc9d3c76836 in pango_cairo_layout_path (cr=<optimized out>, layout=<optimized out>) at /build/buildd/pango1.0-1.36.3/./pango/pangocairo-render.c:1232",
+        "        __FUNCTION__ = \"pango_cairo_layout_path\""
+      ],
+      "args": "cr=<optimized out>, layout=<optimized out>",
+      "depth": 19,
+      "file": "/build/buildd/pango1.0-1.36.3/./pango/pangocairo-render.c:1232",
+      "address": "0x00007fc9d3c76836"
+    },
+    {
+      "function": "rsvg_cairo_render_pango_layout",
+      "extra": [
+        "#20 0x00007fc9cc0b3075 in rsvg_cairo_render_pango_layout (ctx=0x7fc9b0017bc0, layout=0x7fc99000b990, x=132.77536000000001, y=87.964839999999995) at rsvg-cairo-draw.c:437",
+        "        state = 0x7fc9a0036830",
+        "        ink = {x = 1024, y = 5120, width = 21504, height = 14336}",
+        "        bbox = {rect = {x = 133.77536000000001, y = 92.964839999999995, width = 21, height = 14}, affine = {xx = 0.29166666666666663, yx = 0, xy = 0, yy = 0.29166666666666663, x0 = -8.6399999999999864, y0 = -17.226666666666461}, virgin = 0}",
+        "        gravity = PANGO_GRAVITY_SOUTH",
+        "        rotation = <optimized out>"
+      ],
+      "args": "ctx=0x7fc9b0017bc0, layout=0x7fc99000b990, x=132.77536000000001, y=87.964839999999995",
+      "depth": 20,
+      "file": "rsvg-cairo-draw.c:437",
+      "address": "0x00007fc9cc0b3075"
+    },
+    {
+      "function": "rsvg_text_render_text",
+      "extra": [
+        "#21 0x00007fc9cc0ada37 in rsvg_text_render_text (y=0x7fc99efec850, x=0x7fc99efec848, text=<optimized out>, ctx=0x7fc9b0017bc0) at rsvg-text.c:590",
+        "        context = 0x7fc9b0069d80",
+        "        layout = 0x7fc99000b990",
+        "        iter = <optimized out>",
+        "        state = <optimized out>",
+        "        w = 22528",
+        "        h = 24576",
+        "        offsetX = <optimized out>",
+        "        offsetY = <optimized out>"
+      ],
+      "args": "y=0x7fc99efec850, x=0x7fc99efec848, text=<optimized out>, ctx=0x7fc9b0017bc0",
+      "depth": 21,
+      "file": "rsvg-text.c:590",
+      "address": "0x00007fc9cc0ada37"
+    },
+    {
+      "function": "_rsvg_node_text_type_children",
+      "depth": 22,
+      "args": "ctx=ctx@entry=0x7fc9b0017bc0, x=x@entry=0x7fc99efec848, y=y@entry=0x7fc99efec850, lastwasspace=lastwasspace@entry=0x7fc99efec844, usetextonly=usetextonly@entry=0, self=<optimized out>",
+      "file": "rsvg-text.c:181",
+      "extra": [
+        "#22 _rsvg_node_text_type_children (ctx=ctx@entry=0x7fc9b0017bc0, x=x@entry=0x7fc99efec848, y=y@entry=0x7fc99efec850, lastwasspace=lastwasspace@entry=0x7fc99efec844, usetextonly=usetextonly@entry=0, self=<optimized out>) at rsvg-text.c:181",
+        "        str = 0x7fc9b0072420",
+        "        type = <optimized out>",
+        "        i = 0"
+      ]
+    },
+    {
+      "function": "_rsvg_node_text_type_tspan",
+      "extra": [
+        "#23 0x00007fc9cc0ad8c8 in _rsvg_node_text_type_tspan (usetextonly=0, lastwasspace=0x7fc99efec844, y=0x7fc99efec850, x=0x7fc99efec848, ctx=0x7fc9b0017bc0, self=<optimized out>) at rsvg-text.c:354",
+        "        dx = 0",
+        "        dy = 0",
+        "        length = 11"
+      ],
+      "args": "usetextonly=0, lastwasspace=0x7fc99efec844, y=0x7fc99efec850, x=0x7fc99efec848, ctx=0x7fc9b0017bc0, self=<optimized out>",
+      "depth": 23,
+      "file": "rsvg-text.c:354",
+      "address": "0x00007fc9cc0ad8c8"
+    },
+    {
+      "function": "_rsvg_node_text_type_children",
+      "depth": 24,
+      "args": "ctx=ctx@entry=0x7fc9b0017bc0, x=x@entry=0x7fc99efec848, y=y@entry=0x7fc99efec850, lastwasspace=lastwasspace@entry=0x7fc99efec844, usetextonly=usetextonly@entry=0, self=<optimized out>",
+      "file": "rsvg-text.c:191",
+      "extra": [
+        "#24 _rsvg_node_text_type_children (ctx=ctx@entry=0x7fc9b0017bc0, x=x@entry=0x7fc99efec848, y=y@entry=0x7fc99efec850, lastwasspace=lastwasspace@entry=0x7fc99efec844, usetextonly=usetextonly@entry=0, self=<optimized out>) at rsvg-text.c:191",
+        "        type = <optimized out>",
+        "        i = 0"
+      ]
+    },
+    {
+      "function": "_rsvg_node_text_draw",
+      "extra": [
+        "#25 0x00007fc9cc0adcc0 in _rsvg_node_text_draw (self=<optimized out>, ctx=0x7fc9b0017bc0, dominate=<optimized out>) at rsvg-text.c:297",
+        "        x = 132.77536000000001",
+        "        y = 106.96484",
+        "        dx = 0",
+        "        dy = 0",
+        "        length = 0",
+        "        lastwasspace = 1"
+      ],
+      "args": "self=<optimized out>, ctx=0x7fc9b0017bc0, dominate=<optimized out>",
+      "depth": 25,
+      "file": "rsvg-text.c:297",
+      "address": "0x00007fc9cc0adcc0"
+    },
+    {
+      "function": "rsvg_node_draw",
+      "extra": [
+        "#26 0x00007fc9cc0a8503 in rsvg_node_draw (self=0x7fc9b004c380, ctx=ctx@entry=0x7fc9b0017bc0, dominate=dominate@entry=0) at rsvg-structure.c:69",
+        "        state = <optimized out>",
+        "        stacksave = 0x0"
+      ],
+      "args": "self=0x7fc9b004c380, ctx=ctx@entry=0x7fc9b0017bc0, dominate=dominate@entry=0",
+      "depth": 26,
+      "file": "rsvg-structure.c:69",
+      "address": "0x00007fc9cc0a8503"
+    },
+    {
+      "function": "_rsvg_node_draw_children",
+      "extra": [
+        "#27 0x00007fc9cc0a8583 in _rsvg_node_draw_children (self=0x7fc9b004ba70, ctx=0x7fc9b0017bc0, dominate=0) at rsvg-structure.c:87",
+        "        i = 1"
+      ],
+      "args": "self=0x7fc9b004ba70, ctx=0x7fc9b0017bc0, dominate=0",
+      "depth": 27,
+      "file": "rsvg-structure.c:87",
+      "address": "0x00007fc9cc0a8583"
+    },
+    {
+      "function": "rsvg_node_draw",
+      "extra": [
+        "#28 0x00007fc9cc0a8503 in rsvg_node_draw (self=0x7fc9b004ba70, ctx=ctx@entry=0x7fc9b0017bc0, dominate=dominate@entry=0) at rsvg-structure.c:69",
+        "        state = <optimized out>",
+        "        stacksave = 0x0"
+      ],
+      "args": "self=0x7fc9b004ba70, ctx=ctx@entry=0x7fc9b0017bc0, dominate=dominate@entry=0",
+      "depth": 28,
+      "file": "rsvg-structure.c:69",
+      "address": "0x00007fc9cc0a8503"
+    },
+    {
+      "function": "_rsvg_node_draw_children",
+      "extra": [
+        "#29 0x00007fc9cc0a8583 in _rsvg_node_draw_children (self=0x7fc9b0043c20, ctx=0x7fc9b0017bc0, dominate=0) at rsvg-structure.c:87",
+        "        i = 5"
+      ],
+      "args": "self=0x7fc9b0043c20, ctx=0x7fc9b0017bc0, dominate=0",
+      "depth": 29,
+      "file": "rsvg-structure.c:87",
+      "address": "0x00007fc9cc0a8583"
+    },
+    {
+      "function": "rsvg_node_draw",
+      "extra": [
+        "#30 0x00007fc9cc0a8503 in rsvg_node_draw (self=0x7fc9b0043c20, ctx=ctx@entry=0x7fc9b0017bc0, dominate=dominate@entry=0) at rsvg-structure.c:69",
+        "        state = <optimized out>",
+        "        stacksave = 0x0"
+      ],
+      "args": "self=0x7fc9b0043c20, ctx=ctx@entry=0x7fc9b0017bc0, dominate=dominate@entry=0",
+      "depth": 30,
+      "file": "rsvg-structure.c:69",
+      "address": "0x00007fc9cc0a8503"
+    },
+    {
+      "function": "_rsvg_node_draw_children",
+      "extra": [
+        "#31 0x00007fc9cc0a8583 in _rsvg_node_draw_children (self=0x7fc9b003dc60, ctx=0x7fc9b0017bc0, dominate=0) at rsvg-structure.c:87",
+        "        i = 3"
+      ],
+      "args": "self=0x7fc9b003dc60, ctx=0x7fc9b0017bc0, dominate=0",
+      "depth": 31,
+      "file": "rsvg-structure.c:87",
+      "address": "0x00007fc9cc0a8583"
+    },
+    {
+      "function": "rsvg_node_draw",
+      "extra": [
+        "#32 0x00007fc9cc0a8503 in rsvg_node_draw (self=0x7fc9b003dc60, ctx=ctx@entry=0x7fc9b0017bc0, dominate=dominate@entry=0) at rsvg-structure.c:69",
+        "        state = <optimized out>",
+        "        stacksave = 0x0"
+      ],
+      "args": "self=0x7fc9b003dc60, ctx=ctx@entry=0x7fc9b0017bc0, dominate=dominate@entry=0",
+      "depth": 32,
+      "file": "rsvg-structure.c:69",
+      "address": "0x00007fc9cc0a8503"
+    },
+    {
+      "function": "_rsvg_node_draw_children",
+      "extra": [
+        "#33 0x00007fc9cc0a8583 in _rsvg_node_draw_children (self=0x7fc9b003c7f0, ctx=0x7fc9b0017bc0, dominate=0) at rsvg-structure.c:87",
+        "        i = 3"
+      ],
+      "args": "self=0x7fc9b003c7f0, ctx=0x7fc9b0017bc0, dominate=0",
+      "depth": 33,
+      "file": "rsvg-structure.c:87",
+      "address": "0x00007fc9cc0a8583"
+    },
+    {
+      "function": "rsvg_node_draw",
+      "extra": [
+        "#34 0x00007fc9cc0a8503 in rsvg_node_draw (self=0x7fc9b003c7f0, ctx=ctx@entry=0x7fc9b0017bc0, dominate=dominate@entry=0) at rsvg-structure.c:69",
+        "        state = <optimized out>",
+        "        stacksave = 0x0"
+      ],
+      "args": "self=0x7fc9b003c7f0, ctx=ctx@entry=0x7fc9b0017bc0, dominate=dominate@entry=0",
+      "depth": 34,
+      "file": "rsvg-structure.c:69",
+      "address": "0x00007fc9cc0a8503"
+    },
+    {
+      "function": "_rsvg_node_draw_children",
+      "extra": [
+        "#35 0x00007fc9cc0a8583 in _rsvg_node_draw_children (self=0x7fc9b0094070, ctx=0x7fc9b0017bc0, dominate=0) at rsvg-structure.c:87",
+        "        i = 3"
+      ],
+      "args": "self=0x7fc9b0094070, ctx=0x7fc9b0017bc0, dominate=0",
+      "depth": 35,
+      "file": "rsvg-structure.c:87",
+      "address": "0x00007fc9cc0a8583"
+    },
+    {
+      "function": "rsvg_node_draw",
+      "extra": [
+        "#36 0x00007fc9cc0a8503 in rsvg_node_draw (self=0x7fc9b0094070, ctx=ctx@entry=0x7fc9b0017bc0, dominate=dominate@entry=0) at rsvg-structure.c:69",
+        "        state = <optimized out>",
+        "        stacksave = 0x0"
+      ],
+      "args": "self=0x7fc9b0094070, ctx=ctx@entry=0x7fc9b0017bc0, dominate=dominate@entry=0",
+      "depth": 36,
+      "file": "rsvg-structure.c:69",
+      "address": "0x00007fc9cc0a8503"
+    },
+    {
+      "function": "rsvg_node_svg_draw",
+      "extra": [
+        "#37 0x00007fc9cc0a8903 in rsvg_node_svg_draw (self=0x7fc9b00b4850, ctx=0x7fc9b0017bc0, dominate=<optimized out>) at rsvg-structure.c:323",
+        "        sself = 0x7fc9b00b4850",
+        "        state = <optimized out>",
+        "        affine = {xx = 1, yx = 0, xy = 0, yy = 1, x0 = 0, y0 = 0}",
+        "        affine_old = {xx = 1.3333333333333333, yx = 0, xy = 0, yy = 1.3333333333333333, x0 = <optimized out>, y0 = <optimized out>}",
+        "        affine_new = {xx = 1.3333333333333333, yx = 0, xy = 0, yy = 1.3333333333333333, x0 = <optimized out>, y0 = <optimized out>}",
+        "        i = 4",
+        "        nx = 0",
+        "        ny = 0",
+        "        nw = 48",
+        "        nh = 48"
+      ],
+      "args": "self=0x7fc9b00b4850, ctx=0x7fc9b0017bc0, dominate=<optimized out>",
+      "depth": 37,
+      "file": "rsvg-structure.c:323",
+      "address": "0x00007fc9cc0a8903"
+    },
+    {
+      "function": "rsvg_node_draw",
+      "extra": [
+        "#38 0x00007fc9cc0a8503 in rsvg_node_draw (self=0x7fc9b00b4850, ctx=ctx@entry=0x7fc9b0017bc0, dominate=dominate@entry=0) at rsvg-structure.c:69",
+        "        state = <optimized out>",
+        "        stacksave = 0x0"
+      ],
+      "args": "self=0x7fc9b00b4850, ctx=ctx@entry=0x7fc9b0017bc0, dominate=dominate@entry=0",
+      "depth": 38,
+      "file": "rsvg-structure.c:69",
+      "address": "0x00007fc9cc0a8503"
+    },
+    {
+      "function": "rsvg_handle_render_cairo_sub",
+      "extra": [
+        "#39 0x00007fc9cc0b4ac3 in rsvg_handle_render_cairo_sub (handle=handle@entry=0x1127800, cr=cr@entry=0x26022c0, id=id@entry=0x0) at rsvg-cairo-render.c:225",
+        "        draw = 0x7fc9b0017bc0",
+        "        drawsub = <optimized out>",
+        "        __FUNCTION__ = \"rsvg_handle_render_cairo_sub\""
+      ],
+      "args": "handle=handle@entry=0x1127800, cr=cr@entry=0x26022c0, id=id@entry=0x0",
+      "depth": 39,
+      "file": "rsvg-cairo-render.c:225",
+      "address": "0x00007fc9cc0b4ac3"
+    },
+    {
+      "function": "rsvg_handle_get_pixbuf_sub",
+      "extra": [
+        "#40 0x00007fc9cc0b4ef4 in rsvg_handle_get_pixbuf_sub (handle=0x1127800, id=id@entry=0x0) at rsvg.c:90",
+        "        dimensions = {width = 64, height = 64, em = 48, ex = 48}",
+        "        output = 0x0",
+        "        surface = 0x7fc9b0017a30",
+        "        cr = 0x26022c0",
+        "        __FUNCTION__ = \"rsvg_handle_get_pixbuf_sub\""
+      ],
+      "args": "handle=0x1127800, id=id@entry=0x0",
+      "depth": 40,
+      "file": "rsvg.c:90",
+      "address": "0x00007fc9cc0b4ef4"
+    },
+    {
+      "function": "rsvg_handle_get_pixbuf",
+      "extra": [
+        "#41 0x00007fc9cc0b4f77 in rsvg_handle_get_pixbuf (handle=<optimized out>) at rsvg.c:119",
+        "No locals."
+      ],
+      "args": "handle=<optimized out>",
+      "depth": 41,
+      "file": "rsvg.c:119",
+      "address": "0x00007fc9cc0b4f77"
+    },
+    {
+      "function": "gdk_pixbuf__svg_image_stop_load",
+      "extra": [
+        "#42 0x00007fc9cc2e5e46 in gdk_pixbuf__svg_image_stop_load (data=0x7fc9b000ee40, error=0x7fc99efecc88) at io-svg.c:160",
+        "        context = 0x7fc9b000ee40",
+        "        pixbuf = <optimized out>",
+        "        result = 1"
+      ],
+      "args": "data=0x7fc9b000ee40, error=0x7fc99efecc88",
+      "depth": 42,
+      "file": "io-svg.c:160",
+      "address": "0x00007fc9cc2e5e46"
+    },
+    {
+      "function": "gdk_pixbuf_loader_close",
+      "extra": [
+        "#43 0x00007fc9d8d731fb in gdk_pixbuf_loader_close (loader=loader@entry=0x7fc9b00b1b80, error=error@entry=0x2a722e0) at gdk-pixbuf-loader.c:821",
+        "        tmp = 0x0",
+        "        priv = 0x7fc9b00b3400",
+        "        retval = 1",
+        "        __func__ = \"gdk_pixbuf_loader_close\""
+      ],
+      "args": "loader=loader@entry=0x7fc9b00b1b80, error=error@entry=0x2a722e0",
+      "depth": 43,
+      "file": "gdk-pixbuf-loader.c:821",
+      "address": "0x00007fc9d8d731fb"
+    },
+    {
+      "function": "load_from_stream",
+      "extra": [
+        "#44 0x00007fc9d8d6f435 in load_from_stream (loader=loader@entry=0x7fc9b00b1b80, stream=stream@entry=0x7fc9b008f830, cancellable=cancellable@entry=0x0, error=error@entry=0x2a722e0) at gdk-pixbuf-io.c:1465",
+        "        pixbuf = <optimized out>",
+        "        n_read = <optimized out>",
+        "        buffer = \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\" standalone=\\\"no\\\"?>\\n<!-- Created with Inkscape (http://www.inkscape.org/) -->\\n<svg id=\\\"svg3639\\\" xmlns:rdf=\\\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\\\" xmlns=\\\"http://\"...",
+        "        res = 1"
+      ],
+      "args": "loader=loader@entry=0x7fc9b00b1b80, stream=stream@entry=0x7fc9b008f830, cancellable=cancellable@entry=0x0, error=error@entry=0x2a722e0",
+      "depth": 44,
+      "file": "gdk-pixbuf-io.c:1465",
+      "address": "0x00007fc9d8d6f435"
+    },
+    {
+      "function": "gdk_pixbuf_new_from_stream_at_scale",
+      "extra": [
+        "#45 0x00007fc9d8d7107d in gdk_pixbuf_new_from_stream_at_scale (stream=stream@entry=0x7fc9b008f830, width=width@entry=64, height=height@entry=64, preserve_aspect_ratio=preserve_aspect_ratio@entry=1, cancellable=cancellable@entry=0x0, error=error@entry=0x2a722e0) at gdk-pixbuf-io.c:1535",
+        "        loader = 0x7fc9b00b1b80",
+        "        pixbuf = <optimized out>",
+        "        info = {width = 64, height = 64, preserve_aspect_ratio = 1}"
+      ],
+      "args": "stream=stream@entry=0x7fc9b008f830, width=width@entry=64, height=height@entry=64, preserve_aspect_ratio=preserve_aspect_ratio@entry=1, cancellable=cancellable@entry=0x0, error=error@entry=0x2a722e0",
+      "depth": 45,
+      "file": "gdk-pixbuf-io.c:1535",
+      "address": "0x00007fc9d8d7107d"
+    },
+    {
+      "function": "icon_info_ensure_scale_and_pixbuf",
+      "extra": [
+        "#46 0x00007fc9d54a484b in icon_info_ensure_scale_and_pixbuf (icon_info=0x2a72240, scale_only=<optimized out>) at /build/buildd/gtk+3.0-3.10.8/./gtk/gtkicontheme.c:3722",
+        "        stream = 0x7fc9b008f830",
+        "        scaled_desired_size = 64",
+        "        image_width = <optimized out>",
+        "        image_height = <optimized out>",
+        "        source_pixbuf = <optimized out>",
+        "        is_svg = 1",
+        "        scale_only = <optimized out>",
+        "        icon_info = 0x2a72240"
+      ],
+      "args": "icon_info=0x2a72240, scale_only=<optimized out>",
+      "depth": 46,
+      "file": "/build/buildd/gtk+3.0-3.10.8/./gtk/gtkicontheme.c:3722",
+      "address": "0x00007fc9d54a484b"
+    },
+    {
+      "function": "gtk_icon_info_load_icon",
+      "extra": [
+        "#47 0x00007fc9d54a7fea in gtk_icon_info_load_icon (icon_info=0x2a72240, error=0x2982dd8) at /build/buildd/gtk+3.0-3.10.8/./gtk/gtkicontheme.c:3881",
+        "        __FUNCTION__ = \"gtk_icon_info_load_icon\""
+      ],
+      "args": "icon_info=0x2a72240, error=0x2982dd8",
+      "depth": 47,
+      "file": "/build/buildd/gtk+3.0-3.10.8/./gtk/gtkicontheme.c:3881",
+      "address": "0x00007fc9d54a7fea"
+    },
+    {
+      "function": "unity::IconLoader::Impl::IconLoaderTask::LoaderJobFunc(_GTask*, void*, void*, _GCancellable*)",
+      "extra": [
+        "#48 0x00007fc9d624ff30 in unity::IconLoader::Impl::IconLoaderTask::LoaderJobFunc(_GTask*, void*, void*, _GCancellable*) () from /tmp/apport_sandbox_6oYJmc/usr/lib/compiz/libunityshell.so",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 48,
+      "dylib": "/tmp/apport_sandbox_6oYJmc/usr/lib/compiz/libunityshell.so",
+      "address": "0x00007fc9d624ff30"
+    },
+    {
+      "function": "g_task_thread_pool_thread",
+      "extra": [
+        "#49 0x00007fc9eb6cdba5 in g_task_thread_pool_thread (thread_data=0x17f32d0, pool_data=<optimized out>) at /build/buildd/glib2.0-2.40.0/./gio/gtask.c:1213",
+        "        task = 0x17f32d0"
+      ],
+      "args": "thread_data=0x17f32d0, pool_data=<optimized out>",
+      "depth": 49,
+      "file": "/build/buildd/glib2.0-2.40.0/./gio/gtask.c:1213",
+      "address": "0x00007fc9eb6cdba5"
+    },
+    {
+      "function": "g_thread_pool_thread_proxy",
+      "extra": [
+        "#50 0x00007fc9f3b2389c in g_thread_pool_thread_proxy (data=<optimized out>) at /build/buildd/glib2.0-2.40.0/./glib/gthreadpool.c:307",
+        "        task = 0x17f32d0",
+        "        pool = 0x10a5430"
+      ],
+      "args": "data=<optimized out>",
+      "depth": 50,
+      "file": "/build/buildd/glib2.0-2.40.0/./glib/gthreadpool.c:307",
+      "address": "0x00007fc9f3b2389c"
+    },
+    {
+      "function": "g_thread_proxy",
+      "extra": [
+        "#51 0x00007fc9f3b22f15 in g_thread_proxy (data=0x7fc9a8017050) at /build/buildd/glib2.0-2.40.0/./glib/gthread.c:764",
+        "        thread = 0x7fc9a8017050"
+      ],
+      "args": "data=0x7fc9a8017050",
+      "depth": 51,
+      "file": "/build/buildd/glib2.0-2.40.0/./glib/gthread.c:764",
+      "address": "0x00007fc9f3b22f15"
+    },
+    {
+      "function": "start_thread",
+      "extra": [
+        "#52 0x00007fc9f3696182 in start_thread (arg=0x7fc99effd700) at pthread_create.c:312",
+        "        __res = <optimized out>",
+        "        pd = 0x7fc99effd700",
+        "        now = <optimized out>",
+        "        unwind_buf = {cancel_jmp_buf = {{jmp_buf = {140503932720896, -6964088418075749831, 0, 0, 140503932721600, 140503932720896, 6974294084427895353, 6974229373049426489}, mask_was_saved = 0}}, priv = {pad = {0x0, 0x0, 0x0, 0x0}, data = {prev = 0x0, cleanup = 0x0, canceltype = 0}}}",
+        "        not_first_call = <optimized out>",
+        "        pagesize_m1 = <optimized out>",
+        "        sp = <optimized out>",
+        "        freesize = <optimized out>",
+        "        __PRETTY_FUNCTION__ = \"start_thread\""
+      ],
+      "args": "arg=0x7fc99effd700",
+      "depth": 52,
+      "file": "pthread_create.c:312",
+      "address": "0x00007fc9f3696182"
+    },
+    {
+      "function": "clone",
+      "extra": [
+        "#53 0x00007fc9f52b2fbd in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:111",
+        "No locals."
+      ],
+      "args": "",
+      "depth": 53,
+      "file": "../sysdeps/unix/sysv/linux/x86_64/clone.S:111",
+      "address": "0x00007fc9f52b2fbd"
+    }
+  ],
+  "type": "Crash",
+  "Signal": "6",
+  "extra": "apparently random crash soon after logging in\n\nStacktraceTop:  __libc_message (do_abort=do_abort@entry=1, fmt=fmt@entry=0x7fc9f533a668 \"*** Error in `%s': %s: 0x%s ***\\n\") at ../sysdeps/posix/libc_fatal.c:175\n malloc_printerr (ptr=<optimised out>, str=0x7fc9f533a830 \"double free or corruption (fasttop)\", action=1) at malloc.c:4996\n _int_free (av=<optimised out>, p=<optimised out>, have_lock=0) at malloc.c:3840\n ft_glyphslot_free_bitmap () from /usr/lib/x86_64-linux-gnu/libfreetype.so.6\n FT_Load_Glyph () from /usr/lib/x86_64-linux-gnu/libfreetype.so.6\n\n",
+  "UpgradeStatus": "Upgraded to trusty on 2014-05-07 (172 days ago)",
+  "CurrentDesktop": "Unity",
+  "os_version": "Ubuntu 3.13.0-37.64-generic 3.13.11.7",
+  "database_id": "launchpad:0001386114",
+  "Title": "compiz crashed with SIGABRT in __libc_message()",
+  "ProcCmdline": "compiz",
+  "date": "2014-10-27T09:58:31",
+  "Uname": "Linux 3.13.0-37-generic x86_64",
+  "os": "Ubuntu 14.04",
+  "cpu": "amd64",
+  "ApportVersion": "2.14.1-0ubuntu3.5"
+}

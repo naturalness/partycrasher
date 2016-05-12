@@ -28,6 +28,10 @@ topdir = sys.argv[1]
 buckets = []
 
 from elasticsearch import Elasticsearch
+
+es = Elasticsearch(["localhost"], retry_on_timeout=True)
+ESCrash.es = es
+
 bugs_total = 0
 no_stacktrace = 0
 

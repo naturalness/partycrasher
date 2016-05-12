@@ -13,12 +13,16 @@ from elasticsearch import Elasticsearch, NotFoundError, TransportError
 
 # Some of these imports are part of the public API...
 from partycrasher.crash import Crash
-from partycrasher.es_crash import ESCrash, Threshold
+from partycrasher.es_crash import ESCrash
 from partycrasher.es_crash import ReportNotFoundError
 from partycrasher.bucketer import MLTCamelCase
+from partycrasher.threshold import Threshold
 
 
 __version__ = u'0.1.0'
+
+DEFAULT_THRESHOLDS = ('1.0', '1.5', '2.0', '2.75', '3.0', '3.25', '3.5',
+                      '3.75', '4.0', '4.5', '5.0', '5.5', '6.0', '7.0')
 
 
 class BucketNotFoundError(KeyError):
@@ -53,22 +57,32 @@ class Project(namedtuple('Project', 'name')):
 
 
 class PartyCrasher(object):
-    def __init__(self, config_file=None):
+    def __init__(self, config_file=None, thresholds=DEFAULT_THRESHOLDS):
         self.config = ConfigParser(default_config())
+        self.thresholds = thresholds
 
         # TODO: Abstract config out.
         if config_file is not None:
             self.config.readfp(config_file)
 
-        self.esServers = self.config.get('partycrasher.elastic', 'hosts').split()
-
-        # Default to localhost if it's not configured.
-        if len(self.esServers) < 1:
-            self.esServers = ['localhost']
-
         # self.es and self.bucketer are lazy properties.
         self._es = None
         self._bucketer = None
+        
+        
+    @property
+    def es_servers(self):
+        """
+        Configured ES server list
+        """
+        return self.config.get('partycrasher.elastic', 'hosts').split()
+        
+    @property
+    def allow_delete_all(self):
+        """
+        Whether or not the instance should allow all data to be deleted at once
+        """
+        return self.config.getboolean('partycrasher.elastic', 'allow_delete_all')
 
     @property
     def es(self):
@@ -96,37 +110,52 @@ class PartyCrasher(object):
         """
         # TODO: determine from static/dynamic configuration
         return Threshold(4.0)
+    
+    def delete_and_recreate_index(self):
+        """
+        Deletes the entire index and recreates it. This destroys all of the
+        reports.
+        """
+        assert self.allow_delete_all
+        self.es.indices.delete(index='crashes')
+        self.es.cluster.health(wait_for_status='yellow')
+        self._bucketer.create_index()
+        self.es.cluster.health(wait_for_status='yellow')
+        
 
     def _connect_to_elasticsearch(self):
         """
         Establishes a connection to ElasticSearch. given configuration.
         """
-        self._es = Elasticsearch(self.esServers)
+        self._es = Elasticsearch(self.es_servers)
 
         # XXX: Monkey-patch our instance to the global.
         ESCrash.es = self._es
 
-        self._bucketer = MLTCamelCase(name="buckets", thresholds=(4.0,),
+        self._bucketer = MLTCamelCase(name="buckets",
+                                      thresholds=self.thresholds,
                                       lowercase=False, only_stack=False,
                                       index='crashes', elasticsearch=self.es)
         self._bucketer.create_index()
+        self.es.cluster.health(wait_for_status='yellow')
         return self._es
 
-    # TODO catch duplicate and return DuplicateRecordError
-    # TODO multi-bucket multi-threshold mumbo-jumbo
     def ingest(self, crash, dryrun=False):
         """
         Ingest a crash; the Crash may be a simple dictionary, or a
         pre-existing Crash instance.
+
+        :return: the saved crash
+        :rtype Crash:
+        :raises IdenticalReportError:
         """
         true_crash = Crash(crash)
 
         if dryrun:
-            # HACK!
-            true_crash['bucket'] = self.bucketer.assign_bucket(true_crash)
+            true_crash['buckets'] = self.bucketer.assign_buckets(true_crash)
             return true_crash
         else:
-            return self.bucketer.assign_save_bucket(true_crash)
+            return self.bucketer.assign_save_buckets(true_crash)
 
     def get_bucket(self, threshold, bucket_id, project=None):
         """
@@ -157,7 +186,7 @@ class PartyCrasher(object):
 
         return Bucket(id=bucket_id,
                       project=project,
-                      threshold=self.default_threshold,
+                      threshold=threshold,
                       total = reports_found,
                       top_reports=reports)
 
@@ -183,7 +212,7 @@ class PartyCrasher(object):
         # Filters by lower-bound by default;
         filters = [{
             "range": {
-                "date_bucketed": {
+                "date": {
                     "gt": lower_bound.isoformat()
                 }
             }
@@ -262,6 +291,12 @@ class PartyCrasher(object):
         raw_projects = results['aggregations']['projects']['buckets']
         return [Project(project['key']) for project in raw_projects]
 
+    def ensure_index_created(self):
+        """
+        Ensure that the index exists.
+        """
+        self._connect_to_elasticsearch()
+        return self
 
     def delete_crash(self, database_id):
         # TODO: we have to call ES directly here, theres nothing in
@@ -292,8 +327,10 @@ def default_config():
         'partycrasher.http': {
             'prefix': '/'
         },
-
         'partycrasher.elastic': {
             'primary': 'localhost:9200'
+        },
+        'partycrasher': {
+            'allow_delete_all': False,
         },
     }

@@ -1,0 +1,132 @@
+{
+  "stacktrace": [
+    {
+      "function": "g_main_context_check",
+      "extra": [
+        "#0  0x00007fb50bf76983 in g_main_context_check (context=context@entry=0x1f319f0, max_priority=2147483647, fds=fds@entry=0x7fb4f8002e70, n_fds=n_fds@entry=7) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:3120",
+        "        source = <optimized out>",
+        "        iter = {context = 0x7, may_modify = 201011713, current_list = 0x0, source = 0x7fb50ab0bb17}",
+        "        pollrec = 0x245db80",
+        "        n_ready = 0",
+        "        i = <optimized out>"
+      ],
+      "args": "context=context@entry=0x1f319f0, max_priority=2147483647, fds=fds@entry=0x7fb4f8002e70, n_fds=n_fds@entry=7",
+      "depth": 0,
+      "file": "/build/buildd/glib2.0-2.33.6/./glib/gmain.c:3120",
+      "address": "0x00007fb50bf76983"
+    },
+    {
+      "function": "g_main_context_iterate",
+      "extra": [
+        "#1  0x00007fb50bf76ed2 in g_main_context_iterate (context=0x1f319f0, block=block@entry=1, dispatch=dispatch@entry=1, self=<error reading variable: Unhandled dwarf expression opcode 0xfa>) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:3263",
+        "        max_priority = 2147483647",
+        "        timeout = -1",
+        "        some_ready = <optimized out>",
+        "        nfds = 7",
+        "        allocated_nfds = <optimized out>",
+        "        fds = 0x7fb4f8002e70"
+      ],
+      "args": "context=0x1f319f0, block=block@entry=1, dispatch=dispatch@entry=1, self=<error reading variable: Unhandled dwarf expression opcode 0xfa>",
+      "depth": 1,
+      "file": "/build/buildd/glib2.0-2.33.6/./glib/gmain.c:3263",
+      "address": "0x00007fb50bf76ed2"
+    },
+    {
+      "function": "g_main_loop_run",
+      "extra": [
+        "#2  0x00007fb50bf77392 in g_main_loop_run (loop=0x1f31980) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:3460",
+        "        __PRETTY_FUNCTION__ = \"g_main_loop_run\""
+      ],
+      "args": "loop=0x1f31980",
+      "depth": 2,
+      "file": "/build/buildd/glib2.0-2.33.6/./glib/gmain.c:3460",
+      "address": "0x00007fb50bf77392"
+    },
+    {
+      "function": "gdbus_shared_thread_func",
+      "extra": [
+        "#3  0x00007fb50a79a1d6 in gdbus_shared_thread_func (user_data=0x1f319c0) at /build/buildd/glib2.0-2.33.6/./gio/gdbusprivate.c:277",
+        "        data = 0x1f319c0"
+      ],
+      "args": "user_data=0x1f319c0",
+      "depth": 3,
+      "file": "/build/buildd/glib2.0-2.33.6/./gio/gdbusprivate.c:277",
+      "address": "0x00007fb50a79a1d6"
+    },
+    {
+      "function": "g_thread_proxy",
+      "extra": [
+        "#4  0x00007fb50bf99db5 in g_thread_proxy (data=0x1f744a0) at /build/buildd/glib2.0-2.33.6/./glib/gthread.c:801",
+        "        thread = 0x1f744a0"
+      ],
+      "args": "data=0x1f744a0",
+      "depth": 4,
+      "file": "/build/buildd/glib2.0-2.33.6/./glib/gthread.c:801",
+      "address": "0x00007fb50bf99db5"
+    },
+    {
+      "function": "start_thread",
+      "extra": [
+        "#5  0x00007fb50c7d8e9a in start_thread (arg=0x7fb4fc926700) at pthread_create.c:308",
+        "        __res = <optimized out>",
+        "        pd = 0x7fb4fc926700",
+        "        now = <optimized out>",
+        "        unwind_buf = {cancel_jmp_buf = {{jmp_buf = {0, 7369813119002561405, 140733784014976, 140415308294592, 0, 3, -7408653553037128835, -7409321856850113667}, mask_was_saved = 0}}, priv = {pad = {0x0, 0x0, 0x0, 0x0}, data = {prev = 0x0, cleanup = 0x0, canceltype = 0}}}",
+        "        not_first_call = 0",
+        "        pagesize_m1 = <optimized out>",
+        "        sp = <optimized out>",
+        "        freesize = <optimized out>",
+        "        __PRETTY_FUNCTION__ = \"start_thread\""
+      ],
+      "args": "arg=0x7fb4fc926700",
+      "depth": 5,
+      "file": "pthread_create.c:308",
+      "address": "0x00007fb50c7d8e9a"
+    },
+    {
+      "function": "clone",
+      "extra": [
+        "#6  0x00007fb50ab174bd in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:112",
+        "No locals."
+      ],
+      "args": "",
+      "depth": 6,
+      "file": "../sysdeps/unix/sysv/linux/x86_64/clone.S:112",
+      "address": "0x00007fb50ab174bd"
+    },
+    {
+      "function": null,
+      "depth": 7,
+      "args": "",
+      "extra": [
+        "#7  0x0000000000000000 in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x0000000000000000"
+    }
+  ],
+  "NonfreeKernelModules": "nvidia",
+  "extra": "Failed when selecting logout\n\nStacktraceTop:  g_main_context_check () from /lib/x86_64-linux-gnu/libglib-2.0.so.0\n ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0\n g_main_loop_run () from /lib/x86_64-linux-gnu/libglib-2.0.so.0\n ?? () from /usr/lib/x86_64-linux-gnu/libgio-2.0.so.0\n ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0\n\n",
+  "ProcCmdline": "cairo-dock",
+  "CrashCounter": "1",
+  "ApportVersion": "2.4-0ubuntu6",
+  "SegvReason": "writing unknown VMA",
+  "SourcePackage": "cairo-dock",
+  "Title": "cairo-dock crashed with SIGSEGV in g_main_context_check()",
+  "ProcEnviron": " LANGUAGE=en_CA:en\n PATH=(custom, no user)\n LANG=en_CA.UTF-8\n SHELL=/bin/bash\n",
+  "os_version": "Ubuntu 3.5.0-7.7-generic 3.5.0",
+  "type": "Crash",
+  "InstallationMedia": "Ubuntu 12.10 \"Quantal Quetzal\" - Alpha amd64 (20120511)",
+  "Package": "cairo-dock-core 3.0.2-0ubuntu2",
+  "Signal": "11",
+  "date": "2012-08-05T08:17:13",
+  "XsessionErrors": " gnome-session[1848]: WARNING: Error while executing session-migration: Failed to execute child process \"session-migration\" (No such file or directory)\n gnome-session[1848]: WARNING: Could not parse desktop file /home/bill/.config/autostart/xfce4-settings-helper-autostart.desktop: Key file does not have key 'Name'\n gnome-session[1848]: WARNING: could not read /home/bill/.config/autostart/xfce4-settings-helper-autostart.desktop\n",
+  "UserGroups": "adm cdrom dip lpadmin plugdev sambashare sudo",
+  "UpgradeStatus": "No upgrade log present (probably fresh install)",
+  "Uname": "Linux 3.5.0-7-generic x86_64",
+  "database_id": "launchpad:0001033190",
+  "SegvAnalysis": " Segfault happened at: 0x7fb50bf76983 <g_main_context_check+83>:?cmpw   $0x0,0x4(%rdi)\n PC (0x7fb50bf76983) ok\n source \"$0x0\" ok\n destination \"0x4(%rdi)\" (0x7d0000000000004) not located in a known VMA region (needed writable region)!\n Stack memory exhausted (SP below stack segment)\n",
+  "ExecutablePath": "/usr/bin/cairo-dock",
+  "os": "Ubuntu 12.10",
+  "cpu": "amd64"
+}

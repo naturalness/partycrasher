@@ -1,0 +1,137 @@
+{
+  "stacktrace": [
+    {
+      "function": null,
+      "depth": 0,
+      "args": "",
+      "extra": [
+        "#0  0x0806110a in ?? ()"
+      ],
+      "address": "0x0806110a"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#1  0xb7b8110f in ?? () from /usr/lib/libgio-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 1,
+      "dylib": "/usr/lib/libgio-2.0.so.0",
+      "address": "0xb7b8110f"
+    },
+    {
+      "function": "g_simple_async_result_complete",
+      "depth": 2,
+      "args": "",
+      "extra": [
+        "#2  0xb7b8ab22 in g_simple_async_result_complete ()",
+        "   from /usr/lib/libgio-2.0.so.0"
+      ],
+      "address": "0xb7b8ab22"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#3  0xb7b97ff9 in ?? () from /usr/lib/libgio-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 3,
+      "dylib": "/usr/lib/libgio-2.0.so.0",
+      "address": "0xb7b97ff9"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#4  0xb7b6426b in ?? () from /usr/lib/libgio-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 4,
+      "dylib": "/usr/lib/libgio-2.0.so.0",
+      "address": "0xb7b6426b"
+    },
+    {
+      "function": "g_main_context_dispatch",
+      "extra": [
+        "#5  0xb7a486b1 in g_main_context_dispatch () from /usr/lib/libglib-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 5,
+      "dylib": "/usr/lib/libglib-2.0.so.0",
+      "address": "0xb7a486b1"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#6  0xb7a4bd53 in ?? () from /usr/lib/libglib-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 6,
+      "dylib": "/usr/lib/libglib-2.0.so.0",
+      "address": "0xb7a4bd53"
+    },
+    {
+      "function": "g_main_loop_run",
+      "extra": [
+        "#7  0xb7a4c272 in g_main_loop_run () from /usr/lib/libglib-2.0.so.0"
+      ],
+      "args": "",
+      "depth": 7,
+      "dylib": "/usr/lib/libglib-2.0.so.0",
+      "address": "0xb7a4c272"
+    },
+    {
+      "function": null,
+      "depth": 8,
+      "args": "",
+      "extra": [
+        "#8  0x08051d53 in ?? ()"
+      ],
+      "address": "0x08051d53"
+    },
+    {
+      "function": null,
+      "depth": 9,
+      "args": "",
+      "extra": [
+        "#9  0x08052025 in ?? ()"
+      ],
+      "address": "0x08052025"
+    },
+    {
+      "function": "__libc_start_main",
+      "extra": [
+        "#10 0xb78a9685 in __libc_start_main () from /lib/tls/i686/cmov/libc.so.6"
+      ],
+      "args": "",
+      "depth": 10,
+      "dylib": "/lib/tls/i686/cmov/libc.so.6",
+      "address": "0xb78a9685"
+    },
+    {
+      "function": null,
+      "depth": 11,
+      "args": "",
+      "extra": [
+        "#11 0x0804df31 in ?? ()"
+      ],
+      "address": "0x0804df31"
+    }
+  ],
+  "UserGroups": "adm admin audio cdrom dialout dip floppy fuse lpadmin plugdev pulse pulse-access sambashare scanner users vboxusers video",
+  "ExecutablePath": "/usr/lib/gvfs/gvfsd-smb",
+  "SourcePackage": "gvfs",
+  "extra": "StacktraceTop:  ?? ()\n ?? () from /usr/lib/libgio-2.0.so.0\n g_simple_async_result_complete ()\n ?? () from /usr/lib/libgio-2.0.so.0\n ?? () from /usr/lib/libgio-2.0.so.0\n\nOccurred while using Rythmbox.  I am sure it is associated w/ the the gvfs mount issue where I cannot mount a network drive. \"Error: DBus error org.freedesktop.DBus.Error.InvalidArgs: Mountpoint Already registered Please select another viewer and try again.\"  I can access my shared files but they show up a missing files in Rhythmbox.  I have been forcing the .gvfs to load my shared files in Nautilus by opening Rhythmbox and then opening the folder in Nautilus.  If open Nautilus before RhythmboxI cannot access the shared files.\n\nBinary package hint: gvfs\n\n",
+  "os": "Ubuntu 8.10",
+  "Signal": "11",
+  "Package": "gvfs-backends 0.99.6-0ubuntu3",
+  "ProcEnviron": " SHELL=/bin/bash\n PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/X11:/usr/games\n LANG=en_US.UTF-8\n",
+  "Uname": "Linux 2.6.27-2-generic i686",
+  "database_id": "launchpad:0000267589",
+  "NonfreeKernelModules": "nvidia",
+  "ProcCmdline": "/usr/lib/gvfs/gvfsd-smb --spawner :1.13 /org/gtk/gvfs/exec_spaw/5",
+  "Title": "gvfsd-smb crashed with SIGSEGV in g_simple_async_result_complete()",
+  "CrashCounter": "1",
+  "type": "Crash",
+  "cpu": "i386",
+  "ProcAttrCurrent": "unconfined"
+}

@@ -17,6 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
+from datetime import datetime
+from collections import OrderedDict
 
 from partycrasher import Crash, Bucket, Project, Threshold
 from rest_api_utils import href
@@ -124,6 +126,8 @@ class ResourceEncoder(json.JSONEncoder):
         elif isinstance(obj, Threshold):
             # The str output is the JSON output.
             return str(obj)
+        elif isinstance(obj, datetime):
+            return obj.isoformat()
         else:
             raise TypeError('No idea how to encode {!r} object: '
                             '{!r}'.format(type(obj), obj))
@@ -390,7 +394,27 @@ def fix_buckets(crash_dict):
 
     fixed_buckets = {}
     for key, bucket_id in crash_dict['buckets'].items():
-        threshold = str(Threshold(key))
-        fixed_buckets[threshold] = Bucket(bucket_id, project, threshold, None, None)
+        if key == 'top_match':
+            fixed_buckets['top_match'] = serialize_top_match(bucket_id)
+        else:
+            threshold = str(Threshold(key))
+            fixed_buckets[threshold] = Bucket(bucket_id, project, threshold, None, None)
 
     crash_dict['buckets' ] = fixed_buckets
+
+
+def serialize_top_match(info):
+    # See: bucketer.MLT.make_matching_buckets()
+    if info is not None:
+        match_url = href('view_report',
+                         project=info['project'],
+                         report_id=info['report_id'])
+        return OrderedDict([
+            ('report_id', info['report_id']),
+            ('href', match_url['href']),
+            ('project', info['project']),
+            ('score', info['score']),
+        ])
+    else:
+        return None
+

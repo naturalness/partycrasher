@@ -17,9 +17,11 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from __future__ import print_function
+
 from crash import Crash, Stacktrace, Stackframe
 
-import os, re, io, gzip, json
+import os, re, io, gzip, json, sys
 import dateparser
 import unicodedata
 from logging import critical, error, warning, info, debug
@@ -234,7 +236,7 @@ class LaunchpadFrame(Stackframe):
                     frame['function'] = match.group(2)
                     matched = True
         except:
-            print line
+            print(line, file=stderr)
             raise
         if frame['function'] == '??':
             frame['function'] = None
@@ -364,10 +366,11 @@ class LaunchpadCrash(Crash):
                 raise IOError("No stacktrace file found in %s" % (path))
             trace = LaunchpadStack.load_from_file(stack_path)
             if trace is None:
-                print stack_path + " did not contain a stack trace!"
+                print(stack_path + " did not contain a stack trace!", file=sys.stderr)
                 skip_files.append(stack_path)
                 return cls.load_from_file(path, skip_files)
             crash['stacktrace'] = trace
+            crash['project'] = 'Ubuntu'
             #print json.dumps(crash, indent=4, default=repr)
         else:
             raise NotImplementedError("Not a directory, I don't know how to load this.")

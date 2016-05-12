@@ -16,66 +16,25 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from __future__ import print_function
+import sys
 import datetime
 import time
 from weakref import WeakValueDictionary
-from decimal import Decimal
 
 import elasticsearch
 from elasticsearch import Elasticsearch
 
-from crash import Crash, Stacktrace, Stackframe
+from pc_exceptions import IdenticalReportError
+from crash import Crash, Stacktrace, Stackframe, CrashEncoder, Buckets
+from threshold import Threshold
 
-# Python 2/3 non-sense.
-try:
-    unicode
-except NameError:
-    StringTypes = (str,)
-else:
-    StringTypes = (str, unicode)
-
+import json # For debugging
 
 class ReportNotFoundError(KeyError):
     """
     Raised when... the crash is not found!
     """
-
-class Threshold(object):
-    """
-    A wrapper for a threshold value. Ensures proper serialization between
-    ElasticSearch and users.
-    """
-    __slots__ = '_value'
-
-    def __init__(self, value):
-        if isinstance(value, Threshold):
-            # Clone the other Threshold.
-            self._value = value._value
-            return
-        elif isinstance(value, StringTypes):
-            value = value.replace('_', '.')
-
-        self._value = Decimal(value)
-
-    def __str__(self):
-        result = str(self._value)
-        assert '_' not in result
-        if '.' not in result:
-            return result + '.0'
-        return result
-
-    def to_float(self):
-        return float(self._value)
-
-    def __getattr__(self, attr):
-        return getattr(self._value, attr)
-
-    def to_elasticsearch(self):
-        str_value = str(self)
-        assert isinstance(self._value, Decimal)
-        assert str_value.count('.') == 1, 'Invalid decimal number'
-        return str_value.replace('.', '_')
-
 
 class ESCrashMeta(type):
     # The purpose of all of this shit is to ensure that we don't
@@ -107,9 +66,16 @@ class ESCrashMeta(type):
                 else:
                     existing = None
                 if not existing is None:
+
+                    if existing != crash:
+                        # We already know of it! Raise an identical report
+                        # error.
+                        # TODO: not resilient to multiple running instances of
+                        # PartyCrasher :c
+                        raise IdenticalReportError(existing)
+
                     # It is already in elastic search
                     # make sure its the same data
-                    assert(existing == crash)
                     newish = super(ESCrashMeta, cls).__call__(crash=existing, index=index)
                     # cache it as a weak reference
                     cls._cached[index][crash['database_id']] = newish
@@ -118,16 +84,17 @@ class ESCrashMeta(type):
                 else:
                     # Ensure this is UTC ISO format
                     now = datetime.datetime.utcnow()
-                    crash.setdefault('date_bucketed', now.isoformat())
+                    crash.setdefault('date', now.isoformat())
+                    crash_es_safe = crash.copy()
                     try:
                         response = cls.es.create(index=index,
                                                  doc_type='crash',
-                                                 body=crash,
+                                                 body=json.dumps(crash, cls=ESCrashEncoder),
                                                  id=crash['database_id'])
                         assert response['created']
                     except elasticsearch.exceptions.ConflictError as e:
                         if 'DocumentAlreadyExistsException' in e.error:
-                            print "Got DocumentAlreadyExistsException on create!"
+                            print("Got DocumentAlreadyExistsException on create!", file=stderr)
                             time.sleep(5) # Let ES think about its life...
                             already = cls.getrawbyid(crash['database_id'], index=index)
                             if not already is None:
@@ -175,35 +142,16 @@ class ESCrash(Crash):
     def getrawbyid(cls, database_id, index='crashes'):
         if cls.es is None:
             raise RuntimeError('Forgot to monkey-patch ES connection to ESCrash!')
-
+        
         if index in cls.crashes:
             if database_id in cls.crashes[index]:
                 return cls.crashes[database_id]
-
-        response = cls.es.search(index=index, body={
-            'query': {
-                'filtered':{
-                    'query': {
-                        'match_all': {}
-                    },
-                    'filter': {
-                        'term': {
-                            'database_id': database_id,
-                        }
-                    }
-                }
-            }
-        })
-
-        if response['hits']['total'] == 0:
+        try:
+            response = cls.es.get(index=index, id=database_id)
+        except elasticsearch.exceptions.NotFoundError:
             return None
-        elif response['hits']['total'] > 1:
-            raise Exception("The ID occurs in ES twice, which shouldn't be "
-                            "possible, since they are all supposed to be stored "
-                            "with their document ID equal to the database ID.")
-        else:
-            # should this be ESCrash.__base__?
-            return Crash(response['hits']['hits'][0]['_source'])
+
+        return Crash(response['_source'])
 
     def __init__(self, index='crashes', crash=None):
         self.index = index
@@ -230,14 +178,16 @@ class ESCrash(Crash):
 
         # Update the crash in ElasticSearch.
         if (oldval != newval) and self.hot:
+            body={
+                'doc': {
+                        key: newval
+                    }
+                }
             r = self.es.update(index=self.index,
                         doc_type='crash',
                         id=self['database_id'],
-                        body={
-                            'doc': {
-                                    key: val
-                                }
-                            }
+                        # use our own serializer instead of py-elasticsearch
+                        body=json.dumps(body, cls=ESCrashEncoder)
                         )
 
     def get_bucket_id(self, threshold):
@@ -257,6 +207,36 @@ class ESCrash(Crash):
         raise NotImplementedError
         # TODO: code to delete from ES
         # TODO: clear self
+
+
+
+class ESCrashEncoder(CrashEncoder):
+    
+    @staticmethod
+    def hacky_serialize_thresholds(value):
+        """
+        Must serialize thresholds, but ElasticSearch is all like... nah.
+        Actually the problem is that python dumps doesn't allow non-string keys?
+        """
+        assert isinstance(value, Buckets)
+
+        new_dict = value._od.copy()
+        for key in value.keys():
+            if not isinstance(key, Threshold):
+                continue
+            # Change threshold to saner value.
+            new_dict[key.to_elasticsearch()] = value[key]
+            del new_dict[key]
+        return new_dict
+
+    def default(self, o):
+        #assert False
+        #print(type(o), file=sys.stderr)
+        if isinstance(o, Buckets):
+            return self.hacky_serialize_thresholds(o)
+        else:
+            return CrashEncoder.default(self, o)
+    
 
 
 import unittest

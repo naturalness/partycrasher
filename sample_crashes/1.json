@@ -1,0 +1,195 @@
+{
+  "stacktrace": [
+    {
+      "function": null,
+      "extra": [
+        "#0  0x00007f505a20b800 in ?? () from /tmp/tmp_dvilh/lib/x86_64-linux-gnu/libdbus-1.so.3",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 0,
+      "dylib": "/tmp/tmp_dvilh/lib/x86_64-linux-gnu/libdbus-1.so.3",
+      "address": "0x00007f505a20b800"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#1  0x00007f505a212e98 in ?? () from /tmp/tmp_dvilh/lib/x86_64-linux-gnu/libdbus-1.so.3",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 1,
+      "dylib": "/tmp/tmp_dvilh/lib/x86_64-linux-gnu/libdbus-1.so.3",
+      "address": "0x00007f505a212e98"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#2  0x00007f505a204343 in ?? () from /tmp/tmp_dvilh/lib/x86_64-linux-gnu/libdbus-1.so.3",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 2,
+      "dylib": "/tmp/tmp_dvilh/lib/x86_64-linux-gnu/libdbus-1.so.3",
+      "address": "0x00007f505a204343"
+    },
+    {
+      "function": "dbus_connection_dispatch",
+      "extra": [
+        "#3  0x00007f505a2077c6 in dbus_connection_dispatch () from /tmp/tmp_dvilh/lib/x86_64-linux-gnu/libdbus-1.so.3",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 3,
+      "dylib": "/tmp/tmp_dvilh/lib/x86_64-linux-gnu/libdbus-1.so.3",
+      "address": "0x00007f505a2077c6"
+    },
+    {
+      "function": "message_queue_dispatch",
+      "extra": [
+        "#4  0x00007f505ff62c25 in message_queue_dispatch (source=source@entry=0xf384b0, callback=<optimized out>, user_data=<optimized out>) at dbus-gmain.c:90",
+        "        connection = 0xf359b0"
+      ],
+      "args": "source=source@entry=0xf384b0, callback=<optimized out>, user_data=<optimized out>",
+      "depth": 4,
+      "file": "dbus-gmain.c:90",
+      "address": "0x00007f505ff62c25"
+    },
+    {
+      "function": "g_main_dispatch",
+      "extra": [
+        "#5  0x00007f50610ecc65 in g_main_dispatch (context=0xd40880) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:2691",
+        "        dispatch = 0x7f505ff62c10 <message_queue_dispatch>",
+        "        was_in_call = 0",
+        "        user_data = 0x0",
+        "        callback = 0",
+        "        cb_funcs = 0x0",
+        "        cb_data = 0x0",
+        "        current_source_link = {data = 0xf384b0, next = 0x0}",
+        "        need_destroy = <optimized out>",
+        "        source = 0xf384b0",
+        "        current = 0xd0ea40",
+        "        i = <optimized out>"
+      ],
+      "args": "context=0xd40880",
+      "depth": 5,
+      "file": "/build/buildd/glib2.0-2.33.6/./glib/gmain.c:2691",
+      "address": "0x00007f50610ecc65"
+    },
+    {
+      "function": "g_main_context_dispatch",
+      "depth": 6,
+      "args": "context=context@entry=0xd40880",
+      "file": "/build/buildd/glib2.0-2.33.6/./glib/gmain.c:3195",
+      "extra": [
+        "#6  g_main_context_dispatch (context=context@entry=0xd40880) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:3195",
+        "No locals."
+      ]
+    },
+    {
+      "function": "g_main_context_iterate",
+      "extra": [
+        "#7  0x00007f50610ecf98 in g_main_context_iterate (context=0xd40880, block=block@entry=1, dispatch=dispatch@entry=1, self=<error reading variable: Unhandled dwarf expression opcode 0xfa>) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:3266",
+        "        max_priority = 0",
+        "        timeout = 0",
+        "        some_ready = 1",
+        "        nfds = <optimized out>",
+        "        allocated_nfds = <optimized out>",
+        "        fds = 0x11fa930"
+      ],
+      "args": "context=0xd40880, block=block@entry=1, dispatch=dispatch@entry=1, self=<error reading variable: Unhandled dwarf expression opcode 0xfa>",
+      "depth": 7,
+      "file": "/build/buildd/glib2.0-2.33.6/./glib/gmain.c:3266",
+      "address": "0x00007f50610ecf98"
+    },
+    {
+      "function": "g_main_loop_run",
+      "extra": [
+        "#8  0x00007f50610ed392 in g_main_loop_run (loop=0x1314680) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:3460",
+        "        __PRETTY_FUNCTION__ = \"g_main_loop_run\""
+      ],
+      "args": "loop=0x1314680",
+      "depth": 8,
+      "file": "/build/buildd/glib2.0-2.33.6/./glib/gmain.c:3460",
+      "address": "0x00007f50610ed392"
+    },
+    {
+      "function": "gtk_main",
+      "extra": [
+        "#9  0x00007f5060b62d25 in gtk_main () at /build/buildd/gtk+3.0-3.5.8/./gtk/gtkmain.c:1162",
+        "        loop = 0x1314680"
+      ],
+      "args": "",
+      "depth": 9,
+      "file": "/build/buildd/gtk+3.0-3.5.8/./gtk/gtkmain.c:1162",
+      "address": "0x00007f5060b62d25"
+    },
+    {
+      "function": "main",
+      "extra": [
+        "#10 0x000000000040f125 in main (argc=1, argv=0x7fff3c7139e8) at /build/buildd/cairo-dock-3.0.2/src/cairo-dock.c:833",
+        "        i = <optimized out>",
+        "        erreur = 0x0",
+        "        bSafeMode = 0",
+        "        bMaintenance = 0",
+        "        bNoSticky = 0",
+        "        bNormalHint = 0",
+        "        bCappuccino = 0",
+        "        bPrintVersion = 0",
+        "        bTesting = 0",
+        "        bForceIndirectRendering = 0",
+        "        bForceOpenGL = 0",
+        "        bToggleIndirectRendering = 0",
+        "        bKeepAbove = 0",
+        "        bForceColors = 0",
+        "        bAskBackend = 0",
+        "        cEnvironment = 0x0",
+        "        cUserDefinedDataDir = 0x0",
+        "        cVerbosity = 0x0",
+        "        cUserDefinedModuleDir = 0x0",
+        "        cExcludeModule = 0x0",
+        "        cThemeServerAdress = 0x0",
+        "        iDelay = 0",
+        "        pOptionsTable = {{long_name = 0x427f5f \"cairo\", short_name = 99 'c', flags = 2, arg = G_OPTION_ARG_NONE, arg_data = 0x6329e8, description = 0x7f5062141e96 <Address 0x7f5062141e96 out of bounds>, arg_description = 0x0}, {long_name = 0x427fcf \"opengl\", short_name = 111 'o', flags = 2, arg = G_OPTION_ARG_NONE, arg_data = 0x7fff3c713450, description = 0x7f5062141f0f <Address 0x7f5062141f0f out of bounds>, arg_description = 0x0}, {long_name = 0x427fc6 \"indirect-opengl\", short_name = 79 'O', flags = 2, arg = G_OPTION_ARG_NONE, arg_data = 0x7fff3c713454, description = 0x7f5062141ea9 <Address 0x7f5062141ea9 out of bounds>, arg_description = 0x0}, {long_name = 0x427fd6 \"ask-backend\", short_name = 65 'A', flags = 2, arg = G_OPTION_ARG_NONE, arg_data = 0x7fff3c713460, description = 0x427328 \"Ask again on startup which backend to use.\", arg_description = 0x0}, {long_name = 0x427fe2 \"env\", short_name = 101 'e', flags = 2, arg = G_OPTION_ARG_STRING, arg_data = 0x7fff3c713470, description = 0x7f506213cd04 <Address 0x7f506213cd04 out of bounds>, arg_description = 0x0}, {long_name = 0x42807a \"dir\", short_name = 100 'd', flags = 2, arg = G_OPTION_ARG_STRING, arg_data = 0x7fff3c713478, description = 0x7f506213cd46 <Address 0x7f506213cd46 out of bounds>, arg_description = 0x0}, {long_name = 0x427fe6 \"server\", short_name = 83 'S', flags = 2, arg = G_OPTION_ARG_STRING, arg_data = 0x7fff3c713498, description = 0x7f506213af43 <Address 0x7f506213af43 out of bounds>, arg_description = 0x0}, {long_name = 0x427fed \"wait\", short_name = 119 'w', flags = 2, arg = G_OPTION_ARG_INT, arg_data = 0x7fff3c713464, description = 0x7f506214220c <Address 0x7f506214220c out of bounds>, arg_description = 0x0}, {long_name = 0x427ff2 \"maintenance\", short_name = 109 'm', flags = 2, arg = G_OPTION_ARG_NONE, arg_data = 0x7fff3c71343c, description = 0x7f506213b028 <Address 0x7f506213b028 out of bounds>, arg_description = 0x0}, {long_name = 0x427ffe \"exclude\", short_name = 120 'x', flags = 2, arg = G_OPTION_ARG_STRING, arg_data = 0x7fff3c713490, description = 0x7f506213c934 <Address 0x7f506213c934 out of bounds>, arg_description = 0x0}, {long_name = 0x428006 \"safe-mode\", short_name = 102 'f', flags = 2, arg = G_OPTION_ARG_NONE, arg_data = 0x7fff3c713438, description = 0x7f506213c6ea <Address 0x7f506213c6ea out of bounds>, arg_description = 0x0}, {long_name = 0x428029 \"log\", short_name = 108 'l', flags = 2, arg = G_OPTION_ARG_STRING, arg_data = 0x7fff3c713480, description = 0x7f506213ec52 <Address 0x7f506213ec52 out of bounds>, arg_description = 0x0}, {long_name = 0x42802d \"colors\", short_name = 65 'A', flags = 2, arg = G_OPTION_ARG_NONE, arg_data = 0x7fff3c71345c, description = 0x7f506213cdcd <Address 0x7f506213cdcd out of bounds>, arg_description = 0x0}, {long_name = 0x428110 \"version\", short_name = 118 'v', flags = 2, arg = G_OPTION_ARG_NONE, arg_data = 0x7fff3c713448, description = 0x7f506213fe21 <Address 0x7f506213fe21 out of bounds>, arg_description = 0x0}, {long_name = 0x42804c \"locked\", short_name = 107 'k', flags = 2, arg = G_OPTION_ARG_NONE, arg_data = 0x632d98, description = 0x7f506213ec02 <Address 0x7f506213ec02 out of bounds>, arg_description = 0x0}, {long_name = 0x428053 \"keep-above\", short_name = 97 'a', flags = 2, arg = G_OPTION_ARG_NONE, arg_data = 0x7fff3c713458, description = 0x7f506213e8d4 <Address 0x7f506213e8d4 out of bounds>, arg_description = 0x0}, {long_name = 0x42805e \"no-sticky\", short_name = 115 's', flags = 2, arg = G_OPTION_ARG_NONE, arg_data = 0x7fff3c713440, description = 0x7f506213c703 <Address 0x7f506213c703 out of bounds>, arg_description = 0x0}, {long_name = 0x428068 \"capuccino\", short_name = 67 'C', flags = 2, arg = G_OPTION_ARG_NONE, arg_data = 0x7fff3c713444, description = 0x7f506213b9c1 <Address 0x7f506213b9c1 out of bounds>, arg_description = 0x0}, {long_name = 0x428072 \"modules-dir\", short_name = 77 'M', flags = 2, arg = G_OPTION_ARG_STRING, arg_data = 0x7fff3c713488, description = 0x7f506213b491 <Address 0x7f506213b491 out of bounds>, arg_description = 0x0}, {long_name = 0x42807e \"testing\", short_name = 84 'T', flags = 2, arg = G_OPTION_ARG_NONE, arg_data = 0x7fff3c71344c, description = 0x7f506213cc6f <Address 0x7f506213cc6f out of bounds>, arg_description = 0x0}, {long_name = 0x428086 \"easter-eggs\", short_name = 69 'E', flags = 2, arg = G_OPTION_ARG_NONE, arg_data = 0x632490, description = 0x7f506213cc19 <Address 0x7f506213cc19 out of bounds>, arg_description = 0x0}, {long_name = 0x0, short_name = 0 '\\000', flags = 0, arg = G_OPTION_ARG_NONE, arg_data = 0x0, description = 0x0, arg_description = 0x0}}",
+        "        context = <optimized out>",
+        "        __PRETTY_FUNCTION__ = \"main\"",
+        "        iDesktopEnv = <optimized out>",
+        "        bFirstLaunch = 0",
+        "        cRootDataDirPath = <optimized out>",
+        "        iRendering = <optimized out>",
+        "        cExtraDirPath = <optimized out>",
+        "        cThemesDirPath = <optimized out>",
+        "        cCurrentThemeDirPath = <optimized out>",
+        "        bNewVersion = <optimized out>"
+      ],
+      "args": "argc=1, argv=0x7fff3c7139e8",
+      "depth": 10,
+      "file": "/build/buildd/cairo-dock-3.0.2/src/cairo-dock.c:833",
+      "address": "0x000000000040f125"
+    }
+  ],
+  "NonfreeKernelModules": "nvidia",
+  "extra": "Crash while attempting to log out\n\nStacktraceTop:  ?? () from /lib/x86_64-linux-gnu/libdbus-1.so.3\n ?? () from /lib/x86_64-linux-gnu/libdbus-1.so.3\n ?? () from /lib/x86_64-linux-gnu/libdbus-1.so.3\n dbus_connection_dispatch () from /lib/x86_64-linux-gnu/libdbus-1.so.3\n ?? () from /usr/lib/x86_64-linux-gnu/libdbus-glib-1.so.2\n\n",
+  "ProcCmdline": "cairo-dock",
+  "CrashCounter": "1",
+  "ApportVersion": "2.4-0ubuntu6",
+  "SegvReason": "reading NULL VMA",
+  "SourcePackage": "cairo-dock",
+  "Title": "cairo-dock crashed with SIGSEGV in dbus_connection_dispatch()",
+  "ProcEnviron": " LANGUAGE=en_CA:en\n PATH=(custom, no user)\n LANG=en_CA.UTF-8\n SHELL=/bin/bash\n",
+  "os_version": "Ubuntu 3.5.0-8.8-generic 3.5.0",
+  "type": "Crash",
+  "InstallationMedia": "Ubuntu 12.10 \"Quantal Quetzal\" - Alpha amd64 (20120511)",
+  "Package": "cairo-dock-core 3.0.2-0ubuntu2",
+  "Signal": "11",
+  "date": "2012-08-06T16:59:49",
+  "XsessionErrors": " gnome-session[1884]: WARNING: Error while executing session-migration: Failed to execute child process \"session-migration\" (No such file or directory)\n gnome-session[1884]: WARNING: Could not parse desktop file /home/bill/.config/autostart/xfce4-settings-helper-autostart.desktop: Key file does not have key 'Name'\n gnome-session[1884]: WARNING: could not read /home/bill/.config/autostart/xfce4-settings-helper-autostart.desktop\n",
+  "UserGroups": "adm cdrom dip lpadmin plugdev sambashare sudo",
+  "UpgradeStatus": "No upgrade log present (probably fresh install)",
+  "Uname": "Linux 3.5.0-8-generic x86_64",
+  "database_id": "launchpad:0001033690",
+  "SegvAnalysis": " Segfault happened at: 0x7f505a20b800:?mov    (%rdi),%rax\n PC (0x7f505a20b800) ok\n source \"(%rdi)\" (0x00000009) not located in a known VMA region (needed readable region)!\n destination \"%rax\" ok\n",
+  "ExecutablePath": "/usr/bin/cairo-dock",
+  "os": "Ubuntu 12.10",
+  "cpu": "amd64"
+}

@@ -15,5 +15,9 @@ run:
 kill:
 	docker rm -f partycrasher
 
+.PHONY: test
+test: kill build
+	docker run -t -i --name partycrasher $(IMAGE_NAME) python setup.py test
+
 .PHONY: reset
 reset: build kill run

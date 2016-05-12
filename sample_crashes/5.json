@@ -1,0 +1,158 @@
+{
+  "stacktrace": [
+    {
+      "function": "_int_free",
+      "depth": 0,
+      "args": "av=0x7fd116f47740 <main_arena>, p=0x7d9da60, have_lock=0",
+      "file": "malloc.c:3832",
+      "extra": [
+        "#0  _int_free (av=0x7fd116f47740 <main_arena>, p=0x7d9da60, have_lock=0) at malloc.c:3832",
+        "        idx = 1",
+        "        fd = <optimized out>",
+        "        old = 0xffffffff",
+        "        old_idx = <optimized out>",
+        "        size = <optimized out>",
+        "        fb = 0x7fd116f47750 <main_arena+16>",
+        "        nextchunk = <optimized out>",
+        "        nextsize = <optimized out>",
+        "        nextinuse = <optimized out>",
+        "        prevsize = <optimized out>",
+        "        bck = <optimized out>",
+        "        fwd = <optimized out>",
+        "        errstr = 0x0",
+        "        locked = 0",
+        "        __func__ = \"_int_free\""
+      ]
+    },
+    {
+      "function": "XDestroyRegion",
+      "extra": [
+        "#1  0x00007fd1164574c5 in XDestroyRegion (r=0x7d9da70) at ../../src/Region.c:288",
+        "No locals."
+      ],
+      "args": "r=0x7d9da70",
+      "depth": 1,
+      "file": "../../src/Region.c:288",
+      "address": "0x00007fd1164574c5"
+    },
+    {
+      "function": "CompRegion::intersected(CompRect const&) const",
+      "extra": [
+        "#2  0x00007fd1174f5c85 in CompRegion::intersected(CompRect const&) const () from /tmp/apport_sandbox_HssgYB/usr/lib/libcompiz_core.so.ABI-20130125",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 2,
+      "dylib": "/tmp/apport_sandbox_HssgYB/usr/lib/libcompiz_core.so.ABI-20130125",
+      "address": "0x00007fd1174f5c85"
+    },
+    {
+      "function": "unity::UnityScreen::compizDamageNux(CompRegion const&)",
+      "extra": [
+        "#3  0x00007fd0f8432280 in unity::UnityScreen::compizDamageNux(CompRegion const&) () from /tmp/apport_sandbox_HssgYB/usr/lib/compiz/libunityshell.so",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 3,
+      "dylib": "/tmp/apport_sandbox_HssgYB/usr/lib/compiz/libunityshell.so",
+      "address": "0x00007fd0f8432280"
+    },
+    {
+      "function": "unity::UnityScreen::preparePaint(int)",
+      "extra": [
+        "#4  0x00007fd0f8432884 in unity::UnityScreen::preparePaint(int) () from /tmp/apport_sandbox_HssgYB/usr/lib/compiz/libunityshell.so",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 4,
+      "dylib": "/tmp/apport_sandbox_HssgYB/usr/lib/compiz/libunityshell.so",
+      "address": "0x00007fd0f8432884"
+    },
+    {
+      "function": null,
+      "extra": [
+        "#5  0x00007fd110194f25 in ?? () from /tmp/apport_sandbox_HssgYB/usr/lib/compiz/libcomposite.so",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 5,
+      "dylib": "/tmp/apport_sandbox_HssgYB/usr/lib/compiz/libcomposite.so",
+      "address": "0x00007fd110194f25"
+    },
+    {
+      "function": null,
+      "depth": 6,
+      "args": "",
+      "extra": [
+        "#6  0x00000000020a77e0 in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x00000000020a77e0"
+    },
+    {
+      "function": null,
+      "depth": 7,
+      "args": "",
+      "extra": [
+        "#7  0x0000000002122670 in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x0000000002122670"
+    },
+    {
+      "function": null,
+      "depth": 8,
+      "args": "",
+      "extra": [
+        "#8  0x0000000007ea80b0 in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x0000000007ea80b0"
+    },
+    {
+      "function": "CompositeScreen::compositingActive()",
+      "extra": [
+        "#9  0x00007fd1101966b8 in CompositeScreen::compositingActive() () from /tmp/apport_sandbox_HssgYB/usr/lib/compiz/libcomposite.so",
+        "No symbol table info available."
+      ],
+      "args": "",
+      "depth": 9,
+      "dylib": "/tmp/apport_sandbox_HssgYB/usr/lib/compiz/libcomposite.so",
+      "address": "0x00007fd1101966b8"
+    },
+    {
+      "function": null,
+      "depth": 10,
+      "args": "",
+      "extra": [
+        "#10 0x0000000000000000 in ?? ()",
+        "No symbol table info available."
+      ],
+      "address": "0x0000000000000000"
+    }
+  ],
+  "NonfreeKernelModules": "nvidia",
+  "extra": "I was searching for an ODT document, and accidentally opened the preview for it, but then when I went the close the preview, Unity froze, and then after about 5 secs, crashed and restarted.\n\nStacktraceTop:  _int_free (av=0x7fd116f47740 <main_arena>, p=0x7d9da60, have_lock=0) at malloc.c:3832\n XDestroyRegion () from /usr/lib/x86_64-linux-gnu/libX11.so.6\n CompRegion::intersects(CompRegion const&) const () from /usr/lib/libcompiz_core.so.ABI-20130125\n unity::UnityScreen::compizDamageNux(CompRegion const&) () from /usr/lib/compiz/libunityshell.so\n unity::UnityScreen::preparePaint(int) () from /usr/lib/compiz/libunityshell.so\n\n",
+  "ProcCmdline": "compiz",
+  "MarkForUpload": "True",
+  "ApportVersion": "2.12-0ubuntu3",
+  "SegvReason": "reading unknown VMA",
+  "SourcePackage": "unity",
+  "Title": "compiz crashed with SIGSEGV in _int_free()",
+  "ProcEnviron": " LANGUAGE=en_AU:en\n PATH=(custom, user)\n XDG_RUNTIME_DIR=<set>\n LANG=en_AU.UTF-8\n SHELL=/bin/bash\n",
+  "os_version": "Ubuntu 3.11.0-2.5-generic 3.11.0-rc5",
+  "InstallationDate": "Installed on 2013-02-05 (194 days ago)",
+  "type": "Crash",
+  "InstallationMedia": "Ubuntu 12.10 \"Quantal Quetzal\" - Release amd64 (20121017.5)",
+  "Package": "unity 7.1.0+13.10.20130816.3-0ubuntu1",
+  "Signal": "11",
+  "date": "2013-08-19T08:58:36",
+  "UserGroups": "adm cdrom dip games lpadmin plugdev sambashare sudo vboxusers",
+  "UpgradeStatus": "Upgraded to saucy on 2013-08-13 (5 days ago)",
+  "Uname": "Linux 3.11.0-2-generic x86_64",
+  "database_id": "launchpad:0001213742",
+  "SegvAnalysis": " Segfault happened at: 0x7fd116c07289 <_int_free+217>:?mov    0x8(%rdx),%esi\n PC (0x7fd116c07289) ok\n source \"0x8(%rdx)\" (0x100000007) not located in a known VMA region (needed readable region)!\n destination \"%esi\" ok\n",
+  "ExecutablePath": "/usr/bin/compiz",
+  "os": "Ubuntu 13.10",
+  "cpu": "amd64"
+}

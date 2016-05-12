@@ -21,8 +21,10 @@
 import os
 import sys
 import time
+import argparse
 
 from flask import current_app, json, jsonify, request, url_for, redirect
+from flask import render_template, send_file, send_from_directory
 from flask.ext.cors import CORS
 
 # Hacky things to add PartyCrasher to the path.
@@ -36,19 +38,31 @@ from partycrasher.rest_api_utils import (
     jsonify_list,
     href,
     redirect_with_query_string,
+    full_url_for
 )
 from partycrasher.resource_encoder import ResourceEncoder
+from partycrasher.pc_exceptions import IdenticalReportError
 
 import dateparser
 
 # Create and customize the Flask app.
-app = make_json_app('partycrasher')
+app = make_json_app('partycrasher', template_folder='ngapp/app')
 CORS(app)
 app.json_encoder = ResourceEncoder
+# From http://stackoverflow.com/questions/30362950/is-it-possible-to-use-angular-with-the-jinja2-template-engine
+jinja_options = app.jinja_options.copy()
 
-# XXX: This shouldn't be hard-coded!
-with open(os.path.join(REPOSITORY_ROUTE, 'partycrasher.cfg')) as config_file:
-    crasher = partycrasher.PartyCrasher(config_file)
+jinja_options.update(dict(
+    block_start_string='<%',
+    block_end_string='%>',
+    variable_start_string='%%',
+    variable_end_string='%%',
+    comment_start_string='<#',
+    comment_end_string='#>'
+))
+app.jinja_options = jinja_options
+
+crasher = None
 
 
 @app.errorhandler(BadRequest)
@@ -73,36 +87,35 @@ def root():
 
     Resources may be projects, buckets, reports, and other such entities.
 
-    A resources contains its hyperlink reference (i.e., URL), acceptable HTTP
-    methods, and (sometimes) its `link relation`_.
+    A resource contains its hyperlink reference (i.e., URL), and (sometimes)
+    its `link relation`_.
 
     .. _link relation: http://www.iana.org/assignments/link-relations/link-relations.xhtml
-
-    ``methods`` lists any allowable HTTP methods *in addition* to ``OPTIONS``.
-    The same information can be obtained by issuing an ``OPTIONS`` request to
-    the ``href`` and parsing the ``ALLOW`` field in the response.
 
     .. code-block:: json
 
         {
             "resource": {
-                "href": "http://domain.tld/path/to/resource",
-                "rel": "",
-                "methods": [
-                    "GET"
-                ]
+                "href": "http://domain.tld/path/to/resource"
             }
         }
+
+    Endpoints at a glance
+    =====================
 
     .. code-block:: none
 
         partycrasher
-        ├── alan_parsons
+        ├── <project name>
         │   ├── buckets
+        │   |   └── <threshold>
+        │   |       └── <bucket id>
         │   ├── config
         │   └── reports
         │       └── dry_run
         ├── buckets
+        |   └── <threshold>
+        |       └── <bucket id>
         ├── config
         └── reports
             └── dry_run
@@ -115,15 +128,46 @@ def root():
     return jsonify(self=dict(href('root'), rel='canonical'),
                    partycrasher={
                        'version': partycrasher.__version__,
-                       'elastic': crasher.esServers,
+                       'elastic': crasher.es_servers,
                    },
                    projects=projects,
                    config={
-                       'default_threshold': 4.0
+                       'default_threshold': 4.0,
+                       'thresholds': crasher.thresholds
                    })
 
 
-@app.route('/reports', methods=['POST'])
+@app.route('/ui/', methods=['GET'])
+def home():
+    return render_template('index.html',
+                           basehref=full_url_for('home'),
+                           restbase=full_url_for('root'))
+
+@app.route('/ui/bower_components/<path:filename>', methods=['GET'])
+def bower_components(filename):
+    return send_from_directory(relative('ngapp/bower_components/'), filename)
+
+@app.route('/ui/<path:filename>', methods=['GET'])
+def ui(filename):
+    if os.path.exists(relative('ngapp/app/') + filename):
+        # It's a static file.
+        return send_from_directory(relative('ngapp/app/'), filename)
+    else:
+        # Otherwise, it's a route in the web app.
+        return render_template('index.html',
+                           basehref=full_url_for('home'),
+                           restbase=full_url_for('root'))
+
+
+@app.route('/demo')
+def demo():
+    thresholds = crasher.thresholds
+    return render_template('demo.html',
+                           thresholds=json.dumps(thresholds),
+                           min_threshold=thresholds[0],
+                           max_threshold=thresholds[-1])
+
+@app.route('/reports', methods=['POST'], endpoint='add_report_no_project')
 @app.route('/<project>/reports', methods=['POST'])
 def add_report(project=None):
     """
@@ -145,7 +189,12 @@ def add_report(project=None):
 
     Uploads a new report. The report should be sent as a JSON Object with at
     least a unique ``database_id`` property. If uploaded to
-    ``/:project/reports``, the ``project`` property will automatically be set.
+    ``/:project/reports``, the ``project`` property will automatically be set;
+    otherwise, the ``project`` property is also mandatory.
+
+    The report may also have a ``date`` property, which will be used to group
+    crashes by date. If not specified, this is set as the insertion date
+    (which may not always be what you want).
 
     The response contains the bucket assignments, as well as the canonical URL
     to access the report.
@@ -158,14 +207,14 @@ def add_report(project=None):
     .. code-block:: JSON
 
         {
-            "id": "<report-id>",
-            "self": {
-                "href": "https://domain.tld/<project>/reports/<bucket-id>"
-            },
-            "bucket": {
-                "id": "<bucket-id>",
-                "href": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>"
-                "rel": "canonical"
+            "database_id": "<report-id>",
+            "project": "<project>",
+            "href": "https://domain.tld/<project>/reports/<report-id>",
+            "buckets": {
+                "4.0": {
+                    "bucket_id": "<bucket-id @ 4.0>",
+                    "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                }
             }
         }
 
@@ -208,14 +257,26 @@ def add_report(project=None):
 
         [
             {
-                "id": "<report-id 1>",
-                "bucket_id": "<bucket-id 1>",
-                "bucket_url": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id 1>"
+                "database_id": "<report-id 1>",
+                "project": "<project>",
+                "href": "https://domain.tld/<project>/reports/<report-id 1>",
+                "buckets": {
+                    "4.0": {
+                        "bucket_id": "<bucket-id @ 4.0>",
+                        "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                    }
+                }
             },
             {
-                "id": "<report-id 2>",
-                "bucket_id": "<bucket-id 2>",
-                "bucket_url": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id 2>"
+                "database_id": "<report-id 2>",
+                "project": "<project>",
+                "href": "https://domain.tld/<project>/reports/<report-id 2>",
+                "buckets": {
+                    "4.0": {
+                        "bucket_id": "<bucket-id @ 4.0>",
+                        "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                    }
+                }
             }
         ]
 
@@ -235,13 +296,22 @@ def add_report(project=None):
 
     report = request.get_json()
 
+    if not report:
+        raise BadRequest('No usable report data provided.',
+                         error='no_report_data_provided')
+
     if isinstance(report, list):
         return jsonify_list(ingest_multiple(report, project)), 201
     else:
-        report, url = ingest_one(report, project)
-        return jsonify_resource(report), 201, {
-            'Location': url
-        }
+        try:
+            report, url = ingest_one(report, project)
+        except IdenticalReportError as error:
+            # Ingested a duplicate report.
+            return '', 303, { 'Location': url_for_report(error.report) }
+        else:
+            return jsonify_resource(report), 201, {
+                'Location': url
+            }
 
 
 @app.route('/reports/<report_id>',
@@ -287,6 +357,7 @@ def view_report(project=None, report_id=None):
 
         {
             "database_id": "<report-id>",
+            "project": "<project>",
             "buckets": {
                 "3.5": {
                     "id": "<bucket-id, T=3.5>",
@@ -301,6 +372,7 @@ def view_report(project=None, report_id=None):
                     "url": "https://domain.tld/<project>/buckets/4.5/<bucket-id>"
                 }
             },
+
             "threads": [
                 {
                     "stacktrace": ["..."]
@@ -342,9 +414,9 @@ def ask_about_report(project=None):
 
         POST /reports/dry-run HTTP/1.1
 
-    Answers the question: what bucket would this report be assigned to? This
-    does **NOT** store or keep track of the report! Use :ref:`upload-single`
-    to commit reports to the database.
+    Answers the question: “What bucket would this report be assigned to?” This
+    does **NOT** store or track the report! Use :ref:`upload-single` to commit
+    reports to the database.
 
     ::
 
@@ -353,54 +425,60 @@ def ask_about_report(project=None):
     .. code-block:: JSON
 
         {
-            "id": "<report-id>",
-            "self": {
-                "href": "https://domain.tld/<project>/reports/<bucket-id>"
-            },
-            "bucket": {
-                "id": "<bucket-id>",
-                "href": "https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>"
-                "rel": "canonical"
+            "database_id": "<report-id>",
+            "href": "https://domain.tld/<project>/reports/<report-id>"
+            "buckets": {
+                "4.0": {
+                    "bucket_id": "<bucket-id @ 4.0>",
+                    "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                }
             }
         }
 
     """
 
     report = request.get_json()
-    assigned_report, _url = ingest_one(report, project, dryrun=True)
-    return jsonify_resource(assigned_report), 200
+    try:
+        assigned_report, _url = ingest_one(report, project, dryrun=True)
+    except IdenticalReportError as error:
+        # Already ingested report; no need to dry-run.
+        return '', 303, { 'Location': url_for_report(error.report) }
+    else:
+        return jsonify_resource(assigned_report), 200
 
 
-@app.route('/reports/<report_id>', methods=['DELETE'],
-           defaults={'project': None},
-           endpoint='delete_report_no_project')
-@app.route('/<project>/reports/<report_id>', methods=['DELETE'])
-def delete_report(project=None, report_id=None):
-    """
-    .. api-doc-order: 3
+def not_available_in_this_release():
+    @app.route('/reports/<report_id>', methods=['DELETE'],
+               defaults={'project': None},
+               endpoint='delete_report_no_project')
+    @app.route('/<project>/reports/<report_id>', methods=['DELETE'])
+    def delete_report(project=None, report_id=None):
+        """
+        .. api-doc-order: 200
 
-    Delete an existing report
-    =========================
-    ::
+        Delete an existing report
+        =========================
+        ::
 
-        DELETE /:project/reports/:report_id HTTP/1.1
+            DELETE /:project/reports/:report_id HTTP/1.1
 
-    or
+        or
 
-    ::
+        ::
 
-        DELETE /reports/:report_id HTTP/1.1
+            DELETE /reports/:report_id HTTP/1.1
 
-    Deletes an existing report from the database.
+        Deletes an existing report from the database.
 
-    ::
+        ::
 
-        HTTP/1.1 200 OK
+            HTTP/1.1 200 OK
 
-    """
-    # Ignore project.
-    assert report_id is not None
-    raise NotImplementedError
+        """
+        # Ignore project.
+        assert report_id is not None
+        raise NotImplementedError
+
 
 @app.route('/buckets/<threshold>/<bucket_id>',
            defaults={'project': None},
@@ -410,7 +488,32 @@ def view_bucket(project=None, threshold=None, bucket_id=None):
     """
     .. api-doc-order: 15
 
-    [view bucket documentation pending...]
+    View reports in a bucket
+    ========================
+    ::
+
+        GET /:project/buckets/:threshold/:bucket_id HTTP/1.1
+
+    Fetches the bucket in given project, for the given threshold.
+    Returns with a list of top reports (a semi-arbitrary list), and the amount
+    of reports ingested into this bucket.
+
+
+    ::
+
+        HTTP/1.1 200 OK
+
+    .. code-block:: JSON
+
+        {
+            "id": "<bucket-id>",
+            "project": "<project>",
+            "href": "http://domain.tld/<project>/buckets/<threshold>/<bucket-id>",
+            "threshold": "4.0",
+            "top_reports": ["..."],
+            "total": 3279
+        }
+
     """
     assert bucket_id is not None
     assert threshold is not None
@@ -454,50 +557,31 @@ def query_buckets(project=None, threshold=None):
 
     ::
 
-        GET /:project/buckets HTTP/1.1
+        GET /:project/buckets/:threshold HTTP/1.1
 
     or
 
     ::
 
-        GET /:project/buckets HTTP/1.1
+        GET /buckets/:threshold HTTP/1.1
 
-    Find top buckets for a given time-frame. If queried  on a ``:project``
+    Finds the top buckets for a given time-frame. If queried on a ``:project``
     route, implicitly filters by project.
 
     Query parameters
     ----------------
 
-    .. this is the proposed version of this table:
-        +-------------+--------------+-------------------------------------------+
-        | Parameter   | Values       | Description                               |
-        +-------------+--------------+-------------------------------------------+
-        | ``since``   | Start time   | From when to count top buckets.           |
-        +-------------+--------------+-------------------------------------------+
-        | ``project`` | Project name | Limit to this project only; implied if    |
-        |             |              | using a ``/:project/`` endpoint.          |
-        +-------------+--------------+-------------------------------------------+
-        | ``version`` | Version id   | Limit to this version only.               |
-        +------------------------------------------------------------------------+
-
-    +-------------+--------------+-------------------------------------------+
-    | Parameter   | Values       | Description                               |
-    +-------------+--------------+-------------------------------------------+
-    | ``since``   | Start date   | Grab buckets since this date, represented |
-    |             |              | as an ISO 8601 date/time value            |
-    |             |              | (i.e, YYYY-MM-DD).                        |
-    +-------------+--------------+-------------------------------------------+
-    | ``project`` | Project name | Limit to this project only; implied if    |
-    |             |              | using a ``/:project/`` endpoint.          |
-    +-------------+--------------+-------------------------------------------+
-
+    ``since``
+        **Required**. Grab buckets since this date, represented as an ISO 8601
+        date/time value (i.e, ``YYYY-MM-DD``), or a relative offset such as
+        ``5-hours-ago``, ``3-days-ago`` or ``1-week-ago``, etc.
 
     Example
     -------
 
     ::
 
-        GET /alan_parsons/buckets?since=2016-02-29 HTTP/1.1
+        GET /alan_parsons/buckets/4.0?since=2016-02-29 HTTP/1.1
         Host: domain.tld
 
     ::
@@ -512,10 +596,10 @@ def query_buckets(project=None, threshold=None):
             "threshold": "4.0",
             "top_buckets": [
                 {
-                    "href": "http://domain.tld/alan_parsons/buckets/4.0/c29a81a0-5a53-4ba0-8123-5e96685a5895",
                     "id": "c29a81a0-5a53-4ba0-8123-5e96685a5895",
-                    "method": [ "GET" ],
-                    "total": 253
+                    "href": "http://domain.tld/alan_parsons/buckets/4.0/c29a81a0-5a53-4ba0-8123-5e96685a5895",
+                    "total": 253,
+                    "top_reports": ["..."]
                 }
             ]
         }
@@ -544,6 +628,37 @@ def query_buckets(project=None, threshold=None):
     return jsonify(since=lower_bound.isoformat(),
                    threshold=threshold,
                    top_buckets=list(buckets))
+
+
+@app.route('/reports', methods=['DELETE'])
+def delete_reports_no_project():
+    """
+    .. api-doc-order: 100
+
+    Delete every report in the database
+    ==============================
+
+    ::
+
+        DELETE /reports HTTP/1.1
+
+    Deletes every report in the database. Requires that
+    ``partycrasher.elastic.allow_delete_all`` be set in the configuration.
+
+    .. warning::
+
+        Issuing this command deletes every report in the database. All of them.
+
+    ::
+
+        HTTP/1.1 200 OK
+
+    """
+    if crasher.allow_delete_all:
+        crasher.delete_and_recreate_index()
+        return jsonify(status="All reports deleted"), 200
+    else:
+        return jsonify(error="Deleting all reports not enabled"), 403
 
 
 @app.route('/<project>/config')
@@ -616,6 +731,9 @@ if False:
 def ingest_one(report, project_name, dryrun=False):
     """
     Returns a tuple of ingested report and its URL.
+
+    :raises BadRequest: When project is off.
+    :raises IdenticalReportError: When report is identical to existing report.
     """
 
     raise_bad_request_if_project_mismatch(report, project_name)
@@ -623,9 +741,7 @@ def ingest_one(report, project_name, dryrun=False):
     report.setdefault('project', project_name)
 
     report = crasher.ingest(report, dryrun=dryrun)
-    url = url_for('view_report',
-                  project=report['project'],
-                  report_id=report['database_id'])
+    url = url_for_report(report)
 
     # Commit things to the index such that any new inserts will bucket
     # properly...
@@ -639,6 +755,12 @@ def ingest_multiple(reports, project_name):
     reports.
     """
     return [ingest_one(report, project_name)[0] for report in reports]
+
+
+def url_for_report(report):
+    return url_for('view_report',
+                   project=report['project'],
+                   report_id=report['database_id'])
 
 
 def raise_bad_request_if_project_mismatch(report, project_name):
@@ -672,22 +794,60 @@ def jsonify_resource(resource):
                                       mimetype='application/json')
 
 
+def relative(*args):
+    """
+    Return a path relative to the directory containing this very script!
+    """
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), *args)
+
 def main():
-    kwargs = {
-        # Make the server publically visible.
-        'host': '0.0.0.0',
-        'debug': True,
-    }
+    global crasher
+    parser = argparse.ArgumentParser(description="Run PartyCrasher REST service.")
+    parser.add_argument('--port', type=int, default=5000,
+                        help='port to run the REST HTTP service on')
+    parser.add_argument('--host', type=str, default='0.0.0.0',
+                        help='port to run the REST HTTP service on')
+    parser.add_argument('--debug', action='store_true',
+                        help='enable Flask debugging mode')
+    parser.add_argument('--profile', action='store_true',
+                        help='enable profiling')
+    parser.add_argument('--config-file', type=str,
+                        default=
+                          os.path.join(REPOSITORY_ROUTE, 'partycrasher.cfg'),
+                        help='specify location of PartyCrasher config file')
+    parser.add_argument('--allow-delete-all', action='store_true',
+                        help='allow users of the REST interface to delete all data')
+
+    kwargs = vars(parser.parse_args())
+
+    with open(kwargs['config_file']) as config_file:
+        crasher = partycrasher.PartyCrasher(config_file)
+    del kwargs['config_file']
+
+    if kwargs['allow_delete_all']:
+        crasher.config.set('partycrasher.elastic', 'allow_delete_all', 'yes')
+    del kwargs['allow_delete_all']
+
+    crasher.ensure_index_created()
 
     # TODO:
-    #  - add parameter: -c [config-file]
     #  - add parameter: -C [config-setting]
 
-    # Add port if required.
-    if len(sys.argv) > 1:
-        kwargs.update(port=int(sys.argv[1]))
+    profile = kwargs['profile']
 
-    return app.run(**kwargs)
+    #global app
+    #if kwargs['profile']:
+        #from werkzeug.contrib.profiler import ProfilerMiddleware
+        #app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30])
+    del kwargs['profile']
+
+    if profile:
+        import cProfile
+        global run_kwargs
+        run_kwargs = kwargs
+        cProfile.run('app.run(**run_kwargs)', sort='cumtime')
+    else:
+        return app.run(**kwargs)
 
 
 if __name__ == '__main__':

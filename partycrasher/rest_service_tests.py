@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 
 #  Copyright (C) 2016 Joshua Charles Campbell
 #  Copyright (C) 2016 Eddie Antonio Santos
@@ -40,7 +41,6 @@ import time
 import unittest
 import uuid
 
-
 # Terrible Python 2/3 hacks
 try:
     from urlparse import urlparse
@@ -60,9 +60,10 @@ else:
   StringType = unicode
 
 
-
 import dateparser
 import requests
+
+import sample_crashes
 
 # Full path to ./rest_service.py
 REST_SERVICE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -89,7 +90,8 @@ class RestServiceTestCase(unittest.TestCase):
         # os.setsid() is required to start the server in a new session in
         # Unix; Windows needs something else...
         self.rest_service = subprocess.Popen([python_cmd, REST_SERVICE_PATH,
-                                              str(self.port)],
+                                              '--port', str(self.port), 
+                                              '--debug'],
                                              preexec_fn=os.setsid)
 
         # Wait for the REST service to start up.
@@ -191,10 +193,9 @@ class RestServiceTestCase(unittest.TestCase):
         """
 
         proxy_headers = {
-            #'Forwarded': ('for = 0.0.0.0, for = 127.0.0;'
-            'Forwarded': ('for = 0.0.0.0;'
+            'Forwarded': ('for = 127.0.0;'
                           'host = example.org;'
-                          'proto = https')
+                          'proto = https, for=198.51.100.17')
         }
         response = requests.get(self.root_url, headers=proxy_headers)
 
@@ -236,8 +237,10 @@ class RestServiceTestCase(unittest.TestCase):
         assert isinstance(buckets.get('4.0'), dict)
         assert isinstance(buckets.get('4.0').get('id'), StringType)
         assert buckets.get('4.0').get('href', '').startswith('http://')
+        # Ensure that other values exist too!
+        assert isinstance(buckets.get('3.75'), dict)
 
-        insert_date = response.json().get('date_bucketed')
+        insert_date = response.json().get('date')
         assert insert_date is not None
 
         assert before_insert <= dateparser.parse(insert_date) <= after_insert
@@ -257,11 +260,11 @@ class RestServiceTestCase(unittest.TestCase):
 
         assert response.status_code == 201
         assert response.json().get('database_id') == database_id
-        assert response.json().get('buckets') is not None
         assert response.json().get('project') == 'alan_parsons'
-        # TODO: bucket url
+        assert isinstance(response.json().get('buckets'), dict)
+        buckets = response.json().get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
 
-    @unittest.skip('This feature is not yet implemented')
     def test_add_identical_crash_to_project(self):
         """
         Adds an IDENTICAL report to a project;
@@ -282,9 +285,11 @@ class RestServiceTestCase(unittest.TestCase):
         # Check that it's created.
         assert response.status_code == 201
         assert response.json().get('database_id') == database_id
-        assert response.json().get('buckets') is not None
         assert response.json().get('project') == 'alan_parsons'
-        # TODO: bucket url
+        assert isinstance(response.json().get('buckets'), dict)
+        buckets = response.json().get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
+
         report_url = response.headers.get('Location')
         assert report_url is not None
 
@@ -292,7 +297,9 @@ class RestServiceTestCase(unittest.TestCase):
         wait_for_elastic_search()
 
         # Now insert it again!
-        response = requests.post(url, json=report)
+        # Note: allow_redirect must be False; Requests will automatically
+        # follow redirects if not explictly told not to!
+        response = requests.post(url, json=report, allow_redirects=False)
 
         # Must be a redirect.
         assert response.status_code == 303
@@ -349,21 +356,113 @@ class RestServiceTestCase(unittest.TestCase):
         assert len(response.json()) == 3
 
         assert response.json()[0]['database_id'] == database_id_a
-        assert response.json()[0]['buckets'] is not None
         assert response.json()[0]['project'] == 'alan_parsons'
-        # TODO: bucket url
+        assert isinstance(response.json()[0].get('buckets'), dict)
+        buckets = response.json()[0].get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
 
         assert response.json()[1]['database_id'] == database_id_b
-        assert response.json()[1]['buckets'] is not None
         assert response.json()[1]['project'] == 'alan_parsons'
-        # TODO: bucket url
+        assert isinstance(response.json()[1].get('buckets'), dict)
+        buckets = response.json()[1].get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
+
 
         assert response.json()[2]['database_id'] == database_id_c
         assert response.json()[2]['buckets'] is not None
         assert response.json()[2]['project'] == 'alan_parsons'
-        # TODO: bucket url
+        assert isinstance(response.json()[2].get('buckets'), dict)
+        buckets = response.json()[2].get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
+
         # TODO: ensure if URL project and JSON project conflict HTTP 400
         #       is returned
+
+    def test_multiple_bucketing(self):
+        """
+        Check if adding an identical crash results in the same bucket
+        assignment.
+        """
+
+        create_url = self.path_to('ubuntu', 'reports')
+        assert is_cross_origin_accessible(create_url)
+
+        first_id = str(uuid.uuid4())
+        second_id = str(uuid.uuid4())
+        third_id = str(uuid.uuid4())
+
+        # Add a full SAMPLE crash.
+        report = sample_crashes.CRASH_1.copy()
+        report['database_id'] = first_id
+        response = requests.post(create_url, json=report)
+        assert response.status_code == 201
+
+        # Wait a bit...
+        wait_for_elastic_search()
+
+        # Add the SAME crash.
+        report = sample_crashes.CRASH_1.copy()
+        report['database_id'] = second_id
+        response = requests.post(create_url, json=report)
+        assert response.status_code == 201
+
+        assert response.json().get('database_id') == second_id
+        buckets = response.json().get('buckets')
+        assert len(buckets) > 0
+
+        # Get the first (most inclusive) threshold
+        first_threshold = next(iter(sorted_thresholds(buckets)))
+
+        # The first crash should matches the second (identical) crash.
+        assert first_id in buckets[first_threshold].get('id'), \
+          'The identical bug was not in the same bucket!  t={0}'.format(first_threshold)
+
+        # Check that it contains top_match with id, project, href, and score
+        assert 'top_match' in buckets
+        assert buckets['top_match'].get('report_id') == first_id
+        assert first_id in buckets['top_match'].get('href', ())
+        assert buckets['top_match'].get('project') == 'ubuntu'
+        assert float(buckets['top_match'].get('score', 'NaN')) > 0
+
+        # Wait a bit...
+        wait_for_elastic_search()
+
+        # Add a DIFFERENT crash.
+        report = sample_crashes.CRASH_2.copy()
+        report['database_id'] = third_id
+        response = requests.post(create_url, json=report)
+        assert response.status_code == 201
+
+        assert response.json().get('database_id') == third_id
+        buckets = response.json().get('buckets')
+        top_match_score = float(buckets['top_match']['score'])
+        for key, value in buckets.iteritems():
+            try:
+                threshhold = float(key)
+            except ValueError:
+                threshhold = None
+            if threshhold is not None:
+                if top_match_score > threshhold:
+                    assert value is not None
+                    try:
+                        assert value['id'] == self.get_crash_bucket(buckets['top_match']['report_id'], key)
+                    except:
+                        print(key)
+                        print(value)
+                        print(self.get_crash_bucket(buckets['top_match']['report_id'], threshhold))
+                        print(buckets['top_match']['report_id'])
+                        print(threshhold)
+                        raise
+                else:
+                    pass # check bucket size == 1?
+            
+        assert len(buckets) > 0
+        # Get the LAST (pickiest) threshold.
+        last_threshold = next(iter(reversed(sorted_thresholds(buckets))))
+
+        # Ensure that it's not in the same bucket as the last two.
+        assert first_id != buckets[last_threshold].get('id'), \
+          'The different bug was found in the same bucket! t={}'.format(last_threshold)
 
     def test_get_crash(self):
         """
@@ -391,9 +490,10 @@ class RestServiceTestCase(unittest.TestCase):
         # All kinds of URL assertions.
         assert response.status_code == 200
         assert response.json().get('database_id') == database_id
-        assert response.json().get('buckets') is not None
         assert response.json().get('project') == 'alan_parsons'
-        # TODO: bucket url
+        assert isinstance(response.json().get('buckets'), dict)
+        buckets = response.json().get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
 
     def test_get_crash_from_project(self):
         """
@@ -415,11 +515,11 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.get(report_url)
         assert response.status_code == 200
         assert response.json().get('database_id') == database_id
-        assert response.json().get('buckets') is not None
         assert response.json().get('project') == 'alan_parsons'
-        # TODO: bucket url
+        assert isinstance(response.json().get('buckets'), dict)
+        buckets = response.json().get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
 
-    @unittest.skip('temporary')
     def test_dry_run(self):
         """
         Returns the bucket assignment were the given crash to be added.
@@ -436,75 +536,15 @@ class RestServiceTestCase(unittest.TestCase):
 
         assert response.status_code == 200
         assert response.json().get('database_id') == database_id
-        assert response.json().get('buckets') is not None
         assert response.json().get('project') == 'alan_parsons'
-        # TODO: bucket url
+        assert isinstance(response.json().get('buckets'), dict)
+        buckets = response.json().get('buckets')
+        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
 
         # Try to find this crash... and fail!
         response = requests.get(self.path_to('alan_parsons', 'reports',
                                              database_id))
         assert response.status_code == 404
-
-    @unittest.skip('This feature is not yet implemented')
-    def test_delete_crash(self):
-        """
-        Remove a report globally.
-        """
-
-        # Create a unique crash report.
-        database_id = str(uuid.uuid4())
-        create_url = self.path_to('alan_parsons', 'reports')
-        assert is_cross_origin_accessible(create_url)
-
-        response = requests.post(create_url,
-                                 json={'database_id': database_id})
-        assert response.status_code == 201
-
-        report_url = self.path_to('alan_parsons', 'reports', database_id)
-        assert is_cross_origin_accessible(report_url)
-
-        # Delete it.
-        response = requests.delete(report_url)
-        assert response.status_code == 204
-
-        # Try to access it; you just can't do it!
-        response = requests.get(report_url)
-        assert response.status_code == 404
-
-    @unittest.skip('This feature is not yet completed')
-    def test_delete_crash_from_project(self):
-        """
-        Remove a report, referenced through its project.
-
-        Note that this should also delete the report globally.
-        """
-
-        create_url = self.path_to('alan_parsons', 'reports')
-        assert is_cross_origin_accessible(create_url)
-
-        # Insert a new crash with a unique database ID.
-        database_id = str(uuid.uuid4())
-        response = requests.post(create_url, json={'database_id': database_id})
-        assert response.status_code == 201
-
-        report_url = self.path_to('alan_parsons', 'reports', database_id)
-        assert is_cross_origin_accessible(report_url)
-
-        # We can access it now...
-        response = requests.get(report_url)
-        assert response.status_code == 200
-        # TODO: bucket url
-
-        # Delete it.
-        response = requests.delete(report_url)
-        assert response.status_code in (200, 204)
-
-        # Now we should NOT be able to access it!
-        response = requests.get(report_url)
-        assert response.status_code == 404
-
-        # TODO: ensure if URL project and JSON project conflict HTTP 400
-        #       is returned
 
     def test_get_project_bucket(self):
         """
@@ -531,7 +571,7 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(create_url, json=fake_true_date)
         assert response.status_code == 201
 
-        threshold = '4.0'
+        threshold = '3.75'
         try:
           bucket_url = response.json()[0]['buckets'][threshold]['href']
         except (IndexError, KeyError):
@@ -545,6 +585,7 @@ class RestServiceTestCase(unittest.TestCase):
         # The bucket is named after the first crash... I guess?
         #assert database_id_a in response.json().get('id')
         assert response.json().get('total') >= 1
+        assert response.json().get('threshold') == '3.75'
         # Look at the top report; it must contain tfidf_trickery.
         assert (response.json().get('top_reports')[0].get('tfidf_trickery') ==
                 tfidf_trickery)
@@ -601,7 +642,6 @@ class RestServiceTestCase(unittest.TestCase):
         # The results from ElasticSearch are more-or-less unpredictable...
         assert len(top_bucket.get('top_reports')) is not None
 
-    @unittest.skip('temporary')
     def test_top_buckets_invalid_queries(self):
         """
         Send some invalid queries to top buckets.
@@ -617,7 +657,6 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.get(search_url, params={'since': 'herp'})
         assert response.status_code == 400
 
-    @unittest.skip('temporary')
     def test_top_buckets_default_query(self):
         """
         Does it produce reasonable results for the default query?
@@ -639,7 +678,6 @@ class RestServiceTestCase(unittest.TestCase):
         # It should send back a proper since date.
         assert len(response.json().get('since')) is not None
 
-    @unittest.skip('temporary')
     def test_get_project_config(self):
         """
         Fetch per-project configuration.
@@ -661,6 +699,21 @@ class RestServiceTestCase(unittest.TestCase):
         # default...
         os.killpg(os.getpgid(self.rest_service.pid), signal.SIGTERM)
         self.rest_service.wait()
+
+    def get_crash_bucket(self, database_id, threshhold):
+        """
+        Fetch a report and then return the bucket id
+        """
+
+        # Now fetch it! Globally!
+        report_url = self.path_to('reports', database_id)
+        response = requests.get(report_url)
+        try:
+            assert response.json().get('buckets').get(threshhold) is not None
+        except:
+            print(response.json().get('buckets'))
+            raise
+        return response.json().get('buckets').get(threshhold).get('id')
 
 ######################
 # More Test Utilites #
@@ -715,6 +768,10 @@ def is_url(text):
     return True
 
 
+def sorted_thresholds(buckets):
+    return sorted((key for key in buckets if key != 'top_match'), key=float)
+
+
 def wait_for_elastic_search():
     time.sleep(2.5)
 
@@ -733,7 +790,6 @@ def wait_for_service_startup(port, timeout=5.0, delay=0.25,
         time.sleep(delay)
 
     raise RuntimeError('Could not connect to {}:{}'.format(hostname, port))
-
 
 if __name__ == '__main__':
     unittest.main()

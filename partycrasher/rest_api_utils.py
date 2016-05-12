@@ -73,17 +73,26 @@ def redirect_with_query_string(url, *args, **kwargs):
     full_url = url + '?' + query_string if query_string else url
     return redirect(full_url, *args, **kwargs)
 
-
-def href(route, **kwargs):
+def full_url_for(route, **kwargs):
     """
-    Like url_for(), but returns a dictionary, with a key ``href`` which is the
-    external-facing URL for the service.
+    Like url_for(), but returns a fully qualified external-facing URL for the
+    service.
     """
 
     host = determine_user_agent_facing_host()
     path = url_for(route, **kwargs)
-    # TODO: Methods: can use request.endpoint to determine acceptable methods.
-    return {'href': host + path, 'method': ['GET']}
+    # TODO: List allowed methods, so we don't have to do an OPTIONS request. 
+    return host + path
+  
+
+def href(route, **kwargs):
+    """
+    Like full_url_for(), but returns a dictionary, with a key ``href`` which is 
+    the external-facing URL for the service.
+    """
+
+    # TODO: List allowed methods, so we don't have to do an OPTIONS request. 
+    return {'href': full_url_for(route, **kwargs)}
 
 
 # So that `determine user agent facing host` only needs to figure out the host

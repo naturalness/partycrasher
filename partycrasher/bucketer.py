@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 
 #  Copyright (C) 2016 Joshua Charles Campbell
 
@@ -16,13 +17,26 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from __future__ import print_function
+
 import os
 import json
 import uuid
 import time
+import sys
 
-from crash import Crash
-from es_crash import ESCrash, Threshold
+
+
+from crash import Crash, Buckets
+from es_crash import ESCrash
+from threshold import Threshold
+
+
+class IndexNotUpdatedError(Exception):
+    """
+    When ElasticSearch has not yet propegated a required update. The solution
+    to this is usually to just retry the query.
+    """
 
 
 class Bucketer(object):
@@ -31,10 +45,8 @@ class Bucketer(object):
     The default analyzer breaks on whitespace.
     """
 
-    def __init__(self, max_buckets=1, name=None, index='crashes',
+    def __init__(self, name=None, index='crashes',
                  elasticsearch=None, lowercase=False):
-
-        self.max_buckets = max_buckets
 
         # Autogenerate the name from the class's name.
         if name is None:
@@ -87,31 +99,40 @@ class Bucketer(object):
             }
         )
 
-    def assign_bucket(self, crash):
-        buckets = self.bucket(crash)
-        if len(buckets) > 0:
-            bucket = buckets[0]
-        else:
-            bucket = crash['database_id'] # Make a new bucket
-        return bucket
+    def assign_buckets(self, crash):
+        """
+        Returns a dictionary of type to value.
+        """
+        return self.bucket(crash)
 
-    def assign_save_bucket(self, crash, bucket=None):
-        if bucket is None:
-            bucket = self.assign_bucket(crash)
+    def assign_save_buckets(self, crash, buckets=None):
+        """
+        Adds a dictionary of buckets assignments to the given crash in
+        ElasticSearch.
+        """
 
+        if buckets is None:
+            buckets = self.assign_buckets(crash)
+
+        ## Learned the hard way that we can't use setdefault...
+        saved_buckets = crash.get(self.name, Buckets()).copy()
+        saved_buckets.update(buckets)
+        crash[self.name] = saved_buckets
+        
         saved_crash = ESCrash(crash, index=self.index)
-        saved_crash[self.name] = bucket
+        
 
         return saved_crash
+
+DEBUG_MLT = True
 
 
 class MLT(Bucketer):
 
-    def __init__(self, thresholds=(4.0,), use_aggs=False, only_stack=False,
+    def __init__(self, thresholds=(4.0,), only_stack=False,
                  *args, **kwargs):
         super(MLT, self).__init__(*args, **kwargs)
         self.thresholds = tuple(Threshold(value) for value in sorted(thresholds))
-        self.use_aggs = use_aggs
         self.only_stack = only_stack
 
     @property
@@ -123,81 +144,122 @@ class MLT(Bucketer):
         return self.thresholds[0]
 
     def bucket(self, crash, bucket_field=None):
+        """
+        Queries ElasticSearch with MoreLikeThis.
+        Returns the bucket assignment for each threshold.
+        Returns an OrderedDict of {Threshold(...): 'id'}
+        """
         if bucket_field is None:
             bucket_field = self.name
 
         # Compare only the stack trace
         if self.only_stack:
-            crash = {'stacktrace': crash['stacktrace']}
-
-        body={
-            '_source': [bucket_field],
-            'size': self.max_buckets,
-            'min_score': self.min_threshold.to_float(),
-            'query': {
-            'more_like_this': {
-                'docs': [{
-                    '_index': self.index,
-                    '_type': 'crash',
-                    'doc': crash,
-                    }],
-                'minimum_should_match': 0,
-                'max_query_terms': 2500,
-                'min_term_freq': 0,
-                'min_doc_freq': 0,
-                },
-            },
-        }
-        if self.use_aggs:
-            body['aggregations'] ={
-                'buckets': {
-                    'terms': {
-                        'field': bucket_field,
-                        'size': self.max_buckets
-                    },
-                    'aggs': {
-                        'top': {
-                            'top_hits': {
-                                'size': 1,
-                                '_source': {
-                                    'include': ['database_id'],
-                                    }
-                                }
-                            }
-                        }
-                }
+            crash = {
+                'stacktrace': crash['stacktrace'],
+                'database_id': crash['database_id']
             }
 
-        matches = self.es.search(index=self.index, body=body)
+        body = self.make_more_like_this_query(crash, bucket_field)
+        response = self.es.search(index=self.index, body=body)
+        debug_print_json({
+            'id': crash['database_id'],
+            'matches': {
+                'max_score': response['hits']['max_score'],
+                'report': response['hits']['hits'][0]
+            } if response['hits']['max_score'] else None
+        })
+        try:
+            matching_buckets = self.make_matching_buckets(response, bucket_field,
+                                                          default=crash['database_id'])
+            return matching_buckets
+        except IndexNotUpdatedError:
+            time.sleep(1)
+            return self.bucket(crash, bucket_field)
 
-        matching_buckets=[]
-        if self.use_aggs:
-            for match in matches['aggregations']['buckets']['buckets']:
-                assert match['top']['hits']['max_score'] >= self.thresh
-                matching_buckets.append(match['key'])
+    def make_more_like_this_query(self, crash, bucket_field):
+        body =  {
+            # Only fetch database ID, buckets, and project.
+            '_source': [bucket_field, 'database_id', 'project'],
+            'query': {
+                'more_like_this': {
+                    # NOTE: This style only works in ElasticSearch 1.x...
+                    'docs': [
+                        {
+                            '_index': self.index,
+                            '_type': 'crash',
+                            'doc': crash,
+                        }
+                    ],
+                    # Avoid some ElasticSearch optimizations:
+                    #
+                    # Search for WAY more terms than ElasticSearch would
+                    # normally construct.
+                    'max_query_terms': 2500,
+                    # Force ElasticSearch to query... like, all the things.
+                    'min_term_freq': 0,
+                    'min_doc_freq': 0,
+                },
+            },
+            # Must fetch the TOP matching result only.
+            'size': 1,
+            'min_score': 0,
+        }
+
+        return body
+
+    def make_matching_buckets(self, matches, bucket_field, default=None):
+        if default is None:
+            raise ValueError('Must provide a string default bucket name')
+
+        raw_matches = matches['hits']['hits']
+        assert len(raw_matches) in (0, 1), 'Unexpected amount of matches...'
+
+        if len(raw_matches) == 1:
+            top_match = raw_matches[0]
         else:
-            for match in matches['hits']['hits']:
-                if match['_score'] < self.thresh:
-                    continue
-                try:
-                    bucket = match['_source'][bucket_field]
-                except KeyError:
-                    self.es.indices.flush(index=self.index)
-                    print "Force waiting for refresh on " + crash['database_id']
-                    time.sleep(1)
-                    return self.bucket(crash, bucket_field)
-                if bucket not in matching_buckets:
-                    matching_buckets.append(bucket)
+            # Sentinel object; this will never match a threshold.
+            top_match = { '_score': -float('inf') }
+
+        # JSON structure:
+        # matches['hit']['hits] ~> [
+        #   {
+        #       "_score": 8.9,
+        #       "_source": {
+        #           "buckets": {
+        #               "1.0": "***bucket-id-1***",
+        #               "9.0": "***bucket-id-2***"
+        #           }
+        #       }
+        #   }
+
+        def assign_buckets_per_threshold():
+            similarity = top_match['_score']
+            assert isinstance(similarity, (float, int))
+
+            for threshold in sorted(self.thresholds, key=float):
+                if similarity >= float(threshold):
+                    yield threshold, get_bucket_id(top_match, threshold, bucket_field)
+                else:
+                    yield threshold, default
+
+        matching_buckets = Buckets(assign_buckets_per_threshold())
+
+        # Add the top match.
+        if raw_matches:
+            matching_buckets['top_match'] = {
+                'report_id': top_match['_source']['database_id'],
+                'project': top_match['_source']['project'],
+                'score': top_match['_score']
+            }
+        else:
+            matching_buckets['top_match'] = None
 
         return matching_buckets
 
-    def assign_save_bucket(self, crash):
-        bucket = self.assign_bucket(crash)
-        assert isinstance(bucket, str)
-        bucket = {
-            self.thresh.to_elasticsearch(): bucket
-        }
-        return super(MLT, self).assign_save_bucket(crash, bucket)
+    def assign_save_buckets(self, crash):
+        buckets = self.assign_buckets(crash)
+        assert isinstance(buckets, Buckets)
+        return super(MLT, self).assign_save_buckets(crash, buckets)
 
     def alt_bucket(self, crash, bucket_field='bucket'):
         return self.bucket(crash, bucket_field)
@@ -210,7 +272,7 @@ class MLTStandardUnicode(MLT):
             filter_ = ['lowercase']
         else:
             filter_ = []
-        print "Creating index: %s" % self.index
+        print("Creating index: %s" % self.index)
         self.es.indices.create(index=self.index, ignore=400,
         body={
             'mappings': {
@@ -233,6 +295,7 @@ class MLTStandardUnicode(MLT):
             }
         )
 
+
 class MLTLetters(MLT):
     """MLT with a diffrent analyzer (capture letter strings then optionally make them lowercase)"""
     def create_index(self):
@@ -240,7 +303,7 @@ class MLTLetters(MLT):
             tokenizer = 'lowercase'
         else:
             tokenizer = 'letter'
-        print "Creating index: %s" % self.index
+        print("Creating index: %s" % self.index)
         self.es.indices.create(index=self.index, ignore=400,
         body={
             'mappings': {
@@ -267,7 +330,7 @@ class MLTLetters(MLT):
 class MLTIdentifier(MLT):
     """MLT with an analyzer intended to capture programming words"""
     def create_index(self):
-        print "Creating index: %s" % self.index
+        print("Creating index: %s" % self.index)
         self.es.indices.create(index=self.index, ignore=400,
         body={
             'mappings': {
@@ -305,7 +368,7 @@ class MLTCamelCase(MLT):
         body={
             'mappings': {
                 'crash': {
-                    'properties': common_properties()
+                    'properties': common_properties(self.thresholds)
                 }
             },
             'settings': {
@@ -327,7 +390,7 @@ class MLTCamelCase(MLT):
 class MLTLerch(MLT):
     """MLT with an analyzer as described in Lerch, 2013"""
     def create_index(self):
-        print "Creating index: %s" % self.index
+        print("Creating index: %s" % self.index)
         self.es.indices.create(index=self.index, ignore=400,
         body={
             'mappings': {
@@ -378,7 +441,7 @@ class MLTNGram(MLT):
             filter_ = ['lowercase']
         else:
             filter_ = []
-        print "Creating index: %s" % self.index
+        print("Creating index: %s" % self.index)
         self.es.indices.create(index=self.index, ignore=400,
         body={
             'mappings': {
@@ -409,10 +472,64 @@ class MLTNGram(MLT):
         )
 
 
-def common_properties():
+def get_bucket_id(result, threshold, bucket_field='buckets'):
     """
-    Returns properties common to all indexes.
+    Given a crash JSON, returns the bucket field associated with this
+    particular threshold.
     """
+
+    crash = result['_source']
+
+    try:
+        buckets = crash[bucket_field]
+    except KeyError:
+        # We couldn't find the bucket field. ASSUME that this means that
+        # its bucket assignment has not yet propegated to whatever shard
+        # returned the results.
+        message = ('Bucket field {!r} not found in crash: '
+                   '{!r}'.format(bucket_field, crash))
+        raise IndexNotUpdatedError(message)
+
+    try:
+       return buckets[threshold.to_elasticsearch()]
+    except KeyError:
+        message = ('Crash does not have an assignment for '
+                   '{!s}: {!r}'.format(threshold, match))
+        # TODO: Custom exception for this?
+        raise Exception(message)
+
+
+def common_properties(thresholds):
+    """
+    Returns properties common to all indexes;
+    must provide the threshold values
+    """
+
+    string_not_analyzed = {
+        'type': "string",
+        'index': 'not_analyzed',
+    }
+
+    bucket_properties = {
+        threshold.to_elasticsearch(): {
+            'type': "string",
+            'index': 'not_analyzed',
+        } for threshold in thresholds
+    }
+
+    bucket_properties['top_match'] = {
+        'dynamic': 'strict',
+        'properties': {
+            'report_id': string_not_analyzed,
+            'href': string_not_analyzed,
+            'project': string_not_analyzed,
+            'score': {
+                'type': 'float',
+                'index': 'not_analyzed'
+            }
+        }
+    }
+
     # Database ID, the primary bucket, and the project,
     # and the version are all literals.
     return {
@@ -422,27 +539,31 @@ def common_properties():
             'index': 'not_analyzed'
         },
         'buckets': {
-            "properties": {
-
-                # Ugh... either I have to create dynamic propers or... ugh...
-                "4_0": {
-                    'type': "string",
-                    'index': 'not_analyzed',
-                }
-            }
+            # Do not allow arbitrary properties being added to buckets...
+            "dynamic" : "strict",
+            # Create all the subfield appropriate for buckets
+            "properties": bucket_properties
         },
         # TODO: convert into _type
         'project': {
             'type': 'string',
             'index': 'not_analyzed',
         },
-        'date_bucketed': {
+        'date': {
             'type': 'date',
             # Do not index, because our analysis has not studied this yet!
             # Plus, Elastic won't index anyway...
             'index': 'not_analyzed'
         }
     }
+
+def debug_print_json(body, header='🔅 🔆 🔅 🔆 🔅 🔆 🔅 '):
+    return
+    import sys, json
+    # Write the query!
+    sys.stderr.write('\n{header}\n\n'
+                     '{json}\n\n'.format(header=header,
+                                         json=json.dumps(body, indent=4, default=repr)))
 
 
 
