@@ -190,18 +190,6 @@ class ESCrash(Crash):
                         body=json.dumps(body, cls=ESCrashEncoder)
                         )
 
-    def get_bucket_id(self, threshold):
-        key = Threshold(threshold).to_elasticsearch()
-        try:
-            buckets = self['buckets']
-        except KeyError:
-            raise Exception('No assigned buckets for: {!r}'.format(self))
-        try:
-            return buckets[key]
-        except KeyError:
-            raise Exception('Buckets threshold {} not assigned for: '
-                            '{!r}'.format(key, self))
-
     def delete():
         del _cached[self['database_id']]
         raise NotImplementedError

@@ -21,6 +21,8 @@ import json, datetime
 import dateparser
 from collections import OrderedDict
 
+from threshold import Threshold
+
 
 # This is the separator which is meant to be used when turning
 # stack traces into strings, between levels of the stack, going
@@ -145,6 +147,18 @@ class Crash(dict):
     def __eq__(self, other):
         return (super(Crash, self).__eq__(other)
                 and self.__class__ == other.__class__)
+
+    def get_bucket_id(self, threshold):
+        key = Threshold(threshold).to_elasticsearch()
+        try:
+            buckets = self['buckets']
+        except KeyError:
+            raise Exception('No assigned buckets for: {!r}'.format(self))
+        try:
+            return buckets[key]
+        except KeyError:
+            raise Exception('Buckets threshold {} not assigned for: '
+                            '{!r}'.format(key, self))
 
     @classmethod
     def load_from_file(cls, path):
