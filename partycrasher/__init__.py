@@ -46,6 +46,11 @@ class Bucket(namedtuple('Bucket', 'id project threshold total top_reports')):
         kwargs.update(self._asdict())
         for arg in args:
             kwargs.update(arg)
+
+        # HACK: remove empty top_reports
+        if kwargs['top_reports'] is None:
+            del kwargs['top_reports']
+
         return kwargs
 
 
@@ -168,7 +173,7 @@ class PartyCrasher(object):
                 "term": {
                     "buckets." + threshold.to_elasticsearch(): bucket_id
                 }
-            }
+            },
         }
 
         response = self.es.search(body=query, index='crashes')
@@ -242,21 +247,8 @@ class PartyCrasher(object):
                 }
             },
 
-            # Only include the database ID and project in the returned results.
-            "_source": ["database_id", "project", "buckets.*"]
+            "size": 0
         }
-
-        # Return hits only for the requested project.
-        if project is not None:
-            query['query'] = {
-                "constant_score" : {
-                    "filter" : {
-                        "term" : {
-                            "project" : project
-                        }
-                    }
-                }
-            }
 
         response = self.es.search(body=query, index='crashes')
         # Oh, ElasticSearch! You and your verbose responses!
@@ -268,11 +260,10 @@ class PartyCrasher(object):
         from pprint import pprint
         pprint(response)
 
-        reports_by_bucket = get_reports_by_bucket(response, threshold)
 
         return [Bucket(id=bucket['key'], project=project, threshold=threshold,
                        total=bucket['doc_count'],
-                       top_reports=decrashify(reports_by_bucket.get(bucket['key'], ())))
+                       top_reports=None)
                 for bucket in top_buckets]
 
     def get_crash(self, database_id):
@@ -331,12 +322,6 @@ def get_reports_by_bucket(response, threshold):
 
     return dict(buckets)
 
-
-def decrashify(crashes):
-    for crash in crashes:
-        del crash['buckets']
-
-    return crashes
 
 def default_config():
     return {
