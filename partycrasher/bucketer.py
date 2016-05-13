@@ -226,17 +226,18 @@ class MLT(Bucketer):
         #       }
         #   }
 
-        def assign_buckets_per_threshold():
-            similarity = top_match['_score']
-            assert isinstance(similarity, (float, int))
+        similarity = top_match['_score']
+        assert isinstance(similarity, (float, int))
 
-            for threshold in sorted(self.thresholds, key=float):
-                if similarity >= float(threshold):
-                    yield threshold, get_bucket_id(top_match, threshold, bucket_field)
-                else:
-                    yield threshold, default
-
-        matching_buckets = Buckets(assign_buckets_per_threshold())
+        # Add the buckets, by threshold.
+        matching_buckets = Buckets()
+        for threshold in sorted(self.thresholds, key=float):
+            if similarity >= float(threshold):
+                # Assign this report to the existing bucket.
+                matching_buckets[threshold] = get_bucket_id(top_match, threshold, bucket_field)
+            else:
+                # Create a new bucket.
+                matching_buckets[threshold] = default
 
         # Add the top match.
         if raw_matches:
