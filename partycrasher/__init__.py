@@ -246,6 +246,18 @@ class PartyCrasher(object):
             "_source": ["database_id", "project", "buckets.*"]
         }
 
+        # Return hits only for the requested project.
+        if project is not None:
+            query['query'] = {
+                "constant_score" : {
+                    "filter" : {
+                        "term" : {
+                            "project" : project
+                        }
+                    }
+                }
+            }
+
         response = self.es.search(body=query, index='crashes')
         # Oh, ElasticSearch! You and your verbose responses!
         top_buckets = (response['aggregations']
@@ -253,11 +265,14 @@ class PartyCrasher(object):
                        ['top_buckets']
                        ['buckets'])
 
-        reports_by_project = get_reports_by_bucket(response, threshold)
+        from pprint import pprint
+        pprint(response)
+
+        reports_by_bucket = get_reports_by_bucket(response, threshold)
 
         return [Bucket(id=bucket['key'], project=project, threshold=threshold,
                        total=bucket['doc_count'],
-                       top_reports=reports_by_project.get(bucket['key'], ()))
+                       top_reports=decrashify(reports_by_bucket.get(bucket['key'], ())))
                 for bucket in top_buckets]
 
     def get_crash(self, database_id):
@@ -310,13 +325,18 @@ def get_reports_by_bucket(response, threshold):
 
     for hit in raw_hits:
         report = hit['_source']
-        # TODO: Change to _id?
         crash = Crash(report)
         bucket_id = crash.get_bucket_id(threshold)
         buckets[bucket_id].append(crash)
 
-    return buckets
+    return dict(buckets)
 
+
+def decrashify(crashes):
+    for crash in crashes:
+        del crash['buckets']
+
+    return crashes
 
 def default_config():
     return {
