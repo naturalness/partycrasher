@@ -240,7 +240,10 @@ class PartyCrasher(object):
                         }
                     }
                 }
-            }
+            },
+
+            # Only include the database ID and project in the returned results.
+            #"_source": ["database_id", "project"]
         }
 
         response = self.es.search(body=query, index='crashes')
@@ -307,7 +310,8 @@ def get_reports_by_bucket(response, threshold):
 
     for hit in raw_hits:
         report = hit['_source']
-        crash = ESCrash(Crash(report))
+        # TODO: Change to _id?
+        crash = ESCrash(report['database_id'])
         bucket_id = crash.get_bucket_id(threshold)
         buckets[bucket_id].append(crash)
 
