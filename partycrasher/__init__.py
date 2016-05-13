@@ -174,6 +174,7 @@ class PartyCrasher(object):
                     "buckets." + threshold.to_elasticsearch(): bucket_id
                 }
             },
+            "sort": { "date": { "order": "desc" }}
         }
 
         response = self.es.search(body=query, index='crashes')
