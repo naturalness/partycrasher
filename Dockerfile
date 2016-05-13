@@ -13,4 +13,11 @@ MAINTAINER Eddie Antonio Santos <easantos@ualberta.ca>
 
 EXPOSE 5000
 
+# Set up NPM AND Bower for some dumb reason... :S
+RUN cd /usr/src/app/partycrasher/ngapp && \
+    curl -sL https://deb.nodesource.com/setup_4.x | -E bash - && \
+    apt-get install -y nodejs && \
+    npm install -g bower && \
+    bower --allow-root install
+
 CMD [ "python", "partycrasher/rest_service.py", "5000" ]
