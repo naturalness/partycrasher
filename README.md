@@ -1,25 +1,51 @@
-# Partycrasher
+# PartyCrasher
 
 [![Build Status](https://travis-ci.org/naturalness/partycrasher.svg?branch=master)](https://travis-ci.org/naturalness/partycrasher)
 
-Automated scalable crash bucketing!
-
-Partycrasher is a framework for automatically grouping crash
-reports based on the contents of stacktraces and other
+PartyCrasher is a framework for automatically grouping crash reports
+based on the contents of stack traces and other
 data available at the time of a crash. You can read the [paper about it](https://peerj.com/preprints/1705/).
 
-# Current Status
+# Install
 
-Partycrasher does not yet have a interface. To use it, import
-the bucketer that you prefer.
+> Note that the provided `Dockerfile` creates a container that performs
+> all of the following steps for you.
 
-# Use
+PartyCrasher requires [Elastic (ElasticSearch)](https://www.elastic.co/).
 
-Partycrasher requires [Elastic (ElasticSearch)](https://www.elastic.co/).
+To install the PartyCrasher REST client, install ElasticSearch; then
+install the Python dependencies (you may want to install these within
+a [virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/)
+if that's your taste).
+
+```sh
+pip install -r requirements.txt
+```
+
+To install the UI, you must have NPM and Bower.
+
+```sh
+npm install -g bower
+cd partycrasher/ngapp
+bower install
+```
+
+# Usage
+
+Run the REST service:
+
+```sh
+python partycrasher/rest_service.py
+```
+
+The HTTP service will now be listening on port 5000. Refer to the [API
+Docs][] for further usage.
+
+[API Docs]: http://partycrasher.readthedocs.io/en/latest/rest-api.html
 
 # Licensing
 
-Assume that Partycrasher is licensed under the [GPL3+](LICENSE) unless otherwise
+Assume that PartyCrasher is licensed under the [GPL3+](LICENSE) unless otherwise
 specified.
 
 # Citation
