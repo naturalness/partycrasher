@@ -68,15 +68,14 @@ class PartyCrasher(object):
         # self.es and self.bucketer are lazy properties.
         self._es = None
         self._bucketer = None
-        
-        
+
     @property
     def es_servers(self):
         """
         Configured ES server list
         """
         return self.config.get('partycrasher.elastic', 'hosts').split()
-        
+
     @property
     def allow_delete_all(self):
         """
@@ -110,7 +109,7 @@ class PartyCrasher(object):
         """
         # TODO: determine from static/dynamic configuration
         return Threshold(4.0)
-    
+
     def delete_and_recreate_index(self):
         """
         Deletes the entire index and recreates it. This destroys all of the
@@ -121,7 +120,7 @@ class PartyCrasher(object):
         self.es.cluster.health(wait_for_status='yellow')
         self._bucketer.create_index()
         self.es.cluster.health(wait_for_status='yellow')
-        
+
 
     def _connect_to_elasticsearch(self):
         """
@@ -175,14 +174,13 @@ class PartyCrasher(object):
         response = self.es.search(body=query, index='crashes')
         reports_found = response['hits']['total']
 
-        # Since no reports where found, assume the bucket does not exist (at
+        # Since no reports were found, assume the bucket does not exist (at
         # least for this project).
         if reports_found < 1:
             raise BucketNotFoundError(bucket_id)
 
-        reports = self._get_reports_by_bucket(response,
-                                              threshold).get(bucket_id)
-        assert len(reports) > 0
+        reports = get_reports_by_bucket(response, threshold).get(bucket_id)
+        assert reports
 
         return Bucket(id=bucket_id,
                       project=project,
@@ -252,7 +250,7 @@ class PartyCrasher(object):
                        ['top_buckets']
                        ['buckets'])
 
-        reports_by_project = self._get_reports_by_bucket(response, threshold)
+        reports_by_project = get_reports_by_bucket(response, threshold)
 
         return [Bucket(id=bucket['key'], project=project, threshold=threshold,
                        total=bucket['doc_count'],
@@ -304,22 +302,22 @@ class PartyCrasher(object):
         # ESCrash(database_id).delete()
         raise NotImplementedError("BUT WHY~!~~~~")
 
-    @staticmethod
-    def _get_reports_by_bucket(response, threshold):
-        """
-        Returns a dictionary of projects => reports, from the response.
-        """
-        buckets = defaultdict(list)
 
-        raw_hits = response['hits']['hits']
+def get_reports_by_bucket(response, threshold):
+    """
+    Returns a dictionary mapping bucket_id => reports, from the ElasticSearch response.
+    """
+    buckets = defaultdict(list)
 
-        for hit in raw_hits:
-            report = hit['_source']
-            crash = ESCrash(Crash(report))
-            bucket_id = crash.get_bucket_id(threshold)
-            buckets[bucket_id].append(crash)
+    raw_hits = response['hits']['hits']
 
-        return buckets
+    for hit in raw_hits:
+        report = hit['_source']
+        crash = ESCrash(Crash(report))
+        bucket_id = crash.get_bucket_id(threshold)
+        buckets[bucket_id].append(crash)
+
+    return buckets
 
 
 def default_config():
