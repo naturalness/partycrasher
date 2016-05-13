@@ -118,9 +118,9 @@ class Bucketer(object):
         saved_buckets = crash.get(self.name, Buckets()).copy()
         saved_buckets.update(buckets)
         crash[self.name] = saved_buckets
-        
+
         saved_crash = ESCrash(crash, index=self.index)
-        
+
 
         return saved_crash
 
@@ -161,13 +161,7 @@ class MLT(Bucketer):
 
         body = self.make_more_like_this_query(crash, bucket_field)
         response = self.es.search(index=self.index, body=body)
-        debug_print_json({
-            'id': crash['database_id'],
-            'matches': {
-                'max_score': response['hits']['max_score'],
-                'report': response['hits']['hits'][0]
-            } if response['hits']['max_score'] else None
-        })
+
         try:
             matching_buckets = self.make_matching_buckets(response, bucket_field,
                                                           default=crash['database_id'])
@@ -556,14 +550,3 @@ def common_properties(thresholds):
             'index': 'not_analyzed'
         }
     }
-
-def debug_print_json(body, header='🔅 🔆 🔅 🔆 🔅 🔆 🔅 '):
-    return
-    import sys, json
-    # Write the query!
-    sys.stderr.write('\n{header}\n\n'
-                     '{json}\n\n'.format(header=header,
-                                         json=json.dumps(body, indent=4, default=repr)))
-
-
-
