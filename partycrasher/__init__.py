@@ -296,12 +296,6 @@ class PartyCrasher(object):
         self._connect_to_elasticsearch()
         return self
 
-    def delete_crash(self, database_id):
-        # TODO: we have to call ES directly here, theres nothing in
-        # Crash/ESCrash or Bucketer to handle this case maybe
-        # ESCrash(database_id).delete()
-        raise NotImplementedError("BUT WHY~!~~~~")
-
 
 def get_reports_by_bucket(response, threshold):
     """
