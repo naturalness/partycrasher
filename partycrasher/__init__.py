@@ -258,10 +258,6 @@ class PartyCrasher(object):
                        ['top_buckets']
                        ['buckets'])
 
-        from pprint import pprint
-        pprint(response)
-
-
         return [Bucket(id=bucket['key'], project=project, threshold=threshold,
                        total=bucket['doc_count'],
                        top_reports=None)
