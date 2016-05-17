@@ -10,28 +10,16 @@
  */
 angular
   .module('PartyCrasherApp', [
-    'ngAnimate',
-    'ngAria',
-    'ngCookies',
-    'ngMessages',
-    'ngResource',
     'ngRoute',
-    'ngSanitize',
-    'ngTouch',
     'restangular',
   ])
   .config(function ($routeProvider, $locationProvider) {
     $routeProvider
       .when('/', {
-        templateUrl: 'views/main.html',
-        controller: 'MainCtrl',
-        controllerAs: 'main'
+        /* Top buckets for ALL projects. */
+        redirectTo: '/*/buckets'
       })
-      .when('/about', {
-        templateUrl: 'views/about.html',
-        controller: 'AboutCtrl',
-        controllerAs: 'about'
-      })
+      /* Top Buckets. */
       .when('/:project?/buckets/:threshold?', {
         templateUrl: 'views/topbuckets.html',
         controller: 'TopbucketsCtrl',
@@ -39,16 +27,24 @@ angular
       })
       .when('/:project?/buckets/:threshold?/:id', {
         templateUrl: 'views/main.html',
+        /* TODO: */
         controller: 'MainCtrl',
         controllerAs: 'main'
       })
       .when('/:project?/reports/:id', {
         templateUrl: 'views/main.html',
+        /* TODO: */
         controller: 'MainCtrl',
         controllerAs: 'main'
       })
+      /* Unsure? Go to the home page! */
       .otherwise({
         redirectTo: '/'
       });
-    $locationProvider.html5Mode(true);
+
+    /* Provide routing that looks like natural URLs. */
+    $locationProvider.html5Mode({
+      enabled: true,
+      requireBase: true
+    });
   });
