@@ -80,8 +80,10 @@
     <!-- endbuild -->
 
     <script type="text/javascript">
-      angular.module('PartyCrasherApp').constant('BASE_HREF', "%%basehref%%");
-      angular.module('PartyCrasherApp').constant('REST_BASE', "%%restbase%%");
+      angular.module('PartyCrasherApp')
+        .constant('BASE_HREF', "%%basehref%%")
+        .constant('REST_BASE', "%%restbase%%")
+        .constant('DEFAULT_THRESHOLD', '4.0');
     </script>
   </body>
 </html>

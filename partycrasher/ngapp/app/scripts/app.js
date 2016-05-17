@@ -13,24 +13,29 @@ angular
     'ngRoute',
     'restangular',
   ])
-  .config(function ($routeProvider, $locationProvider) {
+  .config(function ($routeProvider, $locationProvider, DEFAULT_THRESHOLD) {
     $routeProvider
       .when('/', {
-        /* Top buckets for ALL projects. */
-        redirectTo: '/*/buckets'
+        /* Redirect to top buckets for ALL projects. */
+        redirectTo: `/*/buckets/${DEFAULT_THRESHOLD}`
       })
+
       /* Top Buckets. */
       .when('/:project?/buckets/:threshold?', {
         templateUrl: 'views/topbuckets.html',
         controller: 'TopbucketsCtrl',
         controllerAs: 'main'
       })
+
+      /* View a bucket. */
       .when('/:project?/buckets/:threshold?/:id', {
         templateUrl: 'views/main.html',
         /* TODO: */
         controller: 'MainCtrl',
         controllerAs: 'main'
       })
+
+      /* View a crash report. */
       .when('/:project?/reports/:id', {
         templateUrl: 'views/main.html',
         /* TODO: */
