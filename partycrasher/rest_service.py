@@ -137,25 +137,21 @@ def root():
                    })
 
 
-@app.route('/ui/', methods=['GET'])
-def home():
-    return render_template('index.html',
-                           bower=full_url_for('home') + 'bower_components',
-                           basehref=full_url_for('home'),
-                           restbase=full_url_for('root'))
-
 @app.route('/ui/bower_components/<path:filename>', methods=['GET'])
 def bower_components(filename):
     return send_from_directory(relative('ngapp/bower_components/'), filename)
 
+
 @app.route('/ui/<path:filename>', methods=['GET'])
-def ui(filename):
-    if os.path.exists(relative('ngapp/app/') + filename):
+@app.route('/ui/')
+def home(filename=None):
+    if filename and os.path.exists(relative('ngapp/app/', filename)):
         # It's a static file.
         return send_from_directory(relative('ngapp/app/'), filename)
-    else:
-        # Otherwise, it's a route in the web app.
-        return render_template('index.html',
+
+    # Otherwise, it's a route in the web app.
+    return render_template('index.html',
+                           bower=full_url_for('home') + 'bower_components',
                            basehref=full_url_for('home'),
                            restbase=full_url_for('root'))
 
