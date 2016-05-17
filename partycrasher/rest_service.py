@@ -159,14 +159,6 @@ def ui(filename):
                            restbase=full_url_for('root'))
 
 
-@app.route('/demo')
-def demo():
-    thresholds = crasher.thresholds
-    return render_template('demo.html',
-                           thresholds=json.dumps(thresholds),
-                           min_threshold=thresholds[0],
-                           max_threshold=thresholds[-1])
-
 @app.route('/reports', methods=['POST'], endpoint='add_report_no_project')
 @app.route('/<project>/reports', methods=['POST'])
 def add_report(project=None):
