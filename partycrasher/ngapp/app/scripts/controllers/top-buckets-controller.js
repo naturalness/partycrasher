@@ -8,7 +8,7 @@
  * Controller of the ngappApp
  */
 angular.module('PartyCrasherApp')
-.controller('TopbucketsCtrl', function ($scope, restService, 
+.controller('TopBucketsController', function ($scope, restService, 
                                         REST_BASE, BASE_HREF, $location,
                                         $routeParams, $httpParamSerializer
                                        ) {

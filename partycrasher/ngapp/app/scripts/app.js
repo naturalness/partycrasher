@@ -22,26 +22,25 @@ angular
 
       /* Top Buckets. */
       .when('/:project?/buckets/:threshold?', {
-        templateUrl: 'views/topbuckets.html',
-        controller: 'TopbucketsCtrl',
+        templateUrl: 'views/top-buckets.html',
+        controller: 'TopBucketsController',
         controllerAs: 'main'
       })
 
+      /* TODO: */
       /* View a bucket. */
       .when('/:project?/buckets/:threshold?/:id', {
-        templateUrl: 'views/main.html',
-        /* TODO: */
-        controller: 'MainCtrl',
-        controllerAs: 'main'
+        templateUrl: 'views/not-implemented.html',
+        controller: 'NotImplementedController'
       })
 
+      /* TODO: */
       /* View a crash report. */
       .when('/:project?/reports/:id', {
-        templateUrl: 'views/main.html',
-        /* TODO: */
-        controller: 'MainCtrl',
-        controllerAs: 'main'
+        templateUrl: 'views/not-implemented.html',
+        controller: 'NotImplementedController'
       })
+
       /* Unsure? Go to the home page! */
       .otherwise({
         redirectTo: '/'
