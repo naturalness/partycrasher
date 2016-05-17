@@ -140,6 +140,7 @@ def root():
 @app.route('/ui/', methods=['GET'])
 def home():
     return render_template('index.html',
+                           bower=full_url_for('home') + 'bower_components',
                            basehref=full_url_for('home'),
                            restbase=full_url_for('root'))
 
