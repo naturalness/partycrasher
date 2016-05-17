@@ -5,18 +5,19 @@
     <title>🎉💥 PartyCrasher</title>
     <meta name="viewport" content="width=device-width">
 
+    <base href="%%basehref%%">
+
     <!-- build:css(.) styles/vendor.css -->
     <!-- bower:css -->
     <link rel="stylesheet" href="%%bower%%/bootstrap/dist/css/bootstrap.css" />
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:css(.tmp) styles/main.css -->
-    <link rel="stylesheet" href="%%basehref%%styles/main.css">
+    <link rel="stylesheet" href="styles/main.css">
     <!-- endbuild -->
     <link rel="stylesheet" href="%%bower%%/bootstrap-combobox/css/bootstrap-combobox.css" />
-    <base href="%%basehref%%">
   </head>
-  <body ng-app="ngappApp">
+  <body ng-app="PartyCrasherApp">
     <!--[if lte IE 8]>
       <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->
@@ -61,20 +62,20 @@
     <!-- build:js(.) scripts/vendor.js -->
     <!-- bower:js -->
     <!-- protip: bower list -p -->
-    <script src="bower_components/jquery/dist/jquery.js"></script>
-    <script src="bower_components/angular/angular.js"></script>
-    <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
-    <script src="bower_components/angular-animate/angular-animate.js"></script>
-    <script src="bower_components/angular-aria/angular-aria.js"></script>
-    <script src="bower_components/angular-cookies/angular-cookies.js"></script>
-    <script src="bower_components/angular-messages/angular-messages.js"></script>
-    <script src="bower_components/angular-resource/angular-resource.js"></script>
-    <script src="bower_components/angular-route/angular-route.js"></script>
-    <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
-    <script src="bower_components/angular-touch/angular-touch.js"></script>
-    <script src="bower_components/lodash/dist/lodash.js"></script>
-    <script src="bower_components/restangular/dist/restangular.js"></script>
-    <script src="bower_components/bootstrap-combobox/js/bootstrap-combobox.js"></script>
+    <script src="%%bower%%/jquery/dist/jquery.js"></script>
+    <script src="%%bower%%/angular/angular.js"></script>
+    <script src="%%bower%%/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="%%bower%%/angular-animate/angular-animate.js"></script>
+    <script src="%%bower%%/angular-aria/angular-aria.js"></script>
+    <script src="%%bower%%/angular-cookies/angular-cookies.js"></script>
+    <script src="%%bower%%/angular-messages/angular-messages.js"></script>
+    <script src="%%bower%%/angular-resource/angular-resource.js"></script>
+    <script src="%%bower%%/angular-route/angular-route.js"></script>
+    <script src="%%bower%%/angular-sanitize/angular-sanitize.js"></script>
+    <script src="%%bower%%/angular-touch/angular-touch.js"></script>
+    <script src="%%bower%%/lodash/dist/lodash.js"></script>
+    <script src="%%bower%%/restangular/dist/restangular.js"></script>
+    <script src="%%bower%%/bootstrap-combobox/js/bootstrap-combobox.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
 
@@ -89,8 +90,8 @@
     <!-- endbuild -->
 
     <script type="text/javascript">
-      angular.module('ngappApp').constant('BASE_HREF', "%%basehref%%");
-      angular.module('ngappApp').constant('REST_BASE', "%%restbase%%");
+      angular.module('PartyCrasherApp').constant('BASE_HREF', "%%basehref%%");
+      angular.module('PartyCrasherApp').constant('REST_BASE', "%%restbase%%");
     </script>
   </body>
 </html>

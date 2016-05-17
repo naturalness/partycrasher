@@ -9,7 +9,7 @@
  * Main module of the application.
  */
 angular
-  .module('ngappApp', [
+  .module('PartyCrasherApp', [
     'ngAnimate',
     'ngAria',
     'ngCookies',

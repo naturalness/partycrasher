@@ -7,7 +7,7 @@
  * # homeService
  * Service in the ngappApp.
  */
-angular.module('ngappApp')
+angular.module('PartyCrasherApp')
   .service('homeService', ['Restangular', function (Restangular) {
     var Home = Restangular.service('home');
 

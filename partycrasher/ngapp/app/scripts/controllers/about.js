@@ -7,7 +7,7 @@
  * # AboutCtrl
  * Controller of the ngappApp
  */
-angular.module('ngappApp')
+angular.module('PartyCrasherApp')
   .controller('AboutCtrl', function () {
     this.awesomeThings = [
       'HTML5 Boilerplate',

@@ -7,7 +7,7 @@
  * # MainCtrl
  * Controller of the ngappApp
  */
-angular.module('ngappApp')
+angular.module('PartyCrasherApp')
   .controller('MainCtrl', function ($scope, restService, REST_BASE, BASE_HREF, $location) {
     var url = $location.url();
     $scope.value = "Loading...";

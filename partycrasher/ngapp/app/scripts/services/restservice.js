@@ -7,7 +7,7 @@
  * # restService
  * Factory in the ngappApp.
  */
-angular.module('ngappApp')
+angular.module('PartyCrasherApp')
   .factory('restService', ['Restangular', function (Restangular) {
     var service = {
       getRest: getRest,
