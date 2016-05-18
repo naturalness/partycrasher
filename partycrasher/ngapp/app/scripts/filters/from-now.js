@@ -7,6 +7,8 @@
 angular.module('PartyCrasherApp')
   .filter('fromNow', function () {
     return function (input) {
+      /* TODO:
+       * Do some type-checking and warn if input values are malformed.  */
       return moment(input).fromNow();
     };
   });

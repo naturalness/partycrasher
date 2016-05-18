@@ -18,7 +18,7 @@ angular.module('PartyCrasherApp')
       return Restangular.one(url).get();
     }
     function getRoot(){
-      return Restangular.one("/").get();
+      return Restangular.one('/').get();
     }
     
     return service;

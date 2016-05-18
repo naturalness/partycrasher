@@ -15,7 +15,11 @@ module.exports = {
         ],
         "quotes": [
             "error",
-            "single"
+            "single",
+             {
+                 "avoidEscape": true,
+                 "allowTemplateLiterals": true
+             }
         ],
         "semi": [
             "error",
@@ -24,6 +28,7 @@ module.exports = {
     },
     "globals": {
         // Disallow assignment to angular.
-        "angular": false
+        "angular": false,
+        "moment": false
     }
 };

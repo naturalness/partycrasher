@@ -8,7 +8,7 @@
  * Controller of the ngappApp
  */
 angular.module('PartyCrasherApp')
-  .controller('TreeCtrl', function ($scope, restService, REST_BASE, BASE_HREF, $location) {
+  .controller('TreeCtrl', function ($scope, restService, REST_BASE, BASE_HREF) {
     $scope.displayType = function(k, v) {
       if (k == "href") {
         return "link";
@@ -32,7 +32,6 @@ angular.module('PartyCrasherApp')
     $scope.clicked = function($event) {
       var content = $event.currentTarget.id + '_content';
       $scope.hiddenElts[content] = $scope.hiddenElts[content] ? false : true;
-      console.log(content + " " + $scope.hiddenElts[content]);
     };
     $scope.hiddenElts = [];
   }).directive('collapsible', function() {
@@ -40,13 +39,11 @@ angular.module('PartyCrasherApp')
       $scope.hiddenElts[attributes.id] = true;
       $scope.$watch(function(){
         var r = $scope.hiddenElts[attributes.id];
-//         debugger;
         return r;
       }, function(value) {
         if (typeof value == 'undefined') {
           return;
         }
-//         debugger;
         if (value) {
           element.show();
         } else {
@@ -54,8 +51,8 @@ angular.module('PartyCrasherApp')
         }
       });
     }
-    
+
     return ({
-      link: link,
+      link: link
     });
   });

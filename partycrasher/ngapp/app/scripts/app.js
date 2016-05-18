@@ -11,7 +11,7 @@
 angular
   .module('PartyCrasherApp', [
     'ngRoute',
-    'restangular',
+    'restangular'
   ])
   .config(function ($routeProvider, $locationProvider, DEFAULT_THRESHOLD) {
     $routeProvider
