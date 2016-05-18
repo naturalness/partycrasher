@@ -1,8 +1,36 @@
-<div>
-    Threshold: <select ng-model="currentThreshold">
-        <option ng-repeat="option in availableThresholds" value="{{option}}">{{option}}</option>
-        </select>
-    </select>
+<main>
+    <h1 class="page-header"> Top Crashes </h1>
 
-    <div ng-include="'views/tree.html'"></div>
-</div>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th> # </th>
+                    <th> Bucket </th>
+                    <th> Project </th>
+                    <th> Last Seen </th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>
+                        <a href="/alan_parsons/buckets/4.0/1"> 57 crashes </a>
+                    </td>
+                    <td> Alan Parsons </td>
+                    <td> Yesterday </td>
+                </tr>
+
+                <tr>
+                    <td>2</td>
+                    <td>
+                        <a href="/alan_parsons/buckets/4.0/2"> 4 crashes </a>
+                    </td>
+                    <td> Alan Parsons </td>
+                    <td>Yesterday</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
