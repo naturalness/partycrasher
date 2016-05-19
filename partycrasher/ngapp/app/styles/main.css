@@ -105,3 +105,13 @@ body {
 .table > tbody > tr > td[colspan] {
   border: 0;
 }
+
+
+/* Make the disclosure buttons for the JSON tree widget thing. */
+.disclosure:not(:checked) ~ .disclosure-contents {
+  display: none;
+}
+
+input[type=checkbox].disclosure {
+  display: none;
+}
