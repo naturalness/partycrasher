@@ -21,11 +21,15 @@ angular.module('PartyCrasherApp')
   /* Initially, we're loading. */
   $scope.loading = true;
 
-  $http.get(searchUrl({ project, threshold, since: '2000' })).then(({data}) => {
-    $scope.results = data;
-    $scope.hasResults = data['top_buckets'].length > 0;
-    $scope.loading = false;
-  });
+  $scope.searchDate = moment().subtract(3, 'days').toDate();
+  $scope.searchProject = project;
+
+  $http.get(searchUrl({ project, threshold, since: $scope.searchDate }))
+    .then(({data}) => {
+      $scope.results = data;
+      $scope.hasResults = data['top_buckets'].length > 0;
+      $scope.loading = false;
+    });
 
   function searchUrl({project, threshold, since}) {
     var query = $httpParamSerializer({ since: since || '3-days-ago' });
