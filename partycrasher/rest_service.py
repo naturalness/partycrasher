@@ -148,6 +148,11 @@ def home(filename=None):
     if filename and os.path.exists(relative('ngapp/app/', filename)):
         # It's a static file.
         return send_from_directory(relative('ngapp/app/'), filename)
+    elif filename and 'views/' in filename and filename.endswith('.html'):
+        # 404 on missing view...
+        # If this is not here, Angular could try to load the index page in
+        # an infinite loop. Which is bad.
+        return '', 404
 
     # Otherwise, it's a route in the web app.
     return render_template('index.html',
