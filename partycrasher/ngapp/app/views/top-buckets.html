@@ -1,10 +1,9 @@
 <main>
   <header class="page-header">
     <h1> Top Crashes </h1>
-    <p ng-if="!loading" class="description"> Since {{ results.since | fromNow }} </p>
   </header>
 
-  <form class="form-inline">
+  <form class="form-inline" ng-submit="search()">
     <div class="form-group">
       <label for="date-in"> Search buckets since </label>
       <input ng-model="searchDate" class="form-control"
@@ -20,10 +19,14 @@
         <option value="ubuntu"> ubuntu </option>
       </select>
     </div>
+    <button type="submit" class="btn btn-default"> Search </button>
   </form>
 
   <p ng-if="loading"> Loading... </p>
 
+  <div ng-if="!loading && hasResults" class="description">
+    Since {{ results.since | fromNow }}
+  </div>
   <div ng-if="!loading && !hasResults">
     No top buckets since {{ results.since | date:'medium' }}
   </div>
