@@ -232,11 +232,14 @@ class PartyCrasher(object):
 
         # Oh, ElasticSearch! You and your verbose query "syntax"!
         query = {
+            # Read this inside out:
             "aggs": {
                 "top_buckets_filtered": {
+                    # Filter the top buckets by date, and maybe by project.
                     "filter": {
                         "bool": { "must": filters }
                     },
+                    # Get the top buckets in descending order of size.
                     "aggs": {
                         "top_buckets": {
                             "terms": {
@@ -248,6 +251,7 @@ class PartyCrasher(object):
                 }
             },
 
+            # Do not send any hits back!
             "size": 0
         }
 

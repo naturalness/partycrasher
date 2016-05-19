@@ -21,15 +21,14 @@ angular
       })
 
       /* Top Buckets. */
-      .when('/:project?/buckets/:threshold?', {
+      .when('/:project?/buckets/:threshold', {
         templateUrl: 'views/top-buckets.html',
-        controller: 'TopBucketsController',
-        controllerAs: 'main'
+        controller: 'TopBucketsController'
       })
 
       /* TODO: */
       /* View a bucket. */
-      .when('/:project?/buckets/:threshold?/:id', {
+      .when('/:project?/buckets/:threshold/:id', {
         templateUrl: 'views/not-implemented.html',
         controller: 'NotImplementedController'
       })

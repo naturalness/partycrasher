@@ -20,7 +20,7 @@ angular.module('PartyCrasherApp')
     return function (obj, category) {
       switch (category) {
         case 'bucket':
-          return `ui/${obj.project}/buckets/${obj.threshold}/${obj.id}`;
+          return `${obj.project}/buckets/${obj.threshold}/${obj.id}`;
         default:
           throw new Error(`Unknown category: ${category}`);
       }
