@@ -15,8 +15,6 @@ angular.module('PartyCrasherApp')
   $routeParams,
   $httpParamSerializer
 ) {
-
-
   /* TODO: derive this from $routeParams and an AJAX call. */
   Object.assign($scope, {
     since: '2012-05-19T00:00:00Z',

@@ -19,7 +19,7 @@
         <tr ng-repeat="bucket in top_buckets">
           <td>{{ $index + 1 }}</td>
           <td>
-            <a href="{{ bucket.href }}">
+            <a href="{{ bucket | uiUrl:'bucket' }}">
               <ng-pluralize count="bucket.total"
                 when="{ 'one': '1 crash', 'other': '{} crashes' }" />
             </a>
