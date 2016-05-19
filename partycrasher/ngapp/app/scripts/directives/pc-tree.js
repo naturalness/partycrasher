@@ -18,16 +18,30 @@ angular.module('PartyCrasherApp')
     }
   };
 
+
+  function looksLikeHref(value) {
+    return !!value.match(/^http:\/\/[^\/]+\//);
+  }
+  
+  /* Returns the type of the expression as a string. Note that the type is not
+   * necessarily a JavaScript type. */
   function valueType(value) {
-    if (typeof value === 'object') {
-      if (value instanceof Array) {
-        return 'array';
-      } else {
-        return 'object';
-      }
-    } else {
-      return 'primitive';
-    }
-    /* TODO: check link. */
+    if (value instanceof Array)
+      return 'array';
+    if (value === null)
+      /* NOTE! typeof null === 'object', so do this check first! */
+      return 'null';
+    if (typeof value == 'object')
+      return 'object';
+    if (typeof value == 'number')
+      return 'number';
+    if (typeof value == 'boolean')
+      return 'boolean';
+    if (typeof value == 'string' && looksLikeHref(value))
+      return 'href';
+    if (typeof value == 'string')
+      return 'string';
+
+    return 'unknown';
   }
 });

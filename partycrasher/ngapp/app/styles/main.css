@@ -82,25 +82,6 @@ body {
   }
 }
 
-
-/* <JOSH> */
-.stuffTree {
-     list-style: none;
-     display: inline-block;
-     vertical-align: top;
-}
-
-.stuffTree li {
-    display: block;
-}
-
-.stuffValue {
-     list-style: none;
-     display: inline-block;
-     margin-left: 1em;
-}
-/* </JOSH> */
-
 /* Remove border top when colspan is explicitly provided. */
 .table > tbody > tr > td[colspan] {
   border: 0;
@@ -117,4 +98,8 @@ input[type=checkbox].disclosure {
 
 .disclosure ~ .disclosure-button {
   cursor: pointer;
+}
+
+.monospace {
+  font-family: monospace;
 }
