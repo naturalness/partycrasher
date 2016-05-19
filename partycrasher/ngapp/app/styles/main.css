@@ -83,6 +83,7 @@ body {
 }
 
 
+/* <JOSH> */
 .stuffTree {
      list-style: none;
      display: inline-block;
@@ -97,4 +98,10 @@ body {
      list-style: none;
      display: inline-block;
      margin-left: 1em;
+}
+/* </JOSH> */
+
+/* Remove border top when colspan is explicitly provided. */
+.table > tbody > tr > td[colspan] {
+  border: 0;
 }

@@ -26,11 +26,10 @@ angular
         controller: 'TopBucketsController'
       })
 
-      /* TODO: */
       /* View a bucket. */
       .when('/:project?/buckets/:threshold/:id', {
-        templateUrl: 'views/not-implemented.html',
-        controller: 'NotImplementedController'
+        templateUrl: 'views/view-bucket.html',
+        controller: 'BucketController'
       })
 
       /* TODO: */
