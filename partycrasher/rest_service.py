@@ -157,6 +157,7 @@ def home(filename=None):
     # Otherwise, it's a route in the web app.
     return render_template('index.html',
                            bower=full_url_for('home') + 'bower_components',
+                           project_names=[proj.name for proj in crasher.get_projects()],
                            basehref=full_url_for('home'),
                            restbase=full_url_for('root'))
 

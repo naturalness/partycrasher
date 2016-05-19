@@ -74,7 +74,8 @@
       angular.module('PartyCrasherApp')
         .constant('BASE_HREF', "%%basehref%%")
         .constant('REST_BASE', "%%restbase%%")
-        .constant('DEFAULT_THRESHOLD', '4.0');
+        .constant('DEFAULT_THRESHOLD', '4.0')
+        .constant('PROJECT_NAMES', %% project_names|tojson|safe %%);
     </script>
   </body>
 </html>

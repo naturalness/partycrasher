@@ -13,7 +13,8 @@ angular.module('PartyCrasherApp')
   $http,
   $routeParams,
   $httpParamSerializer,
-  DEFAULT_THRESHOLD
+  DEFAULT_THRESHOLD,
+  PROJECT_NAMES
 ) {
   var threshold = $routeParams.threshold || DEFAULT_THRESHOLD,
     project = $routeParams.project || '*';
@@ -23,6 +24,8 @@ angular.module('PartyCrasherApp')
   $scope.searchDate = moment().subtract(3, 'days').toDate();
   $scope.searchProject = project;
   $scope.search = search;
+
+  $scope.projects = PROJECT_NAMES;
 
   /* Do the initial search. */
   search();
