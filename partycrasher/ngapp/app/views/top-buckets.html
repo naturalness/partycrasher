@@ -1,10 +1,16 @@
 <main>
   <header class="page-header">
     <h1> Top Crashes </h1>
-    <p class="description"> Since {{ since | fromNow }} </p>
+    <p ng-if="!loading" class="description"> Since {{ results.since | fromNow }} </p>
   </header>
 
-  <div class="table-responsive">
+  <p ng-if="loading"> Loading... </p>
+
+  <div ng-if="!loading && !hasResults">
+    No top buckets since {{ results.since | date:'medium' }}
+  </div>
+
+  <div ng-if="hasResults" class="table-responsive">
     <table class="table table-striped">
       <thead>
         <tr>
@@ -16,7 +22,7 @@
       </thead>
 
       <tbody>
-        <tr ng-repeat="bucket in top_buckets">
+        <tr ng-repeat="bucket in results.top_buckets">
           <td>{{ $index + 1 }}</td>
           <td>
             <a href="{{ ::bucket | uiUrl:'bucket' }}">
@@ -30,4 +36,5 @@
       </tbody>
     </table>
   </div>
+
 </main>
