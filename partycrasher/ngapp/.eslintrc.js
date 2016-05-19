@@ -32,6 +32,7 @@ module.exports = {
     "globals": {
         // Disallow assignment to angular.
         "angular": false,
-        "moment": false
+        "moment": false,
+        "_": false
     }
 };
