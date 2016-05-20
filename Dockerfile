@@ -15,7 +15,7 @@ EXPOSE 5000
 
 # Set up NPM AND Bower for some dumb reason... :S
 RUN cd /usr/src/app/partycrasher/ngapp && \
-    curl -sL https://deb.nodesource.com/setup_4.x | -E bash - && \
+    curl -sL https://deb.nodesource.com/setup_4.x | bash - && \
     apt-get install -y nodejs && \
     npm install -g bower && \
     bower --allow-root install
