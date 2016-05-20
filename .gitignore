@@ -20,3 +20,8 @@ var/
 
 # Get rid of cache.
 .cache/
+
+# Test data
+/*.csv
+/lp.json
+/lp.json.xz

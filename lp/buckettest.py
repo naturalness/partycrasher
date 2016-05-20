@@ -6,12 +6,12 @@
 #  modify it under the terms of the GNU General Public License
 #  as published by the Free Software Foundation; either version 2
 #  of the License, or (at your option) any later version.
-#  
+#
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-#  
+#
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -19,6 +19,11 @@
 from __future__ import division
 
 import os, sys, pprint, random, time, operator, math, csv
+
+# XXX: import things from within the partycrasher package.
+REPOSITORY_ROUTE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join(REPOSITORY_ROUTE, 'partycrasher'))
+
 import crash
 from topN import TopN, TopNLoose, TopNAddress, TopNFile, TopNModule
 from es_crash import ESCrash
@@ -32,7 +37,7 @@ from rest_client import RestClient
 
 if len(sys.argv) < 2+1:
     print "Usage: " + sys.argv[0] + "oracle.json http://restservicehost:port/"
-    
+
 oracle_file_path = sys.argv[1]
 rest_service_url = sys.argv[2]
 
@@ -92,7 +97,7 @@ comparisons = {
     #'lerch6.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[6.0, 'only_stack':True}},
     #'lerch8.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[8.0, 'only_stack':True}},
     #'lerch10.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[10.0, 'only_stack':True}},
-    #'top1': {'comparer': TopN, 'kwargs': {'n':1}}, 
+    #'top1': {'comparer': TopN, 'kwargs': {'n':1}},
     #'top2': {'comparer': TopN, 'kwargs': {'n':2}},
     #'top3': {'comparer': TopN, 'kwargs': {'n':3}},
     #'lerchcx': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[4.0, 'only_stack':False}},
@@ -176,7 +181,7 @@ def argmax(d):
     #comparisons[comparison]['bucketer'].create_index()
 #es.cluster.health(wait_for_status='yellow')
 #print "Running simulations..."
-try: 
+try:
     response = requests.delete(client.path_to('reports'))
     assert response.status_code == 200
     del response
@@ -265,7 +270,7 @@ for database_id in sorted(all_ids.keys()):
                     intersection = cluster
                     precision = intersection/C
                     recall = intersection/L
-                    fscore = (1.0+(beta**2.0))*((precision*recall)/((beta**2.0)*precision+recall))                    
+                    fscore = (1.0+(beta**2.0))*((precision*recall)/((beta**2.0)*precision+recall))
                     if fscore > Fmax:
                         Fmax = fscore
                 F += (L/N) * Fmax
@@ -293,7 +298,7 @@ for database_id in sorted(all_ids.keys()):
                 recall += (c/rn)
             precision = precision/N
             recall = recall/N
-            fscore = (1.0+(beta**2.0))*((precision*recall)/((beta**2.0)*precision+recall))                    
+            fscore = (1.0+(beta**2.0))*((precision*recall)/((beta**2.0)*precision+recall))
             print "%s:\t%0.3f\t%0.3f\t%0.3f\t%0.3f\t%0.3f\t%0.3f\t%0.3f" \
                 % (comparison,
                 precision,

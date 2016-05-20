@@ -43,6 +43,17 @@ Docs][] for further usage.
 
 [API Docs]: http://partycrasher.readthedocs.io/en/latest/rest-api.html
 
+# Uploading Test Data
+
+> **Note**: This will delete *all* data in the existing PartyCrasher
+> instance.
+
+To download test data and upload it to PartyCrasher, simply type:
+
+```sh
+$ make buckettest
+```
+
 # Licensing
 
 Assume that PartyCrasher is licensed under the [GPL3+](LICENSE) unless otherwise
