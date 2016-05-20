@@ -6,23 +6,23 @@ EXTERNAL_PORT = 5000
 .PHONY: help
 help: ## Prints this message and exits
 	$(info Available targets)
-	@awk '/^[a-zA-Z\-\_0-9]+:/ {                        \
-		nb = sub( /^## /, "", helpMsg );                \
-		if(nb == 0) {                                   \
-			helpMsg = $$0;                              \
-			nb = sub( /^[^:]*:.* ## /, "", helpMsg );   \
-		}                                               \
-		if (nb)                                         \
-			print  $$1 helpMsg;                         \
-	}                                                   \
-	{ helpMsg = $$0 }'                                  \
+	@awk '/^[a-zA-Z\-\_0-9]+:/ { \
+		replaced = sub( /^## /, "", helpMsg ); \
+		if (replaced == 0) { \
+			helpMsg = $$0; \
+			replaced = sub( /^[^:]*:.* ## /, "", helpMsg ); \
+		} \
+		if (replaced) \
+			print  $$1 helpMsg; \
+	} \
+	{ helpMsg = $$0 }' \
 	$(MAKEFILE_LIST) | column -ts:
 
 .PHONY: start
 start: ## Starts the server locally (does not use Docker).
 	python partycrasher/rest_service.py \
-		--port=$(EXTERNAL_PORT)         \
-		--debug                         \
+		--port=$(EXTERNAL_PORT) \
+		--debug \
 		--allow-delete-all
 
 .PHONY: build
