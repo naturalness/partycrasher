@@ -43,22 +43,22 @@ import uuid
 
 # Terrible Python 2/3 hacks
 try:
-    from urlparse import urlparse
-except ImportError:
-    from urllib.parse import urlparse
-
-try:
     xrange
 except NameError:
-    xrange = range
-
-try:
-  unicode
-except NameError:
-  StringType = str
+    PYTHON_3 = True
 else:
-  StringType = unicode
+    PYTHON_3 = False
 
+# A smart person would have just used six, but... eh.
+if PYTHON_3:
+    xrange = range
+    from urllib.parse import urlparse
+    StringType = str
+    from configparser import ConfigParser
+else:
+    from urlparse import urlparse
+    StringType = unicode
+    from ConfigParser import SafeConfigParser as ConfigParser
 
 import dateparser
 import requests
@@ -66,15 +66,21 @@ import requests
 import sample_crashes
 
 # Full path to ./rest_service.py
-REST_SERVICE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 'rest_service.py')
+SOURCE_ROUTE = os.path.dirname(os.path.abspath(__file__))
+REPOSITORY_ROUTE = os.path.dirname(SOURCE_ROUTE)
+REST_SERVICE_PATH = os.path.join(SOURCE_ROUTE, 'rest_service.py')
+CONFIG_FILE = os.path.join(REPOSITORY_ROUTE, 'partycrasher.cfg')
 
 # TODO: database_id => id.
 
 class RestServiceTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        requests.delete('http://localhost:9200/crashes')
+        config = ConfigParser()
+        with open(CONFIG_FILE) as config_file:
+            config.readfp(config_file)
+        host = config.get('partycrasher.elastic', 'hosts')
+        requests.delete('http://{0}/crashes'.format(host))
 
     def setUp(self):
         self.port = random.randint(5001, 5999)
@@ -90,7 +96,7 @@ class RestServiceTestCase(unittest.TestCase):
         # os.setsid() is required to start the server in a new session in
         # Unix; Windows needs something else...
         self.rest_service = subprocess.Popen([python_cmd, REST_SERVICE_PATH,
-                                              '--port', str(self.port), 
+                                              '--port', str(self.port),
                                               '--debug'],
                                              preexec_fn=os.setsid)
 
@@ -455,7 +461,7 @@ class RestServiceTestCase(unittest.TestCase):
                         raise
                 else:
                     pass # check bucket size == 1?
-            
+
         assert len(buckets) > 0
         # Get the LAST (pickiest) threshold.
         last_threshold = next(iter(reversed(sorted_thresholds(buckets))))
@@ -595,6 +601,8 @@ class RestServiceTestCase(unittest.TestCase):
         Get top buckets for a given time frame.
         """
         now = datetime.datetime.utcnow()
+
+        # TODO: test for last_seen
 
         # Create a bunch of reports with IDENTICAL unique content
         tfidf_trickery = str(uuid.uuid4())
