@@ -627,9 +627,13 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 201
 
         # Create one duplicate in a completely different project!
+        last_insert_date = datetime.datetime.utcnow()
         response = requests.post(self.path_to('manhattan', 'reports'),
-                                 json={'database_id': database_id_weirdo,
-                                      'tfidf_trickery': tfidf_trickery})
+                                 json={
+                                     'database_id': database_id_weirdo,
+                                     'tfidf_trickery': tfidf_trickery,
+                                     'date': last_insert_date.isoformat()
+                                 })
         assert response.status_code == 201
 
         wait_for_elastic_search()
@@ -647,6 +651,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert top_bucket.get('href') is not None
         assert is_url(top_bucket['href'])
         assert top_bucket.get('total') >= 1
+        assert top_bucket.get('last_seen') == last_insert_date.isoformat()
 
         # The results from ElasticSearch are more-or-less unpredictable...
         assert 'top_reports' not in top_bucket
