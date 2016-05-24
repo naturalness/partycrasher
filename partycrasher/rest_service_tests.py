@@ -632,7 +632,6 @@ class RestServiceTestCase(unittest.TestCase):
                                  json={
                                      'database_id': database_id_weirdo,
                                      'tfidf_trickery': tfidf_trickery,
-                                     'date': last_insert_date.isoformat()
                                  })
         assert response.status_code == 201
 
@@ -651,7 +650,10 @@ class RestServiceTestCase(unittest.TestCase):
         assert top_bucket.get('href') is not None
         assert is_url(top_bucket['href'])
         assert top_bucket.get('total') >= 1
-        assert top_bucket.get('last_seen') == last_insert_date.isoformat()
+        assert 'last_seen' in top_bucket
+        # FIXME: The very top bucket is not well known, so this
+        # tests that it's a parsable date...
+        assert dateparser.parse(top_bucket['last_seen']), "Can't parse date"
 
         # The results from ElasticSearch are more-or-less unpredictable...
         assert 'top_reports' not in top_bucket

@@ -31,7 +31,7 @@ class BucketNotFoundError(KeyError):
     """
 
 
-class Bucket(namedtuple('Bucket', 'id project threshold total top_reports')):
+class Bucket(namedtuple('Bucket', 'id project threshold total top_reports last_seen')):
     """
     Data class for buckets. Contains two identifiers:
      - id: The bucket's ID;
@@ -41,15 +41,18 @@ class Bucket(namedtuple('Bucket', 'id project threshold total top_reports')):
     def to_dict(self, *args, **kwargs):
         """
         Converts the current object into a dictionary;
-        Any argguments are treated as in the `dict` constructor.
+        Any arguments are treated as in the `dict` constructor.
         """
         kwargs.update(self._asdict())
         for arg in args:
             kwargs.update(arg)
 
-        # HACK: remove empty top_reports
+        # HACK: remove empty top_reports, last_seen.
         if kwargs['top_reports'] is None:
             del kwargs['top_reports']
+
+        if kwargs['last_seen'] is None:
+            del kwargs['last_seen']
 
         return kwargs
 
@@ -191,8 +194,9 @@ class PartyCrasher(object):
         return Bucket(id=bucket_id,
                       project=project,
                       threshold=threshold,
-                      total = reports_found,
-                      top_reports=reports)
+                      total=reports_found,
+                      top_reports=reports,
+                      last_seen=None)
 
     def top_buckets(self, lower_bound, threshold=None, project=None):
         """
@@ -245,6 +249,14 @@ class PartyCrasher(object):
                             "terms": {
                                 "field": "buckets." + threshold.to_elasticsearch(),
                                 "order": { "_count": "desc" }
+                            },
+                            # Get the date of the latest crash per bucket.
+                            "aggs": {
+                                "last_seen": {
+                                    "max": {
+                                        "field": "date"
+                                    }
+                                }
                             }
                         }
                     }
@@ -256,6 +268,7 @@ class PartyCrasher(object):
         }
 
         response = self.es.search(body=query, index='crashes')
+
         # Oh, ElasticSearch! You and your verbose responses!
         top_buckets = (response['aggregations']
                        ['top_buckets_filtered']
@@ -264,6 +277,7 @@ class PartyCrasher(object):
 
         return [Bucket(id=bucket['key'], project=project, threshold=threshold,
                        total=bucket['doc_count'],
+                       last_seen=bucket['last_seen']['value_as_string'],
                        top_reports=None)
                 for bucket in top_buckets]
 

@@ -398,7 +398,12 @@ def fix_buckets(crash_dict):
             fixed_buckets['top_match'] = serialize_top_match(bucket_id)
         else:
             threshold = str(Threshold(key))
-            fixed_buckets[threshold] = Bucket(bucket_id, project, threshold, None, None)
+            fixed_buckets[threshold] = Bucket(id=bucket_id,
+                                              project=project,
+                                              threshold=threshold,
+                                              total=None,
+                                              top_reports=None,
+                                              last_seen=None)
 
     crash_dict['buckets' ] = fixed_buckets
 
