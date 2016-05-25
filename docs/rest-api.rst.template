@@ -8,13 +8,13 @@ Overview
  - Modeled after the GitHub API, the returned JSON contains full-qualified
    URLs to resources (based on the User-Agent facing host).
  - All paths may be prefixed with ``/:project/``
- - All paths are also available without the ``/:project/`` prefix in case the
+ - Most paths are also available without the ``/:project/`` prefix in case the
    project is unknown or unspecified.
  - There are three entities:
 
    - Buckets
    - Reports
-   - Projects (maintained mostly for psychological acceptability, and compatibility with BugParty)
+   - Projects
 
 .. Set the default highlighting language to HTTP
 .. highlight:: http

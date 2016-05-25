@@ -44,6 +44,7 @@
           <th> # </th>
           <th> Bucket </th>
           <th> Project </th>
+          <th> First Seen </th>
         </tr>
       </thead>
 
@@ -57,6 +58,8 @@
             </a>
           </td>
           <td>{{ ::bucket.project }}</td>
+
+          <td>{{ ::bucket.first_seen | fromNow }}</td>
         </tr>
       </tbody>
     </table>

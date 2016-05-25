@@ -616,8 +616,6 @@ class RestServiceTestCase(unittest.TestCase):
         """
         now = datetime.datetime.utcnow()
 
-        # TODO: test for last_seen
-
         # Create a bunch of reports with IDENTICAL unique content
         tfidf_trickery = str(uuid.uuid4())
 
@@ -629,8 +627,10 @@ class RestServiceTestCase(unittest.TestCase):
         # This one will go in the Manhattan Project
         database_id_weirdo = str(uuid.uuid4())
 
+        project = 'chilango'
+
         # Add multiple reports.
-        response = requests.post(self.path_to('alan_parsons', 'reports'),
+        response = requests.post(self.path_to(project, 'reports'),
                                  json=[
                                      {'database_id': database_id_a,
                                       'tfidf_trickery': tfidf_trickery},
@@ -653,7 +653,7 @@ class RestServiceTestCase(unittest.TestCase):
 
         # We should find our newly created reports as the most populous
         # bucket.
-        search_url = self.path_to('alan_parsons', 'buckets', '4.0')
+        search_url = self.path_to(project, 'buckets', '4.0')
         response = requests.get(search_url, params={'since': now.isoformat()})
         assert response.json().get('since') == now.isoformat()
         assert len(response.json().get('top_buckets')) >= 2
@@ -664,12 +664,16 @@ class RestServiceTestCase(unittest.TestCase):
         assert top_bucket.get('href') is not None
         assert is_url(top_bucket['href'])
         assert top_bucket.get('total') >= 1
-        assert 'last_seen' in top_bucket
-        # FIXME: The very top bucket is not well known, so this
-        # tests that it's a parsable date...
-        assert dateparser.parse(top_bucket['last_seen']), "Can't parse date"
+        assert 'first_seen' in top_bucket
+        try:
+            dateparser.parse(top_bucket['first_seen'])
+        except:
+            raise AssertionError("Can't parse date")
 
-        # The results from ElasticSearch are more-or-less unpredictable...
+        first_seen = dateparser.parse(top_bucket['first_seen']), "Can't parse date"
+        assert now < first_seen < datetime.datetime.utcnow()
+
+        # This is a legacy field that no longer exists.
         assert 'top_reports' not in top_bucket
 
     def test_top_buckets_invalid_queries(self):

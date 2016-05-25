@@ -583,7 +583,7 @@ def query_buckets(project=None, threshold=None):
                     "id": "c29a81a0-5a53-4ba0-8123-5e96685a5895",
                     "href": "http://domain.tld/alan_parsons/buckets/4.0/c29a81a0-5a53-4ba0-8123-5e96685a5895",
                     "total": 253,
-                    "top_reports": ["..."]
+                    "first_seen": "2016-02-27T14:32:08Z"
                 }
             ]
         }
