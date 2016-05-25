@@ -31,10 +31,14 @@
     <div class="container-fluid">
       <div class="row">
         <# The left nav #>
-        <nav class="col-sm-3 col-md-2 sidebar">
+        <nav class="col-sm-3 col-md-2 sidebar" ng-controller="NavController">
           <ul class="nav nav-sidebar">
-            <li class="active"><a href="#"> Top Crashes </a></li>
-            <li><a href="#"> View Bucket </a></li>
+            <li ng-class="{ active: isActive('TopBucketsController') }">
+              <a href="#"> Top Crashes </a>
+            </li>
+            <li ng-class="{ active: isActive('BucketController') }">
+              <a href="#"> View Bucket </a>
+            </li>
           </ul>
         </nav>
 
@@ -65,6 +69,7 @@
     <script src="scripts/services/restservice.js"></script>
     <script src="scripts/controllers/top-buckets-controller.js"></script>
     <script src="scripts/controllers/bucket-controller.js"></script>
+    <script src="scripts/controllers/nav-controller.js"></script>
     <script src="scripts/directives/pc-tree.js"></script>
     <script src="scripts/filters/from-now.js"></script>
     <script src="scripts/filters/ui-url.js"></script>
