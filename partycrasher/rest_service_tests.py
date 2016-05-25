@@ -670,7 +670,7 @@ class RestServiceTestCase(unittest.TestCase):
         except:
             raise AssertionError("Can't parse date")
 
-        first_seen = dateparser.parse(top_bucket['first_seen']), "Can't parse date"
+        first_seen = dateparser.parse(top_bucket['first_seen'])
         assert now < first_seen < datetime.datetime.utcnow()
 
         # This is a legacy field that no longer exists.

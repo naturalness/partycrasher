@@ -31,7 +31,7 @@ class BucketNotFoundError(KeyError):
     """
 
 
-class Bucket(namedtuple('Bucket', 'id project threshold total top_reports last_seen')):
+class Bucket(namedtuple('Bucket', 'id project threshold total top_reports first_seen')):
     """
     Data class for buckets. Contains two identifiers:
      - id: The bucket's ID;
@@ -47,12 +47,12 @@ class Bucket(namedtuple('Bucket', 'id project threshold total top_reports last_s
         for arg in args:
             kwargs.update(arg)
 
-        # HACK: remove empty top_reports, last_seen.
+        # HACK: remove empty top_reports, first_seen.
         if kwargs['top_reports'] is None:
             del kwargs['top_reports']
 
-        if kwargs['last_seen'] is None:
-            del kwargs['last_seen']
+        if kwargs['first_seen'] is None:
+            del kwargs['first_seen']
 
         return kwargs
 
@@ -196,7 +196,7 @@ class PartyCrasher(object):
                       threshold=threshold,
                       total=reports_found,
                       top_reports=reports,
-                      last_seen=None)
+                      first_seen=None)
 
     def top_buckets(self, lower_bound, threshold=None, project=None):
         """
@@ -252,8 +252,8 @@ class PartyCrasher(object):
                             },
                             # Get the date of the latest crash per bucket.
                             "aggs": {
-                                "last_seen": {
-                                    "max": {
+                                "first_seen": {
+                                    "min": {
                                         "field": "date"
                                     }
                                 }
@@ -277,7 +277,7 @@ class PartyCrasher(object):
 
         return [Bucket(id=bucket['key'], project=project, threshold=threshold,
                        total=bucket['doc_count'],
-                       last_seen=bucket['last_seen']['value_as_string'],
+                       first_seen=bucket['first_seen']['value_as_string'],
                        top_reports=None)
                 for bucket in top_buckets]
 

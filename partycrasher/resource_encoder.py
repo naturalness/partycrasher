@@ -404,7 +404,7 @@ def fix_buckets(crash_dict):
                                               threshold=threshold,
                                               total=None,
                                               top_reports=None,
-                                              last_seen=None)
+                                              first_seen=None)
 
     crash_dict['buckets' ] = fixed_buckets
 
