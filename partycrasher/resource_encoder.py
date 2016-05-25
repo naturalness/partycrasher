@@ -105,7 +105,8 @@ class ResourceEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Crash):
             crash = obj
-            serializable = href('view_report', project=crash.project, report_id=crash.id)
+            serializable = href('view_report', project=crash.project,
+                                report_id=crash.id_without_project)
             serializable.update(crash)
             fix_buckets(serializable)
 
@@ -413,7 +414,7 @@ def serialize_top_match(info):
     if info is not None:
         match_url = href('view_report',
                          project=info['project'],
-                         report_id=info['report_id'])
+                         report_id=info['report_id'].split(':')[1])
         return OrderedDict([
             ('report_id', info['report_id']),
             ('href', match_url['href']),

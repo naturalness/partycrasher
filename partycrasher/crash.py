@@ -183,14 +183,21 @@ class Crash(dict):
         else:
             return super(Crash, self).__getitem__(key)
 
+    @staticmethod
+    def make_id(project, database_id):
+        return project + ':' + database_id
+
     def __setitem__(self, key, val):
         # Translates key synonyms to their "canonical" key.
         synonyms = self.synonyms
+
         # First force strings to be unicoded
         if isinstance(key, bytes):
             key = key.decode(encoding='utf-8', errors='replace')
         if isinstance(val, bytes):
             val = val.decode(encoding='utf-8', errors='replace')
+
+        # Now do conversions.
         if key in synonyms:
             return super(Crash, self).__setitem__(synonyms[key], val)
         elif key in self.breakapart:
@@ -206,6 +213,8 @@ class Crash(dict):
             else:
                 # Code review: Is TypeError more semantically related?
                 raise ValueError("Expected a dict!")
+
+        # XXX: Why is this hardcoded here?
         elif key == 'crashing_thread': # Mozilla
             if (isinstance(val, dict)):
                 for key2 in val:
@@ -213,9 +222,19 @@ class Crash(dict):
             else:
                 raise ValueError("Expected a dict!")
         elif key in self.canonical_fields:
+
+            # Prepend the database ID.
+            if key == 'database_id' and not val.startswith(self['project'] + ':'):
+                fixed_id = Crash.make_id(self['project'], val)
+                self['database_id'] = fixed_id
+                return
+
+            # Check if the value has the type we require.
             if isinstance(val, self.canonical_fields[key]['type']):
+                # It's the right type. No need to convert, just set.
                 return super(Crash, self).__setitem__(key, val)
             else:
+                # Coerce to the required type.
                 if self.canonical_fields[key]['converter'] is not None:
                     return super(Crash, self).__setitem__(key,
                         self.canonical_fields[key]['converter'](val))
@@ -235,7 +254,15 @@ class Crash(dict):
 
     @property
     def id(self):
+        return self.id_without_project
+
+    @property
+    def id_with_project(self):
         return self['database_id']
+
+    @property
+    def id_without_project(self):
+        return self['database_id'].split(':')[1]
 
     def normalize(self):
         """

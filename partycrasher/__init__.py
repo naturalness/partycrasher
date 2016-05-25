@@ -281,9 +281,10 @@ class PartyCrasher(object):
                        top_reports=None)
                 for bucket in top_buckets]
 
-    def get_crash(self, database_id):
+    def get_crash(self, database_id, project):
         self._connect_to_elasticsearch()
 
+        database_id = Crash.make_id(project, database_id)
         try:
             return ESCrash(database_id, index='crashes')
         except NotFoundError as e:

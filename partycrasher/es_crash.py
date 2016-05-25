@@ -65,6 +65,7 @@ class ESCrashMeta(type):
                     existing = cls.getrawbyid(crash['database_id'], index=index)
                 else:
                     existing = None
+
                 if not existing is None:
 
                     if existing != crash:
@@ -142,7 +143,7 @@ class ESCrash(Crash):
     def getrawbyid(cls, database_id, index='crashes'):
         if cls.es is None:
             raise RuntimeError('Forgot to monkey-patch ES connection to ESCrash!')
-        
+
         if index in cls.crashes:
             if database_id in cls.crashes[index]:
                 return cls.crashes[database_id]
@@ -199,7 +200,7 @@ class ESCrash(Crash):
 
 
 class ESCrashEncoder(CrashEncoder):
-    
+
     @staticmethod
     def hacky_serialize_thresholds(value):
         """
@@ -224,7 +225,7 @@ class ESCrashEncoder(CrashEncoder):
             return self.hacky_serialize_thresholds(o)
         else:
             return CrashEncoder.default(self, o)
-    
+
 
 
 import unittest
@@ -232,6 +233,7 @@ class TestCrash(unittest.TestCase):
 
     exampleCrash1 = Crash({
         'database_id': 'exampleCrash1',
+        'project': 'Ubuntu',
         'CrashCounter': '1',
         'ExecutablePath': '/bin/nbd-server',
         'NonfreeKernelModules': 'fglrx',
@@ -315,7 +317,6 @@ class TestCrash(unittest.TestCase):
         fetched_from_es_undone = Crash(fetched_from_es)
         assert fetched_from_es_undone == self.exampleCrash1
         fetched_from_es['cpu'] = 'amd64'
-
 
 
 if __name__ == '__main__':

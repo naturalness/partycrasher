@@ -309,11 +309,8 @@ def add_report(project=None):
             }
 
 
-@app.route('/reports/<report_id>',
-           defaults={'project': None},
-           endpoint='view_report_no_project')
 @app.route('/<project>/reports/<report_id>')
-def view_report(project=None, report_id=None):
+def view_report(project, report_id):
     """
     .. api-doc-order: 2
 
@@ -322,12 +319,6 @@ def view_report(project=None, report_id=None):
     ::
 
         GET /:project/reports/:report_id HTTP/1.1
-
-    or
-
-    ::
-
-        GET /reports/:report_id HTTP/1.1
 
     Fetches a processed report from the database.  This includes all data
     originally posted, plus bucket assignments, and the URLs for every
@@ -379,11 +370,9 @@ def view_report(project=None, report_id=None):
         }
 
     """
-    # Ignore project.
-    assert report_id is not None
 
     try:
-        report = crasher.get_crash(report_id)
+        report = crasher.get_crash(report_id, project)
     except partycrasher.ReportNotFoundError:
         return jsonify(not_found=report_id), 404
     else:
@@ -755,7 +744,7 @@ def ingest_multiple(reports, project_name):
 def url_for_report(report):
     return url_for('view_report',
                    project=report['project'],
-                   report_id=report['database_id'])
+                   report_id=report.id_without_project)
 
 
 def raise_bad_request_if_project_mismatch(report, project_name):
