@@ -224,7 +224,9 @@ class Crash(dict):
         elif key in self.canonical_fields:
 
             # Prepend the database ID.
-            if key == 'database_id' and not val.startswith(self['project'] + ':'):
+            if key == 'database_id' and not str(val).startswith(self['project'] + ':'):
+                # Coerce the ID to a string.
+
                 fixed_id = Crash.make_id(self['project'], val)
                 self['database_id'] = fixed_id
                 return
@@ -266,7 +268,13 @@ class Crash(dict):
 
     def normalize(self):
         """
-        wat.
+        Checks ALL of the existing keys and remaps them to normalized values.
+
+        Note that due to normalization, the keys may shift. That is, this
+        condition does NOT hold.
+
+            crash[key] = value
+            crash[key] == value
         """
         # Use self.keys() so that we can remove items (it is impossible to
         # modify the dictionary during iteration).
