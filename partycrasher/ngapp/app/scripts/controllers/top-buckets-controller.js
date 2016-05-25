@@ -21,22 +21,24 @@ angular.module('PartyCrasherApp')
 
   /* Initially, we're loading. */
   $scope.loading = true;
-  $scope.searchDate = moment().subtract(3, 'days').toDate();
-  $scope.searchProject = project;
+
   $scope.search = search;
+  $scope.search.date = moment().subtract(3, 'days').toDate();
+  $scope.search.project = project;
 
   $scope.projects = PROJECT_NAMES;
 
   /* Do the initial search. */
   search();
 
+  /* TODO: add generic query. */
   function search() {
     $scope.loading = true;
 
     $http.get(searchUrl({
-      project: $scope.searchProject,
+      project: $scope.search.project,
       threshold,
-      since: $scope.searchDate
+      since: $scope.search.date
     }))
       .then(({data}) => {
         $scope.results = data;
