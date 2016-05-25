@@ -33,16 +33,16 @@ class Buckets(object):
     """Proxy for OrderedDict"""
     def __init__(self, *args, **kwargs):
         self._od = OrderedDict(*args, **kwargs)
-    
+
     def __getattr__(self, a):
         return getattr(self._od, a)
-    
+
     def __setitem__(self, *args, **kwargs):
         return self._od.__setitem__(*args, **kwargs)
 
     def __getitem__(self, *args, **kwargs):
         return self._od.__getitem__(*args, **kwargs)
-    
+
     def __delitem__(self, *args, **kwargs):
         return self._od.__delitem__(*args, **kwargs)
 
@@ -56,7 +56,7 @@ class Buckets(object):
         new = Buckets()
         new._od = self._od.copy()
         return new
-    
+
     # TODO: automatically convert keys of wrong type to Threshold
 
 class Stackframe(dict):
@@ -244,7 +244,7 @@ class Crash(dict):
         # Use self.keys() so that we can remove items (it is impossible to
         # modify the dictionary during iteration).
         for key in self.keys():
-            # wat.
+            # __setitem__ WILL change the
             value = self[key]
             del self[key]
             self.__setitem__(key, value)

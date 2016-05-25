@@ -339,6 +339,50 @@ class RestServiceTestCase(unittest.TestCase):
         assert 404 == requests.get(self.path_to('manhattan', 'reports',
                                                database_id)).status_code
 
+    def test_add_identical_ids_to_different_project(self):
+        """
+        Adds an IDENTICAL ID to two different projects project.
+        This MUST accept the crash, but return the same ID as before.
+        """
+
+
+        # Make a new, unique database ID.
+        database_id = str(uuid.uuid4())
+
+        # Figure out the URLs.
+        project_1 = self.path_to('alan_parsons', 'reports')
+        project_2 = self.path_to('manhattan', 'reports')
+        crash_1_url = self.path_to('alan_parsons', 'reports', database_id)
+        crash_2_url = self.path_to('manhattan', 'reports', database_id)
+
+        assert crash_1_url != crash_2_url
+
+        # Post one crash.
+        report = {
+            'database_id': database_id,
+            'platform': 'xbone'
+        }
+        response = requests.post(project_1, json=report)
+
+        # Check that it's created.
+        assert response.status_code == 201
+        assert response.json().get('database_id') == database_id
+        assert response.json().get('project') == 'alan_parsons'
+        assert crash_1_url in response.headers.get('Location')
+
+        # After inserts, gotta wait...
+        wait_for_elastic_search()
+
+        # Post the same crash, but in a different project.
+        response = requests.post(project_2, json=report,
+                                 allow_redirects=False)
+
+        # Check that this one's also created.
+        assert response.status_code == 201
+        assert response.json().get('database_id') == database_id
+        assert response.json().get('project') == 'manhattan'
+        assert crash_2_url in response.headers.get('Location')
+
     def test_add_multiple(self):
         """
         Add multiple crashes to a single project;
