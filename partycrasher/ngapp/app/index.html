@@ -35,8 +35,8 @@
         <nav class="col-sm-3 col-md-2 sidebar" ng-controller="NavController">
           <ul class="nav nav-sidebar">
             <li ng-class="{ active: isActive('top-buckets') }">
-              <a href="{{ urlFor('top-buckets', { project: '*', threshold: '4.0' }) }}">
-                Top Crashes
+              <a href="{{ urlFor('top-buckets', { project: '*', threshold: threshold }) }}">
+                Top Buckets
               </a>
             </li>
             <li ng-class="{ active: isActive('view-bucket') }">

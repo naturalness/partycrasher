@@ -108,3 +108,7 @@ body {
   border-radius: 50%;
 }
 
+a[href=''] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
