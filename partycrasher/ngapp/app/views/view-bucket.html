@@ -1,10 +1,17 @@
 <main>
   <header class="page-header">
-    <h1> Bucket {{ ::id }} </h1>
+    <h1> Bucket {{ ::id }} <small class="bucket-total">
+      <ng-pluralize count="::total"
+        when="{ 'one': '1 crash', 'other': '{} crashes' }" />
+        total
+      </small></h1>
   </header>
 
+  <div class="bucket-summary">
+
+  </div>
+
   <h2> Latest Crashes </h2>
-  <p> Total: {{ ::total }} </p>
 
   <div class="table-responsive">
     <table class="table">
