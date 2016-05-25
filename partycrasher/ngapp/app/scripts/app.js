@@ -12,7 +12,8 @@ angular
   .module('PartyCrasherApp', [
     'ngRoute',
     'ngNamedRoute',
-    'restangular'
+    'restangular',
+    'datePicker'
   ])
   .config(function ($routeProvider, $locationProvider, DEFAULT_THRESHOLD) {
     $routeProvider
