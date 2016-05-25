@@ -33,10 +33,10 @@
         <# The left nav #>
         <nav class="col-sm-3 col-md-2 sidebar" ng-controller="NavController">
           <ul class="nav nav-sidebar">
-            <li ng-class="{ active: isActive('TopBucketsController') }">
+            <li ng-class="{ active: isActive('top-buckets') }">
               <a href="#"> Top Crashes </a>
             </li>
-            <li ng-class="{ active: isActive('BucketController') }">
+            <li ng-class="{ active: isActive('view-bucket') }">
               <a href="#"> View Bucket </a>
             </li>
           </ul>
@@ -58,6 +58,7 @@
     <script src="%%bower%%/jquery/dist/jquery.js"></script>
     <script src="%%bower%%/angular/angular.js"></script>
     <script src="%%bower%%/angular-route/angular-route.js"></script>
+    <script src="%%bower%%/angular-named-route/dist/angular-named-route.js"></script>
     <script src="%%bower%%/lodash/dist/lodash.js"></script>
     <script src="%%bower%%/restangular/dist/restangular.js"></script>
     <script src="%%bower%%/moment/moment.js"></script>

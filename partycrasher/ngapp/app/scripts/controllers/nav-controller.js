@@ -9,11 +9,11 @@
  */
 angular.module('PartyCrasherApp')
 .controller('NavController', function ($scope, $route) {
-  $scope.isActive = function (controllerName) {
+  $scope.isActive = function (name) {
     if (!$route.current) {
       return false;
     }
 
-    return $route.current.controller === controllerName;
+    return $route.current.name === name;
   };
 });

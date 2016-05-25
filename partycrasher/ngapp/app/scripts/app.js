@@ -11,6 +11,7 @@
 angular
   .module('PartyCrasherApp', [
     'ngRoute',
+    'ngNamedRoute',
     'restangular'
   ])
   .config(function ($routeProvider, $locationProvider, DEFAULT_THRESHOLD) {
@@ -22,12 +23,14 @@ angular
 
       /* Top Buckets. */
       .when('/:project?/buckets/:threshold', {
+        name: 'top-buckets',
         templateUrl: 'views/top-buckets.html',
         controller: 'TopBucketsController'
       })
 
       /* View a bucket. */
       .when('/:project?/buckets/:threshold/:id', {
+        name: 'view-bucket',
         templateUrl: 'views/view-bucket.html',
         controller: 'BucketController'
       })
@@ -35,6 +38,7 @@ angular
       /* TODO: */
       /* View a crash report. */
       .when('/:project?/reports/:id', {
+        name: 'view-report',
         templateUrl: 'views/not-implemented.html',
         controller: 'NotImplementedController'
       })
