@@ -8,16 +8,18 @@
   </header>
 
   <section class="bucket-summary">
+    <!--
     <dt> First Seen </dt>
     <dd> TODO </dd>
     <dt> Last Seen </dt>
     <dd> TODO </dd>
+    -->
     <dt> Versions </dt>
-    <dd> TODO </dd>
+    <dd>{{ ::bucket.versions }}</dd>
     <dt> OSes </dt>
-    <dd> TODO </dd>
+    <dd>{{ ::bucket.oses }}</dd>
     <dt> Builds </dt>
-    <dd> TODO </dd>
+    <dd>{{ ::bucket.builds }}</dd>
   </section>
 
   <hr>
@@ -45,7 +47,7 @@
       <h2 class="panel-title"> Latest Crashes </h2>
     </header>
 
-    <ul class="list-group" ng-repeat="crash in ::bucket.top_reports">
+    <ul class="list-group" ng-repeat="crash in ::bucket.reports">
       <li class="list-group-item"><a href="{{ ::crash.href }}">{{ ::crash.id }}</a></li>
     </ul>
   </section>

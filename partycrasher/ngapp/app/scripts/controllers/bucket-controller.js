@@ -8,7 +8,7 @@
  * Controller of the ngappApp
  */
 angular.module('PartyCrasherApp')
-.controller('BucketController', function ($scope, SAMPLE_BUCKET, $http, $routeParams) {
+.controller('BucketController', function ($scope, Bucket, SAMPLE_BUCKET, $http, $routeParams) {
   var project = $routeParams.project || '*',
     /* no default threshold, since this is a SPECIFIC bucket. */
     threshold = $routeParams.threshold,
@@ -16,7 +16,7 @@ angular.module('PartyCrasherApp')
 
   $scope.loading = true;
 
-  $scope.bucket = SAMPLE_BUCKET;
+  $scope.bucket = new Bucket(SAMPLE_BUCKET);
 
   /* Fetch the bucket. */
   $http.get(bucketURL({ project, threshold, id }))
