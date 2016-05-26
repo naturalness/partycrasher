@@ -32,14 +32,21 @@
       <h2 class="panel-title"> Sample Stack Traces </h2>
     </header>
     <div class="panel-body stack-traces">
-      <div class="panel panel-default">
+      <div ng-repeat="report in ::sampleReports" class="panel panel-default">
         <header class="panel-heading">
           <h3 class="panel-title">
-            <a href="#">Bucket ID or whatever</a>
+            <a href="{{ ::report | uiUrl:'report' }}">{{ ::report.id }}</a>
           </h3>
         </header>
         <ol class="mini stack-trace list-group">
-          <li class="stack-frame list-group-item"> TODO </li>
+          <li ng-repeat="frame in ::report.stackTrace"
+              class="stack-frame list-group-item">
+            <code ng-if="frame.func">{{ ::frame.func }}</code>
+            <small ng-if="frame.filename">
+              {{ ::frame.filename }}{{ ::frame.line ? ':' + frame.line : '' }}
+            </small>
+            <span ng-if="frame.address">({{ ::frame.address }})</span>
+          </li>
         </ol>
       </div>
     </div>
