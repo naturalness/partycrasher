@@ -1,41 +1,52 @@
 <main>
-  <header class="page-header">
-    <h1> Bucket {{ ::id }} <small class="bucket-total">
-      <ng-pluralize count="::total"
+  <header class="page-header row">
+    <h1> Bucket {{ ::bucket.id }} <small class="bucket-total">
+      <ng-pluralize count="::bucket.total"
         when="{ 'one': '1 crash', 'other': '{} crashes' }" />
         total
       </small></h1>
   </header>
 
-  <div class="bucket-summary">
+  <section class="bucket-summary">
+    <dt> First Seen </dt>
+    <dd> TODO </dd>
+    <dt> Last Seen </dt>
+    <dd> TODO </dd>
+    <dt> Versions </dt>
+    <dd> TODO </dd>
+    <dt> OSes </dt>
+    <dd> TODO </dd>
+    <dt> Builds </dt>
+    <dd> TODO </dd>
+  </section>
 
-  </div>
+  <hr>
 
-  <h2> Latest Crashes </h2>
+  <section class="panel panel-default latest-crashes">
+    <header class="panel-heading">
+      <h2 class="panel-title"> Sample Stack Traces </h2>
+    </header>
+    <div class="panel-body stack-traces">
+      <div class="panel panel-default">
+        <header class="panel-heading">
+          <h3 class="panel-title">
+            <a href="#">Bucket ID or whatever</a>
+          </h3>
+        </header>
+        <ol class="mini stack-trace list-group">
+          <li class="stack-frame list-group-item"> TODO </li>
+        </ol>
+      </div>
+    </div>
+  </section>
 
-  <div class="table-responsive">
-    <table class="table">
-      <thead>
-        <tr>
-          <th> # </th>
-          <th> Project </th>
-          <th> Seen </th>
-        </tr>
-      </thead>
+  <section class="panel panel-default latest-crashes">
+    <header class="panel-heading">
+      <h2 class="panel-title"> Latest Crashes </h2>
+    </header>
 
-      <tbody>
-        <tr ng-repeat-start="report in top_reports">
-          <td rowspan="2">{{ $index + 1 }}</td>
-          <td>{{ ::report.project }}</td>
-          <td>{{ ::report.date | fromNow }} </td>
-        </tr>
-
-        <tr ng-repeat-end>
-          <td colspan="2">
-            <pre>&lt;pc-tree value="report" /&gt;</pre>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <ul class="list-group" ng-repeat="crash in ::bucket.top_reports">
+      <li class="list-group-item"><a href="{{ ::crash.href }}">{{ ::crash.id }}</a></li>
+    </ul>
+  </section>
 </main>

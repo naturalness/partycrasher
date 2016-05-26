@@ -16,7 +16,7 @@ angular.module('PartyCrasherApp')
 
   $scope.loading = true;
 
-  Object.assign($scope, SAMPLE_BUCKET);
+  $scope.bucket = SAMPLE_BUCKET;
 
   /* Fetch the bucket. */
   $http.get(bucketURL({ project, threshold, id }))
