@@ -124,8 +124,6 @@ class Bucketer(object):
 
         return saved_crash
 
-DEBUG_MLT = True
-
 
 class MLT(Bucketer):
 
@@ -164,7 +162,7 @@ class MLT(Bucketer):
 
         try:
             matching_buckets = self.make_matching_buckets(response, bucket_field,
-                                                          default=crash['database_id'])
+                                                          default=crash.id)
             return matching_buckets
         except IndexNotUpdatedError:
             time.sleep(1)
