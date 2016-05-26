@@ -17,8 +17,13 @@ angular.module('PartyCrasherApp')
     return this._raw['project'];
   }
 
+  get href() {
+    return this._raw['href'];
+  }
+
   get date() {
-    return this._raw['date'];
+    var isoDate = this._raw['date'].replace(/z$/i, '') + 'Z';
+    return new Date(Date.parse(isoDate));
   }
 
   get stacktrace() {

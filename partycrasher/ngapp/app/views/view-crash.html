@@ -1,0 +1,36 @@
+<main>
+  <header class="page-header row">
+    <h1> Crash {{ ::crash.id }}
+      <small>{{ ::crash.project }}</small>
+    </h1>
+  </header>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="important-metadata">
+        <dl class="dl-horizontal">
+          <dt> Date </dt>
+          <dd>{{ ::crash.date | date:'medium' }}</dd>
+          <dt> OS </dt>
+          <dd>{{ ::crash.os }}</dd>
+          <dt ng-if="::crash.build"> Build </dt>
+          <dd ng-if="::crash.build">{{ ::crash.build }}</dd>
+          <dt ng-if="::crash.version"> Version </dt>
+          <dd ng-if="::crash.version">{{ ::crash.version }}</dd>
+        </dl>
+      </div>
+
+      <div class="stack-trace">
+        <ol ng-repeat="frame in ::crash.stacktrace">
+          <li class="stack-frame">
+            <pre>{{ ::frame | json }}</pre>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <footer class="row">
+    <a href="{{ ::crash.href }}" class="btn btn-default"> View Raw Report </a>
+  </footer>
+</main>

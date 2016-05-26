@@ -35,12 +35,11 @@ angular
         controller: 'BucketController'
       })
 
-      /* TODO: */
       /* View a crash report. */
       .when('/:project?/reports/:id', {
         name: 'view-report',
-        templateUrl: 'views/not-implemented.html',
-        controller: 'NotImplementedController'
+        templateUrl: 'views/view-crash.html',
+        controller: 'CrashController'
       })
 
       /* Unsure? Go to the home page! */
