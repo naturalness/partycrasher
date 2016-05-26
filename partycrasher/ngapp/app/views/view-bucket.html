@@ -15,11 +15,14 @@
     <dd> TODO </dd>
     -->
     <dt> Versions </dt>
-    <dd>{{ ::bucket.versions }}</dd>
+    <dd ng-if="versions">{{ ::versions.join(', ') }}</dd>
+    <dd ng-if="!versions"><em> No information </em></dd>
     <dt> OSes </dt>
-    <dd>{{ ::bucket.oses }}</dd>
+    <dd ng-if="oses">{{ ::oses.join(', ') }}</dd>
+    <dd ng-if="!oses"><em> No information </em></dd>
     <dt> Builds </dt>
-    <dd>{{ ::bucket.builds }}</dd>
+    <dd ng-if="builds">{{ ::builds.join(', ') }}</dd>
+    <dd ng-if="!builds"><em> No information </em></dd>
   </section>
 
   <hr>

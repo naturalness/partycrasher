@@ -16,7 +16,7 @@ angular.module('PartyCrasherApp')
 
   $scope.loading = true;
 
-  $scope.bucket = new Bucket(SAMPLE_BUCKET);
+  setBucket(SAMPLE_BUCKET);
 
   /* Fetch the bucket. */
   $http.get(bucketURL({ project, threshold, id }))
@@ -27,5 +27,19 @@ angular.module('PartyCrasherApp')
 
   function bucketURL({ project, threshold, id }) {
     return `/${project}/buckets/${threshold}/${id}`;
+  }
+
+  function setBucket(data) {
+    var bucket = $scope.bucket = new Bucket(data);
+    /* Cool metadata. */
+    $scope.versions = nullIfEmpty(bucket.versions);
+    $scope.oses = nullIfEmpty(bucket.oses);
+    $scope.builds = nullIfEmpty(bucket.build);
+  }
+
+  function nullIfEmpty(thing) {
+    if (!thing)
+      return null;
+    return thing.length ? thing : null;
   }
 });

@@ -16,6 +16,10 @@ angular.module('PartyCrasherApp')
     }
 
     count(thing) {
+      if (thing === null || thing === undefined) {
+        return;
+      }
+
       var previous = this._count.get(thing) || 0;
       this._count.set(thing, previous + 1);
     }
@@ -23,7 +27,9 @@ angular.module('PartyCrasherApp')
     asSortedArray() {
       var unsorted = Array.from(this._count);
       return _(unsorted)
-        .sortBy(pair => pair[1])
+        .sortBy(pair => {
+          return pair[1];
+        })
         .map('0')
         .value();
     }
