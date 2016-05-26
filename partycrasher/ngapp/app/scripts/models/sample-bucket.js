@@ -1,3405 +1,1073 @@
 angular.module('PartyCrasherApp')
 .constant('SAMPLE_BUCKET', {
-  'href': 'http://localhost:49263/Ubuntu/buckets/4.0/Ubuntu:launchpad:0000139026', 
-  'id': 'Ubuntu:launchpad:0000139026', 
-  'project': 'Ubuntu', 
-  'threshold': '4.0', 
+  'href': 'http://localhost:49263/ubuntu/buckets/4.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+  'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+  'project': 'ubuntu',
+  'threshold': '4.0',
   'top_reports': [
     {
-      'CrashCounter': '1', 
-      'ExecutablePath': '/usr/bin/strigidaemon', 
-      'NonfreeKernelModules': 'fglrx', 
-      'Package': 'strigi-daemon 0.5.5-2ubuntu2', 
-      'PackageArchitecture': 'i386', 
-      'ProcCmdline': '/usr/bin/strigidaemon clucene', 
-      'ProcCwd': '/home/techno', 
-      'ProcEnviron': ' PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games\n LANG=de_DE.UTF-8\n SHELL=/bin/bash\n', 
-      'Signal': '11', 
-      'SourcePackage': 'strigi', 
-      'Title': 'strigidaemon crashed with SIGSEGV in Strigi::AnalyzerConfiguration::indexType()', 
-      'Uname': 'Linux Schrott 2.6.22-13-generic #1 SMP Thu Oct 4 17:18:44 GMT 2007 i686 GNU/Linux', 
-      'UserGroups': 'adm admin audio cdrom dialout dip floppy lpadmin netdev plugdev powerdev scanner video', 
+      'ApportVersion': '2.12-0ubuntu3',
+      'ExecutablePath': '/usr/bin/compiz',
+      'InstallationDate': 'Installed on 2013-02-05 (194 days ago)',
+      'InstallationMedia': 'Ubuntu 12.10 "Quantal Quetzal" - Release amd64 (20121017.5)',
+      'MarkForUpload': 'True',
+      'NonfreeKernelModules': 'nvidia',
+      'Package': 'unity 7.1.0+13.10.20130816.3-0ubuntu1',
+      'ProcCmdline': 'compiz',
+      'ProcEnviron': ' LANGUAGE=en_AU:en\n PATH=(custom, user)\n XDG_RUNTIME_DIR=<set>\n LANG=en_AU.UTF-8\n SHELL=/bin/bash\n',
+      'SegvAnalysis': ' Segfault happened at: 0x7fd116c07289 <_int_free+217>:?mov    0x8(%rdx),%esi\n PC (0x7fd116c07289) ok\n source "0x8(%rdx)" (0x100000007) not located in a known VMA region (needed readable region)!\n destination "%esi" ok\n',
+      'SegvReason': 'reading unknown VMA',
+      'Signal': '11',
+      'SourcePackage': 'unity',
+      'Title': 'compiz crashed with SIGSEGV in _int_free()',
+      'Uname': 'Linux 3.11.0-2-generic x86_64',
+      'UpgradeStatus': 'Upgraded to saucy on 2013-08-13 (5 days ago)',
+      'UserGroups': 'adm cdrom dip games lpadmin plugdev sambashare sudo vboxusers',
       'buckets': {
         '1.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.0/Ubuntu:launchpad:0000116712', 
-          'id': 'Ubuntu:launchpad:0000116712', 
-          'project': 'Ubuntu', 
-          'threshold': '1.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/1.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '1.0',
           'total': null
-        }, 
+        },
         '1.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.5/Ubuntu:launchpad:0000127694', 
-          'id': 'Ubuntu:launchpad:0000127694', 
-          'project': 'Ubuntu', 
-          'threshold': '1.5', 
+          'href': 'http://localhost:49263/ubuntu/buckets/1.5/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '1.5',
           'total': null
-        }, 
+        },
         '2.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.0/Ubuntu:launchpad:0000132195', 
-          'id': 'Ubuntu:launchpad:0000132195', 
-          'project': 'Ubuntu', 
-          'threshold': '2.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/2.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '2.0',
           'total': null
-        }, 
+        },
         '2.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '2.75', 
+          'href': 'http://localhost:49263/ubuntu/buckets/2.75/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '2.75',
           'total': null
-        }, 
+        },
         '3.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/3.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '3.0',
           'total': null
-        }, 
+        },
         '3.25': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.25/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.25', 
+          'href': 'http://localhost:49263/ubuntu/buckets/3.25/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '3.25',
           'total': null
-        }, 
+        },
         '3.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.5', 
+          'href': 'http://localhost:49263/ubuntu/buckets/3.5/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '3.5',
           'total': null
-        }, 
+        },
         '3.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.75', 
+          'href': 'http://localhost:49263/ubuntu/buckets/3.75/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '3.75',
           'total': null
-        }, 
+        },
         '4.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/4.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '4.0',
           'total': null
-        }, 
+        },
         '4.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.5', 
+          'href': 'http://localhost:49263/ubuntu/buckets/4.5/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '4.5',
           'total': null
-        }, 
+        },
         '5.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '5.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/5.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '5.0',
           'total': null
-        }, 
+        },
         '5.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '5.5', 
+          'href': 'http://localhost:49263/ubuntu/buckets/5.5/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '5.5',
           'total': null
-        }, 
+        },
         '6.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/6.0/Ubuntu:launchpad:0000147400', 
-          'id': 'Ubuntu:launchpad:0000147400', 
-          'project': 'Ubuntu', 
-          'threshold': '6.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/6.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '6.0',
           'total': null
-        }, 
+        },
         '7.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/7.0/Ubuntu:launchpad:0000150570', 
-          'id': 'Ubuntu:launchpad:0000150570', 
-          'project': 'Ubuntu', 
-          'threshold': '7.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/7.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '7.0',
           'total': null
-        }, 
+        },
         'top_match': {
-          'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-          'project': 'Ubuntu', 
-          'report_id': 'Ubuntu:launchpad:0000150522', 
-          'score': 6.283423
+          'href': 'http://localhost:49263/ubuntu/reports/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'report_id': 'ubuntu:14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'score': 7.442582
         }
-      }, 
-      'cpu': 'i386', 
-      'database_id': 'Ubuntu:launchpad:0000150570', 
-      'date': '2007-10-08T07:33:56', 
-      'extra': 'Strigidaemon often crashes on startup.\n\nStacktraceTop:  Strigi::AnalyzerConfiguration::indexType ()\n CLuceneIndexWriter::addValue ()\n CLuceneIndexWriter::addValue ()\n Strigi::AnalysisResult::addValue ()\n ?? () from /usr/lib/libstreamanalyzer.so.0\n\n', 
-      'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-      'os': 'Ubuntu 7.10', 
-      'project': 'Ubuntu', 
+      },
+      'cpu': 'amd64',
+      'database_id': 'ubuntu:18d7a97f-5574-407e-9439-63263fc938c8',
+      'date': '2013-08-19T08:58:36',
+      'extra': 'I was searching for an ODT document, and accidentally opened the preview for it, but then when I went the close the preview, Unity froze, and then after about 5 secs, crashed and restarted.\n\nStacktraceTop:  _int_free (av=0x7fd116f47740 <main_arena>, p=0x7d9da60, have_lock=0) at malloc.c:3832\n XDestroyRegion () from /usr/lib/x86_64-linux-gnu/libX11.so.6\n CompRegion::intersects(CompRegion const&) const () from /usr/lib/libcompiz_core.so.ABI-20130125\n unity::UnityScreen::compizDamageNux(CompRegion const&) () from /usr/lib/compiz/libunityshell.so\n unity::UnityScreen::preparePaint(int) () from /usr/lib/compiz/libunityshell.so\n\n',
+      'href': 'http://localhost:49263/ubuntu/reports/18d7a97f-5574-407e-9439-63263fc938c8',
+      'os': 'Ubuntu 13.10',
+      'os_version': 'Ubuntu 3.11.0-2.5-generic 3.11.0-rc5',
+      'project': 'ubuntu',
       'stacktrace': [
         {
-          'args': 'this=0xbfd7bb3c, field=0x730a001c', 
-          'depth': 0, 
+          'args': 'av=0x7fd116f47740 <main_arena>, p=0x7d9da60, have_lock=0',
+          'depth': 0,
           'extra': [
-            '#0  Strigi::AnalyzerConfiguration::indexType (this=0xbfd7bb3c, field=0x730a001c) at /build/buildd/strigi-0.5.5/src/streamanalyzer/fieldtypes.h:120', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/fieldtypes.h was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/fieldtypes.h:120', 
-          'function': 'Strigi::AnalyzerConfiguration::indexType'
-        }, 
+            '#0  _int_free (av=0x7fd116f47740 <main_arena>, p=0x7d9da60, have_lock=0) at malloc.c:3832',
+            '        idx = 1',
+            '        fd = <optimized out>',
+            '        old = 0xffffffff',
+            '        old_idx = <optimized out>',
+            '        size = <optimized out>',
+            '        fb = 0x7fd116f47750 <main_arena+16>',
+            '        nextchunk = <optimized out>',
+            '        nextsize = <optimized out>',
+            '        nextinuse = <optimized out>',
+            '        prevsize = <optimized out>',
+            '        bck = <optimized out>',
+            '        fwd = <optimized out>',
+            '        errstr = 0x0',
+            '        locked = 0',
+            '        __func__ = "_int_free"'
+          ],
+          'file': 'malloc.c:3832',
+          'function': '_int_free'
+        },
         {
-          'address': '0xb7ec04a4', 
-          'args': 'this=0x8097360, idx=0xb6190224, field=0x730a001c, value=@0xb618ff64', 
-          'depth': 1, 
+          'address': '0x00007fd1164574c5',
+          'args': 'r=0x7d9da70',
+          'depth': 1,
           'extra': [
-            '#1  0xb7ec04a4 in CLuceneIndexWriter::addValue (this=0x8097360, idx=0xb6190224, field=0x730a001c, value=@0xb618ff64)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
+            '#1  0x00007fd1164574c5 in XDestroyRegion (r=0x7d9da70) at ../../src/Region.c:288',
+            'No locals.'
+          ],
+          'file': '../../src/Region.c:288',
+          'function': 'XDestroyRegion'
+        },
         {
-          'address': '0xb7ec1e5f', 
-          'args': 'this=0x8097360, idx=0xb6190224, field=0x730a001c, value=11', 
-          'depth': 2, 
+          'address': '0x00007fd1174f5c85',
+          'args': '',
+          'depth': 2,
+          'dylib': '/tmp/apport_sandbox_HssgYB/usr/lib/libcompiz_core.so.ABI-20130125',
           'extra': [
-            '#2  0xb7ec1e5f in CLuceneIndexWriter::addValue (this=0x8097360, idx=0xb6190224, field=0x730a001c, value=11)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
+            '#2  0x00007fd1174f5c85 in CompRegion::intersected(CompRect const&) const () from /tmp/apport_sandbox_HssgYB/usr/lib/libcompiz_core.so.ABI-20130125',
+            'No symbol table info available.'
+          ],
+          'function': 'CompRegion::intersected(CompRect const&) const'
+        },
         {
-          'address': '0xb7eee4c0', 
-          'args': 'this=0xb6190224, field=0x730a001c, value=11', 
-          'depth': 3, 
+          'address': '0x00007fd0f8432280',
+          'args': '',
+          'depth': 3,
+          'dylib': '/tmp/apport_sandbox_HssgYB/usr/lib/compiz/libunityshell.so',
           'extra': [
-            '#3  0xb7eee4c0 in Strigi::AnalysisResult::addValue (this=0xb6190224, field=0x730a001c, value=11) at /build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp:269', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp:269', 
-          'function': 'Strigi::AnalysisResult::addValue'
-        }, 
+            '#3  0x00007fd0f8432280 in unity::UnityScreen::compizDamageNux(CompRegion const&) () from /tmp/apport_sandbox_HssgYB/usr/lib/compiz/libunityshell.so',
+            'No symbol table info available.'
+          ],
+          'function': 'unity::UnityScreen::compizDamageNux(CompRegion const&)'
+        },
         {
-          'address': '0xb7effc43', 
-          'args': 'this=0xb7f24928, complete=true', 
-          'depth': 4, 
+          'address': '0x00007fd0f8432884',
+          'args': '',
+          'depth': 4,
+          'dylib': '/tmp/apport_sandbox_HssgYB/usr/lib/compiz/libunityshell.so',
           'extra': [
-            '#4  0xb7effc43 in M3uLineAnalyzer::endAnalysis (this=0xb7f24928, complete=true) at /build/buildd/strigi-0.5.5/src/streamanalyzer/m3ustreamanalyzer.cpp:80', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/m3ustreamanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/m3ustreamanalyzer.cpp:80', 
-          'function': 'M3uLineAnalyzer::endAnalysis'
-        }, 
+            '#4  0x00007fd0f8432884 in unity::UnityScreen::preparePaint(int) () from /tmp/apport_sandbox_HssgYB/usr/lib/compiz/libunityshell.so',
+            'No symbol table info available.'
+          ],
+          'function': 'unity::UnityScreen::preparePaint(int)'
+        },
         {
-          'address': '0xb7eff909', 
-          'args': 'this=0x8573e88, complete=true', 
-          'depth': 5, 
+          'address': '0x00007fd110194f25',
+          'args': '',
+          'depth': 5,
+          'dylib': '/tmp/apport_sandbox_HssgYB/usr/lib/compiz/libcomposite.so',
           'extra': [
-            '#5  0xb7eff909 in Strigi::LineEventAnalyzer::endAnalysis (this=0x8573e88, complete=true) at /build/buildd/strigi-0.5.5/src/streamanalyzer/lineeventanalyzer.cpp:108', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/lineeventanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/lineeventanalyzer.cpp:108', 
-          'function': 'Strigi::LineEventAnalyzer::endAnalysis'
-        }, 
+            '#5  0x00007fd110194f25 in ?? () from /tmp/apport_sandbox_HssgYB/usr/lib/compiz/libcomposite.so',
+            'No symbol table info available.'
+          ],
+          'function': null
+        },
         {
-          'address': '0xb7ef4b7e', 
-          'args': 'this=0x8568138', 
-          'depth': 6, 
+          'address': '0x00000000020a77e0',
+          'args': '',
+          'depth': 6,
           'extra': [
-            '#6  0xb7ef4b7e in Strigi::EventThroughAnalyzer::handleEnd (this=0x8568138) at /build/buildd/strigi-0.5.5/src/streamanalyzer/eventthroughanalyzer.cpp:84', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/eventthroughanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/eventthroughanalyzer.cpp:84', 
-          'function': 'Strigi::EventThroughAnalyzer::handleEnd'
-        }, 
+            '#6  0x00000000020a77e0 in ?? ()',
+            'No symbol table info available.'
+          ],
+          'function': null
+        },
         {
-          'address': '0xb7d8e5a4', 
-          'args': 'this=0x8569d68', 
-          'depth': 7, 
+          'address': '0x0000000002122670',
+          'args': '',
+          'depth': 7,
           'extra': [
-            '#7  0xb7d8e5a4 in Strigi::DataEventInputStream::finish (this=0x8569d68) at /build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp:109', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp:109', 
-          'function': 'Strigi::DataEventInputStream::finish'
-        }, 
+            '#7  0x0000000002122670 in ?? ()',
+            'No symbol table info available.'
+          ],
+          'function': null
+        },
         {
-          'address': '0xb7d8eb22', 
-          'args': 'this=0x8569d68, start=@0xb61900a4, min=20480, max=0', 
-          'depth': 8, 
+          'address': '0x0000000007ea80b0',
+          'args': '',
+          'depth': 8,
           'extra': [
-            '#8  0xb7d8eb22 in Strigi::DataEventInputStream::read (this=0x8569d68, start=@0xb61900a4, min=20480, max=0) at /build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp:70', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp:70', 
-          'function': 'Strigi::DataEventInputStream::read'
-        }, 
+            '#8  0x0000000007ea80b0 in ?? ()',
+            'No symbol table info available.'
+          ],
+          'function': null
+        },
         {
-          'address': '0xb7f1e895', 
-          'args': 'this=0x84031d0, idx=@0xb6190224, in=0x8569d68', 
-          'depth': 9, 
+          'address': '0x00007fd1101966b8',
+          'args': '',
+          'depth': 9,
+          'dylib': '/tmp/apport_sandbox_HssgYB/usr/lib/compiz/libcomposite.so',
           'extra': [
-            '#9  0xb7f1e895 in TextEndAnalyzer::analyze (this=0x84031d0, idx=@0xb6190224, in=0x8569d68) at /build/buildd/strigi-0.5.5/src/streamanalyzer/endanalyzers/textendanalyzer.cpp:50', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/endanalyzers/textendanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/endanalyzers/textendanalyzer.cpp:50', 
-          'function': 'TextEndAnalyzer::analyze'
-        }, 
+            '#9  0x00007fd1101966b8 in CompositeScreen::compositingActive() () from /tmp/apport_sandbox_HssgYB/usr/lib/compiz/libcomposite.so',
+            'No symbol table info available.'
+          ],
+          'function': 'CompositeScreen::compositingActive()'
+        },
         {
-          'address': '0xb7f0c359', 
-          'args': 'this=0x80b2778, idx=@0xb6190224, input=0x8569d68', 
-          'depth': 10, 
+          'address': '0x0000000000000000',
+          'args': '',
+          'depth': 10,
           'extra': [
-            '#10 0xb7f0c359 in Strigi::StreamAnalyzerPrivate::analyze (this=0x80b2778, idx=@0xb6190224, input=0x8569d68) at /build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp:404', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp:404', 
-          'function': 'Strigi::StreamAnalyzerPrivate::analyze'
-        }, 
-        {
-          'address': '0xb7f0c6b1', 
-          'args': 'this=0x80afc4c, idx=@0xb6190224, input=0xb61901e0', 
-          'depth': 11, 
-          'extra': [
-            '#11 0xb7f0c6b1 in Strigi::StreamAnalyzer::analyze (this=0x80afc4c, idx=@0xb6190224, input=0xb61901e0) at /build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp:351', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp:351', 
-          'function': 'Strigi::StreamAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7eee05d', 
-          'args': 'this=0xb6190224, file=0xb61901e0', 
-          'depth': 12, 
-          'extra': [
-            '#12 0xb7eee05d in Strigi::AnalysisResult::index (this=0xb6190224, file=0xb61901e0) at /build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp:168', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp:168', 
-          'function': 'Strigi::AnalysisResult::index'
-        }, 
-        {
-          'address': '0xb7ef36bd', 
-          'args': 'this=0x80afc40, analyzer=0x80afc4c', 
-          'depth': 13, 
-          'extra': [
-            '#13 0xb7ef36bd in Strigi::DirAnalyzer::Private::update (this=0x80afc40, analyzer=0x80afc4c) at /build/buildd/strigi-0.5.5/src/streamanalyzer/diranalyzer.cpp:146', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/diranalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/diranalyzer.cpp:146', 
-          'function': 'Strigi::DirAnalyzer::Private::update'
-        }, 
-        {
-          'address': '0xb7ef3d0c', 
-          'args': 'this=0x80afc40, dirs=@0xb6190338, nthreads=1, c=0x808dbe4', 
-          'depth': 14, 
-          'extra': [
-            '#14 0xb7ef3d0c in Strigi::DirAnalyzer::Private::updateDirs (this=0x80afc40, dirs=@0xb6190338, nthreads=1, c=0x808dbe4)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::updateDirs'
-        }, 
-        {
-          'address': '0xb7ef3dc8', 
-          'args': 'this=0xb6190344, dirs=@0xb6190338, nthreads=1, caller=0x808dbe4', 
-          'depth': 15, 
-          'extra': [
-            '#15 0xb7ef3dc8 in Strigi::DirAnalyzer::updateDirs (this=0xb6190344, dirs=@0xb6190338, nthreads=1, caller=0x808dbe4)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::updateDirs'
-        }, 
-        {
-          'address': '0x080622ff', 
-          'args': 'this=0x808dba8', 
-          'depth': 16, 
-          'extra': [
-            '#16 0x080622ff in PollingListener::poll (this=0x808dba8) at /build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp:86', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp:86', 
-          'function': 'PollingListener::poll'
-        }, 
-        {
-          'address': '0x08062413', 
-          'args': 'this=0x808dba8', 
-          'depth': 17, 
-          'extra': [
-            '#17 0x08062413 in PollingListener::run (this=0x808dba8) at /build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp:64', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp:64', 
-          'function': 'PollingListener::run'
-        }, 
-        {
-          'address': '0x0805b154', 
-          'args': 'd=0x808dba8', 
-          'depth': 18, 
-          'extra': [
-            '#18 0x0805b154 in threadstarter (d=0x808dba8) at /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-          'function': 'threadstarter'
-        }, 
-        {
-          'address': '0xb7ed046b', 
-          'args': '', 
-          'depth': 19, 
-          'dylib': '/lib/tls/i686/cmov/libpthread.so.0', 
-          'extra': [
-            '#19 0xb7ed046b in start_thread () from /lib/tls/i686/cmov/libpthread.so.0'
-          ], 
-          'function': 'start_thread'
-        }, 
-        {
-          'address': '0xb7a7473e', 
-          'args': '', 
-          'depth': 20, 
-          'dylib': '/lib/tls/i686/cmov/libc.so.6', 
-          'extra': [
-            '#20 0xb7a7473e in clone () from /lib/tls/i686/cmov/libc.so.6'
-          ], 
-          'function': 'clone'
+            '#10 0x0000000000000000 in ?? ()',
+            'No symbol table info available.'
+          ],
+          'function': null
         }
-      ], 
+      ],
       'type': 'Crash'
-    }, 
+    },
     {
-      'CrashCounter': '1', 
-      'ExecutablePath': '/usr/bin/strigidaemon', 
-      'NonfreeKernelModules': 'cdrom', 
-      'Package': 'strigi-daemon 0.5.5-2ubuntu2', 
-      'PackageArchitecture': 'i386', 
-      'ProcCmdline': '/usr/bin/strigidaemon clucene', 
-      'ProcCwd': '/home/edbash', 
-      'ProcEnviron': ' PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games\n LANG=en_US.UTF-8\n SHELL=/bin/bash\n', 
-      'Signal': '11', 
-      'SourcePackage': 'strigi', 
-      'Title': 'strigidaemon crashed with SIGSEGV in Strigi::AnalyzerConfiguration::indexType()', 
-      'Uname': 'Linux edbash-office-gateway 2.6.22-13-generic #1 SMP Thu Oct 4 17:18:44 GMT 2007 i686 GNU/Linux', 
-      'UserGroups': 'adm admin audio cdrom dialout dip floppy lpadmin netdev plugdev powerdev scanner video', 
+      'ApportVersion': '2.12-0ubuntu3',
+      'ExecutablePath': '/usr/bin/compiz',
+      'InstallationDate': 'Installed on 2013-02-05 (194 days ago)',
+      'InstallationMedia': 'Ubuntu 12.10 "Quantal Quetzal" - Release amd64 (20121017.5)',
+      'MarkForUpload': 'True',
+      'NonfreeKernelModules': 'nvidia',
+      'Package': 'unity 7.1.0+13.10.20130816.3-0ubuntu1',
+      'ProcCmdline': 'compiz',
+      'ProcEnviron': ' LANGUAGE=en_AU:en\n PATH=(custom, user)\n XDG_RUNTIME_DIR=<set>\n LANG=en_AU.UTF-8\n SHELL=/bin/bash\n',
+      'SegvAnalysis': ' Segfault happened at: 0x7fd116c07289 <_int_free+217>:?mov    0x8(%rdx),%esi\n PC (0x7fd116c07289) ok\n source "0x8(%rdx)" (0x100000007) not located in a known VMA region (needed readable region)!\n destination "%esi" ok\n',
+      'SegvReason': 'reading unknown VMA',
+      'Signal': '11',
+      'SourcePackage': 'unity',
+      'Title': 'compiz crashed with SIGSEGV in _int_free()',
+      'Uname': 'Linux 3.11.0-2-generic x86_64',
+      'UpgradeStatus': 'Upgraded to saucy on 2013-08-13 (5 days ago)',
+      'UserGroups': 'adm cdrom dip games lpadmin plugdev sambashare sudo vboxusers',
       'buckets': {
         '1.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.0/Ubuntu:launchpad:0000116712', 
-          'id': 'Ubuntu:launchpad:0000116712', 
-          'project': 'Ubuntu', 
-          'threshold': '1.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/1.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '1.0',
           'total': null
-        }, 
+        },
         '1.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.5/Ubuntu:launchpad:0000127694', 
-          'id': 'Ubuntu:launchpad:0000127694', 
-          'project': 'Ubuntu', 
-          'threshold': '1.5', 
+          'href': 'http://localhost:49263/ubuntu/buckets/1.5/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '1.5',
           'total': null
-        }, 
+        },
         '2.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.0/Ubuntu:launchpad:0000132195', 
-          'id': 'Ubuntu:launchpad:0000132195', 
-          'project': 'Ubuntu', 
-          'threshold': '2.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/2.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '2.0',
           'total': null
-        }, 
+        },
         '2.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '2.75', 
+          'href': 'http://localhost:49263/ubuntu/buckets/2.75/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '2.75',
           'total': null
-        }, 
+        },
         '3.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/3.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '3.0',
           'total': null
-        }, 
+        },
         '3.25': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.25/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.25', 
+          'href': 'http://localhost:49263/ubuntu/buckets/3.25/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '3.25',
           'total': null
-        }, 
+        },
         '3.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.5', 
+          'href': 'http://localhost:49263/ubuntu/buckets/3.5/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '3.5',
           'total': null
-        }, 
+        },
         '3.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.75', 
+          'href': 'http://localhost:49263/ubuntu/buckets/3.75/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '3.75',
           'total': null
-        }, 
+        },
         '4.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/4.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '4.0',
           'total': null
-        }, 
+        },
         '4.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.5', 
+          'href': 'http://localhost:49263/ubuntu/buckets/4.5/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '4.5',
           'total': null
-        }, 
+        },
         '5.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '5.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/5.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '5.0',
           'total': null
-        }, 
+        },
         '5.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '5.5', 
+          'href': 'http://localhost:49263/ubuntu/buckets/5.5/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '5.5',
           'total': null
-        }, 
+        },
         '6.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/6.0/Ubuntu:launchpad:0000147400', 
-          'id': 'Ubuntu:launchpad:0000147400', 
-          'project': 'Ubuntu', 
-          'threshold': '6.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/6.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '6.0',
           'total': null
-        }, 
+        },
         '7.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/7.0/Ubuntu:launchpad:0000150522', 
-          'id': 'Ubuntu:launchpad:0000150522', 
-          'project': 'Ubuntu', 
-          'threshold': '7.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/7.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '7.0',
           'total': null
-        }, 
-        'top_match': {
-          'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-          'project': 'Ubuntu', 
-          'report_id': 'Ubuntu:launchpad:0000147400', 
-          'score': 6.019362
-        }
-      }, 
-      'cpu': 'i386', 
-      'database_id': 'Ubuntu:launchpad:0000150522', 
-      'date': '2007-10-08T05:44:50', 
-      'extra': 'kde crashed while attempting to configure a screen-saver.\n\nStacktraceTop:  Strigi::AnalyzerConfiguration::indexType ()\n CLuceneIndexWriter::addValue ()\n CLuceneIndexWriter::addValue ()\n Strigi::AnalysisResult::addValue ()\n ?? () from /usr/lib/libstreamanalyzer.so.0\n\n', 
-      'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-      'os': 'Ubuntu 7.10', 
-      'project': 'Ubuntu', 
+        },
+        'top_match': null
+      },
+      'cpu': 'amd64',
+      'database_id': 'ubuntu:14fcce75-2b56-4976-bc55-d7d058bcea7b',
+      'date': '2013-08-19T08:58:36',
+      'extra': 'I was searching for an ODT document, and accidentally opened the preview for it, but then when I went the close the preview, Unity froze, and then after about 5 secs, crashed and restarted.\n\nStacktraceTop:  _int_free (av=0x7fd116f47740 <main_arena>, p=0x7d9da60, have_lock=0) at malloc.c:3832\n XDestroyRegion () from /usr/lib/x86_64-linux-gnu/libX11.so.6\n CompRegion::intersects(CompRegion const&) const () from /usr/lib/libcompiz_core.so.ABI-20130125\n unity::UnityScreen::compizDamageNux(CompRegion const&) () from /usr/lib/compiz/libunityshell.so\n unity::UnityScreen::preparePaint(int) () from /usr/lib/compiz/libunityshell.so\n\n',
+      'href': 'http://localhost:49263/ubuntu/reports/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+      'os': 'Ubuntu 13.10',
+      'os_version': 'Ubuntu 3.11.0-2.5-generic 3.11.0-rc5',
+      'project': 'ubuntu',
       'stacktrace': [
         {
-          'args': 'this=0xbfb93d5c, field=0x0', 
-          'depth': 0, 
+          'args': 'av=0x7fd116f47740 <main_arena>, p=0x7d9da60, have_lock=0',
+          'depth': 0,
           'extra': [
-            '#0  Strigi::AnalyzerConfiguration::indexType (this=0xbfb93d5c, field=0x0) at /build/buildd/strigi-0.5.5/src/streamanalyzer/fieldtypes.h:120', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/fieldtypes.h was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/fieldtypes.h:120', 
-          'function': 'Strigi::AnalyzerConfiguration::indexType'
-        }, 
+            '#0  _int_free (av=0x7fd116f47740 <main_arena>, p=0x7d9da60, have_lock=0) at malloc.c:3832',
+            '        idx = 1',
+            '        fd = <optimized out>',
+            '        old = 0xffffffff',
+            '        old_idx = <optimized out>',
+            '        size = <optimized out>',
+            '        fb = 0x7fd116f47750 <main_arena+16>',
+            '        nextchunk = <optimized out>',
+            '        nextsize = <optimized out>',
+            '        nextinuse = <optimized out>',
+            '        prevsize = <optimized out>',
+            '        bck = <optimized out>',
+            '        fwd = <optimized out>',
+            '        errstr = 0x0',
+            '        locked = 0',
+            '        __func__ = "_int_free"'
+          ],
+          'file': 'malloc.c:3832',
+          'function': '_int_free'
+        },
         {
-          'address': '0xb7ec04a4', 
-          'args': 'this=0x8095958, idx=0xb6190224, field=0x0, value=@0xb618ff64', 
-          'depth': 1, 
+          'address': '0x00007fd1164574c5',
+          'args': 'r=0x7d9da70',
+          'depth': 1,
           'extra': [
-            '#1  0xb7ec04a4 in CLuceneIndexWriter::addValue (this=0x8095958, idx=0xb6190224, field=0x0, value=@0xb618ff64)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
+            '#1  0x00007fd1164574c5 in XDestroyRegion (r=0x7d9da70) at ../../src/Region.c:288',
+            'No locals.'
+          ],
+          'file': '../../src/Region.c:288',
+          'function': 'XDestroyRegion'
+        },
         {
-          'address': '0xb7ec1e5f', 
-          'args': 'this=0x8095958, idx=0xb6190224, field=0x0, value=11', 
-          'depth': 2, 
+          'address': '0x00007fd1174f5c85',
+          'args': '',
+          'depth': 2,
+          'dylib': '/tmp/apport_sandbox_HssgYB/usr/lib/libcompiz_core.so.ABI-20130125',
           'extra': [
-            '#2  0xb7ec1e5f in CLuceneIndexWriter::addValue (this=0x8095958, idx=0xb6190224, field=0x0, value=11) at /build/buildd/strigi-0.5.5/src/luceneindexer/cluceneindexwriter.cpp:138', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/luceneindexer/cluceneindexwriter.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/luceneindexer/cluceneindexwriter.cpp:138', 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
+            '#2  0x00007fd1174f5c85 in CompRegion::intersected(CompRect const&) const () from /tmp/apport_sandbox_HssgYB/usr/lib/libcompiz_core.so.ABI-20130125',
+            'No symbol table info available.'
+          ],
+          'function': 'CompRegion::intersected(CompRect const&) const'
+        },
         {
-          'address': '0xb7eee4c0', 
-          'args': 'this=0xb6190224, field=0x0, value=11', 
-          'depth': 3, 
+          'address': '0x00007fd0f8432280',
+          'args': '',
+          'depth': 3,
+          'dylib': '/tmp/apport_sandbox_HssgYB/usr/lib/compiz/libunityshell.so',
           'extra': [
-            '#3  0xb7eee4c0 in Strigi::AnalysisResult::addValue (this=0xb6190224, field=0x0, value=11) at /build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp:269', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp:269', 
-          'function': 'Strigi::AnalysisResult::addValue'
-        }, 
+            '#3  0x00007fd0f8432280 in unity::UnityScreen::compizDamageNux(CompRegion const&) () from /tmp/apport_sandbox_HssgYB/usr/lib/compiz/libunityshell.so',
+            'No symbol table info available.'
+          ],
+          'function': 'unity::UnityScreen::compizDamageNux(CompRegion const&)'
+        },
         {
-          'address': '0xb7effc43', 
-          'args': 'this=0xb7f24928, complete=true', 
-          'depth': 4, 
+          'address': '0x00007fd0f8432884',
+          'args': '',
+          'depth': 4,
+          'dylib': '/tmp/apport_sandbox_HssgYB/usr/lib/compiz/libunityshell.so',
           'extra': [
-            '#4  0xb7effc43 in M3uLineAnalyzer::endAnalysis (this=0xb7f24928, complete=true) at /build/buildd/strigi-0.5.5/src/streamanalyzer/m3ustreamanalyzer.cpp:80', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/m3ustreamanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/m3ustreamanalyzer.cpp:80', 
-          'function': 'M3uLineAnalyzer::endAnalysis'
-        }, 
+            '#4  0x00007fd0f8432884 in unity::UnityScreen::preparePaint(int) () from /tmp/apport_sandbox_HssgYB/usr/lib/compiz/libunityshell.so',
+            'No symbol table info available.'
+          ],
+          'function': 'unity::UnityScreen::preparePaint(int)'
+        },
         {
-          'address': '0xb7eff909', 
-          'args': 'this=0x80a6548, complete=true', 
-          'depth': 5, 
+          'address': '0x00007fd110194f25',
+          'args': '',
+          'depth': 5,
+          'dylib': '/tmp/apport_sandbox_HssgYB/usr/lib/compiz/libcomposite.so',
           'extra': [
-            '#5  0xb7eff909 in Strigi::LineEventAnalyzer::endAnalysis (this=0x80a6548, complete=true) at /build/buildd/strigi-0.5.5/src/streamanalyzer/lineeventanalyzer.cpp:108', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/lineeventanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/lineeventanalyzer.cpp:108', 
-          'function': 'Strigi::LineEventAnalyzer::endAnalysis'
-        }, 
+            '#5  0x00007fd110194f25 in ?? () from /tmp/apport_sandbox_HssgYB/usr/lib/compiz/libcomposite.so',
+            'No symbol table info available.'
+          ],
+          'function': null
+        },
         {
-          'address': '0xb7ef4b7e', 
-          'args': 'this=0x80b65b8', 
-          'depth': 6, 
+          'address': '0x00000000020a77e0',
+          'args': '',
+          'depth': 6,
           'extra': [
-            '#6  0xb7ef4b7e in Strigi::EventThroughAnalyzer::handleEnd (this=0x80b65b8) at /build/buildd/strigi-0.5.5/src/streamanalyzer/eventthroughanalyzer.cpp:84', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/eventthroughanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/eventthroughanalyzer.cpp:84', 
-          'function': 'Strigi::EventThroughAnalyzer::handleEnd'
-        }, 
+            '#6  0x00000000020a77e0 in ?? ()',
+            'No symbol table info available.'
+          ],
+          'function': null
+        },
         {
-          'address': '0xb7d8e5a4', 
-          'args': 'this=0x80c7488', 
-          'depth': 7, 
+          'address': '0x0000000002122670',
+          'args': '',
+          'depth': 7,
           'extra': [
-            '#7  0xb7d8e5a4 in Strigi::DataEventInputStream::finish (this=0x80c7488) at /build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp:109', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp:109', 
-          'function': 'Strigi::DataEventInputStream::finish'
-        }, 
+            '#7  0x0000000002122670 in ?? ()',
+            'No symbol table info available.'
+          ],
+          'function': null
+        },
         {
-          'address': '0xb7d8eb22', 
-          'args': 'this=0x80c7488, start=@0xb61900a4, min=20480, max=0', 
-          'depth': 8, 
+          'address': '0x0000000007ea80b0',
+          'args': '',
+          'depth': 8,
           'extra': [
-            '#8  0xb7d8eb22 in Strigi::DataEventInputStream::read (this=0x80c7488, start=@0xb61900a4, min=20480, max=0) at /build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp:70', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp:70', 
-          'function': 'Strigi::DataEventInputStream::read'
-        }, 
+            '#8  0x0000000007ea80b0 in ?? ()',
+            'No symbol table info available.'
+          ],
+          'function': null
+        },
         {
-          'address': '0xb7f1e895', 
-          'args': 'this=0x80c7088, idx=@0xb6190224, in=0x80c7488', 
-          'depth': 9, 
+          'address': '0x00007fd1101966b8',
+          'args': '',
+          'depth': 9,
+          'dylib': '/tmp/apport_sandbox_HssgYB/usr/lib/compiz/libcomposite.so',
           'extra': [
-            '#9  0xb7f1e895 in TextEndAnalyzer::analyze (this=0x80c7088, idx=@0xb6190224, in=0x80c7488) at /build/buildd/strigi-0.5.5/src/streamanalyzer/endanalyzers/textendanalyzer.cpp:50', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/endanalyzers/textendanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/endanalyzers/textendanalyzer.cpp:50', 
-          'function': 'TextEndAnalyzer::analyze'
-        }, 
+            '#9  0x00007fd1101966b8 in CompositeScreen::compositingActive() () from /tmp/apport_sandbox_HssgYB/usr/lib/compiz/libcomposite.so',
+            'No symbol table info available.'
+          ],
+          'function': 'CompositeScreen::compositingActive()'
+        },
         {
-          'address': '0xb7f0c359', 
-          'args': 'this=0x80a1400, idx=@0xb6190224, input=0x80c7488', 
-          'depth': 10, 
+          'address': '0x0000000000000000',
+          'args': '',
+          'depth': 10,
           'extra': [
-            '#10 0xb7f0c359 in Strigi::StreamAnalyzerPrivate::analyze (this=0x80a1400, idx=@0xb6190224, input=0x80c7488) at /build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp:404', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp:404', 
-          'function': 'Strigi::StreamAnalyzerPrivate::analyze'
-        }, 
-        {
-          'address': '0xb7f0c6b1', 
-          'args': 'this=0x809e8d4, idx=@0xb6190224, input=0xb61901e0', 
-          'depth': 11, 
-          'extra': [
-            '#11 0xb7f0c6b1 in Strigi::StreamAnalyzer::analyze (this=0x809e8d4, idx=@0xb6190224, input=0xb61901e0) at /build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp:351', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp:351', 
-          'function': 'Strigi::StreamAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7eee05d', 
-          'args': 'this=0xb6190224, file=0xb61901e0', 
-          'depth': 12, 
-          'extra': [
-            '#12 0xb7eee05d in Strigi::AnalysisResult::index (this=0xb6190224, file=0xb61901e0) at /build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp:168', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp:168', 
-          'function': 'Strigi::AnalysisResult::index'
-        }, 
-        {
-          'address': '0xb7ef36bd', 
-          'args': 'this=0x809e8c8, analyzer=0x809e8d4', 
-          'depth': 13, 
-          'extra': [
-            '#13 0xb7ef36bd in Strigi::DirAnalyzer::Private::update (this=0x809e8c8, analyzer=0x809e8d4) at /build/buildd/strigi-0.5.5/src/streamanalyzer/diranalyzer.cpp:146', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/diranalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/diranalyzer.cpp:146', 
-          'function': 'Strigi::DirAnalyzer::Private::update'
-        }, 
-        {
-          'address': '0xb7ef3d0c', 
-          'args': 'this=0x809e8c8, dirs=@0xb6190338, nthreads=1, c=0x808dd94', 
-          'depth': 14, 
-          'extra': [
-            '#14 0xb7ef3d0c in Strigi::DirAnalyzer::Private::updateDirs (this=0x809e8c8, dirs=@0xb6190338, nthreads=1, c=0x808dd94)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::updateDirs'
-        }, 
-        {
-          'address': '0xb7ef3dc8', 
-          'args': 'this=0xb6190344, dirs=@0xb6190338, nthreads=1, caller=0x808dd94', 
-          'depth': 15, 
-          'extra': [
-            '#15 0xb7ef3dc8 in Strigi::DirAnalyzer::updateDirs (this=0xb6190344, dirs=@0xb6190338, nthreads=1, caller=0x808dd94)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::updateDirs'
-        }, 
-        {
-          'address': '0x080622ff', 
-          'args': 'this=0x808dd58', 
-          'depth': 16, 
-          'extra': [
-            '#16 0x080622ff in PollingListener::poll (this=0x808dd58) at /build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp:86', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp:86', 
-          'function': 'PollingListener::poll'
-        }, 
-        {
-          'address': '0x08062413', 
-          'args': 'this=0x808dd58', 
-          'depth': 17, 
-          'extra': [
-            '#17 0x08062413 in PollingListener::run (this=0x808dd58) at /build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp:64', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp:64', 
-          'function': 'PollingListener::run'
-        }, 
-        {
-          'address': '0x0805b154', 
-          'args': 'd=0x808dd58', 
-          'depth': 18, 
-          'extra': [
-            '#18 0x0805b154 in threadstarter (d=0x808dd58) at /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-          'function': 'threadstarter'
-        }, 
-        {
-          'address': '0xb7ed046b', 
-          'args': '', 
-          'depth': 19, 
-          'dylib': '/lib/tls/i686/cmov/libpthread.so.0', 
-          'extra': [
-            '#19 0xb7ed046b in start_thread () from /lib/tls/i686/cmov/libpthread.so.0'
-          ], 
-          'function': 'start_thread'
-        }, 
-        {
-          'address': '0xb7a7473e', 
-          'args': '', 
-          'depth': 20, 
-          'dylib': '/lib/tls/i686/cmov/libc.so.6', 
-          'extra': [
-            '#20 0xb7a7473e in clone () from /lib/tls/i686/cmov/libc.so.6'
-          ], 
-          'function': 'clone'
+            '#10 0x0000000000000000 in ?? ()',
+            'No symbol table info available.'
+          ],
+          'function': null
         }
-      ], 
+      ],
       'type': 'Crash'
-    }, 
+    },
     {
-      'ExecutablePath': '/usr/bin/strigidaemon', 
-      'NonfreeKernelModules': 'cdrom', 
-      'Package': 'strigi-daemon 0.5.5-2ubuntu2', 
-      'PackageArchitecture': 'i386', 
-      'ProcCmdline': '/usr/bin/strigidaemon clucene', 
-      'ProcCwd': '/home/clchauvin', 
-      'ProcEnviron': ' PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games\n LANG=en_US.UTF-8\n SHELL=/bin/bash\n', 
-      'Signal': '11', 
-      'SourcePackage': 'strigi', 
-      'Title': 'strigidaemon crashed with SIGSEGV in Strigi::AnalyzerConfiguration::indexType()', 
-      'Uname': 'Linux chuck-basement 2.6.22-13-generic #1 SMP Thu Oct 4 17:18:44 GMT 2007 i686 GNU/Linux', 
-      'UserGroups': 'adm admin audio cdrom dialout dip floppy lpadmin netdev plugdev powerdev scanner video', 
+      'ApportVersion': '2.4-0ubuntu5',
+      'ExecutablePath': '/usr/lib/i386-linux-gnu/colord/colord-sane',
+      'NonfreeKernelModules': 'nvidia',
+      'Package': 'colord 0.1.21-1',
+      'ProcCmdline': '/usr/lib/i386-linux-gnu/colord/colord-sane',
+      'ProcEnviron': ' \n',
+      'SegvAnalysis': ' Segfault happened at: 0xb54dca12:?mov    (%edx),%esi\n PC (0xb54dca12) ok\n source "(%edx)" (0x625f6d65) not located in a known VMA region (needed readable region)!\n destination "%esi" ok\n',
+      'SegvReason': 'reading unknown VMA',
+      'Signal': '11',
+      'SourcePackage': 'colord',
+      'Title': 'colord-sane crashed with SIGSEGV',
+      'Uname': 'Linux 3.5.0-6-generic i686',
+      'UpgradeStatus': 'No upgrade log present (probably fresh install)',
+      'UserGroups': 'scanner',
       'buckets': {
         '1.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.0/Ubuntu:launchpad:0000116712', 
-          'id': 'Ubuntu:launchpad:0000116712', 
-          'project': 'Ubuntu', 
-          'threshold': '1.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/1.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '1.0',
           'total': null
-        }, 
+        },
         '1.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.5/Ubuntu:launchpad:0000127694', 
-          'id': 'Ubuntu:launchpad:0000127694', 
-          'project': 'Ubuntu', 
-          'threshold': '1.5', 
+          'href': 'http://localhost:49263/ubuntu/buckets/1.5/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '1.5',
           'total': null
-        }, 
+        },
         '2.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.0/Ubuntu:launchpad:0000132195', 
-          'id': 'Ubuntu:launchpad:0000132195', 
-          'project': 'Ubuntu', 
-          'threshold': '2.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/2.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '2.0',
           'total': null
-        }, 
+        },
         '2.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '2.75', 
+          'href': 'http://localhost:49263/ubuntu/buckets/2.75/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '2.75',
           'total': null
-        }, 
+        },
         '3.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/3.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '3.0',
           'total': null
-        }, 
+        },
         '3.25': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.25/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.25', 
+          'href': 'http://localhost:49263/ubuntu/buckets/3.25/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '3.25',
           'total': null
-        }, 
+        },
         '3.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.5', 
+          'href': 'http://localhost:49263/ubuntu/buckets/3.5/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '3.5',
           'total': null
-        }, 
+        },
         '3.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.75', 
+          'href': 'http://localhost:49263/ubuntu/buckets/3.75/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '3.75',
           'total': null
-        }, 
+        },
         '4.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/4.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '4.0',
           'total': null
-        }, 
+        },
         '4.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.5', 
+          'href': 'http://localhost:49263/ubuntu/buckets/4.5/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '4.5',
           'total': null
-        }, 
+        },
         '5.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.0/Ubuntu:launchpad:0000150534', 
-          'id': 'Ubuntu:launchpad:0000150534', 
-          'project': 'Ubuntu', 
-          'threshold': '5.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/5.0/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '5.0',
           'total': null
-        }, 
+        },
         '5.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.5/Ubuntu:launchpad:0000150534', 
-          'id': 'Ubuntu:launchpad:0000150534', 
-          'project': 'Ubuntu', 
-          'threshold': '5.5', 
+          'href': 'http://localhost:49263/ubuntu/buckets/5.5/14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'id': '14fcce75-2b56-4976-bc55-d7d058bcea7b',
+          'project': 'ubuntu',
+          'threshold': '5.5',
           'total': null
-        }, 
+        },
         '6.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/6.0/Ubuntu:launchpad:0000150534', 
-          'id': 'Ubuntu:launchpad:0000150534', 
-          'project': 'Ubuntu', 
-          'threshold': '6.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/6.0/c2944bb6-0ebb-4570-9025-e91f5ab0080b',
+          'id': 'c2944bb6-0ebb-4570-9025-e91f5ab0080b',
+          'project': 'ubuntu',
+          'threshold': '6.0',
           'total': null
-        }, 
+        },
         '7.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/7.0/Ubuntu:launchpad:0000150534', 
-          'id': 'Ubuntu:launchpad:0000150534', 
-          'project': 'Ubuntu', 
-          'threshold': '7.0', 
+          'href': 'http://localhost:49263/ubuntu/buckets/7.0/c2944bb6-0ebb-4570-9025-e91f5ab0080b',
+          'id': 'c2944bb6-0ebb-4570-9025-e91f5ab0080b',
+          'project': 'ubuntu',
+          'threshold': '7.0',
           'total': null
-        }, 
+        },
         'top_match': {
-          'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-          'project': 'Ubuntu', 
-          'report_id': 'Ubuntu:launchpad:0000147400', 
-          'score': 4.879227
+          'href': 'http://localhost:49263/ubuntu/reports/18d7a97f-5574-407e-9439-63263fc938c8',
+          'project': 'ubuntu',
+          'report_id': 'ubuntu:18d7a97f-5574-407e-9439-63263fc938c8',
+          'score': 5.797851
         }
-      }, 
-      'cpu': 'i386', 
-      'database_id': 'Ubuntu:launchpad:0000150534', 
-      'date': '2007-10-07T09:11:28', 
-      'extra': "was typing numbers in a text box in firefox, using  the number pad, when strigi barfed up a lung. The only other things that had recently happened... I'd just awakened the computer from sleep. Well, the monitor anyway (even though I swear I keep turning \"Energy Saving\" off on the monitor, it keeps getting set back on). It's a little after 7: 00am, I haven't had any coffee yet, and strigi up and pulls a number on my like this? After all we'd been through?\n\nStacktraceTop:  Strigi::AnalyzerConfiguration::indexType ()\n CLuceneIndexWriter::addValue ()\n CLuceneIndexWriter::addValue ()\n Strigi::AnalysisResult::addValue ()\n ?? () from /usr/lib/libstreamanalyzer.so.0\n\n", 
-      'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-      'os': 'Ubuntu 7.10', 
-      'project': 'Ubuntu', 
+      },
+      'cpu': 'i386',
+      'database_id': 'ubuntu:c2944bb6-0ebb-4570-9025-e91f5ab0080b',
+      'date': '2012-07-26T07:20:50',
+      'extra': 'crash at login time on quantal i386 logged as gnome-classic with nvidia-current graphic\n\nStacktraceTop:  ?? () from /lib/i386-linux-gnu/libdbus-1.so.3\n ?? () from /lib/i386-linux-gnu/libdbus-1.so.3\n ?? () from /lib/i386-linux-gnu/libdbus-1.so.3\n ?? () from /lib/i386-linux-gnu/libdbus-1.so.3\n ?? () from /lib/i386-linux-gnu/libdbus-1.so.3\n\n',
+      'href': 'http://localhost:49263/ubuntu/reports/c2944bb6-0ebb-4570-9025-e91f5ab0080b',
+      'os': 'Ubuntu 12.10',
+      'os_version': 'Ubuntu 3.5.0-6.6-generic 3.5.0',
+      'project': 'ubuntu',
       'stacktrace': [
         {
-          'args': 'this=0xbf8e6a2c, field=0x0', 
-          'depth': 0, 
+          'args': 'link=0x9992508, before_this_link=0x625f6d65, list=0x998f6fc',
+          'depth': 0,
           'extra': [
-            '#0  Strigi::AnalyzerConfiguration::indexType (this=0xbf8e6a2c, field=0x0) at /build/buildd/strigi-0.5.5/src/streamanalyzer/fieldtypes.h:120', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/fieldtypes.h was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/fieldtypes.h:120', 
-          'function': 'Strigi::AnalyzerConfiguration::indexType'
-        }, 
+            '#0  link_before (link=0x9992508, before_this_link=0x625f6d65, list=0x998f6fc) at ../../dbus/dbus-list.c:120',
+            'No locals.'
+          ],
+          'file': '../../dbus/dbus-list.c:120',
+          'function': 'link_before'
+        },
         {
-          'address': '0xb7eea4a4', 
-          'args': 'this=0x80914e0, idx=0xb61ba010, field=0x0, value=@0xb61b9dd4', 
-          'depth': 1, 
+          'args': 'list=0x998f6fc, link=0x9992508',
+          'depth': 1,
           'extra': [
-            '#1  0xb7eea4a4 in CLuceneIndexWriter::addValue (this=0x80914e0, idx=0xb61ba010, field=0x0, value=@0xb61b9dd4)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
+            '#1  _dbus_list_prepend_link (list=0x998f6fc, link=0x9992508) at ../../dbus/dbus-list.c:313',
+            'No locals.'
+          ],
+          'file': '../../dbus/dbus-list.c:313',
+          'function': '_dbus_list_prepend_link'
+        },
         {
-          'address': '0xb7eebe5f', 
-          'args': 'this=0x80914e0, idx=0xb61ba010, field=0x0, value=12', 
-          'depth': 2, 
+          'address': '0xb54dca6a',
+          'args': 'list=0x998f6fc, link=0x9992508',
+          'depth': 2,
           'extra': [
-            '#2  0xb7eebe5f in CLuceneIndexWriter::addValue (this=0x80914e0, idx=0xb61ba010, field=0x0, value=12) at /build/buildd/strigi-0.5.5/src/luceneindexer/cluceneindexwriter.cpp:138', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/luceneindexer/cluceneindexwriter.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/luceneindexer/cluceneindexwriter.cpp:138', 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
+            '#2  0xb54dca6a in _dbus_list_append_link (list=0x998f6fc, link=0x9992508) at ../../dbus/dbus-list.c:295',
+            'No locals.'
+          ],
+          'file': '../../dbus/dbus-list.c:295',
+          'function': '_dbus_list_append_link'
+        },
         {
-          'address': '0xb7f184c0', 
-          'args': 'this=0xb61ba010, field=0x0, value=12', 
-          'depth': 3, 
+          'address': '0xb54cb568',
+          'args': 'message=0x998f6a0, link=0x9992508',
+          'depth': 3,
           'extra': [
-            '#3  0xb7f184c0 in Strigi::AnalysisResult::addValue (this=0xb61ba010, field=0x0, value=12) at /build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp:269', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp:269', 
-          'function': 'Strigi::AnalysisResult::addValue'
-        }, 
+            '#3  0xb54cb568 in _dbus_message_add_counter_link (message=0x998f6a0, link=0x9992508) at ../../dbus/dbus-message.c:249',
+            'No locals.'
+          ],
+          'file': '../../dbus/dbus-message.c:249',
+          'function': '_dbus_message_add_counter_link'
+        },
         {
-          'address': '0xb7f29c43', 
-          'args': 'this=0xb7f4e928, complete=true', 
-          'depth': 4, 
+          'address': '0xb54cb606',
+          'args': 'message=0x998f6a0, counter=0x9997090',
+          'depth': 4,
           'extra': [
-            '#4  0xb7f29c43 in M3uLineAnalyzer::endAnalysis (this=0xb7f4e928, complete=true) at /build/buildd/strigi-0.5.5/src/streamanalyzer/m3ustreamanalyzer.cpp:80', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/m3ustreamanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/m3ustreamanalyzer.cpp:80', 
-          'function': 'M3uLineAnalyzer::endAnalysis'
-        }, 
+            '#4  0xb54cb606 in _dbus_message_add_counter (message=0x998f6a0, counter=0x9997090) at ../../dbus/dbus-message.c:278',
+            '        link = 0x9992508'
+          ],
+          'file': '../../dbus/dbus-message.c:278',
+          'function': '_dbus_message_add_counter'
+        },
         {
-          'address': '0xb7f29909', 
-          'args': 'this=0x80a8710, complete=true', 
-          'depth': 5, 
+          'address': '0xb54d8be7',
+          'args': 'transport=0x9996d30',
+          'depth': 5,
           'extra': [
-            '#5  0xb7f29909 in Strigi::LineEventAnalyzer::endAnalysis (this=0x80a8710, complete=true) at /build/buildd/strigi-0.5.5/src/streamanalyzer/lineeventanalyzer.cpp:108', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/lineeventanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/lineeventanalyzer.cpp:108', 
-          'function': 'Strigi::LineEventAnalyzer::endAnalysis'
-        }, 
+            '#5  0xb54d8be7 in _dbus_transport_queue_messages (transport=0x9996d30) at ../../dbus/dbus-transport.c:1138',
+            '        message = <optimized out>',
+            '        link = 0x99924f0',
+            '        status = <optimized out>'
+          ],
+          'file': '../../dbus/dbus-transport.c:1138',
+          'function': '_dbus_transport_queue_messages'
+        },
         {
-          'address': '0xb7f1eb7e', 
-          'args': 'this=0x828cb40', 
-          'depth': 6, 
+          'address': '0xb54d9827',
+          'args': 'transport=0x9996d30',
+          'depth': 6,
           'extra': [
-            '#6  0xb7f1eb7e in Strigi::EventThroughAnalyzer::handleEnd (this=0x828cb40) at /build/buildd/strigi-0.5.5/src/streamanalyzer/eventthroughanalyzer.cpp:84', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/eventthroughanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/eventthroughanalyzer.cpp:84', 
-          'function': 'Strigi::EventThroughAnalyzer::handleEnd'
-        }, 
+            '#6  0xb54d9827 in do_reading (transport=0x9996d30) at ../../dbus/dbus-transport-socket.c:851',
+            '        buffer = 0x9996e24',
+            '        bytes_read = 260',
+            '        total = 260',
+            '        oom = <optimized out>'
+          ],
+          'file': '../../dbus/dbus-transport-socket.c:851',
+          'function': 'do_reading'
+        },
         {
-          'address': '0xb7db85a4', 
-          'args': 'this=0x828b080', 
-          'depth': 7, 
+          'address': '0xb54d9f17',
+          'args': 'transport=0x9996d30',
+          'depth': 7,
           'extra': [
-            '#7  0xb7db85a4 in Strigi::DataEventInputStream::finish (this=0x828b080) at /build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp:109', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp:109', 
-          'function': 'Strigi::DataEventInputStream::finish'
-        }, 
+            '#7  0xb54d9f17 in do_reading (transport=0x9996d30) at ../../dbus/dbus-transport-socket.c:706',
+            '        socket_transport = 0x9996d30'
+          ],
+          'file': '../../dbus/dbus-transport-socket.c:706',
+          'function': 'do_reading'
+        },
         {
-          'address': '0xb7db8b22', 
-          'args': 'this=0x828b080, start=@0xb61b9f14, min=20480, max=0', 
-          'depth': 8, 
+          'args': 'transport=0x9996d30, flags=6, timeout_milliseconds=25000',
+          'depth': 8,
           'extra': [
-            '#8  0xb7db8b22 in Strigi::DataEventInputStream::read (this=0x828b080, start=@0xb61b9f14, min=20480, max=0) at /build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp:70', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streams/dataeventinputstream.cpp:70', 
-          'function': 'Strigi::DataEventInputStream::read'
-        }, 
+            '#8  socket_do_iteration (transport=0x9996d30, flags=6, timeout_milliseconds=25000) at ../../dbus/dbus-transport-socket.c:1162',
+            '        need_read = 1',
+            '        need_write = 0',
+            '        authentication_completed = 0',
+            '        socket_transport = 0x9996d30',
+            '        poll_fd = {fd = 13, events = 1, revents = 1}',
+            '        poll_res = <optimized out>',
+            '        poll_timeout = <optimized out>'
+          ],
+          'file': '../../dbus/dbus-transport-socket.c:1162',
+          'function': 'socket_do_iteration'
+        },
         {
-          'address': '0xb7f48895', 
-          'args': 'this=0x80cfb10, idx=@0xb61ba010, in=0x828b080', 
-          'depth': 9, 
+          'address': '0xb54d890d',
+          'args': 'transport=0x9996d30, flags=6, timeout_milliseconds=25000',
+          'depth': 9,
           'extra': [
-            '#9  0xb7f48895 in TextEndAnalyzer::analyze (this=0x80cfb10, idx=@0xb61ba010, in=0x828b080) at /build/buildd/strigi-0.5.5/src/streamanalyzer/endanalyzers/textendanalyzer.cpp:50', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/endanalyzers/textendanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/endanalyzers/textendanalyzer.cpp:50', 
-          'function': 'TextEndAnalyzer::analyze'
-        }, 
+            '#9  0xb54d890d in _dbus_transport_do_iteration (transport=0x9996d30, flags=6, timeout_milliseconds=25000) at ../../dbus/dbus-transport.c:974',
+            'No locals.'
+          ],
+          'file': '../../dbus/dbus-transport.c:974',
+          'function': '_dbus_transport_do_iteration'
+        },
         {
-          'address': '0xb7f36359', 
-          'args': 'this=0x80b98c0, idx=@0xb61ba010, input=0x828b080', 
-          'depth': 10, 
+          'address': '0xb54c0614',
+          'args': 'connection=0x99971a8, pending=0x9996c58, flags=6, timeout_milliseconds=25000',
+          'depth': 10,
           'extra': [
-            '#10 0xb7f36359 in Strigi::StreamAnalyzerPrivate::analyze (this=0x80b98c0, idx=@0xb61ba010, input=0x828b080) at /build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp:404', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp:404', 
-          'function': 'Strigi::StreamAnalyzerPrivate::analyze'
-        }, 
+            '#10 0xb54c0614 in _dbus_connection_do_iteration_unlocked (connection=0x99971a8, pending=0x9996c58, flags=6, timeout_milliseconds=25000) at ../../dbus/dbus-connection.c:1215',
+            'No locals.'
+          ],
+          'file': '../../dbus/dbus-connection.c:1215',
+          'function': '_dbus_connection_do_iteration_unlocked'
+        },
         {
-          'address': '0xb7f366b1', 
-          'args': 'this=0x80ab9f4, idx=@0xb61ba010, input=0x829f728', 
-          'depth': 11, 
+          'address': '0xb54c1b14',
+          'args': 'pending=0x9996c58',
+          'depth': 11,
           'extra': [
-            '#11 0xb7f366b1 in Strigi::StreamAnalyzer::analyze (this=0x80ab9f4, idx=@0xb61ba010, input=0x829f728) at /build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp:351', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp:351', 
-          'function': 'Strigi::StreamAnalyzer::analyze'
-        }, 
+            '#11 0xb54c1b14 in _dbus_connection_block_pending_call (pending=0x9996c58) at ../../dbus/dbus-connection.c:2404',
+            '        start_tv_sec = 39',
+            '        start_tv_usec = 526607',
+            '        tv_sec = 161049688',
+            '        tv_usec = -1079918980',
+            '        status = <optimized out>',
+            '        connection = 0x99971a8',
+            '        client_serial = 1',
+            '        timeout = 0x9997260',
+            '        timeout_milliseconds = 25000',
+            '        elapsed_milliseconds = <optimized out>'
+          ],
+          'file': '../../dbus/dbus-connection.c:2404',
+          'function': '_dbus_connection_block_pending_call'
+        },
         {
-          'address': '0xb7f18cce', 
-          'args': 'this=0xb61ba224, name=@0xb61ba068, mt=1187802606, file=0x829f728', 
-          'depth': 12, 
+          'address': '0xb54d237f',
+          'args': 'pending=0x9996c58',
+          'depth': 12,
           'extra': [
-            '#12 0xb7f18cce in Strigi::AnalysisResult::indexChild (this=0xb61ba224, name=@0xb61ba068, mt=1187802606, file=0x829f728)'
-          ], 
-          'function': 'Strigi::AnalysisResult::indexChild'
-        }, 
+            '#12 0xb54d237f in dbus_pending_call_block (pending=0x9996c58) at ../../dbus/dbus-pending-call.c:705',
+            '        __FUNCTION__ = "dbus_pending_call_block"'
+          ],
+          'file': '../../dbus/dbus-pending-call.c:705',
+          'function': 'dbus_pending_call_block'
+        },
         {
-          'address': '0xb7f48bcf', 
-          'args': 'this=0x8293c40, idx=@0xb61ba224, in=0x82d2058', 
-          'depth': 13, 
+          'address': '0xb54c0f4b',
+          'args': 'connection=0x99971a8, message=0x998fa00, timeout_milliseconds=-1, error=0xb4cb116c',
+          'depth': 13,
           'extra': [
-            '#13 0xb7f48bcf in ZipEndAnalyzer::analyze (this=0x8293c40, idx=@0xb61ba224, in=0x82d2058) at /build/buildd/strigi-0.5.5/src/streamanalyzer/endanalyzers/zipendanalyzer.cpp:51', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/endanalyzers/zipendanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/endanalyzers/zipendanalyzer.cpp:51', 
-          'function': 'ZipEndAnalyzer::analyze'
-        }, 
+            '#13 0xb54c0f4b in dbus_connection_send_with_reply_and_block (connection=0x99971a8, message=0x998fa00, timeout_milliseconds=-1, error=0xb4cb116c) at ../../dbus/dbus-connection.c:3515',
+            '        reply = <optimized out>',
+            '        pending = 0x9996c58',
+            '        __FUNCTION__ = "dbus_connection_send_with_reply_and_block"'
+          ],
+          'file': '../../dbus/dbus-connection.c:3515',
+          'function': 'dbus_connection_send_with_reply_and_block'
+        },
         {
-          'address': '0xb7f36359', 
-          'args': 'this=0x80b98c0, idx=@0xb61ba224, input=0x82d2058', 
-          'depth': 14, 
+          'address': '0xb54bba34',
+          'args': 'connection=0x99971a8, error=0xb4cb116c',
+          'depth': 14,
           'extra': [
-            '#14 0xb7f36359 in Strigi::StreamAnalyzerPrivate::analyze (this=0x80b98c0, idx=@0xb61ba224, input=0x82d2058) at /build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp:404', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp:404', 
-          'function': 'Strigi::StreamAnalyzerPrivate::analyze'
-        }, 
+            '#14 0xb54bba34 in dbus_bus_register (connection=0x99971a8, error=0xb4cb116c) at ../../dbus/dbus-bus.c:698',
+            '        message = <optimized out>',
+            '        reply = <optimized out>',
+            '        name = <optimized out>',
+            '        bd = <optimized out>',
+            '        retval = 0',
+            '        __FUNCTION__ = "dbus_bus_register"'
+          ],
+          'file': '../../dbus/dbus-bus.c:698',
+          'function': 'dbus_bus_register'
+        },
         {
-          'address': '0xb7f366b1', 
-          'args': 'this=0x80ab9f4, idx=@0xb61ba224, input=0xb61ba1e0', 
-          'depth': 15, 
+          'address': '0xb54bbd5f',
+          'args': 'type=DBUS_BUS_SYSTEM, private=0, error=0xb4cb116c',
+          'depth': 15,
           'extra': [
-            '#15 0xb7f366b1 in Strigi::StreamAnalyzer::analyze (this=0x80ab9f4, idx=@0xb61ba224, input=0xb61ba1e0) at /build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp:351', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/streamanalyzer.cpp:351', 
-          'function': 'Strigi::StreamAnalyzer::analyze'
-        }, 
+            '#15 0xb54bbd5f in internal_bus_get (type=DBUS_BUS_SYSTEM, private=0, error=0xb4cb116c) at ../../dbus/dbus-bus.c:491',
+            '        address = <optimized out>',
+            '        connection = 0x99971a8',
+            '        bd = <optimized out>',
+            '        address_type = DBUS_BUS_SYSTEM',
+            '        __FUNCTION__ = "internal_bus_get"'
+          ],
+          'file': '../../dbus/dbus-bus.c:491',
+          'function': 'internal_bus_get'
+        },
         {
-          'address': '0xb7f1805d', 
-          'args': 'this=0xb61ba224, file=0xb61ba1e0', 
-          'depth': 16, 
+          'address': '0xb4c9166c',
+          'args': '',
+          'depth': 16,
+          'dylib': '/tmp/tmpoqDoof/usr/lib/sane/libsane-hpaio.so.1',
           'extra': [
-            '#16 0xb7f1805d in Strigi::AnalysisResult::index (this=0xb61ba224, file=0xb61ba1e0) at /build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp:168', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/analysisresult.cpp:168', 
-          'function': 'Strigi::AnalysisResult::index'
-        }, 
+            '#16 0xb4c9166c in ?? () from /tmp/tmpoqDoof/usr/lib/sane/libsane-hpaio.so.1',
+            'No symbol table info available.'
+          ],
+          'function': null
+        },
         {
-          'address': '0xb7f1d6bd', 
-          'args': 'this=0x80ab9e8, analyzer=0x80ab9f4', 
-          'depth': 17, 
+          'address': '0xb4c8da77',
+          'args': '',
+          'depth': 17,
+          'dylib': '/tmp/tmpoqDoof/usr/lib/sane/libsane-hpaio.so.1',
           'extra': [
-            '#17 0xb7f1d6bd in Strigi::DirAnalyzer::Private::update (this=0x80ab9e8, analyzer=0x80ab9f4) at /build/buildd/strigi-0.5.5/src/streamanalyzer/diranalyzer.cpp:146', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/streamanalyzer/diranalyzer.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/streamanalyzer/diranalyzer.cpp:146', 
-          'function': 'Strigi::DirAnalyzer::Private::update'
-        }, 
+            '#17 0xb4c8da77 in sane_hpaio_init () from /tmp/tmpoqDoof/usr/lib/sane/libsane-hpaio.so.1',
+            'No symbol table info available.'
+          ],
+          'function': 'sane_hpaio_init'
+        },
         {
-          'address': '0xb7f1dd0c', 
-          'args': 'this=0x80ab9e8, dirs=@0xb61ba338, nthreads=1, c=0x8098bf4', 
-          'depth': 18, 
+          'address': '0xb777b492',
+          'args': 'be=be@entry=0x995a700',
+          'depth': 18,
           'extra': [
-            '#18 0xb7f1dd0c in Strigi::DirAnalyzer::Private::updateDirs (this=0x80ab9e8, dirs=@0xb61ba338, nthreads=1, c=0x8098bf4)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::updateDirs'
-        }, 
+            '#18 0xb777b492 in init (be=be@entry=0x995a700) at dll.c:612',
+            '        status = <optimized out>',
+            '        version = -1216876556'
+          ],
+          'file': 'dll.c:612',
+          'function': 'init'
+        },
         {
-          'address': '0xb7f1ddc8', 
-          'args': 'this=0xb61ba344, dirs=@0xb61ba338, nthreads=1, caller=0x8098bf4', 
-          'depth': 19, 
+          'address': '0xb777bf40',
+          'args': 'device_list=device_list@entry=0xbfa1c0ec, local_only=local_only@entry=1',
+          'depth': 19,
           'extra': [
-            '#19 0xb7f1ddc8 in Strigi::DirAnalyzer::updateDirs (this=0xb61ba344, dirs=@0xb61ba338, nthreads=1, caller=0x8098bf4)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::updateDirs'
-        }, 
+            '#19 0xb777bf40 in sane_dll_get_devices (device_list=device_list@entry=0xbfa1c0ec, local_only=local_only@entry=1) at dll.c:1053',
+            '        be_list = 0xb55421d8',
+            '        be = 0x995a700',
+            '        status = <optimized out>',
+            '        full_name = <optimized out>',
+            '        i = <optimized out>',
+            '        num_devs = <optimized out>',
+            '        len = <optimized out>'
+          ],
+          'file': 'dll.c:1053',
+          'function': 'sane_dll_get_devices'
+        },
         {
-          'address': '0x080622ff', 
-          'args': 'this=0x8098bb8', 
-          'depth': 20, 
+          'address': '0xb77795f3',
+          'args': 'dl=dl@entry=0xbfa1c0ec, local=local@entry=1',
+          'depth': 20,
           'extra': [
-            '#20 0x080622ff in PollingListener::poll (this=0x8098bb8) at /build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp:86', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp:86', 
-          'function': 'PollingListener::poll'
-        }, 
+            '#20 0xb77795f3 in sane_get_devices (dl=dl@entry=0xbfa1c0ec, local=local@entry=1) at dll-s.c:17',
+            'No locals.'
+          ],
+          'file': 'dll-s.c:17',
+          'function': 'sane_get_devices'
+        },
         {
-          'address': '0x08062413', 
-          'args': 'this=0x8098bb8', 
-          'depth': 21, 
+          'address': '0x08049dc9',
+          'args': 'priv=priv@entry=0x994d6f0',
+          'depth': 21,
           'extra': [
-            '#21 0x08062413 in PollingListener::run (this=0x8098bb8) at /build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp:64', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/daemon/eventlistener/pollinglistener.cpp:64', 
-          'function': 'PollingListener::run'
-        }, 
+            '#21 0x08049dc9 in cd_sane_client_refresh (priv=priv@entry=0x994d6f0) at cd-main.c:303',
+            '        tmp = <optimized out>',
+            '        device_list = 0x0',
+            '        i = <optimized out>',
+            '        status = <optimized out>'
+          ],
+          'file': 'cd-main.c:303',
+          'function': 'cd_sane_client_refresh'
+        },
         {
-          'address': '0x0805b154', 
-          'args': 'd=0x8098bb8', 
-          'depth': 22, 
+          'address': '0x0804a1c5',
+          'args': 'source_object=0x9954990, res=0x9957950, user_data=user_data@entry=0x994d6f0',
+          'depth': 22,
           'extra': [
-            '#22 0x0805b154 in threadstarter (d=0x8098bb8) at /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-          'function': 'threadstarter'
-        }, 
+            '#22 0x0804a1c5 in cd_main_colord_connect_cb (source_object=0x9954990, res=0x9957950, user_data=user_data@entry=0x994d6f0) at cd-main.c:446',
+            '        priv = 0x994d6f0',
+            '        ret = <optimized out>',
+            '        error = 0x0'
+          ],
+          'file': 'cd-main.c:446',
+          'function': 'cd_main_colord_connect_cb'
+        },
         {
-          'address': '0xb7efa46b', 
-          'args': '', 
-          'depth': 23, 
-          'dylib': '/lib/tls/i686/cmov/libpthread.so.0', 
+          'address': '0xb767b1f0',
+          'args': 'simple=0x9957950',
+          'depth': 23,
           'extra': [
-            '#23 0xb7efa46b in start_thread () from /lib/tls/i686/cmov/libpthread.so.0'
-          ], 
-          'function': 'start_thread'
-        }, 
+            '#23 0xb767b1f0 in g_simple_async_result_complete (simple=0x9957950) at /build/buildd/glib2.0-2.33.6/./gio/gsimpleasyncresult.c:775',
+            '        current_source = <optimized out>',
+            '        current_context = <optimized out>',
+            '        __PRETTY_FUNCTION__ = "g_simple_async_result_complete"'
+          ],
+          'file': '/build/buildd/glib2.0-2.33.6/./gio/gsimpleasyncresult.c:775',
+          'function': 'g_simple_async_result_complete'
+        },
         {
-          'address': '0xb7a9e73e', 
-          'args': '', 
-          'depth': 24, 
-          'dylib': '/lib/tls/i686/cmov/libc.so.6', 
+          'address': '0xb767b31c',
+          'args': 'data=data@entry=0x9957950',
+          'depth': 24,
           'extra': [
-            '#24 0xb7a9e73e in clone () from /lib/tls/i686/cmov/libc.so.6'
-          ], 
-          'function': 'clone'
+            '#24 0xb767b31c in complete_in_idle_cb (data=data@entry=0x9957950) at /build/buildd/glib2.0-2.33.6/./gio/gsimpleasyncresult.c:787',
+            '        simple = <optimized out>'
+          ],
+          'file': '/build/buildd/glib2.0-2.33.6/./gio/gsimpleasyncresult.c:787',
+          'function': 'complete_in_idle_cb'
+        },
+        {
+          'address': '0xb75071c0',
+          'args': 'source=source@entry=0x995b368, callback=0xb767b2f0 <complete_in_idle_cb>, user_data=0x9957950',
+          'depth': 25,
+          'extra': [
+            '#25 0xb75071c0 in g_idle_dispatch (source=source@entry=0x995b368, callback=0xb767b2f0 <complete_in_idle_cb>, user_data=0x9957950) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:4781',
+            'No locals.'
+          ],
+          'file': '/build/buildd/glib2.0-2.33.6/./glib/gmain.c:4781',
+          'function': 'g_idle_dispatch'
+        },
+        {
+          'address': '0xb7509ef3',
+          'args': 'context=0x994d738',
+          'depth': 26,
+          'extra': [
+            '#26 0xb7509ef3 in g_main_dispatch (context=0x994d738) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:2691',
+            '        dispatch = 0xb75071a0 <g_idle_dispatch>',
+            '        was_in_call = 0',
+            '        user_data = 0x9957950',
+            '        callback = 0xb767b2f0 <complete_in_idle_cb>',
+            '        cb_funcs = 0xb75bd4f8',
+            '        cb_data = 0x995c6a8',
+            '        current_source_link = {data = 0x995b368, next = 0x0}',
+            '        need_destroy = <optimized out>',
+            '        source = 0x995b368',
+            '        current = 0x994c8a0',
+            '        i = <optimized out>'
+          ],
+          'file': '/build/buildd/glib2.0-2.33.6/./glib/gmain.c:2691',
+          'function': 'g_main_dispatch'
+        },
+        {
+          'args': 'context=context@entry=0x994d738',
+          'depth': 27,
+          'extra': [
+            '#27 g_main_context_dispatch (context=context@entry=0x994d738) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:3195',
+            'No locals.'
+          ],
+          'file': '/build/buildd/glib2.0-2.33.6/./glib/gmain.c:3195',
+          'function': 'g_main_context_dispatch'
+        },
+        {
+          'address': '0xb750a290',
+          'args': 'context=0x994d738, block=block@entry=1, dispatch=dispatch@entry=1, self=<error reading variable: Unhandled dwarf expression opcode 0xfa>',
+          'depth': 28,
+          'extra': [
+            '#28 0xb750a290 in g_main_context_iterate (context=0x994d738, block=block@entry=1, dispatch=dispatch@entry=1, self=<error reading variable: Unhandled dwarf expression opcode 0xfa>) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:3266',
+            '        max_priority = 0',
+            '        timeout = 0',
+            '        some_ready = 1',
+            '        nfds = 2',
+            '        allocated_nfds = <optimized out>',
+            '        fds = <optimized out>'
+          ],
+          'file': '/build/buildd/glib2.0-2.33.6/./glib/gmain.c:3266',
+          'function': 'g_main_context_iterate'
+        },
+        {
+          'address': '0xb750a6eb',
+          'args': 'loop=0x994d6d0',
+          'depth': 29,
+          'extra': [
+            '#29 0xb750a6eb in g_main_loop_run (loop=0x994d6d0) at /build/buildd/glib2.0-2.33.6/./glib/gmain.c:3460',
+            '        __PRETTY_FUNCTION__ = "g_main_loop_run"'
+          ],
+          'file': '/build/buildd/glib2.0-2.33.6/./glib/gmain.c:3460',
+          'function': 'g_main_loop_run'
+        },
+        {
+          'address': '0x080497d4',
+          'args': 'argc=1, argv=0xbfa1c3f4',
+          'depth': 30,
+          'extra': [
+            '#30 0x080497d4 in main (argc=1, argv=0xbfa1c3f4) at cd-main.c:617',
+            '        priv = 0x994d6f0',
+            '        immediate_exit = 0',
+            '        timed_exit = 0',
+            '        error = 0x0',
+            '        context = <optimized out>',
+            '        retval = 1',
+            "        options = {{long_name = 0x804a609 \"timed-exit\", short_name = 0 '\\000', flags = 0, arg = G_OPTION_ARG_NONE, arg_data = 0xbfa1c2e0, description = 0x804a614 \"Exit after a small delay\", arg_description = 0x0}, {long_name = 0x804a62d \"immediate-exit\", short_name = 0 '\\000', flags = 0, arg = G_OPTION_ARG_NONE, arg_data = 0xbfa1c2dc, description = 0x804a6e4 \"Exit after the engine has loaded\", arg_description = 0x0}, {long_name = 0x0, short_name = 0 '\\000', flags = 0, arg = G_OPTION_ARG_NONE, arg_data = 0x0, description = 0x0, arg_description = 0x0}}"
+          ],
+          'file': 'cd-main.c:617',
+          'function': 'main'
         }
-      ], 
-      'type': 'Crash'
-    }, 
-    {
-      'CrashCounter': '1', 
-      'ExecutablePath': '/usr/bin/strigidaemon', 
-      'NonfreeKernelModules': 'nvidia', 
-      'Package': 'strigi-daemon 0.5.5-2ubuntu2', 
-      'PackageArchitecture': 'i386', 
-      'ProcCmdline': '/usr/bin/strigidaemon clucene', 
-      'ProcCwd': '/home/john', 
-      'ProcEnviron': ' PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games\n LANG=en_US.UTF-8\n SHELL=/bin/bash\n', 
-      'Signal': '11', 
-      'SourcePackage': 'strigi', 
-      'Title': 'strigidaemon crashed with SIGSEGV in Strigi::AnalyzerConfiguration::indexType()', 
-      'Uname': 'Linux front13 2.6.22-13-generic #1 SMP Thu Oct 4 17:18:44 GMT 2007 i686 GNU/Linux', 
-      'UserGroups': 'adm admin audio cdrom dialout dip floppy lpadmin netdev plugdev powerdev scanner video', 
-      'buckets': {
-        '1.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.0/Ubuntu:launchpad:0000116712', 
-          'id': 'Ubuntu:launchpad:0000116712', 
-          'project': 'Ubuntu', 
-          'threshold': '1.0', 
-          'total': null
-        }, 
-        '1.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.5/Ubuntu:launchpad:0000127694', 
-          'id': 'Ubuntu:launchpad:0000127694', 
-          'project': 'Ubuntu', 
-          'threshold': '1.5', 
-          'total': null
-        }, 
-        '2.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.0/Ubuntu:launchpad:0000132195', 
-          'id': 'Ubuntu:launchpad:0000132195', 
-          'project': 'Ubuntu', 
-          'threshold': '2.0', 
-          'total': null
-        }, 
-        '2.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '2.75', 
-          'total': null
-        }, 
-        '3.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.0', 
-          'total': null
-        }, 
-        '3.25': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.25/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.25', 
-          'total': null
-        }, 
-        '3.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.5', 
-          'total': null
-        }, 
-        '3.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.75', 
-          'total': null
-        }, 
-        '4.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.0', 
-          'total': null
-        }, 
-        '4.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.5', 
-          'total': null
-        }, 
-        '5.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '5.0', 
-          'total': null
-        }, 
-        '5.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '5.5', 
-          'total': null
-        }, 
-        '6.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/6.0/Ubuntu:launchpad:0000150069', 
-          'id': 'Ubuntu:launchpad:0000150069', 
-          'project': 'Ubuntu', 
-          'threshold': '6.0', 
-          'total': null
-        }, 
-        '7.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/7.0/Ubuntu:launchpad:0000150069', 
-          'id': 'Ubuntu:launchpad:0000150069', 
-          'project': 'Ubuntu', 
-          'threshold': '7.0', 
-          'total': null
-        }, 
-        'top_match': {
-          'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-          'project': 'Ubuntu', 
-          'report_id': 'Ubuntu:launchpad:0000141639', 
-          'score': 5.585655
-        }
-      }, 
-      'cpu': 'i386', 
-      'database_id': 'Ubuntu:launchpad:0000150069', 
-      'date': '2007-10-07T00:25:23', 
-      'extra': "Went for a snack, when I came back the computer had crashed/rebooted.\nDon't know what to tell you, because I didn't witness it\n\nStacktraceTop:  Strigi::AnalyzerConfiguration::indexType ()\n CLuceneIndexWriter::addValue ()\n CLuceneIndexWriter::addValue ()\n Strigi::AnalysisResult::addValue ()\n ?? () from /usr/lib/libstreamanalyzer.so.0\n\n", 
-      'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-      'os': 'Ubuntu 7.10', 
-      'project': 'Ubuntu', 
-      'stacktrace': [
-        {
-          'args': 'this=0xbfd6910c, field=0x0', 
-          'depth': 0, 
-          'extra': [
-            '#0  Strigi::AnalyzerConfiguration::indexType (this=0xbfd6910c, field=0x0)'
-          ], 
-          'function': 'Strigi::AnalyzerConfiguration::indexType'
-        }, 
-        {
-          'address': '0xb7ea14a4', 
-          'args': 'this=0x8095a88, idx=0xb6170224, field=0x0, value=@0xb616ff64', 
-          'depth': 1, 
-          'extra': [
-            '#1  0xb7ea14a4 in CLuceneIndexWriter::addValue (this=0x8095a88, idx=0xb6170224, field=0x0, value=@0xb616ff64)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
-        {
-          'address': '0xb7ea2e5f', 
-          'args': 'this=0x8095a88, idx=0xb6170224, field=0x0, value=8', 
-          'depth': 2, 
-          'extra': [
-            '#2  0xb7ea2e5f in CLuceneIndexWriter::addValue (this=0x8095a88, idx=0xb6170224, field=0x0, value=8)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
-        {
-          'address': '0xb7ece4c0', 
-          'args': 'this=0xb6170224, field=0x0, value=8', 
-          'depth': 3, 
-          'extra': [
-            '#3  0xb7ece4c0 in Strigi::AnalysisResult::addValue (this=0xb6170224, field=0x0, value=8)'
-          ], 
-          'function': 'Strigi::AnalysisResult::addValue'
-        }, 
-        {
-          'address': '0xb7edfc43', 
-          'args': 'this=0xb7f04928, complete=true', 
-          'depth': 4, 
-          'extra': [
-            '#4  0xb7edfc43 in M3uLineAnalyzer::endAnalysis (this=0xb7f04928, complete=true)'
-          ], 
-          'function': 'M3uLineAnalyzer::endAnalysis'
-        }, 
-        {
-          'address': '0xb7edf909', 
-          'args': 'this=0x83c12d8, complete=true', 
-          'depth': 5, 
-          'extra': [
-            '#5  0xb7edf909 in Strigi::LineEventAnalyzer::endAnalysis (this=0x83c12d8, complete=true)'
-          ], 
-          'function': 'Strigi::LineEventAnalyzer::endAnalysis'
-        }, 
-        {
-          'address': '0xb7ed4b7e', 
-          'args': 'this=0x858aff0', 
-          'depth': 6, 
-          'extra': [
-            '#6  0xb7ed4b7e in Strigi::EventThroughAnalyzer::handleEnd (this=0x858aff0)'
-          ], 
-          'function': 'Strigi::EventThroughAnalyzer::handleEnd'
-        }, 
-        {
-          'address': '0xb7d6f5a4', 
-          'args': 'this=0x858b9e0', 
-          'depth': 7, 
-          'extra': [
-            '#7  0xb7d6f5a4 in Strigi::DataEventInputStream::finish (this=0x858b9e0)'
-          ], 
-          'function': 'Strigi::DataEventInputStream::finish'
-        }, 
-        {
-          'address': '0xb7d6fb22', 
-          'args': 'this=0x858b9e0, start=@0xb61700a4, min=20480, max=0', 
-          'depth': 8, 
-          'extra': [
-            '#8  0xb7d6fb22 in Strigi::DataEventInputStream::read (this=0x858b9e0, start=@0xb61700a4, min=20480, max=0)'
-          ], 
-          'function': 'Strigi::DataEventInputStream::read'
-        }, 
-        {
-          'address': '0xb7efe895', 
-          'args': 'this=0x85a5708, idx=@0xb6170224, in=0x858b9e0', 
-          'depth': 9, 
-          'extra': [
-            '#9  0xb7efe895 in TextEndAnalyzer::analyze (this=0x85a5708, idx=@0xb6170224, in=0x858b9e0)'
-          ], 
-          'function': 'TextEndAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7eec359', 
-          'args': 'this=0x80bbe78, idx=@0xb6170224, input=0x858b9e0', 
-          'depth': 10, 
-          'extra': [
-            '#10 0xb7eec359 in Strigi::StreamAnalyzerPrivate::analyze (this=0x80bbe78, idx=@0xb6170224, input=0x858b9e0)'
-          ], 
-          'function': 'Strigi::StreamAnalyzerPrivate::analyze'
-        }, 
-        {
-          'address': '0xb7eec6b1', 
-          'args': 'this=0x80b934c, idx=@0xb6170224, input=0xb61701e0', 
-          'depth': 11, 
-          'extra': [
-            '#11 0xb7eec6b1 in Strigi::StreamAnalyzer::analyze (this=0x80b934c, idx=@0xb6170224, input=0xb61701e0)'
-          ], 
-          'function': 'Strigi::StreamAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7ece05d', 
-          'args': 'this=0xb6170224, file=0xb61701e0', 
-          'depth': 12, 
-          'extra': [
-            '#12 0xb7ece05d in Strigi::AnalysisResult::index (this=0xb6170224, file=0xb61701e0)'
-          ], 
-          'function': 'Strigi::AnalysisResult::index'
-        }, 
-        {
-          'address': '0xb7ed36bd', 
-          'args': 'this=0x80b9340, analyzer=0x80b934c', 
-          'depth': 13, 
-          'extra': [
-            '#13 0xb7ed36bd in Strigi::DirAnalyzer::Private::update (this=0x80b9340, analyzer=0x80b934c)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::update'
-        }, 
-        {
-          'address': '0xb7ed3d0c', 
-          'args': 'this=0x80b9340, dirs=@0xb6170338, nthreads=1, c=0x808dd44', 
-          'depth': 14, 
-          'extra': [
-            '#14 0xb7ed3d0c in Strigi::DirAnalyzer::Private::updateDirs (this=0x80b9340, dirs=@0xb6170338, nthreads=1, c=0x808dd44)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::updateDirs'
-        }, 
-        {
-          'address': '0xb7ed3dc8', 
-          'args': 'this=0xb6170344, dirs=@0xb6170338, nthreads=1, caller=0x808dd44', 
-          'depth': 15, 
-          'extra': [
-            '#15 0xb7ed3dc8 in Strigi::DirAnalyzer::updateDirs (this=0xb6170344, dirs=@0xb6170338, nthreads=1, caller=0x808dd44)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::updateDirs'
-        }, 
-        {
-          'address': '0x080622ff', 
-          'args': 'this=0x808dd08', 
-          'depth': 16, 
-          'extra': [
-            '#16 0x080622ff in PollingListener::poll (this=0x808dd08)'
-          ], 
-          'function': 'PollingListener::poll'
-        }, 
-        {
-          'address': '0x08062413', 
-          'args': 'this=0x808dd08', 
-          'depth': 17, 
-          'extra': [
-            '#17 0x08062413 in PollingListener::run (this=0x808dd08)'
-          ], 
-          'function': 'PollingListener::run'
-        }, 
-        {
-          'address': '0x0805b154', 
-          'args': 'd=0x808dd08', 
-          'depth': 18, 
-          'extra': [
-            '#18 0x0805b154 in threadstarter (d=0x808dd08) at /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-          'function': 'threadstarter'
-        }, 
-        {
-          'address': '0xb7eb046b', 
-          'args': '', 
-          'depth': 19, 
-          'dylib': '/lib/tls/i686/cmov/libpthread.so.0', 
-          'extra': [
-            '#19 0xb7eb046b in start_thread () from /lib/tls/i686/cmov/libpthread.so.0'
-          ], 
-          'function': 'start_thread'
-        }, 
-        {
-          'address': '0xb7a5473e', 
-          'args': '', 
-          'depth': 20, 
-          'dylib': '/lib/tls/i686/cmov/libc.so.6', 
-          'extra': [
-            '#20 0xb7a5473e in clone () from /lib/tls/i686/cmov/libc.so.6'
-          ], 
-          'function': 'clone'
-        }
-      ], 
-      'type': 'Crash'
-    }, 
-    {
-      'CrashCounter': '1', 
-      'ExecutablePath': '/usr/bin/strigidaemon', 
-      'NonfreeKernelModules': 'nvidia', 
-      'Package': 'strigi-daemon 0.5.5-2ubuntu2', 
-      'PackageArchitecture': 'i386', 
-      'ProcCmdline': '/usr/bin/strigidaemon clucene', 
-      'ProcCwd': '/home/ramses', 
-      'ProcEnviron': ' LANGUAGE=nl_NL:nl\n PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games\n LANG=nl_NL.UTF-8\n SHELL=/bin/bash\n', 
-      'Signal': '11', 
-      'SourcePackage': 'strigi', 
-      'Title': 'strigidaemon crashed with SIGSEGV in Strigi::AnalyzerConfiguration::indexType()', 
-      'Uname': 'Linux ubuntutest 2.6.22-13-generic #1 SMP Thu Oct 4 17:18:44 GMT 2007 i686 GNU/Linux', 
-      'UserGroups': 'adm admin audio cdrom dialout dip floppy lpadmin netdev plugdev powerdev scanner video', 
-      'buckets': {
-        '1.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.0/Ubuntu:launchpad:0000116712', 
-          'id': 'Ubuntu:launchpad:0000116712', 
-          'project': 'Ubuntu', 
-          'threshold': '1.0', 
-          'total': null
-        }, 
-        '1.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.5/Ubuntu:launchpad:0000127694', 
-          'id': 'Ubuntu:launchpad:0000127694', 
-          'project': 'Ubuntu', 
-          'threshold': '1.5', 
-          'total': null
-        }, 
-        '2.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.0/Ubuntu:launchpad:0000132195', 
-          'id': 'Ubuntu:launchpad:0000132195', 
-          'project': 'Ubuntu', 
-          'threshold': '2.0', 
-          'total': null
-        }, 
-        '2.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '2.75', 
-          'total': null
-        }, 
-        '3.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.0', 
-          'total': null
-        }, 
-        '3.25': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.25/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.25', 
-          'total': null
-        }, 
-        '3.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.5', 
-          'total': null
-        }, 
-        '3.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.75', 
-          'total': null
-        }, 
-        '4.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.0', 
-          'total': null
-        }, 
-        '4.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.5', 
-          'total': null
-        }, 
-        '5.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '5.0', 
-          'total': null
-        }, 
-        '5.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.5/Ubuntu:launchpad:0000150264', 
-          'id': 'Ubuntu:launchpad:0000150264', 
-          'project': 'Ubuntu', 
-          'threshold': '5.5', 
-          'total': null
-        }, 
-        '6.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/6.0/Ubuntu:launchpad:0000150264', 
-          'id': 'Ubuntu:launchpad:0000150264', 
-          'project': 'Ubuntu', 
-          'threshold': '6.0', 
-          'total': null
-        }, 
-        '7.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/7.0/Ubuntu:launchpad:0000150264', 
-          'id': 'Ubuntu:launchpad:0000150264', 
-          'project': 'Ubuntu', 
-          'threshold': '7.0', 
-          'total': null
-        }, 
-        'top_match': {
-          'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-          'project': 'Ubuntu', 
-          'report_id': 'Ubuntu:launchpad:0000146201', 
-          'score': 5.1673417
-        }
-      }, 
-      'cpu': 'i386', 
-      'database_id': 'Ubuntu:launchpad:0000150264', 
-      'date': '2007-10-06T18:56:18', 
-      'extra': "Every time I close this program I have the same problem,\nDisk is not full and not write protect so I really don't know what the problem might be.\n\nError displayed: \nStacktraceTop:  Strigi::AnalyzerConfiguration::indexType ()\n CLuceneIndexWriter::addValue ()\n CLuceneIndexWriter::addValue ()\n Strigi::AnalysisResult::addValue ()\n ?? () from /usr/lib/libstreamanalyzer.so.0\n\nUnable to save bookmarks in /home/ramses/.kde/share/apps/d3lphin/bookmarks.xml. Reported error was: Permission denied. This error message will only be shown once. The cause of the error needs to be fixed as quickly as possible, which is most likely a full hard drive.\nGrtz. Ramses\n\n\n", 
-      'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-      'os': 'Ubuntu 7.10', 
-      'project': 'Ubuntu', 
-      'stacktrace': [
-        {
-          'args': 'this=0xbff518cc, field=0xa00006f', 
-          'depth': 0, 
-          'extra': [
-            '#0  Strigi::AnalyzerConfiguration::indexType (this=0xbff518cc, field=0xa00006f)'
-          ], 
-          'function': 'Strigi::AnalyzerConfiguration::indexType'
-        }, 
-        {
-          'address': '0xb7e7f4a4', 
-          'args': 'this=0x80971b8, idx=0xb614e224, field=0xa00006f, value=@0xb614df64', 
-          'depth': 1, 
-          'extra': [
-            '#1  0xb7e7f4a4 in CLuceneIndexWriter::addValue (this=0x80971b8, idx=0xb614e224, field=0xa00006f, value=@0xb614df64)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
-        {
-          'address': '0xb7e80e5f', 
-          'args': 'this=0x80971b8, idx=0xb614e224, field=0xa00006f, value=1', 
-          'depth': 2, 
-          'extra': [
-            '#2  0xb7e80e5f in CLuceneIndexWriter::addValue (this=0x80971b8, idx=0xb614e224, field=0xa00006f, value=1)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
-        {
-          'address': '0xb7eac4c0', 
-          'args': 'this=0xb614e224, field=0xa00006f, value=1', 
-          'depth': 3, 
-          'extra': [
-            '#3  0xb7eac4c0 in Strigi::AnalysisResult::addValue (this=0xb614e224, field=0xa00006f, value=1)'
-          ], 
-          'function': 'Strigi::AnalysisResult::addValue'
-        }, 
-        {
-          'address': '0xb7ebdc43', 
-          'args': 'this=0xb7ee2928, complete=true', 
-          'depth': 4, 
-          'extra': [
-            '#4  0xb7ebdc43 in M3uLineAnalyzer::endAnalysis (this=0xb7ee2928, complete=true)'
-          ], 
-          'function': 'M3uLineAnalyzer::endAnalysis'
-        }, 
-        {
-          'address': '0xb7ebd909', 
-          'args': 'this=0x849c7a8, complete=true', 
-          'depth': 5, 
-          'extra': [
-            '#5  0xb7ebd909 in Strigi::LineEventAnalyzer::endAnalysis (this=0x849c7a8, complete=true)'
-          ], 
-          'function': 'Strigi::LineEventAnalyzer::endAnalysis'
-        }, 
-        {
-          'address': '0xb7eb2b7e', 
-          'args': 'this=0x8491950', 
-          'depth': 6, 
-          'extra': [
-            '#6  0xb7eb2b7e in Strigi::EventThroughAnalyzer::handleEnd (this=0x8491950)'
-          ], 
-          'function': 'Strigi::EventThroughAnalyzer::handleEnd'
-        }, 
-        {
-          'address': '0xb7d4d5a4', 
-          'args': 'this=0x84ab638', 
-          'depth': 7, 
-          'extra': [
-            '#7  0xb7d4d5a4 in Strigi::DataEventInputStream::finish (this=0x84ab638)'
-          ], 
-          'function': 'Strigi::DataEventInputStream::finish'
-        }, 
-        {
-          'address': '0xb7d4db22', 
-          'args': 'this=0x84ab638, start=@0xb614e0a4, min=20480, max=0', 
-          'depth': 8, 
-          'extra': [
-            '#8  0xb7d4db22 in Strigi::DataEventInputStream::read (this=0x84ab638, start=@0xb614e0a4, min=20480, max=0)'
-          ], 
-          'function': 'Strigi::DataEventInputStream::read'
-        }, 
-        {
-          'address': '0xb7edc895', 
-          'args': 'this=0x84c8290, idx=@0xb614e224, in=0x84ab638', 
-          'depth': 9, 
-          'extra': [
-            '#9  0xb7edc895 in TextEndAnalyzer::analyze (this=0x84c8290, idx=@0xb614e224, in=0x84ab638)'
-          ], 
-          'function': 'TextEndAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7eca359', 
-          'args': 'this=0x80ab530, idx=@0xb614e224, input=0x84ab638', 
-          'depth': 10, 
-          'extra': [
-            '#10 0xb7eca359 in Strigi::StreamAnalyzerPrivate::analyze (this=0x80ab530, idx=@0xb614e224, input=0x84ab638)'
-          ], 
-          'function': 'Strigi::StreamAnalyzerPrivate::analyze'
-        }, 
-        {
-          'address': '0xb7eca6b1', 
-          'args': 'this=0x80a8a04, idx=@0xb614e224, input=0xb614e1e0', 
-          'depth': 11, 
-          'extra': [
-            '#11 0xb7eca6b1 in Strigi::StreamAnalyzer::analyze (this=0x80a8a04, idx=@0xb614e224, input=0xb614e1e0)'
-          ], 
-          'function': 'Strigi::StreamAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7eac05d', 
-          'args': 'this=0xb614e224, file=0xb614e1e0', 
-          'depth': 12, 
-          'extra': [
-            '#12 0xb7eac05d in Strigi::AnalysisResult::index (this=0xb614e224, file=0xb614e1e0)'
-          ], 
-          'function': 'Strigi::AnalysisResult::index'
-        }, 
-        {
-          'address': '0xb7eb16bd', 
-          'args': 'this=0x80a89f8, analyzer=0x80a8a04', 
-          'depth': 13, 
-          'extra': [
-            '#13 0xb7eb16bd in Strigi::DirAnalyzer::Private::update (this=0x80a89f8, analyzer=0x80a8a04)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::update'
-        }, 
-        {
-          'address': '0xb7eb1d0c', 
-          'args': 'this=0x80a89f8, dirs=@0xb614e338, nthreads=1, c=0x809b224', 
-          'depth': 14, 
-          'extra': [
-            '#14 0xb7eb1d0c in Strigi::DirAnalyzer::Private::updateDirs (this=0x80a89f8, dirs=@0xb614e338, nthreads=1, c=0x809b224)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::updateDirs'
-        }, 
-        {
-          'address': '0xb7eb1dc8', 
-          'args': 'this=0xb614e344, dirs=@0xb614e338, nthreads=1, caller=0x809b224', 
-          'depth': 15, 
-          'extra': [
-            '#15 0xb7eb1dc8 in Strigi::DirAnalyzer::updateDirs (this=0xb614e344, dirs=@0xb614e338, nthreads=1, caller=0x809b224)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::updateDirs'
-        }, 
-        {
-          'address': '0x080622ff', 
-          'args': 'this=0x809b1e8', 
-          'depth': 16, 
-          'extra': [
-            '#16 0x080622ff in PollingListener::poll (this=0x809b1e8)'
-          ], 
-          'function': 'PollingListener::poll'
-        }, 
-        {
-          'address': '0x08062413', 
-          'args': 'this=0x809b1e8', 
-          'depth': 17, 
-          'extra': [
-            '#17 0x08062413 in PollingListener::run (this=0x809b1e8)'
-          ], 
-          'function': 'PollingListener::run'
-        }, 
-        {
-          'address': '0x0805b154', 
-          'args': 'd=0x809b1e8', 
-          'depth': 18, 
-          'extra': [
-            '#18 0x0805b154 in threadstarter (d=0x809b1e8) at /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-          'function': 'threadstarter'
-        }, 
-        {
-          'address': '0xb7e8e46b', 
-          'args': '', 
-          'depth': 19, 
-          'dylib': '/lib/tls/i686/cmov/libpthread.so.0', 
-          'extra': [
-            '#19 0xb7e8e46b in start_thread () from /lib/tls/i686/cmov/libpthread.so.0'
-          ], 
-          'function': 'start_thread'
-        }, 
-        {
-          'address': '0xb7a3273e', 
-          'args': '', 
-          'depth': 20, 
-          'dylib': '/lib/tls/i686/cmov/libc.so.6', 
-          'extra': [
-            '#20 0xb7a3273e in clone () from /lib/tls/i686/cmov/libc.so.6'
-          ], 
-          'function': 'clone'
-        }
-      ], 
-      'type': 'Crash'
-    }, 
-    {
-      'CrashCounter': '1', 
-      'ExecutablePath': '/usr/bin/strigidaemon', 
-      'NonfreeKernelModules': 'nvidia', 
-      'Package': 'strigi-daemon 0.5.5-2ubuntu2', 
-      'PackageArchitecture': 'i386', 
-      'ProcCmdline': '/usr/bin/strigidaemon clucene', 
-      'ProcCwd': '/home/ramses', 
-      'ProcEnviron': ' LANGUAGE=nl_NL:nl\n PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games\n LANG=nl_NL.UTF-8\n SHELL=/bin/bash\n', 
-      'Signal': '11', 
-      'SourcePackage': 'strigi', 
-      'Title': 'strigidaemon crashed with SIGSEGV in Strigi::AnalyzerConfiguration::indexType()', 
-      'Uname': 'Linux ubuntutest 2.6.22-13-generic #1 SMP Thu Oct 4 17:18:44 GMT 2007 i686 GNU/Linux', 
-      'UserGroups': 'adm admin audio cdrom dialout dip floppy lpadmin netdev plugdev powerdev scanner video', 
-      'buckets': {
-        '1.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.0/Ubuntu:launchpad:0000116712', 
-          'id': 'Ubuntu:launchpad:0000116712', 
-          'project': 'Ubuntu', 
-          'threshold': '1.0', 
-          'total': null
-        }, 
-        '1.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.5/Ubuntu:launchpad:0000127694', 
-          'id': 'Ubuntu:launchpad:0000127694', 
-          'project': 'Ubuntu', 
-          'threshold': '1.5', 
-          'total': null
-        }, 
-        '2.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.0/Ubuntu:launchpad:0000132195', 
-          'id': 'Ubuntu:launchpad:0000132195', 
-          'project': 'Ubuntu', 
-          'threshold': '2.0', 
-          'total': null
-        }, 
-        '2.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '2.75', 
-          'total': null
-        }, 
-        '3.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.0', 
-          'total': null
-        }, 
-        '3.25': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.25/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.25', 
-          'total': null
-        }, 
-        '3.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.5', 
-          'total': null
-        }, 
-        '3.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.75', 
-          'total': null
-        }, 
-        '4.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.0', 
-          'total': null
-        }, 
-        '4.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.5', 
-          'total': null
-        }, 
-        '5.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '5.0', 
-          'total': null
-        }, 
-        '5.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.5/Ubuntu:launchpad:0000150264', 
-          'id': 'Ubuntu:launchpad:0000150264', 
-          'project': 'Ubuntu', 
-          'threshold': '5.5', 
-          'total': null
-        }, 
-        '6.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/6.0/Ubuntu:launchpad:0000150264', 
-          'id': 'Ubuntu:launchpad:0000150264', 
-          'project': 'Ubuntu', 
-          'threshold': '6.0', 
-          'total': null
-        }, 
-        '7.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/7.0/Ubuntu:launchpad:0000150264', 
-          'id': 'Ubuntu:launchpad:0000150264', 
-          'project': 'Ubuntu', 
-          'threshold': '7.0', 
-          'total': null
-        }, 
-        'top_match': {
-          'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-          'project': 'Ubuntu', 
-          'report_id': 'Ubuntu:launchpad:0000150264', 
-          'score': 8.342042
-        }
-      }, 
-      'cpu': 'i386', 
-      'database_id': 'Ubuntu:launchpad:0000150265', 
-      'date': '2007-10-06T18:56:18', 
-      'extra': "Every time I close this program I have the same problem,\nDisk is not full and not write protect so I really don't know what the problem might be.\n\nError displayed: \nStacktraceTop:  Strigi::AnalyzerConfiguration::indexType ()\n CLuceneIndexWriter::addValue ()\n CLuceneIndexWriter::addValue ()\n Strigi::AnalysisResult::addValue ()\n ?? () from /usr/lib/libstreamanalyzer.so.0\n\nUnable to save bookmarks in /home/ramses/.kde/share/apps/d3lphin/bookmarks.xml. Reported error was: Permission denied. This error message will only be shown once. The cause of the error needs to be fixed as quickly as possible, which is most likely a full hard drive.\nGrtz. Ramses\n\n\n", 
-      'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-      'os': 'Ubuntu 7.10', 
-      'project': 'Ubuntu', 
-      'stacktrace': [
-        {
-          'args': 'this=0xbff518cc, field=0xa00006f', 
-          'depth': 0, 
-          'extra': [
-            '#0  Strigi::AnalyzerConfiguration::indexType (this=0xbff518cc, field=0xa00006f)'
-          ], 
-          'function': 'Strigi::AnalyzerConfiguration::indexType'
-        }, 
-        {
-          'address': '0xb7e7f4a4', 
-          'args': 'this=0x80971b8, idx=0xb614e224, field=0xa00006f, value=@0xb614df64', 
-          'depth': 1, 
-          'extra': [
-            '#1  0xb7e7f4a4 in CLuceneIndexWriter::addValue (this=0x80971b8, idx=0xb614e224, field=0xa00006f, value=@0xb614df64)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
-        {
-          'address': '0xb7e80e5f', 
-          'args': 'this=0x80971b8, idx=0xb614e224, field=0xa00006f, value=1', 
-          'depth': 2, 
-          'extra': [
-            '#2  0xb7e80e5f in CLuceneIndexWriter::addValue (this=0x80971b8, idx=0xb614e224, field=0xa00006f, value=1)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
-        {
-          'address': '0xb7eac4c0', 
-          'args': 'this=0xb614e224, field=0xa00006f, value=1', 
-          'depth': 3, 
-          'extra': [
-            '#3  0xb7eac4c0 in Strigi::AnalysisResult::addValue (this=0xb614e224, field=0xa00006f, value=1)'
-          ], 
-          'function': 'Strigi::AnalysisResult::addValue'
-        }, 
-        {
-          'address': '0xb7ebdc43', 
-          'args': 'this=0xb7ee2928, complete=true', 
-          'depth': 4, 
-          'extra': [
-            '#4  0xb7ebdc43 in M3uLineAnalyzer::endAnalysis (this=0xb7ee2928, complete=true)'
-          ], 
-          'function': 'M3uLineAnalyzer::endAnalysis'
-        }, 
-        {
-          'address': '0xb7ebd909', 
-          'args': 'this=0x849c7a8, complete=true', 
-          'depth': 5, 
-          'extra': [
-            '#5  0xb7ebd909 in Strigi::LineEventAnalyzer::endAnalysis (this=0x849c7a8, complete=true)'
-          ], 
-          'function': 'Strigi::LineEventAnalyzer::endAnalysis'
-        }, 
-        {
-          'address': '0xb7eb2b7e', 
-          'args': 'this=0x8491950', 
-          'depth': 6, 
-          'extra': [
-            '#6  0xb7eb2b7e in Strigi::EventThroughAnalyzer::handleEnd (this=0x8491950)'
-          ], 
-          'function': 'Strigi::EventThroughAnalyzer::handleEnd'
-        }, 
-        {
-          'address': '0xb7d4d5a4', 
-          'args': 'this=0x84ab638', 
-          'depth': 7, 
-          'extra': [
-            '#7  0xb7d4d5a4 in Strigi::DataEventInputStream::finish (this=0x84ab638)'
-          ], 
-          'function': 'Strigi::DataEventInputStream::finish'
-        }, 
-        {
-          'address': '0xb7d4db22', 
-          'args': 'this=0x84ab638, start=@0xb614e0a4, min=20480, max=0', 
-          'depth': 8, 
-          'extra': [
-            '#8  0xb7d4db22 in Strigi::DataEventInputStream::read (this=0x84ab638, start=@0xb614e0a4, min=20480, max=0)'
-          ], 
-          'function': 'Strigi::DataEventInputStream::read'
-        }, 
-        {
-          'address': '0xb7edc895', 
-          'args': 'this=0x84c8290, idx=@0xb614e224, in=0x84ab638', 
-          'depth': 9, 
-          'extra': [
-            '#9  0xb7edc895 in TextEndAnalyzer::analyze (this=0x84c8290, idx=@0xb614e224, in=0x84ab638)'
-          ], 
-          'function': 'TextEndAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7eca359', 
-          'args': 'this=0x80ab530, idx=@0xb614e224, input=0x84ab638', 
-          'depth': 10, 
-          'extra': [
-            '#10 0xb7eca359 in Strigi::StreamAnalyzerPrivate::analyze (this=0x80ab530, idx=@0xb614e224, input=0x84ab638)'
-          ], 
-          'function': 'Strigi::StreamAnalyzerPrivate::analyze'
-        }, 
-        {
-          'address': '0xb7eca6b1', 
-          'args': 'this=0x80a8a04, idx=@0xb614e224, input=0xb614e1e0', 
-          'depth': 11, 
-          'extra': [
-            '#11 0xb7eca6b1 in Strigi::StreamAnalyzer::analyze (this=0x80a8a04, idx=@0xb614e224, input=0xb614e1e0)'
-          ], 
-          'function': 'Strigi::StreamAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7eac05d', 
-          'args': 'this=0xb614e224, file=0xb614e1e0', 
-          'depth': 12, 
-          'extra': [
-            '#12 0xb7eac05d in Strigi::AnalysisResult::index (this=0xb614e224, file=0xb614e1e0)'
-          ], 
-          'function': 'Strigi::AnalysisResult::index'
-        }, 
-        {
-          'address': '0xb7eb16bd', 
-          'args': 'this=0x80a89f8, analyzer=0x80a8a04', 
-          'depth': 13, 
-          'extra': [
-            '#13 0xb7eb16bd in Strigi::DirAnalyzer::Private::update (this=0x80a89f8, analyzer=0x80a8a04)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::update'
-        }, 
-        {
-          'address': '0xb7eb1d0c', 
-          'args': 'this=0x80a89f8, dirs=@0xb614e338, nthreads=1, c=0x809b224', 
-          'depth': 14, 
-          'extra': [
-            '#14 0xb7eb1d0c in Strigi::DirAnalyzer::Private::updateDirs (this=0x80a89f8, dirs=@0xb614e338, nthreads=1, c=0x809b224)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::updateDirs'
-        }, 
-        {
-          'address': '0xb7eb1dc8', 
-          'args': 'this=0xb614e344, dirs=@0xb614e338, nthreads=1, caller=0x809b224', 
-          'depth': 15, 
-          'extra': [
-            '#15 0xb7eb1dc8 in Strigi::DirAnalyzer::updateDirs (this=0xb614e344, dirs=@0xb614e338, nthreads=1, caller=0x809b224)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::updateDirs'
-        }, 
-        {
-          'address': '0x080622ff', 
-          'args': 'this=0x809b1e8', 
-          'depth': 16, 
-          'extra': [
-            '#16 0x080622ff in PollingListener::poll (this=0x809b1e8)'
-          ], 
-          'function': 'PollingListener::poll'
-        }, 
-        {
-          'address': '0x08062413', 
-          'args': 'this=0x809b1e8', 
-          'depth': 17, 
-          'extra': [
-            '#17 0x08062413 in PollingListener::run (this=0x809b1e8)'
-          ], 
-          'function': 'PollingListener::run'
-        }, 
-        {
-          'address': '0x0805b154', 
-          'args': 'd=0x809b1e8', 
-          'depth': 18, 
-          'extra': [
-            '#18 0x0805b154 in threadstarter (d=0x809b1e8) at /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-          'function': 'threadstarter'
-        }, 
-        {
-          'address': '0xb7e8e46b', 
-          'args': '', 
-          'depth': 19, 
-          'dylib': '/lib/tls/i686/cmov/libpthread.so.0', 
-          'extra': [
-            '#19 0xb7e8e46b in start_thread () from /lib/tls/i686/cmov/libpthread.so.0'
-          ], 
-          'function': 'start_thread'
-        }, 
-        {
-          'address': '0xb7a3273e', 
-          'args': '', 
-          'depth': 20, 
-          'dylib': '/lib/tls/i686/cmov/libc.so.6', 
-          'extra': [
-            '#20 0xb7a3273e in clone () from /lib/tls/i686/cmov/libc.so.6'
-          ], 
-          'function': 'clone'
-        }
-      ], 
-      'type': 'Crash'
-    }, 
-    {
-      'CrashCounter': '1', 
-      'ExecutablePath': '/usr/bin/strigidaemon', 
-      'NonfreeKernelModules': 'nvidia', 
-      'Package': 'strigi-daemon 0.5.5-2ubuntu2', 
-      'PackageArchitecture': 'i386', 
-      'ProcCmdline': '/usr/bin/strigidaemon clucene', 
-      'ProcCwd': '/home/ramses', 
-      'ProcEnviron': ' LANGUAGE=nl_NL:nl\n PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games\n LANG=nl_NL.UTF-8\n SHELL=/bin/bash\n', 
-      'Signal': '11', 
-      'SourcePackage': 'strigi', 
-      'Title': 'strigidaemon crashed with SIGSEGV in Strigi::AnalyzerConfiguration::indexType()', 
-      'Uname': 'Linux ubuntutest 2.6.22-13-generic #1 SMP Thu Oct 4 17:18:44 GMT 2007 i686 GNU/Linux', 
-      'UserGroups': 'adm admin audio cdrom dialout dip floppy lpadmin netdev plugdev powerdev scanner video', 
-      'buckets': {
-        '1.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.0/Ubuntu:launchpad:0000116712', 
-          'id': 'Ubuntu:launchpad:0000116712', 
-          'project': 'Ubuntu', 
-          'threshold': '1.0', 
-          'total': null
-        }, 
-        '1.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.5/Ubuntu:launchpad:0000127694', 
-          'id': 'Ubuntu:launchpad:0000127694', 
-          'project': 'Ubuntu', 
-          'threshold': '1.5', 
-          'total': null
-        }, 
-        '2.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.0/Ubuntu:launchpad:0000132195', 
-          'id': 'Ubuntu:launchpad:0000132195', 
-          'project': 'Ubuntu', 
-          'threshold': '2.0', 
-          'total': null
-        }, 
-        '2.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '2.75', 
-          'total': null
-        }, 
-        '3.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.0', 
-          'total': null
-        }, 
-        '3.25': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.25/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.25', 
-          'total': null
-        }, 
-        '3.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.5', 
-          'total': null
-        }, 
-        '3.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.75', 
-          'total': null
-        }, 
-        '4.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.0', 
-          'total': null
-        }, 
-        '4.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.5', 
-          'total': null
-        }, 
-        '5.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '5.0', 
-          'total': null
-        }, 
-        '5.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.5/Ubuntu:launchpad:0000150264', 
-          'id': 'Ubuntu:launchpad:0000150264', 
-          'project': 'Ubuntu', 
-          'threshold': '5.5', 
-          'total': null
-        }, 
-        '6.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/6.0/Ubuntu:launchpad:0000150264', 
-          'id': 'Ubuntu:launchpad:0000150264', 
-          'project': 'Ubuntu', 
-          'threshold': '6.0', 
-          'total': null
-        }, 
-        '7.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/7.0/Ubuntu:launchpad:0000150264', 
-          'id': 'Ubuntu:launchpad:0000150264', 
-          'project': 'Ubuntu', 
-          'threshold': '7.0', 
-          'total': null
-        }, 
-        'top_match': {
-          'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-          'project': 'Ubuntu', 
-          'report_id': 'Ubuntu:launchpad:0000150265', 
-          'score': 8.545265
-        }
-      }, 
-      'cpu': 'i386', 
-      'database_id': 'Ubuntu:launchpad:0000150266', 
-      'date': '2007-10-06T18:56:18', 
-      'extra': "Every time I close this program I have the same problem,\nDisk is not full and not write protect so I really don't know what the problem might be.\n\nError displayed: \nStacktraceTop:  Strigi::AnalyzerConfiguration::indexType ()\n CLuceneIndexWriter::addValue ()\n CLuceneIndexWriter::addValue ()\n Strigi::AnalysisResult::addValue ()\n ?? () from /usr/lib/libstreamanalyzer.so.0\n\nUnable to save bookmarks in /home/ramses/.kde/share/apps/d3lphin/bookmarks.xml. Reported error was: Permission denied. This error message will only be shown once. The cause of the error needs to be fixed as quickly as possible, which is most likely a full hard drive.\nGrtz. Ramses\n\n\n", 
-      'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-      'os': 'Ubuntu 7.10', 
-      'project': 'Ubuntu', 
-      'stacktrace': [
-        {
-          'args': 'this=0xbff518cc, field=0xa00006f', 
-          'depth': 0, 
-          'extra': [
-            '#0  Strigi::AnalyzerConfiguration::indexType (this=0xbff518cc, field=0xa00006f)'
-          ], 
-          'function': 'Strigi::AnalyzerConfiguration::indexType'
-        }, 
-        {
-          'address': '0xb7e7f4a4', 
-          'args': 'this=0x80971b8, idx=0xb614e224, field=0xa00006f, value=@0xb614df64', 
-          'depth': 1, 
-          'extra': [
-            '#1  0xb7e7f4a4 in CLuceneIndexWriter::addValue (this=0x80971b8, idx=0xb614e224, field=0xa00006f, value=@0xb614df64)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
-        {
-          'address': '0xb7e80e5f', 
-          'args': 'this=0x80971b8, idx=0xb614e224, field=0xa00006f, value=1', 
-          'depth': 2, 
-          'extra': [
-            '#2  0xb7e80e5f in CLuceneIndexWriter::addValue (this=0x80971b8, idx=0xb614e224, field=0xa00006f, value=1)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
-        {
-          'address': '0xb7eac4c0', 
-          'args': 'this=0xb614e224, field=0xa00006f, value=1', 
-          'depth': 3, 
-          'extra': [
-            '#3  0xb7eac4c0 in Strigi::AnalysisResult::addValue (this=0xb614e224, field=0xa00006f, value=1)'
-          ], 
-          'function': 'Strigi::AnalysisResult::addValue'
-        }, 
-        {
-          'address': '0xb7ebdc43', 
-          'args': 'this=0xb7ee2928, complete=true', 
-          'depth': 4, 
-          'extra': [
-            '#4  0xb7ebdc43 in M3uLineAnalyzer::endAnalysis (this=0xb7ee2928, complete=true)'
-          ], 
-          'function': 'M3uLineAnalyzer::endAnalysis'
-        }, 
-        {
-          'address': '0xb7ebd909', 
-          'args': 'this=0x849c7a8, complete=true', 
-          'depth': 5, 
-          'extra': [
-            '#5  0xb7ebd909 in Strigi::LineEventAnalyzer::endAnalysis (this=0x849c7a8, complete=true)'
-          ], 
-          'function': 'Strigi::LineEventAnalyzer::endAnalysis'
-        }, 
-        {
-          'address': '0xb7eb2b7e', 
-          'args': 'this=0x8491950', 
-          'depth': 6, 
-          'extra': [
-            '#6  0xb7eb2b7e in Strigi::EventThroughAnalyzer::handleEnd (this=0x8491950)'
-          ], 
-          'function': 'Strigi::EventThroughAnalyzer::handleEnd'
-        }, 
-        {
-          'address': '0xb7d4d5a4', 
-          'args': 'this=0x84ab638', 
-          'depth': 7, 
-          'extra': [
-            '#7  0xb7d4d5a4 in Strigi::DataEventInputStream::finish (this=0x84ab638)'
-          ], 
-          'function': 'Strigi::DataEventInputStream::finish'
-        }, 
-        {
-          'address': '0xb7d4db22', 
-          'args': 'this=0x84ab638, start=@0xb614e0a4, min=20480, max=0', 
-          'depth': 8, 
-          'extra': [
-            '#8  0xb7d4db22 in Strigi::DataEventInputStream::read (this=0x84ab638, start=@0xb614e0a4, min=20480, max=0)'
-          ], 
-          'function': 'Strigi::DataEventInputStream::read'
-        }, 
-        {
-          'address': '0xb7edc895', 
-          'args': 'this=0x84c8290, idx=@0xb614e224, in=0x84ab638', 
-          'depth': 9, 
-          'extra': [
-            '#9  0xb7edc895 in TextEndAnalyzer::analyze (this=0x84c8290, idx=@0xb614e224, in=0x84ab638)'
-          ], 
-          'function': 'TextEndAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7eca359', 
-          'args': 'this=0x80ab530, idx=@0xb614e224, input=0x84ab638', 
-          'depth': 10, 
-          'extra': [
-            '#10 0xb7eca359 in Strigi::StreamAnalyzerPrivate::analyze (this=0x80ab530, idx=@0xb614e224, input=0x84ab638)'
-          ], 
-          'function': 'Strigi::StreamAnalyzerPrivate::analyze'
-        }, 
-        {
-          'address': '0xb7eca6b1', 
-          'args': 'this=0x80a8a04, idx=@0xb614e224, input=0xb614e1e0', 
-          'depth': 11, 
-          'extra': [
-            '#11 0xb7eca6b1 in Strigi::StreamAnalyzer::analyze (this=0x80a8a04, idx=@0xb614e224, input=0xb614e1e0)'
-          ], 
-          'function': 'Strigi::StreamAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7eac05d', 
-          'args': 'this=0xb614e224, file=0xb614e1e0', 
-          'depth': 12, 
-          'extra': [
-            '#12 0xb7eac05d in Strigi::AnalysisResult::index (this=0xb614e224, file=0xb614e1e0)'
-          ], 
-          'function': 'Strigi::AnalysisResult::index'
-        }, 
-        {
-          'address': '0xb7eb16bd', 
-          'args': 'this=0x80a89f8, analyzer=0x80a8a04', 
-          'depth': 13, 
-          'extra': [
-            '#13 0xb7eb16bd in Strigi::DirAnalyzer::Private::update (this=0x80a89f8, analyzer=0x80a8a04)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::update'
-        }, 
-        {
-          'address': '0xb7eb1d0c', 
-          'args': 'this=0x80a89f8, dirs=@0xb614e338, nthreads=1, c=0x809b224', 
-          'depth': 14, 
-          'extra': [
-            '#14 0xb7eb1d0c in Strigi::DirAnalyzer::Private::updateDirs (this=0x80a89f8, dirs=@0xb614e338, nthreads=1, c=0x809b224)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::updateDirs'
-        }, 
-        {
-          'address': '0xb7eb1dc8', 
-          'args': 'this=0xb614e344, dirs=@0xb614e338, nthreads=1, caller=0x809b224', 
-          'depth': 15, 
-          'extra': [
-            '#15 0xb7eb1dc8 in Strigi::DirAnalyzer::updateDirs (this=0xb614e344, dirs=@0xb614e338, nthreads=1, caller=0x809b224)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::updateDirs'
-        }, 
-        {
-          'address': '0x080622ff', 
-          'args': 'this=0x809b1e8', 
-          'depth': 16, 
-          'extra': [
-            '#16 0x080622ff in PollingListener::poll (this=0x809b1e8)'
-          ], 
-          'function': 'PollingListener::poll'
-        }, 
-        {
-          'address': '0x08062413', 
-          'args': 'this=0x809b1e8', 
-          'depth': 17, 
-          'extra': [
-            '#17 0x08062413 in PollingListener::run (this=0x809b1e8)'
-          ], 
-          'function': 'PollingListener::run'
-        }, 
-        {
-          'address': '0x0805b154', 
-          'args': 'd=0x809b1e8', 
-          'depth': 18, 
-          'extra': [
-            '#18 0x0805b154 in threadstarter (d=0x809b1e8) at /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-          'function': 'threadstarter'
-        }, 
-        {
-          'address': '0xb7e8e46b', 
-          'args': '', 
-          'depth': 19, 
-          'dylib': '/lib/tls/i686/cmov/libpthread.so.0', 
-          'extra': [
-            '#19 0xb7e8e46b in start_thread () from /lib/tls/i686/cmov/libpthread.so.0'
-          ], 
-          'function': 'start_thread'
-        }, 
-        {
-          'address': '0xb7a3273e', 
-          'args': '', 
-          'depth': 20, 
-          'dylib': '/lib/tls/i686/cmov/libc.so.6', 
-          'extra': [
-            '#20 0xb7a3273e in clone () from /lib/tls/i686/cmov/libc.so.6'
-          ], 
-          'function': 'clone'
-        }
-      ], 
-      'type': 'Crash'
-    }, 
-    {
-      'CrashCounter': '1', 
-      'ExecutablePath': '/usr/bin/strigidaemon', 
-      'NonfreeKernelModules': 'cdrom', 
-      'Package': 'strigi-daemon 0.5.5-2ubuntu2', 
-      'PackageArchitecture': 'i386', 
-      'ProcCmdline': '/usr/bin/strigidaemon clucene', 
-      'ProcCwd': '/home/ian', 
-      'ProcEnviron': ' PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games\n LANG=en_GB.UTF-8\n SHELL=/bin/bash\n', 
-      'Signal': '11', 
-      'SourcePackage': 'strigi', 
-      'Title': 'strigidaemon crashed with SIGSEGV in Strigi::AnalyzerConfiguration::indexType()', 
-      'Uname': 'Linux ian-laptop 2.6.22-12-generic #1 SMP Sun Sep 23 18:11:30 GMT 2007 i686 GNU/Linux', 
-      'UserGroups': 'adm admin audio cdrom dialout dip floppy lpadmin netdev plugdev powerdev scanner video', 
-      'buckets': {
-        '1.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.0/Ubuntu:launchpad:0000116712', 
-          'id': 'Ubuntu:launchpad:0000116712', 
-          'project': 'Ubuntu', 
-          'threshold': '1.0', 
-          'total': null
-        }, 
-        '1.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.5/Ubuntu:launchpad:0000127694', 
-          'id': 'Ubuntu:launchpad:0000127694', 
-          'project': 'Ubuntu', 
-          'threshold': '1.5', 
-          'total': null
-        }, 
-        '2.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.0/Ubuntu:launchpad:0000132195', 
-          'id': 'Ubuntu:launchpad:0000132195', 
-          'project': 'Ubuntu', 
-          'threshold': '2.0', 
-          'total': null
-        }, 
-        '2.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '2.75', 
-          'total': null
-        }, 
-        '3.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.0', 
-          'total': null
-        }, 
-        '3.25': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.25/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.25', 
-          'total': null
-        }, 
-        '3.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.5', 
-          'total': null
-        }, 
-        '3.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.75', 
-          'total': null
-        }, 
-        '4.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.0', 
-          'total': null
-        }, 
-        '4.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.5', 
-          'total': null
-        }, 
-        '5.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '5.0', 
-          'total': null
-        }, 
-        '5.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '5.5', 
-          'total': null
-        }, 
-        '6.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/6.0/Ubuntu:launchpad:0000146201', 
-          'id': 'Ubuntu:launchpad:0000146201', 
-          'project': 'Ubuntu', 
-          'threshold': '6.0', 
-          'total': null
-        }, 
-        '7.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/7.0/Ubuntu:launchpad:0000149548', 
-          'id': 'Ubuntu:launchpad:0000149548', 
-          'project': 'Ubuntu', 
-          'threshold': '7.0', 
-          'total': null
-        }, 
-        'top_match': {
-          'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-          'project': 'Ubuntu', 
-          'report_id': 'Ubuntu:launchpad:0000146201', 
-          'score': 6.310311
-        }
-      }, 
-      'cpu': 'i386', 
-      'database_id': 'Ubuntu:launchpad:0000149548', 
-      'date': '2007-10-05T18:31:39', 
-      'extra': 'Crashes on every startup\n\nStacktraceTop:  Strigi::AnalyzerConfiguration::indexType ()\n CLuceneIndexWriter::addValue ()\n CLuceneIndexWriter::addValue ()\n Strigi::AnalysisResult::addValue ()\n ?? () from /usr/lib/libstreamanalyzer.so.0\n\n', 
-      'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-      'os': 'Ubuntu 7.10', 
-      'project': 'Ubuntu', 
-      'stacktrace': [
-        {
-          'args': 'this=0xbfcfc1ac, field=0x0', 
-          'depth': 0, 
-          'extra': [
-            '#0  Strigi::AnalyzerConfiguration::indexType (this=0xbfcfc1ac, field=0x0)'
-          ], 
-          'function': 'Strigi::AnalyzerConfiguration::indexType'
-        }, 
-        {
-          'address': '0xb7edd4a4', 
-          'args': 'this=0x808be20, idx=0xb61ad224, field=0x0, value=@0xb61acf64', 
-          'depth': 1, 
-          'extra': [
-            '#1  0xb7edd4a4 in CLuceneIndexWriter::addValue (this=0x808be20, idx=0xb61ad224, field=0x0, value=@0xb61acf64)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
-        {
-          'address': '0xb7edee5f', 
-          'args': 'this=0x808be20, idx=0xb61ad224, field=0x0, value=1', 
-          'depth': 2, 
-          'extra': [
-            '#2  0xb7edee5f in CLuceneIndexWriter::addValue (this=0x808be20, idx=0xb61ad224, field=0x0, value=1)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
-        {
-          'address': '0xb7f0b4c0', 
-          'args': 'this=0xb61ad224, field=0x0, value=1', 
-          'depth': 3, 
-          'extra': [
-            '#3  0xb7f0b4c0 in Strigi::AnalysisResult::addValue (this=0xb61ad224, field=0x0, value=1)'
-          ], 
-          'function': 'Strigi::AnalysisResult::addValue'
-        }, 
-        {
-          'address': '0xb7f1cc43', 
-          'args': 'this=0xb7f41928, complete=true', 
-          'depth': 4, 
-          'extra': [
-            '#4  0xb7f1cc43 in M3uLineAnalyzer::endAnalysis (this=0xb7f41928, complete=true)'
-          ], 
-          'function': 'M3uLineAnalyzer::endAnalysis'
-        }, 
-        {
-          'address': '0xb7f1c909', 
-          'args': 'this=0x80a49e8, complete=true', 
-          'depth': 5, 
-          'extra': [
-            '#5  0xb7f1c909 in Strigi::LineEventAnalyzer::endAnalysis (this=0x80a49e8, complete=true)'
-          ], 
-          'function': 'Strigi::LineEventAnalyzer::endAnalysis'
-        }, 
-        {
-          'address': '0xb7f11b7e', 
-          'args': 'this=0x80a4a50', 
-          'depth': 6, 
-          'extra': [
-            '#6  0xb7f11b7e in Strigi::EventThroughAnalyzer::handleEnd (this=0x80a4a50)'
-          ], 
-          'function': 'Strigi::EventThroughAnalyzer::handleEnd'
-        }, 
-        {
-          'address': '0xb7dab5a4', 
-          'args': 'this=0x80c4ef0', 
-          'depth': 7, 
-          'extra': [
-            '#7  0xb7dab5a4 in Strigi::DataEventInputStream::finish (this=0x80c4ef0)'
-          ], 
-          'function': 'Strigi::DataEventInputStream::finish'
-        }, 
-        {
-          'address': '0xb7dabb22', 
-          'args': 'this=0x80c4ef0, start=@0xb61ad0a4, min=20480, max=0', 
-          'depth': 8, 
-          'extra': [
-            '#8  0xb7dabb22 in Strigi::DataEventInputStream::read (this=0x80c4ef0, start=@0xb61ad0a4, min=20480, max=0)'
-          ], 
-          'function': 'Strigi::DataEventInputStream::read'
-        }, 
-        {
-          'address': '0xb7f3b895', 
-          'args': 'this=0x80c4e28, idx=@0xb61ad224, in=0x80c4ef0', 
-          'depth': 9, 
-          'extra': [
-            '#9  0xb7f3b895 in TextEndAnalyzer::analyze (this=0x80c4e28, idx=@0xb61ad224, in=0x80c4ef0)'
-          ], 
-          'function': 'TextEndAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7f29359', 
-          'args': 'this=0x80a2368, idx=@0xb61ad224, input=0x80c4ef0', 
-          'depth': 10, 
-          'extra': [
-            '#10 0xb7f29359 in Strigi::StreamAnalyzerPrivate::analyze (this=0x80a2368, idx=@0xb61ad224, input=0x80c4ef0)'
-          ], 
-          'function': 'Strigi::StreamAnalyzerPrivate::analyze'
-        }, 
-        {
-          'address': '0xb7f296b1', 
-          'args': 'this=0x809f83c, idx=@0xb61ad224, input=0xb61ad1e0', 
-          'depth': 11, 
-          'extra': [
-            '#11 0xb7f296b1 in Strigi::StreamAnalyzer::analyze (this=0x809f83c, idx=@0xb61ad224, input=0xb61ad1e0)'
-          ], 
-          'function': 'Strigi::StreamAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7f0b05d', 
-          'args': 'this=0xb61ad224, file=0xb61ad1e0', 
-          'depth': 12, 
-          'extra': [
-            '#12 0xb7f0b05d in Strigi::AnalysisResult::index (this=0xb61ad224, file=0xb61ad1e0)'
-          ], 
-          'function': 'Strigi::AnalysisResult::index'
-        }, 
-        {
-          'address': '0xb7f106bd', 
-          'args': 'this=0x809f830, analyzer=0x809f83c', 
-          'depth': 13, 
-          'extra': [
-            '#13 0xb7f106bd in Strigi::DirAnalyzer::Private::update (this=0x809f830, analyzer=0x809f83c)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::update'
-        }, 
-        {
-          'address': '0xb7f10d0c', 
-          'args': 'this=0x809f830, dirs=@0xb61ad338, nthreads=1, c=0x808da9c', 
-          'depth': 14, 
-          'extra': [
-            '#14 0xb7f10d0c in Strigi::DirAnalyzer::Private::updateDirs (this=0x809f830, dirs=@0xb61ad338, nthreads=1, c=0x808da9c)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::updateDirs'
-        }, 
-        {
-          'address': '0xb7f10dc8', 
-          'args': 'this=0xb61ad344, dirs=@0xb61ad338, nthreads=1, caller=0x808da9c', 
-          'depth': 15, 
-          'extra': [
-            '#15 0xb7f10dc8 in Strigi::DirAnalyzer::updateDirs (this=0xb61ad344, dirs=@0xb61ad338, nthreads=1, caller=0x808da9c)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::updateDirs'
-        }, 
-        {
-          'address': '0x080622ff', 
-          'args': 'this=0x808da60', 
-          'depth': 16, 
-          'extra': [
-            '#16 0x080622ff in PollingListener::poll (this=0x808da60)'
-          ], 
-          'function': 'PollingListener::poll'
-        }, 
-        {
-          'address': '0x08062413', 
-          'args': 'this=0x808da60', 
-          'depth': 17, 
-          'extra': [
-            '#17 0x08062413 in PollingListener::run (this=0x808da60)'
-          ], 
-          'function': 'PollingListener::run'
-        }, 
-        {
-          'address': '0x0805b154', 
-          'args': 'd=0x808da60', 
-          'depth': 18, 
-          'extra': [
-            '#18 0x0805b154 in threadstarter (d=0x808da60) at /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-          'function': 'threadstarter'
-        }, 
-        {
-          'address': '0xb7eed46b', 
-          'args': '', 
-          'depth': 19, 
-          'dylib': '/lib/tls/i686/cmov/libpthread.so.0', 
-          'extra': [
-            '#19 0xb7eed46b in start_thread () from /lib/tls/i686/cmov/libpthread.so.0'
-          ], 
-          'function': 'start_thread'
-        }, 
-        {
-          'address': '0xb7a9173e', 
-          'args': '', 
-          'depth': 20, 
-          'dylib': '/lib/tls/i686/cmov/libc.so.6', 
-          'extra': [
-            '#20 0xb7a9173e in clone () from /lib/tls/i686/cmov/libc.so.6'
-          ], 
-          'function': 'clone'
-        }
-      ], 
-      'type': 'Crash'
-    }, 
-    {
-      'CrashCounter': '1', 
-      'ExecutablePath': '/usr/bin/strigidaemon', 
-      'NonfreeKernelModules': 'fglrx', 
-      'Package': 'strigi-daemon 0.5.5-2ubuntu2', 
-      'PackageArchitecture': 'i386', 
-      'ProcCmdline': '/usr/bin/strigidaemon clucene', 
-      'ProcCwd': '/home/goblin', 
-      'ProcEnviron': ' PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games\n LANG=de_DE.UTF-8\n SHELL=/bin/bash\n', 
-      'Signal': '11', 
-      'SourcePackage': 'strigi', 
-      'Title': 'strigidaemon crashed with SIGSEGV in Strigi::AnalyzerConfiguration::indexType()', 
-      'Uname': 'Linux Ridcully 2.6.22-12-generic #1 SMP Sun Sep 23 18:11:30 GMT 2007 i686 GNU/Linux', 
-      'UserGroups': 'adm admin audio cdrom dialout dip floppy lpadmin netdev plugdev powerdev scanner video', 
-      'buckets': {
-        '1.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.0/Ubuntu:launchpad:0000116712', 
-          'id': 'Ubuntu:launchpad:0000116712', 
-          'project': 'Ubuntu', 
-          'threshold': '1.0', 
-          'total': null
-        }, 
-        '1.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.5/Ubuntu:launchpad:0000127694', 
-          'id': 'Ubuntu:launchpad:0000127694', 
-          'project': 'Ubuntu', 
-          'threshold': '1.5', 
-          'total': null
-        }, 
-        '2.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.0/Ubuntu:launchpad:0000132195', 
-          'id': 'Ubuntu:launchpad:0000132195', 
-          'project': 'Ubuntu', 
-          'threshold': '2.0', 
-          'total': null
-        }, 
-        '2.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '2.75', 
-          'total': null
-        }, 
-        '3.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.0', 
-          'total': null
-        }, 
-        '3.25': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.25/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.25', 
-          'total': null
-        }, 
-        '3.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.5', 
-          'total': null
-        }, 
-        '3.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.75', 
-          'total': null
-        }, 
-        '4.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.0', 
-          'total': null
-        }, 
-        '4.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.5', 
-          'total': null
-        }, 
-        '5.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '5.0', 
-          'total': null
-        }, 
-        '5.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '5.5', 
-          'total': null
-        }, 
-        '6.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/6.0/Ubuntu:launchpad:0000148917', 
-          'id': 'Ubuntu:launchpad:0000148917', 
-          'project': 'Ubuntu', 
-          'threshold': '6.0', 
-          'total': null
-        }, 
-        '7.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/7.0/Ubuntu:launchpad:0000148917', 
-          'id': 'Ubuntu:launchpad:0000148917', 
-          'project': 'Ubuntu', 
-          'threshold': '7.0', 
-          'total': null
-        }, 
-        'top_match': {
-          'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-          'project': 'Ubuntu', 
-          'report_id': 'Ubuntu:launchpad:0000146435', 
-          'score': 5.905002
-        }
-      }, 
-      'cpu': 'i386', 
-      'database_id': 'Ubuntu:launchpad:0000148917', 
-      'date': '2007-10-04T12:51:05', 
-      'extra': 'After the upgrade from feisty to gutsy, the newly installed strigi daemon crashes on start-up. \n\nKubuntu Gutsy Beta.\n\nStacktraceTop:  Strigi::AnalyzerConfiguration::indexType ()\n CLuceneIndexWriter::addValue ()\n CLuceneIndexWriter::addValue ()\n Strigi::AnalysisResult::addValue ()\n ?? () from /usr/lib/libstreamanalyzer.so.0\n\n', 
-      'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-      'os': 'Ubuntu 7.10', 
-      'project': 'Ubuntu', 
-      'stacktrace': [
-        {
-          'args': 'this=0xbfef0e9c, field=0x7300001c', 
-          'depth': 0, 
-          'extra': [
-            '#0  Strigi::AnalyzerConfiguration::indexType (this=0xbfef0e9c, field=0x7300001c)'
-          ], 
-          'function': 'Strigi::AnalyzerConfiguration::indexType'
-        }, 
-        {
-          'address': '0xb7ec44a4', 
-          'args': 'this=0x80928a0, idx=0xb6193224, field=0x7300001c, value=@0xb6192f64', 
-          'depth': 1, 
-          'extra': [
-            '#1  0xb7ec44a4 in CLuceneIndexWriter::addValue (this=0x80928a0, idx=0xb6193224, field=0x7300001c, value=@0xb6192f64)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
-        {
-          'address': '0xb7ec5e5f', 
-          'args': 'this=0x80928a0, idx=0xb6193224, field=0x7300001c, value=23', 
-          'depth': 2, 
-          'extra': [
-            '#2  0xb7ec5e5f in CLuceneIndexWriter::addValue (this=0x80928a0, idx=0xb6193224, field=0x7300001c, value=23)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
-        {
-          'address': '0xb7ef14c0', 
-          'args': 'this=0xb6193224, field=0x7300001c, value=23', 
-          'depth': 3, 
-          'extra': [
-            '#3  0xb7ef14c0 in Strigi::AnalysisResult::addValue (this=0xb6193224, field=0x7300001c, value=23)'
-          ], 
-          'function': 'Strigi::AnalysisResult::addValue'
-        }, 
-        {
-          'address': '0xb7f02c43', 
-          'args': 'this=0xb7f27928, complete=true', 
-          'depth': 4, 
-          'extra': [
-            '#4  0xb7f02c43 in M3uLineAnalyzer::endAnalysis (this=0xb7f27928, complete=true)'
-          ], 
-          'function': 'M3uLineAnalyzer::endAnalysis'
-        }, 
-        {
-          'address': '0xb7f02909', 
-          'args': 'this=0x83f85d8, complete=true', 
-          'depth': 5, 
-          'extra': [
-            '#5  0xb7f02909 in Strigi::LineEventAnalyzer::endAnalysis (this=0x83f85d8, complete=true)'
-          ], 
-          'function': 'Strigi::LineEventAnalyzer::endAnalysis'
-        }, 
-        {
-          'address': '0xb7ef7b7e', 
-          'args': 'this=0x83ea5e0', 
-          'depth': 6, 
-          'extra': [
-            '#6  0xb7ef7b7e in Strigi::EventThroughAnalyzer::handleEnd (this=0x83ea5e0)'
-          ], 
-          'function': 'Strigi::EventThroughAnalyzer::handleEnd'
-        }, 
-        {
-          'address': '0xb7d925a4', 
-          'args': 'this=0x8501550', 
-          'depth': 7, 
-          'extra': [
-            '#7  0xb7d925a4 in Strigi::DataEventInputStream::finish (this=0x8501550)'
-          ], 
-          'function': 'Strigi::DataEventInputStream::finish'
-        }, 
-        {
-          'address': '0xb7d92b22', 
-          'args': 'this=0x8501550, start=@0xb61930a4, min=20480, max=0', 
-          'depth': 8, 
-          'extra': [
-            '#8  0xb7d92b22 in Strigi::DataEventInputStream::read (this=0x8501550, start=@0xb61930a4, min=20480, max=0)'
-          ], 
-          'function': 'Strigi::DataEventInputStream::read'
-        }, 
-        {
-          'address': '0xb7f21895', 
-          'args': 'this=0x853e8a0, idx=@0xb6193224, in=0x8501550', 
-          'depth': 9, 
-          'extra': [
-            '#9  0xb7f21895 in TextEndAnalyzer::analyze (this=0x853e8a0, idx=@0xb6193224, in=0x8501550)'
-          ], 
-          'function': 'TextEndAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7f0f359', 
-          'args': 'this=0x80b7658, idx=@0xb6193224, input=0x8501550', 
-          'depth': 10, 
-          'extra': [
-            '#10 0xb7f0f359 in Strigi::StreamAnalyzerPrivate::analyze (this=0x80b7658, idx=@0xb6193224, input=0x8501550)'
-          ], 
-          'function': 'Strigi::StreamAnalyzerPrivate::analyze'
-        }, 
-        {
-          'address': '0xb7f0f6b1', 
-          'args': 'this=0x80b4b2c, idx=@0xb6193224, input=0xb61931e0', 
-          'depth': 11, 
-          'extra': [
-            '#11 0xb7f0f6b1 in Strigi::StreamAnalyzer::analyze (this=0x80b4b2c, idx=@0xb6193224, input=0xb61931e0)'
-          ], 
-          'function': 'Strigi::StreamAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7ef105d', 
-          'args': 'this=0xb6193224, file=0xb61931e0', 
-          'depth': 12, 
-          'extra': [
-            '#12 0xb7ef105d in Strigi::AnalysisResult::index (this=0xb6193224, file=0xb61931e0)'
-          ], 
-          'function': 'Strigi::AnalysisResult::index'
-        }, 
-        {
-          'address': '0xb7ef66bd', 
-          'args': 'this=0x80b4b20, analyzer=0x80b4b2c', 
-          'depth': 13, 
-          'extra': [
-            '#13 0xb7ef66bd in Strigi::DirAnalyzer::Private::update (this=0x80b4b20, analyzer=0x80b4b2c)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::update'
-        }, 
-        {
-          'address': '0xb7ef6d0c', 
-          'args': 'this=0x80b4b20, dirs=@0xb6193338, nthreads=1, c=0x808df6c', 
-          'depth': 14, 
-          'extra': [
-            '#14 0xb7ef6d0c in Strigi::DirAnalyzer::Private::updateDirs (this=0x80b4b20, dirs=@0xb6193338, nthreads=1, c=0x808df6c)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::updateDirs'
-        }, 
-        {
-          'address': '0xb7ef6dc8', 
-          'args': 'this=0xb6193344, dirs=@0xb6193338, nthreads=1, caller=0x808df6c', 
-          'depth': 15, 
-          'extra': [
-            '#15 0xb7ef6dc8 in Strigi::DirAnalyzer::updateDirs (this=0xb6193344, dirs=@0xb6193338, nthreads=1, caller=0x808df6c)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::updateDirs'
-        }, 
-        {
-          'address': '0x080622ff', 
-          'args': 'this=0x808df30', 
-          'depth': 16, 
-          'extra': [
-            '#16 0x080622ff in PollingListener::poll (this=0x808df30)'
-          ], 
-          'function': 'PollingListener::poll'
-        }, 
-        {
-          'address': '0x08062413', 
-          'args': 'this=0x808df30', 
-          'depth': 17, 
-          'extra': [
-            '#17 0x08062413 in PollingListener::run (this=0x808df30)'
-          ], 
-          'function': 'PollingListener::run'
-        }, 
-        {
-          'address': '0x0805b154', 
-          'args': 'd=0x808df30', 
-          'depth': 18, 
-          'extra': [
-            '#18 0x0805b154 in threadstarter (d=0x808df30) at /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-          'function': 'threadstarter'
-        }, 
-        {
-          'address': '0xb7ed346b', 
-          'args': '', 
-          'depth': 19, 
-          'dylib': '/lib/tls/i686/cmov/libpthread.so.0', 
-          'extra': [
-            '#19 0xb7ed346b in start_thread () from /lib/tls/i686/cmov/libpthread.so.0'
-          ], 
-          'function': 'start_thread'
-        }, 
-        {
-          'address': '0xb7a7773e', 
-          'args': '', 
-          'depth': 20, 
-          'dylib': '/lib/tls/i686/cmov/libc.so.6', 
-          'extra': [
-            '#20 0xb7a7773e in clone () from /lib/tls/i686/cmov/libc.so.6'
-          ], 
-          'function': 'clone'
-        }
-      ], 
-      'type': 'Crash'
-    }, 
-    {
-      'CrashCounter': '1', 
-      'ExecutablePath': '/usr/bin/strigidaemon', 
-      'NonfreeKernelModules': 'nvidia', 
-      'Package': 'strigi-daemon 0.5.5-2ubuntu2', 
-      'PackageArchitecture': 'i386', 
-      'ProcCmdline': '/usr/bin/strigidaemon clucene', 
-      'ProcCwd': '/home/richard', 
-      'ProcEnviron': ' PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games\n LANG=en_US.UTF-8\n SHELL=/bin/bash\n', 
-      'Signal': '11', 
-      'SourcePackage': 'strigi', 
-      'Title': 'strigidaemon crashed with SIGSEGV in Strigi::AnalyzerConfiguration::indexType()', 
-      'Uname': 'Linux richard-desktop 2.6.22-12-generic #1 SMP Sun Sep 23 18:11:30 GMT 2007 i686 GNU/Linux', 
-      'UserGroups': 'adm admin audio cdrom dialout dip floppy lpadmin netdev plugdev powerdev scanner video', 
-      'buckets': {
-        '1.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.0/Ubuntu:launchpad:0000116712', 
-          'id': 'Ubuntu:launchpad:0000116712', 
-          'project': 'Ubuntu', 
-          'threshold': '1.0', 
-          'total': null
-        }, 
-        '1.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/1.5/Ubuntu:launchpad:0000127694', 
-          'id': 'Ubuntu:launchpad:0000127694', 
-          'project': 'Ubuntu', 
-          'threshold': '1.5', 
-          'total': null
-        }, 
-        '2.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.0/Ubuntu:launchpad:0000132195', 
-          'id': 'Ubuntu:launchpad:0000132195', 
-          'project': 'Ubuntu', 
-          'threshold': '2.0', 
-          'total': null
-        }, 
-        '2.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/2.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '2.75', 
-          'total': null
-        }, 
-        '3.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.0', 
-          'total': null
-        }, 
-        '3.25': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.25/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.25', 
-          'total': null
-        }, 
-        '3.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.5', 
-          'total': null
-        }, 
-        '3.75': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/3.75/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '3.75', 
-          'total': null
-        }, 
-        '4.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.0', 
-          'total': null
-        }, 
-        '4.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/4.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '4.5', 
-          'total': null
-        }, 
-        '5.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.0/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '5.0', 
-          'total': null
-        }, 
-        '5.5': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/5.5/Ubuntu:launchpad:0000139026', 
-          'id': 'Ubuntu:launchpad:0000139026', 
-          'project': 'Ubuntu', 
-          'threshold': '5.5', 
-          'total': null
-        }, 
-        '6.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/6.0/Ubuntu:launchpad:0000148343', 
-          'id': 'Ubuntu:launchpad:0000148343', 
-          'project': 'Ubuntu', 
-          'threshold': '6.0', 
-          'total': null
-        }, 
-        '7.0': {
-          'href': 'http://localhost:49263/Ubuntu/buckets/7.0/Ubuntu:launchpad:0000148343', 
-          'id': 'Ubuntu:launchpad:0000148343', 
-          'project': 'Ubuntu', 
-          'threshold': '7.0', 
-          'total': null
-        }, 
-        'top_match': {
-          'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-          'project': 'Ubuntu', 
-          'report_id': 'Ubuntu:launchpad:0000146435', 
-          'score': 5.762886
-        }
-      }, 
-      'cpu': 'i386', 
-      'database_id': 'Ubuntu:launchpad:0000148343', 
-      'date': '2007-10-02T19:55:35', 
-      'extra': 'After logging into a user account (using Kubuntu desktop with kdm), if I try to plug in a flash mp3 player, strigi crashes.\n\nStacktraceTop:  Strigi::AnalyzerConfiguration::indexType ()\n CLuceneIndexWriter::addValue ()\n CLuceneIndexWriter::addValue ()\n Strigi::AnalysisResult::addValue ()\n ?? () from /usr/lib/libstreamanalyzer.so.0\n\n', 
-      'href': 'http://localhost:49263/Ubuntu/reports/launchpad', 
-      'os': 'Ubuntu 7.10', 
-      'project': 'Ubuntu', 
-      'stacktrace': [
-        {
-          'args': 'this=0xbf894a9c, field=0x67697274', 
-          'depth': 0, 
-          'extra': [
-            '#0  Strigi::AnalyzerConfiguration::indexType (this=0xbf894a9c, field=0x67697274)'
-          ], 
-          'function': 'Strigi::AnalyzerConfiguration::indexType'
-        }, 
-        {
-          'address': '0xb7ec14a4', 
-          'args': 'this=0x8094790, idx=0xb6191010, field=0x67697274, value=@0xb6190dd4', 
-          'depth': 1, 
-          'extra': [
-            '#1  0xb7ec14a4 in CLuceneIndexWriter::addValue (this=0x8094790, idx=0xb6191010, field=0x67697274, value=@0xb6190dd4)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
-        {
-          'address': '0xb7ec2e5f', 
-          'args': 'this=0x8094790, idx=0xb6191010, field=0x67697274, value=16', 
-          'depth': 2, 
-          'extra': [
-            '#2  0xb7ec2e5f in CLuceneIndexWriter::addValue (this=0x8094790, idx=0xb6191010, field=0x67697274, value=16)'
-          ], 
-          'function': 'CLuceneIndexWriter::addValue'
-        }, 
-        {
-          'address': '0xb7eef4c0', 
-          'args': 'this=0xb6191010, field=0x67697274, value=16', 
-          'depth': 3, 
-          'extra': [
-            '#3  0xb7eef4c0 in Strigi::AnalysisResult::addValue (this=0xb6191010, field=0x67697274, value=16)'
-          ], 
-          'function': 'Strigi::AnalysisResult::addValue'
-        }, 
-        {
-          'address': '0xb7f00c43', 
-          'args': 'this=0xb7f25928, complete=true', 
-          'depth': 4, 
-          'extra': [
-            '#4  0xb7f00c43 in M3uLineAnalyzer::endAnalysis (this=0xb7f25928, complete=true)'
-          ], 
-          'function': 'M3uLineAnalyzer::endAnalysis'
-        }, 
-        {
-          'address': '0xb7f00909', 
-          'args': 'this=0x82e4358, complete=true', 
-          'depth': 5, 
-          'extra': [
-            '#5  0xb7f00909 in Strigi::LineEventAnalyzer::endAnalysis (this=0x82e4358, complete=true)'
-          ], 
-          'function': 'Strigi::LineEventAnalyzer::endAnalysis'
-        }, 
-        {
-          'address': '0xb7ef5b7e', 
-          'args': 'this=0x82e8038', 
-          'depth': 6, 
-          'extra': [
-            '#6  0xb7ef5b7e in Strigi::EventThroughAnalyzer::handleEnd (this=0x82e8038)'
-          ], 
-          'function': 'Strigi::EventThroughAnalyzer::handleEnd'
-        }, 
-        {
-          'address': '0xb7d8f5a4', 
-          'args': 'this=0x82e7ef8', 
-          'depth': 7, 
-          'extra': [
-            '#7  0xb7d8f5a4 in Strigi::DataEventInputStream::finish (this=0x82e7ef8)'
-          ], 
-          'function': 'Strigi::DataEventInputStream::finish'
-        }, 
-        {
-          'address': '0xb7d8fb22', 
-          'args': 'this=0x82e7ef8, start=@0xb6190f14, min=20480, max=0', 
-          'depth': 8, 
-          'extra': [
-            '#8  0xb7d8fb22 in Strigi::DataEventInputStream::read (this=0x82e7ef8, start=@0xb6190f14, min=20480, max=0)'
-          ], 
-          'function': 'Strigi::DataEventInputStream::read'
-        }, 
-        {
-          'address': '0xb7f1f895', 
-          'args': 'this=0x82db300, idx=@0xb6191010, in=0x82e7ef8', 
-          'depth': 9, 
-          'extra': [
-            '#9  0xb7f1f895 in TextEndAnalyzer::analyze (this=0x82db300, idx=@0xb6191010, in=0x82e7ef8)'
-          ], 
-          'function': 'TextEndAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7f0d359', 
-          'args': 'this=0x80ae6a0, idx=@0xb6191010, input=0x82e7ef8', 
-          'depth': 10, 
-          'extra': [
-            '#10 0xb7f0d359 in Strigi::StreamAnalyzerPrivate::analyze (this=0x80ae6a0, idx=@0xb6191010, input=0x82e7ef8)'
-          ], 
-          'function': 'Strigi::StreamAnalyzerPrivate::analyze'
-        }, 
-        {
-          'address': '0xb7f0d6b1', 
-          'args': 'this=0x80abb74, idx=@0xb6191010, input=0x8304f28', 
-          'depth': 11, 
-          'extra': [
-            '#11 0xb7f0d6b1 in Strigi::StreamAnalyzer::analyze (this=0x80abb74, idx=@0xb6191010, input=0x8304f28)'
-          ], 
-          'function': 'Strigi::StreamAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7eefcce', 
-          'args': 'this=0xb6191224, name=@0xb6191068, mt=1102251444, file=0x8304f28', 
-          'depth': 12, 
-          'extra': [
-            '#12 0xb7eefcce in Strigi::AnalysisResult::indexChild (this=0xb6191224, name=@0xb6191068, mt=1102251444, file=0x8304f28)'
-          ], 
-          'function': 'Strigi::AnalysisResult::indexChild'
-        }, 
-        {
-          'address': '0xb7f1fbcf', 
-          'args': 'this=0x82ad100, idx=@0xb6191224, in=0x82ab260', 
-          'depth': 13, 
-          'extra': [
-            '#13 0xb7f1fbcf in ZipEndAnalyzer::analyze (this=0x82ad100, idx=@0xb6191224, in=0x82ab260)'
-          ], 
-          'function': 'ZipEndAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7f0d359', 
-          'args': 'this=0x80ae6a0, idx=@0xb6191224, input=0x82ab260', 
-          'depth': 14, 
-          'extra': [
-            '#14 0xb7f0d359 in Strigi::StreamAnalyzerPrivate::analyze (this=0x80ae6a0, idx=@0xb6191224, input=0x82ab260)'
-          ], 
-          'function': 'Strigi::StreamAnalyzerPrivate::analyze'
-        }, 
-        {
-          'address': '0xb7f0d6b1', 
-          'args': 'this=0x80abb74, idx=@0xb6191224, input=0xb61911e0', 
-          'depth': 15, 
-          'extra': [
-            '#15 0xb7f0d6b1 in Strigi::StreamAnalyzer::analyze (this=0x80abb74, idx=@0xb6191224, input=0xb61911e0)'
-          ], 
-          'function': 'Strigi::StreamAnalyzer::analyze'
-        }, 
-        {
-          'address': '0xb7eef05d', 
-          'args': 'this=0xb6191224, file=0xb61911e0', 
-          'depth': 16, 
-          'extra': [
-            '#16 0xb7eef05d in Strigi::AnalysisResult::index (this=0xb6191224, file=0xb61911e0)'
-          ], 
-          'function': 'Strigi::AnalysisResult::index'
-        }, 
-        {
-          'address': '0xb7ef46bd', 
-          'args': 'this=0x80abb68, analyzer=0x80abb74', 
-          'depth': 17, 
-          'extra': [
-            '#17 0xb7ef46bd in Strigi::DirAnalyzer::Private::update (this=0x80abb68, analyzer=0x80abb74)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::update'
-        }, 
-        {
-          'address': '0xb7ef4d0c', 
-          'args': 'this=0x80abb68, dirs=@0xb6191338, nthreads=1, c=0x809b254', 
-          'depth': 18, 
-          'extra': [
-            '#18 0xb7ef4d0c in Strigi::DirAnalyzer::Private::updateDirs (this=0x80abb68, dirs=@0xb6191338, nthreads=1, c=0x809b254)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::Private::updateDirs'
-        }, 
-        {
-          'address': '0xb7ef4dc8', 
-          'args': 'this=0xb6191344, dirs=@0xb6191338, nthreads=1, caller=0x809b254', 
-          'depth': 19, 
-          'extra': [
-            '#19 0xb7ef4dc8 in Strigi::DirAnalyzer::updateDirs (this=0xb6191344, dirs=@0xb6191338, nthreads=1, caller=0x809b254)'
-          ], 
-          'function': 'Strigi::DirAnalyzer::updateDirs'
-        }, 
-        {
-          'address': '0x080622ff', 
-          'args': 'this=0x809b218', 
-          'depth': 20, 
-          'extra': [
-            '#20 0x080622ff in PollingListener::poll (this=0x809b218)'
-          ], 
-          'function': 'PollingListener::poll'
-        }, 
-        {
-          'address': '0x08062413', 
-          'args': 'this=0x809b218', 
-          'depth': 21, 
-          'extra': [
-            '#21 0x08062413 in PollingListener::run (this=0x809b218)'
-          ], 
-          'function': 'PollingListener::run'
-        }, 
-        {
-          'address': '0x0805b154', 
-          'args': 'd=0x809b218', 
-          'depth': 22, 
-          'extra': [
-            '#22 0x0805b154 in threadstarter (d=0x809b218) at /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-            '  [Error: /build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp was not found in source tree]'
-          ], 
-          'file': '/build/buildd/strigi-0.5.5/src/daemon/strigithread.cpp:115', 
-          'function': 'threadstarter'
-        }, 
-        {
-          'address': '0xb7ed146b', 
-          'args': '', 
-          'depth': 23, 
-          'dylib': '/lib/tls/i686/cmov/libpthread.so.0', 
-          'extra': [
-            '#23 0xb7ed146b in start_thread () from /lib/tls/i686/cmov/libpthread.so.0'
-          ], 
-          'function': 'start_thread'
-        }, 
-        {
-          'address': '0xb7a7573e', 
-          'args': '', 
-          'depth': 24, 
-          'dylib': '/lib/tls/i686/cmov/libc.so.6', 
-          'extra': [
-            '#24 0xb7a7573e in clone () from /lib/tls/i686/cmov/libc.so.6'
-          ], 
-          'function': 'clone'
-        }
-      ], 
+      ],
       'type': 'Crash'
     }
-  ], 
-  'total': 26
+  ],
+  'total': 3
 });
