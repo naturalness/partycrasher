@@ -64,16 +64,21 @@ specified.
 If you use this code we would appreciate if you cited the paper!
 
 ~~~
-@article{10.7287/peerj.preprints.1705v1,
- title = {The unreasonable effectiveness of traditional information retrieval in crash report deduplication},
- author = {Campbell, Joshua Charles and Santos, Eddie Antonio and Hindle, Abram},
- year = {2016},
- month = {2},
- volume = {4},
- pages = {e1705v1},
- journal = {PeerJ PrePrints},
- issn = {2167-9843},
- url = {https://dx.doi.org/10.7287/peerj.preprints.1705v1},
- doi = {10.7287/peerj.preprints.1705v1}
+@inproceedings{Campbell:2016:UET:2901739.2901766,
+   author = {Campbell, Joshua Charles and Santos, Eddie Antonio and Hindle, Abram},
+   title = {The Unreasonable Effectiveness of Traditional Information Retrieval in Crash Report Deduplication},
+   booktitle = {Proceedings of the 13th International Workshop on Mining Software Repositories},
+   series = {MSR '16},
+   year = {2016},
+   isbn = {978-1-4503-4186-8},
+   location = {Austin, Texas},
+   pages = {269--280},
+   numpages = {12},
+   url = {http://doi.acm.org/10.1145/2901739.2901766},
+   doi = {10.1145/2901739.2901766},
+   acmid = {2901766},
+   publisher = {ACM},
+   address = {New York, NY, USA},
+   keywords = {automatic crash reporting, call stack trace, contextual information, deduplication, duplicate bug reports, duplicate crash report, free/open source software, information retrieval, software engineering},
 }
 ~~~
