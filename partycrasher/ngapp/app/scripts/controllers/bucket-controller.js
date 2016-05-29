@@ -8,7 +8,13 @@
  * Controller of the ngappApp
  */
 angular.module('PartyCrasherApp')
-.controller('BucketController', function ($scope, $http, $routeParams, Bucket) {
+.controller('BucketController', function (
+  $scope,
+  $http,
+  $routeParams,
+  Bucket,
+  PartyCrasher
+) {
   var project = $routeParams.project,
     threshold = $routeParams.threshold,
     id = $routeParams.id;
@@ -16,20 +22,12 @@ angular.module('PartyCrasherApp')
   $scope.loading = true;
 
   /* Fetch the bucket. */
-  $http.get(bucketURL({ project, threshold, id }))
-    .then(({data}) => {
+  PartyCrasher.fetchBucket({ project, threshold, id })
+    .then(bucket => {
       $scope.loading = false;
-      setBucket(data);
+      setBucket(bucket);
     });
-
   /* TODO: What if we get an invalid bucket? */
-
-  /**
-   * TODO: Make this a server/provider thing...
-   */
-  function bucketURL({ project, threshold, id }) {
-    return `/${project}/buckets/${threshold}/${id}`;
-  }
 
   function setBucket(data) {
     var bucket = $scope.bucket = new Bucket(data);
