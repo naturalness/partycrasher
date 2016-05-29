@@ -12,6 +12,7 @@ angular.module('PartyCrasherApp')
   $scope,
   $http,
   $routeParams,
+  $location,
   $httpParamSerializer,
   DEFAULT_THRESHOLD,
   PROJECT_NAMES
@@ -25,6 +26,7 @@ angular.module('PartyCrasherApp')
   $scope.search = search;
   $scope.search.date = moment().subtract(3, 'days').toDate();
   $scope.search.project = project;
+  $scope.search.threshold = threshold;
 
   $scope.projects = PROJECT_NAMES;
 
@@ -44,7 +46,20 @@ angular.module('PartyCrasherApp')
         $scope.results = data;
         $scope.hasResults = data['top_buckets'].length > 0;
         $scope.loading = false;
+
+        setNewLocation();
       });
+  }
+
+  /**
+   * Sets the location from the search variables.
+   */
+  function setNewLocation() {
+    var project = $scope.search.project;
+    var threshold = $scope.search.threshold;
+
+    /* TODO: add "since" support. */
+    $location.url(`/${project}/buckets/${threshold}`);
   }
 
   function searchUrl({project, threshold, since}) {
