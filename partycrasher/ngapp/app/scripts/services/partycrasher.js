@@ -4,8 +4,7 @@
  * function (PartyCrasher, $scope) { ... }
  */
 angular.module('PartyCrasherApp')
-.factory('PartyCrasher', function ($http) {
-
+.factory('PartyCrasher', function ($http, $httpParamSerializer) {
   class PartyCrasher {
 
     /**
@@ -15,13 +14,13 @@ angular.module('PartyCrasherApp')
      */
     fetchBucket({project, threshold, id}) {
       if (!(project && threshold && id)) {
-        return Promise.reject(`Must provide project, threshold, and id`);
+        return Promise.reject(new Error('Must provide project, threshold, and id'));
       }
 
       return $http.get(bucketURL({project, threshold, id}))
         .then(({data}) => data);
     }
-    
+
     /**
      * Fetch a bucket by (project, id) pair.
      *
@@ -29,7 +28,7 @@ angular.module('PartyCrasherApp')
      */
     fetchReport({project, id}) {
       if (!(project && id)) {
-        return Promise.reject(`Must provide project and id`);
+        return Promise.reject(new Error('Must provide project and id'));
       }
 
       return $http.get(reportURL({ project, id }))
@@ -39,8 +38,13 @@ angular.module('PartyCrasherApp')
     /**
      * Searches for buckets.
      */
-    search() {
-      /* TODO */
+    search({ project, threshold, since }) {
+      if (!(since instanceof Date)) {
+        Promise.reject(new TypeError(`since must be a Date object`));
+      }
+
+      return $http.get(searchUrl({ project, threshold, since }))
+        .then(({data}) => data);
     }
   }
 
@@ -54,6 +58,10 @@ angular.module('PartyCrasherApp')
     return `/${project}/reports/${id}`;
   }
 
-  
+  function searchUrl({project, threshold, since}) {
+    var query = $httpParamSerializer({ since: since || '3-days-ago' });
+    return `/${project}/buckets/${threshold}?${query}`;
+  }
+
   return new PartyCrasher();
 });

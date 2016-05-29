@@ -13,8 +13,8 @@ angular.module('PartyCrasherApp')
   $http,
   $routeParams,
   $location,
-  $httpParamSerializer,
   DEFAULT_THRESHOLD,
+  PartyCrasher,
   PROJECT_NAMES
 ) {
   var threshold = $routeParams.threshold || DEFAULT_THRESHOLD,
@@ -42,16 +42,16 @@ angular.module('PartyCrasherApp')
 
   /* TODO: add generic query. */
   function search() {
+    var project = $scope.search.project,
+      since = $scope.search.date,
+      threshold = $scope.search.threshold;
+
     $scope.loading = true;
 
-    $http.get(searchUrl({
-      project: $scope.search.project,
-      threshold,
-      since: $scope.search.date
-    }))
-      .then(({data}) => {
-        $scope.results = data;
-        $scope.hasResults = data['top_buckets'].length > 0;
+    PartyCrasher.search({ project, threshold, since})
+      .then(results => {
+        $scope.results = results;
+        $scope.hasResults = results['top_buckets'].length > 0;
         $scope.loading = false;
         /* TODO: do something with data['since']. */
 
@@ -70,10 +70,5 @@ angular.module('PartyCrasherApp')
     $location
       .search('since', since)
       .path(`/${project}/buckets/${threshold}`);
-  }
-
-  function searchUrl({project, threshold, since}) {
-    var query = $httpParamSerializer({ since: since || '3-days-ago' });
-    return `/${project}/buckets/${threshold}?${query}`;
   }
 });
