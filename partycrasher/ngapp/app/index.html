@@ -88,6 +88,7 @@
         .constant('BASE_HREF', "%%basehref%%")
         .constant('REST_BASE', "%%restbase%%")
         .constant('DEFAULT_THRESHOLD', '4.0')
+        .constant('THRESHOLDS', %% thresholds|tojson|safe %%)
         .constant('PROJECT_NAMES', %% project_names|tojson|safe %%);
     </script>
   </body>

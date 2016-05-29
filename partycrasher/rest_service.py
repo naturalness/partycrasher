@@ -154,12 +154,16 @@ def home(filename=None):
         # an infinite loop. Which is bad.
         return '', 404
 
+    context = dict(
+        bower=full_url_for('home') + 'bower_components',
+        project_names=[proj.name for proj in crasher.get_projects()],
+        thresholds=[str(thresh) for thresh in crasher.thresholds],
+        basehref=full_url_for('home'),
+        restbase=full_url_for('root')
+    )
+
     # Otherwise, it's a route in the web app.
-    return render_template('index.html',
-                           bower=full_url_for('home') + 'bower_components',
-                           project_names=[proj.name for proj in crasher.get_projects()],
-                           basehref=full_url_for('home'),
-                           restbase=full_url_for('root'))
+    return render_template('index.html', **context)
 
 
 @app.route('/reports', methods=['POST'], endpoint='add_report_no_project')
