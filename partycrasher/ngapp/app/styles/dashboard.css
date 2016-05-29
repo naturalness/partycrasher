@@ -112,3 +112,21 @@ a[href=''] {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* Stacktrace styles. */
+.stack-traces {
+    display: flex;
+    overflow: hidden;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+}
+
+.stack-traces > .stack-trace-panel {
+    flex: 1;
+    overflow-y: scroll;
+    max-width: 32%;
+}
+
+.mini.stack-trace {
+    max-height: 30em;
+}

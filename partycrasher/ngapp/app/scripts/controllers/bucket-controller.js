@@ -24,6 +24,9 @@ angular.module('PartyCrasherApp')
       false && setBucket(data);
     });
 
+  /**
+   * TODO: Make this a server/provider thing...
+   */
   function bucketURL({ project, threshold, id }) {
     return `/${project}/buckets/${threshold}/${id}`;
   }
@@ -31,7 +34,7 @@ angular.module('PartyCrasherApp')
   function setBucket(data) {
     var bucket = $scope.bucket = new Bucket(data);
 
-    $scope.sampleReports = bucket.reports.slice(0, 3).map(report => {
+    $scope.sampleReports = bucket.reports.slice(-3).map(report => {
       /* Return a subset of the fields. */
       return {
         id: report.id,
@@ -40,7 +43,7 @@ angular.module('PartyCrasherApp')
         stackTrace: report.stackTrace };
     });
 
-    /* Cool metadata. */
+    /* TODO: make this easier to use later. */
     $scope.versions = nullIfEmpty(bucket.versions);
     $scope.oses = nullIfEmpty(bucket.oses);
     $scope.builds = nullIfEmpty(bucket.build);

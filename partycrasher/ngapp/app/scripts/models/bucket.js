@@ -7,6 +7,9 @@ angular.module('PartyCrasherApp')
 .provider('Bucket', function () {
   var _CrashReport;
 
+  /**
+   * Inner-class for counting distinct values.
+   */
   class Counter {
     constructor(collection) {
       this._count = new Map();
@@ -16,6 +19,9 @@ angular.module('PartyCrasherApp')
     }
 
     count(thing) {
+      /**
+       * TODO: Add "unknown" symbol.
+       */
       if (thing === null || thing === undefined) {
         return;
       }
@@ -72,6 +78,9 @@ angular.module('PartyCrasherApp')
 
     /*== Cool metadata. ==*/
 
+    /**
+     * TODO: make "count" public.
+     */
     get oses() {
       return this._count('os');
     }

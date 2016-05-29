@@ -32,7 +32,8 @@
       <h2 class="panel-title"> Sample Stack Traces </h2>
     </header>
     <div class="panel-body stack-traces">
-      <div ng-repeat="report in ::sampleReports" class="panel panel-default">
+      <div ng-repeat="report in ::sampleReports"
+           class="panel panel-default stack-trace-panel">
         <header class="panel-heading">
           <h3 class="panel-title">
             <a href="{{ ::report | uiUrl:'report' }}">{{ ::report.id }}</a>
