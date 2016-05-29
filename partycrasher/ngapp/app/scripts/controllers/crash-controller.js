@@ -8,6 +8,18 @@
  * Controller of the ngappApp
  */
 angular.module('PartyCrasherApp')
-.controller('CrashController', function ($scope, CrashReport, SAMPLE_BUCKET) {
-  $scope.crash = new CrashReport(SAMPLE_BUCKET['top_reports'][0]);
+.controller('CrashController', function (
+  $scope,
+  $routeParams,
+  PartyCrasher,
+  CrashReport
+) {
+  var project = $routeParams.project,
+    id = $routeParams.id;
+
+  PartyCrasher.fetchReport({ project, id })
+    .then(rawReport => {
+      var report = $scope.crash = new CrashReport(rawReport);
+      $scope.stack = report.stackTrace;
+    });
 });

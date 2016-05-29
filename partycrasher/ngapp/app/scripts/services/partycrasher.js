@@ -9,7 +9,7 @@ angular.module('PartyCrasherApp')
   class PartyCrasher {
 
     /**
-     * Fetch a bucket by (project, threshold, id) pair.
+     * Fetch a bucket by (project, threshold, id) tuple.
      *
      * Returns a Promise of data.
      */
@@ -19,6 +19,20 @@ angular.module('PartyCrasherApp')
       }
 
       return $http.get(bucketURL({project, threshold, id}))
+        .then(({data}) => data);
+    }
+    
+    /**
+     * Fetch a bucket by (project, id) pair.
+     *
+     * Returns a Promise of the report.
+     */
+    fetchReport({project, id}) {
+      if (!(project && id)) {
+        return Promise.reject(`Must provide project and id`);
+      }
+
+      return $http.get(reportURL({ project, id }))
         .then(({data}) => data);
     }
 
@@ -32,6 +46,12 @@ angular.module('PartyCrasherApp')
 
   function bucketURL({ project, threshold, id }) {
     return `/${project}/buckets/${threshold}/${id}`;
+  }
+
+  function reportURL({ project, id }) {
+    /* Get rid of project prefix. */
+    id = id.replace(/^[*\w]+:/, '');
+    return `/${project}/reports/${id}`;
   }
 
   
