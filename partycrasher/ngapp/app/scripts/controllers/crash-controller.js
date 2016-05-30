@@ -22,6 +22,6 @@ angular.module('PartyCrasherApp')
       var report = $scope.crash = new CrashReport(rawReport);
       $scope.stack = report.stackTrace;
       $scope.context = report.contextData;
-      debugger;
+      $scope.buckets = report.buckets;
     });
 });

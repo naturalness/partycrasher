@@ -127,6 +127,16 @@ a[href=''] {
     max-width: 32%;
 }
 
+.stack-frame {
+  display: list-item;
+  list-style: decimal inside;
+}
+
+.stack-frame > .dl-x {
+  display: inline-block;
+  vertical-align: top;
+}
+
 .mini.stack-trace {
     max-height: 30em;
 }
@@ -134,3 +144,47 @@ a[href=''] {
 input {
   background-color: white;
 }
+
+li>.dl-x {
+  width: calc(100% - 30px);
+}
+
+.dl-x dt {
+  float: left;
+  width: 25%;
+  clear: left;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dl-x dd {
+  margin-left: calc(25% + 20px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dl-xs dt {
+  width: calc(3.5ch);
+}
+
+.dl-xs dd {
+  margin-left: calc(3.5ch + 20px);
+}
+
+.panel-title>a {
+  color: #337ab7;
+  text-decoration: none;
+}
+.panel-title>a:hover,
+.panel-title>a:focus {
+  color: #23527c;
+  text-decoration: underline;
+}
+.panel-title>a:focus {
+  outline: thin dotted;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+

@@ -1,4 +1,4 @@
-<main>
+<main class="container-fluid">
   <header class="page-header row">
     <h1> Crash {{ ::crash.id }}
       <small>{{ ::crash.project }}</small>
@@ -7,9 +7,10 @@
 
 
   <div class="row">
-    <section class="col-md-8">
-      <div class="important-metadata">
-        <dl class="dl-horizontal">
+    <div class="col-md-5">
+      <section class="panel panel-default">
+        <div class="panel-body">
+        <dl class="dl-x">
           <dt> Date </dt>
           <dd>{{ ::crash.date | date:'medium' }}</dd>
           <dt> OS </dt>
@@ -19,14 +20,31 @@
           <dt ng-if="::crash.version"> Version </dt>
           <dd ng-if="::crash.version">{{ ::crash.version }}</dd>
         </dl>
+        </div>
+      </section>
+      
+      <section class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">Buckets</h3>
+        </div>
+        <div class="panel-body">
+        <dl class="dl-x dl-xs">
+          <dt ng-repeat-start="(key, value) in buckets">{{key}}</dt>
+          <dd ng-repeat-end><a href="{{::value | uiUrl: 'bucket'}}">{{value.id}}</a></dd>
+        </dl>
+        </div>
+      </section>
+    </div>
+
+    <div class="col-md-7">
+    <section class="stack-trace panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Stacktrace</h3>
       </div>
-
-      <hr/>
-
-      <section class="stack-trace">
-        <ol>
-          <li ng-repeat="frame in ::stack" class="stack-frame">
-            <dl class="dl-horizontal">
+      <div class="panel-body">
+        <ol class="list-group">
+          <li ng-repeat="frame in ::stack" class="stack-frame list-group-item">
+            <dl class="dl-x">
               <dt ng-if="frame.func"> Function </dt>
               <dd ng-if="frame.func">
                 <code>{{ ::frame.func }}</code>
@@ -40,15 +58,21 @@
           </li>
         </ol>
       </div>
+    </section>
+    </div>
+
+    <div class="col-md-12">
+    <section class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">More information</h3>
+      </div>
+      <div class="panel-body">
+        <pc-tree value="context" />
+      </div>
+    </section>
     </div>
   </div>
-
-  <section class="row">
-    <header>
-      <h2> Extra data </h2>
-    </header>
-    <pc-tree value="context" />
-  </section>
+  
 
   <footer class="row">
     <a href="{{ ::crash.href }}" class="btn btn-default"> View Raw Report </a>

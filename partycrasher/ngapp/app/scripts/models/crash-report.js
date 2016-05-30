@@ -45,6 +45,12 @@ angular.module('PartyCrasherApp')
       return this._raw['buckets']['top_match'];
     }
 
+    get buckets() {
+      return _.pickBy(this._raw['buckets'], (_value, key) => {
+        return (isFinite(key));
+      });
+    }
+
     /*== Some fields used in aggregations. ==*/
 
     get os() {

@@ -53,13 +53,18 @@
     </div>
   </section>
 
+  <div class="row">
   <section class="panel panel-default latest-crashes">
     <header class="panel-heading">
       <h2 class="panel-title"> Latest Crashes </h2>
     </header>
-
-    <ul class="list-group" ng-repeat="crash in ::bucket.reports">
-      <li class="list-group-item"><a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a></li>
+    <div class="panel-body">
+    <ul class="list-group">
+      <li class="list-group-item" ng-repeat="crash in ::bucket.reports">
+        <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a>
+      </li>
     </ul>
+    </div>
   </section>
+  </div>
 </main>

@@ -91,6 +91,12 @@ body {
 .disclosure:not(:checked) ~ .disclosure-contents {
   display: none;
 }
+.disclosure:not(:checked) ~ .disclosure-button .disclosure-hide {
+  display: none;
+}
+.disclosure:checked ~ .disclosure-button .disclosure-show {
+  display: none;
+}
 
 input[type=checkbox].disclosure {
   display: none;
