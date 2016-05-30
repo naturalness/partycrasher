@@ -7,26 +7,51 @@
       </small></h1>
   </header>
 
-  <section class="bucket-summary">
-    <!--
-    <dt> First Seen </dt>
-    <dd> TODO </dd>
-    <dt> Last Seen </dt>
-    <dd> TODO </dd>
-    -->
-    <dt> Versions </dt>
-    <dd ng-if="versions">{{ ::versions.join(', ') }}</dd>
-    <dd ng-if="!versions"><em> No information </em></dd>
-    <dt> OSes </dt>
-    <dd ng-if="oses">{{ ::oses.join(', ') }}</dd>
-    <dd ng-if="!oses"><em> No information </em></dd>
-    <dt> Builds </dt>
-    <dd ng-if="builds">{{ ::builds.join(', ') }}</dd>
-    <dd ng-if="!builds"><em> No information </em></dd>
-  </section>
+  <div class="row">
+    <div class="col-md-5">
+      <section class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">Summary</h3>
+        </div>
+        <div class="panel-body">
+          <dl>
+          <!--
+          <dt> First Seen </dt>
+          <dd> TODO </dd>
+          <dt> Last Seen </dt>
+          <dd> TODO </dd>
+          -->
+            <dt> Versions </dt>
+            <dd ng-if="versions">{{ ::versions.join(', ') }}</dd>
+            <dd ng-if="!versions"><em> No information </em></dd>
+            <dt> OSes </dt>
+            <dd ng-if="oses">{{ ::oses.join(', ') }}</dd>
+            <dd ng-if="!oses"><em> No information </em></dd>
+            <dt> Builds </dt>
+            <dd ng-if="builds">{{ ::builds.join(', ') }}</dd>
+            <dd ng-if="!builds"><em> No information </em></dd>
+          </dl>
+        </div>
+      </section>
+    </div>
+    <div class="col-md-7">
+      <section class="panel panel-default latest-crashes">
+        <header class="panel-heading">
+          <h2 class="panel-title"> Latest Crashes </h2>
+        </header>
+        <div class="panel-body">
+        <ul class="list-group">
+          <li class="list-group-item" ng-repeat="crash in ::bucket.reports">
+            <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a> {{ ::crash.date | fromNow }}
+          </li>
+        </ul>
+        </div>
+      </section>
+    </div>
+  </div>
 
-  <hr>
-
+  <div class="row">
+  <div class="col-md-12">
   <section class="panel panel-default latest-crashes">
     <header class="panel-heading">
       <h2 class="panel-title"> Sample Stack Traces </h2>
@@ -52,19 +77,7 @@
       </div>
     </div>
   </section>
-
-  <div class="row">
-  <section class="panel panel-default latest-crashes">
-    <header class="panel-heading">
-      <h2 class="panel-title"> Latest Crashes </h2>
-    </header>
-    <div class="panel-body">
-    <ul class="list-group">
-      <li class="list-group-item" ng-repeat="crash in ::bucket.reports">
-        <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a>
-      </li>
-    </ul>
-    </div>
-  </section>
   </div>
+  </div>
+
 </main>
