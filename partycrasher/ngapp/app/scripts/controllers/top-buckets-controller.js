@@ -24,9 +24,9 @@ angular.module('PartyCrasherApp')
     date;
 
   if (since) {
-    date = new Date(since);
+    date = since;
   } else {
-    date = moment().subtract(3, 'days').toDate();
+    date = "3-days-ago";
   }
 
   if (Number.isNaN(date.valueOf())) {
@@ -66,18 +66,23 @@ angular.module('PartyCrasherApp')
   /* TODO: add generic query. */
   function search() {
     var project = $scope.search.project,
-      since = new Date($scope.search.date),
+      since = $scope.search.date,
       threshold = $scope.search.threshold;
-
     $scope.loading = true;
-
+    
     PartyCrasher.search({ project, threshold, since})
       .then(results => {
         $scope.hasResults = results['top_buckets'].length > 0;
         $scope.results = results;
         $scope.loading = false;
-        var newsince = new Date(results['since'] + "+00:00");
-        setNewLocation(newsince);
+        $scope.errorMessage = null;
+        setNewLocation(since);
+      }).catch(error => {
+        $scope.hasResults = false;
+        $scope.results = null;
+        $scope.errorMessage = error.data.message;
+        $scope.loading = false;
+        setNewLocation(since);
       });
   }
 
@@ -89,7 +94,7 @@ angular.module('PartyCrasherApp')
     var threshold = $scope.search.threshold;
 
     $location
-      .search('since', date.toISOString())
+      .search('since', date)
       .path(`/${project}/buckets/${threshold}`);
   }
 });

@@ -130,3 +130,7 @@ a[href=''] {
 .mini.stack-trace {
     max-height: 30em;
 }
+
+input {
+  background-color: white;
+}

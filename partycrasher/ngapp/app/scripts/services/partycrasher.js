@@ -39,10 +39,6 @@ angular.module('PartyCrasherApp')
      * Searches for buckets.
      */
     search({ project, threshold, since }) {
-      if (!(since instanceof Date)) {
-        return Promise.reject(new TypeError(`since must be a Date object`));
-      }
-
       return $http.get(searchUrl({ project, threshold, since }))
         .then(({data}) => data);
     }

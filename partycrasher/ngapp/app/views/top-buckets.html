@@ -6,7 +6,7 @@
   <form class="form-inline" ng-submit="search()">
     <div class="form-group">
       <label for="date-in"> Search buckets since </label>
-      <input date-time
+      <input type="text"
              id="date-in"
              ng-model="search.date"
              view="date"
@@ -40,11 +40,12 @@
   </form>
 
   <p ng-if="loading"> Loading... </p>
+  <p ng-if="errorMessage">{{ errorMessage }}</p>
 
   <div ng-if="!loading && hasResults" class="description">
     Since {{ results.since | fromNow }}
   </div>
-  <div ng-if="!loading && !hasResults">
+  <div ng-if="!loading && !hasResults && !errorMessage">
     No top buckets since {{ results.since | date:'medium' }}
   </div>
 
