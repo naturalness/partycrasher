@@ -162,7 +162,7 @@ class MLT(Bucketer):
 
         try:
             matching_buckets = self.make_matching_buckets(response, bucket_field,
-                                                          default=crash.id)
+                                                          default=crash['database_id'])
             return matching_buckets
         except IndexNotUpdatedError:
             time.sleep(1)
@@ -210,7 +210,7 @@ class MLT(Bucketer):
             top_match = raw_matches[0]
         else:
             # Sentinel object; this will never match a threshold.
-            top_match = { '_score': -float('inf') }
+            top_match = { '_score': -1000000 }
 
         # JSON structure:
         # matches['hit']['hits] ~> [
@@ -225,15 +225,19 @@ class MLT(Bucketer):
         #   }
 
         similarity = top_match['_score']
+        #print(similarity);
         assert isinstance(similarity, (float, int))
 
         # Add the buckets, by threshold.
         matching_buckets = Buckets()
         for threshold in sorted(self.thresholds, key=float):
             if similarity >= float(threshold):
+                bucket_id = get_bucket_id(top_match, threshold, bucket_field)
+                #print(bucket_id)
                 # Assign this report to the existing bucket.
-                matching_buckets[threshold] = get_bucket_id(top_match, threshold, bucket_field)
+                matching_buckets[threshold] = bucket_id
             else:
+                #print("default: " + default)
                 # Create a new bucket.
                 matching_buckets[threshold] = default
 

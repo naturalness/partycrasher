@@ -76,8 +76,8 @@ angular.module('PartyCrasherApp')
         $scope.hasResults = results['top_buckets'].length > 0;
         $scope.results = results;
         $scope.loading = false;
-
-        setNewLocation(new Date(results['since']));
+        var newsince = new Date(results['since'] + "+00:00");
+        setNewLocation(newsince);
       });
   }
 
