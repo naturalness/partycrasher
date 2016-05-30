@@ -748,7 +748,7 @@ def ingest_multiple(reports, project_name):
 def url_for_report(report):
     return url_for('view_report',
                    project=report['project'],
-                   report_id=report.id_without_project)
+                   report_id=report.id)
 
 
 def raise_bad_request_if_project_mismatch(report, project_name):

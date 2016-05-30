@@ -375,11 +375,8 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(project_2, json=report,
                                  allow_redirects=False)
 
-        # Check that this one's also created.
-        assert response.status_code == 201
-        assert response.json().get('database_id').endswith(database_id)
-        assert response.json().get('project') == 'manhattan'
-        assert crash_2_url in response.headers.get('Location')
+        # Check that this one's not created.
+        assert response.status_code == 303
 
     def test_add_multiple(self):
         """

@@ -421,7 +421,7 @@ def serialize_top_match(info):
     if info is not None:
         match_url = href('view_report',
                          project=info['project'],
-                         report_id=info['report_id'].split(':')[1])
+                         report_id=info['report_id'])
         return OrderedDict([
             ('report_id', info['report_id']),
             ('href', match_url['href']),
