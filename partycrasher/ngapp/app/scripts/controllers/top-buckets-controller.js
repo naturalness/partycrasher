@@ -20,23 +20,34 @@ angular.module('PartyCrasherApp')
 ) {
   var threshold = $routeParams.threshold || DEFAULT_THRESHOLD,
     project = $routeParams.project || '*',
-    since = $location.search().since;
+    since = $location.search().since,
+    date;
 
   if (since) {
-    since = new Date(since);
+    date = new Date(since);
   } else {
-    since = moment().subtract(3, 'days').toDate();
+    date = moment().subtract(3, 'days').toDate();
+  }
+
+  if (Number.isNaN(date.valueOf())) {
+    throw new RangeError(`Could not parse date ${since}`);
   }
 
   /* Initially, we're loading. */
   $scope.loading = true;
   $scope.thresholds = THRESHOLDS;
 
+  /* Note! The weird date picker thing DEMANDS that the date property be
+   * wrapped an object of some kind (viz. search). */
   $scope.search = search;
-  $scope.search.date = since;
+  $scope.search.date = date;
   $scope.search.project = project;
   $scope.search.thresholdIndex = THRESHOLDS.indexOf(threshold);
 
+  /*
+   * Allows returning the string value of the threshold, even if only the list
+   * index value of the threshold is known.
+   */
   Object.defineProperty($scope.search, 'threshold', {
     get: function () {
       return THRESHOLDS[$scope.search.thresholdIndex];
@@ -55,32 +66,30 @@ angular.module('PartyCrasherApp')
   /* TODO: add generic query. */
   function search() {
     var project = $scope.search.project,
-      since = $scope.search.date,
+      since = new Date($scope.search.date),
       threshold = $scope.search.threshold;
 
     $scope.loading = true;
 
     PartyCrasher.search({ project, threshold, since})
       .then(results => {
-        $scope.results = results;
         $scope.hasResults = results['top_buckets'].length > 0;
+        $scope.results = results;
         $scope.loading = false;
-        /* TODO: do something with data['since']. */
 
-        setNewLocation();
+        setNewLocation(new Date(results['since']));
       });
   }
 
   /**
    * Sets the location from the search variables.
    */
-  function setNewLocation() {
+  function setNewLocation(date) {
     var project = $scope.search.project;
     var threshold = $scope.search.threshold;
-    var since = $scope.search.date.toISOString();
 
     $location
-      .search('since', since)
+      .search('since', date.toISOString())
       .path(`/${project}/buckets/${threshold}`);
   }
 });
