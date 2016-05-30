@@ -15,7 +15,8 @@ angular.module('PartyCrasherApp')
   $location,
   DEFAULT_THRESHOLD,
   PartyCrasher,
-  PROJECT_NAMES
+  PROJECT_NAMES,
+  THRESHOLDS
 ) {
   var threshold = $routeParams.threshold || DEFAULT_THRESHOLD,
     project = $routeParams.project || '*',
@@ -29,11 +30,22 @@ angular.module('PartyCrasherApp')
 
   /* Initially, we're loading. */
   $scope.loading = true;
+  $scope.thresholds = THRESHOLDS;
 
   $scope.search = search;
   $scope.search.date = since;
   $scope.search.project = project;
-  $scope.search.threshold = threshold;
+  $scope.search.thresholdIndex = THRESHOLDS.indexOf(threshold);
+
+  Object.defineProperty($scope.search, 'threshold', {
+    get: function () {
+      return THRESHOLDS[$scope.search.thresholdIndex];
+    },
+
+    set: function () {
+      throw new Error(`Cannot directly set threshold.`);
+    }
+  });
 
   $scope.projects = PROJECT_NAMES;
 

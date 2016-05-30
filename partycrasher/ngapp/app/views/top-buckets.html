@@ -25,7 +25,18 @@
 
       </select>
     </div>
-    <button type="submit" class="btn btn-default"> Search </button>
+
+    <div class="form-group">
+      <label for="thresh=in"> Threshold </label>
+      <input type="range" id="thresh-in" ng-model="search.thresholdIndex"
+             min="0" max="{{ thresholds.length - 1}}" value="0" />
+      <span class="help-block"> <!-- TODO: write help text here!  --> </span>
+      <output>{{ search.threshold }}</output>
+    </div>
+
+    <button type="submit" class="btn btn-default">
+      <i class="glyphicon glyphicon-search"></i> Search
+     </button>
   </form>
 
   <p ng-if="loading"> Loading... </p>
