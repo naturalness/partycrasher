@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "dependencies": {
     "angular": "^1.4.0",
-    "angular-datepicker": "^2.0.3",
     "angular-named-route": "^2.1.0",
     "angular-route": "^1.4.0",
     "bootstrap": "^3.2.0",
