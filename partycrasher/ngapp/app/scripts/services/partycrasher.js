@@ -50,7 +50,6 @@ angular.module('PartyCrasherApp')
 
   function reportURL({ project, id }) {
     /* Get rid of project prefix. */
-    id = id.replace(/^[*\w]+:/, '');
     return `/${project}/reports/${id}`;
   }
 
