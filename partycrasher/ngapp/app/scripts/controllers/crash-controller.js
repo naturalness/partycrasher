@@ -21,5 +21,6 @@ angular.module('PartyCrasherApp')
     .then(rawReport => {
       var report = $scope.crash = new CrashReport(rawReport);
       $scope.stack = report.stackTrace;
+      $scope.context = report.contextData;
     });
 });

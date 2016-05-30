@@ -13,7 +13,6 @@ angular.module('PartyCrasherApp')
 
     /* Set up the scope with an ID an a function */
     link(scope) {
-      scope.id = _.uniqueId('disclosure-');
       scope.type = valueType;
     }
   };
@@ -22,7 +21,7 @@ angular.module('PartyCrasherApp')
   function looksLikeHref(value) {
     return !!value.match(/^http:\/\/[^\/]+\//);
   }
-  
+
   /* Returns the type of the expression as a string. Note that the type is not
    * necessarily a JavaScript type. */
   function valueType(value) {

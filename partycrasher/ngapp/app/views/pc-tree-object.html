@@ -1,8 +1,8 @@
-<input id="{{ ::id }}" type="checkbox" class="disclosure">
-<label class="disclosure-button" for="{{ ::id }}"> Show </label>
+<input id="disclosure-{{ $id }}" type="checkbox" class="disclosure">
+<label class="disclosure-button" for="disclosure-{{ $id }}"> Show </label>
 <dl class="disclosure-contents dl-horizontal">
-  <dt ng-repeat-start="(key, value) in ::value">
-    {{ ::key }}
+  <dt ng-repeat-start="(key, value) in value">
+    {{ key }}
   </dt>
   <dd ng-repeat-end>
     <pc-tree value="value" />

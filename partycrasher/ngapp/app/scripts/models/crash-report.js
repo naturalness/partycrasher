@@ -31,6 +31,13 @@ angular.module('PartyCrasherApp')
       return this._raw['stacktrace'].map(rawFrame => new StackFrame(rawFrame));
     }
 
+    get contextData() {
+      /* Return a clone that selectively copies fields from the crash.  */
+      return _.pickBy(this._raw, (_value, key) => {
+        return !(key in {buckets:1, stacktrace:1});
+      });
+    }
+
     /**
      * @return an object of { report_id, project, score, href }.
      */
