@@ -185,7 +185,7 @@ class Crash(dict):
 
     @staticmethod
     def make_id(project, database_id):
-        return project + ':' + database_id
+        raise NotImplementedError("make_id removed")
 
     def __setitem__(self, key, val):
         # Translates key synonyms to their "canonical" key.
@@ -223,14 +223,6 @@ class Crash(dict):
                 raise ValueError("Expected a dict!")
         elif key in self.canonical_fields:
 
-            # Prepend the database ID.
-            if key == 'database_id' and not str(val).startswith(self['project'] + ':'):
-                # Coerce the ID to a string.
-
-                fixed_id = Crash.make_id(self['project'], val)
-                self['database_id'] = fixed_id
-                return
-
             # Check if the value has the type we require.
             if isinstance(val, self.canonical_fields[key]['type']):
                 # It's the right type. No need to convert, just set.
@@ -256,15 +248,15 @@ class Crash(dict):
 
     @property
     def id(self):
-        return self.id_without_project
-
-    @property
-    def id_with_project(self):
         return self['database_id']
 
     @property
+    def id_with_project(self):
+        raise NotImplementedError("id_with_project removed")
+
+    @property
     def id_without_project(self):
-        return self['database_id'].split(':')[1]
+        return self['database_id']
 
     def normalize(self):
         """
