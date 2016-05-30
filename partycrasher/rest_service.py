@@ -25,7 +25,7 @@ import argparse
 
 from flask import current_app, json, jsonify, request, url_for, redirect
 from flask import render_template, send_file, send_from_directory
-from flask.ext.cors import CORS
+from flask_cors import CORS
 
 # Hacky things to add PartyCrasher to the path.
 REPOSITORY_ROUTE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
