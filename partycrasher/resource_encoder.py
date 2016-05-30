@@ -112,13 +112,20 @@ class ResourceEncoder(json.JSONEncoder):
 
         elif isinstance(obj, Bucket):
             bucket = obj
-            resource_info = href('view_bucket',
-                                 project=bucket.project,
-                                 threshold=bucket.threshold,
-                                 bucket_id=bucket.id)
+            if bucket.project:
+                resource_info = href('view_bucket',
+                                     project=bucket.project,
+                                     threshold=bucket.threshold,
+                                     bucket_id=bucket.id)
+            else:
+                resource_info = href('view_bucket_no_project',
+                                     threshold=bucket.threshold,
+                                     bucket_id=bucket.id)
             serializable = bucket.to_dict(resource_info)
         elif isinstance(obj, Project):
             project = obj
+            # TODO: Point to the (currently non-existent) project page.
+            # gh-issue #33
             serializable = href('query_buckets',
                                 # TODO: unhardcode this number!
                                 threshold='4.0',
