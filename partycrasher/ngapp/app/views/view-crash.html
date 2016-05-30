@@ -5,12 +5,9 @@
     </h1>
   </header>
 
-  <div class="row">
-    <pc-tree value="context" />
-  </div>
 
   <div class="row">
-    <div class="col-md-8">
+    <section class="col-md-8">
       <div class="important-metadata">
         <dl class="dl-horizontal">
           <dt> Date </dt>
@@ -26,7 +23,7 @@
 
       <hr/>
 
-      <div class="stack-trace">
+      <section class="stack-trace">
         <ol>
           <li ng-repeat="frame in ::stack" class="stack-frame">
             <dl class="dl-horizontal">
@@ -45,6 +42,13 @@
       </div>
     </div>
   </div>
+
+  <section class="row">
+    <header>
+      <h2> Extra data </h2>
+    </header>
+    <pc-tree value="context" />
+  </section>
 
   <footer class="row">
     <a href="{{ ::crash.href }}" class="btn btn-default"> View Raw Report </a>
