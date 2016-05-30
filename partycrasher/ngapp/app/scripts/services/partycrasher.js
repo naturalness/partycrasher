@@ -40,7 +40,7 @@ angular.module('PartyCrasherApp')
      */
     search({ project, threshold, since }) {
       if (!(since instanceof Date)) {
-        Promise.reject(new TypeError(`since must be a Date object`));
+        return Promise.reject(new TypeError(`since must be a Date object`));
       }
 
       return $http.get(searchUrl({ project, threshold, since }))
@@ -60,7 +60,14 @@ angular.module('PartyCrasherApp')
 
   function searchUrl({project, threshold, since}) {
     var query = $httpParamSerializer({ since: since || '3-days-ago' });
-    return `/${project}/buckets/${threshold}?${query}`;
+
+    if (!project || project === '*') {
+      /* Search ALL projects. */
+      return `/buckets/${threshold}?${query}`;
+    } else {
+      /* Search just this project. */
+      return `/${project}/buckets/${threshold}?${query}`;
+    }
   }
 
   return new PartyCrasher();
