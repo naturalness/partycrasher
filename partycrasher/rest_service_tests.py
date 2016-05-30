@@ -331,9 +331,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.json().get('expected') == 'alan_parsons'
         assert response.json().get('actual') == 'manhattan'
 
-        # Now try to fetch it, globally and from either project
-        assert 404 == requests.get(self.path_to('reports',
-                                               database_id)).status_code
+        # Now try to fetch it from either project
         assert 404 == requests.get(self.path_to('alan_parsons', 'reports',
                                                database_id)).status_code
         assert 404 == requests.get(self.path_to('manhattan', 'reports',
@@ -739,7 +737,7 @@ class RestServiceTestCase(unittest.TestCase):
         Fetch a report and then return the bucket id
         """
 
-        # Now fetch it! Globally!
+        # Now fetch it!
         response = requests.get(href)
         try:
             assert response.status_code == 200
