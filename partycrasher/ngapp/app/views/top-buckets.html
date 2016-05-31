@@ -63,7 +63,7 @@
 
       <tbody>
         <tr ng-repeat="bucket in results.top_buckets">
-          <td>{{ $index + 1 }}</td>
+          <td>{{ $index + 1 + search.from }}</td>
           <td>
             <a href="{{ ::bucket | uiUrl:'bucket' }}">
               <ng-pluralize count="bucket.total"

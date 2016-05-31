@@ -515,6 +515,13 @@ def view_bucket(project=None, threshold=None, bucket_id=None):
     Returns with a list of top reports (a semi-arbitrary list), and the amount
     of reports ingested into this bucket.
 
+    Query parameters
+    ----------------
+
+    ``from``
+        Get page of crash reports starting from this number.
+    ``size``
+        Get this number of crash reports, starting from ``from``.
 
     ::
 
@@ -535,8 +542,16 @@ def view_bucket(project=None, threshold=None, bucket_id=None):
     assert bucket_id is not None
     assert threshold is not None
 
+    from_ = request.args.get('from', None)
+    size = request.args.get('size', None)
+    
+    if from_ is not None:
+      from_ = int(from_)
+    if size is not None:
+      size = int(size)
+
     try:
-        bucket = crasher.get_bucket(threshold, bucket_id, project)
+        bucket = crasher.get_bucket(threshold, bucket_id, project, from_, size)
     except partycrasher.BucketNotFoundError:
         return jsonify(error="not_found", bucket_id=bucket_id), 404
 

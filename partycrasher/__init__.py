@@ -167,7 +167,8 @@ class PartyCrasher(object):
         else:
             return self.bucketer.assign_save_buckets(true_crash)
 
-    def get_bucket(self, threshold, bucket_id, project=None):
+    def get_bucket(self, threshold, bucket_id, 
+                   project=None, from_=None, size=None):
         """
         Returns information for the given bucket.
         """
@@ -182,6 +183,10 @@ class PartyCrasher(object):
             },
             "sort": { "date": { "order": "desc" }}
         }
+                
+        if from_ is not None:
+            query["from"] = from_;
+            query["size"] = size;
 
         response = self.es.search(body=query, index='crashes')
         reports_found = response['hits']['total']

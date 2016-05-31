@@ -12,12 +12,12 @@ angular.module('PartyCrasherApp')
      *
      * Returns a Promise of data.
      */
-    fetchBucket({project, threshold, id}) {
+    fetchBucket({project, threshold, id, from, size}) {
       if (!(project && threshold && id)) {
         return Promise.reject(new Error('Must provide project, threshold, and id'));
       }
 
-      return $http.get(bucketURL({project, threshold, id}))
+      return $http.get(bucketURL({project, threshold, id, from, size}))
         .then(({data}) => data);
     }
 
@@ -58,8 +58,12 @@ angular.module('PartyCrasherApp')
     }
   }
 
-  function bucketURL({ project, threshold, id }) {
-    return `/${project}/buckets/${threshold}/${id}`;
+  function bucketURL({ project, threshold, id, from, size }) {
+    var query = $httpParamSerializer({ 
+                                      from: from || '0',
+                                      size: size || '10',
+                                    });
+    return `/${project}/buckets/${threshold}/${id}?${query}`;
   }
 
   function reportURL({ project, id }) {

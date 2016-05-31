@@ -13,21 +13,39 @@ angular.module('PartyCrasherApp')
   $http,
   $routeParams,
   Bucket,
-  PartyCrasher
+  PartyCrasher,
+  $location
 ) {
   var project = $routeParams.project,
     threshold = $routeParams.threshold,
-    id = $routeParams.id;
+    id = $routeParams.id,
+    from = $location.search().from,
+    size = $location.search().size;
+  
+  if (!from) {
+    from = 0;
+  }
+  
+  if (!size) {
+    size = 10;
+  }
+  
+  $scope.from = from | 0;
+  $scope.size = size | 0;
 
   $scope.loading = true;
 
-  /* Fetch the bucket. */
-  PartyCrasher.fetchBucket({ project, threshold, id })
-    .then(bucket => {
-      $scope.loading = false;
-      setBucket(bucket);
-    });
-  /* TODO: What if we get an invalid bucket? */
+  function fetchBucket() {/* Fetch the bucket. */
+    PartyCrasher.fetchBucket({ project, threshold, id, 
+                               from: $scope.from, 
+                               size: $scope.size })
+      .then(bucket => {
+        $scope.loading = false;
+        setBucket(bucket);
+      });
+    /* TODO: What if we get an invalid bucket? */
+  }
+  fetchBucket();
 
   function setBucket(data) {
     var bucket = $scope.bucket = new Bucket(data);
@@ -58,4 +76,29 @@ angular.module('PartyCrasherApp')
     }
     return thing.length ? thing : null;
   }
+  
+ function prevPage() {
+    var from = ($scope.from | 0) - ($scope.size | 0);
+    setNewLocation(from, $scope.size);
+  }
+  function nextPage() {
+    var from = ($scope.from | 0) + ($scope.size | 0);
+    setNewLocation(from, $scope.size);
+  }
+  
+  $scope.prevPage = prevPage;
+  $scope.nextPage = nextPage;
+
+  function setNewLocation(from, size) {
+    var project = $routeParams.project,
+      threshold = $routeParams.threshold,
+      id = $routeParams.id;
+    
+    $location
+      .search('from', from)
+      .search('size', size)
+      .path(`/${project}/buckets/${threshold}/${id}`);
+  }
+
+
 });

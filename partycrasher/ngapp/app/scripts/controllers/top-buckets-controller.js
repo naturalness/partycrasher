@@ -52,8 +52,8 @@ angular.module('PartyCrasherApp')
   $scope.search = search;
   $scope.search.date = date;
   $scope.search.project = project;
-  $scope.search.from = from;
-  $scope.search.size = size;
+  $scope.search.from = from | 0;
+  $scope.search.size = size | 0;
   $scope.search.thresholdIndex = THRESHOLDS.indexOf(threshold);
 
   /*
