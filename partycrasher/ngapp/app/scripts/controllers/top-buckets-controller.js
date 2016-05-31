@@ -82,10 +82,8 @@ angular.module('PartyCrasherApp')
           PartyCrasher.fetchBucket({ project, threshold, id })
             .then(bucket => {
               var id = bucket['top_reports'][0]['database_id'];
-              PartyCrasher.fetchSummary({ project, id })
-                .then(summary => {
-                  thisBucket.summary = summary;
-                });
+              thisBucket.database_id = id;
+              thisBucket.project = bucket['top_reports'][0]['project'];
             });
         });
       }).catch(error => {

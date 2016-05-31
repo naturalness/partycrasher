@@ -22,7 +22,7 @@
             <dt ng-if="::crash.version"> Version </dt>
             <dd ng-if="::crash.version">{{ ::crash.version }}</dd>
             <dt> Keywords </dt>
-            <dd> <span ng-repeat="item in summary | limitTo: 10">{{item.term}} </span> </dd>
+            <dd> <span pc-summary database-id="crash.id" project="crash.project"/> </dd>
           </dl>
           
         </div>

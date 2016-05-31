@@ -68,7 +68,7 @@
         <div class="panel-body">
           <p>
             <strong>Keywords: </strong>
-            <span ng-repeat="item in report.summary | unique: 'term' | limitTo: 10">{{item.term}} </span>
+            <span pc-summary database-id="report.id" project="report.project"/>
           </p>
           <strong>Stacktrace: </strong>
           <ol class="mini stack-trace list-group">

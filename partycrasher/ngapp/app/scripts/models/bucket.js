@@ -92,6 +92,10 @@ angular.module('PartyCrasherApp')
     get builds() {
       return this._count('builds');
     }
+    
+    get a_crash_id() {
+      return this._raw['top_reports'][0]['database_id'];
+    }
 
     /**
      * Counts the properties and returns them in sorted order.
