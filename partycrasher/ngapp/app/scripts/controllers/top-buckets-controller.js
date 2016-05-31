@@ -21,12 +21,22 @@ angular.module('PartyCrasherApp')
   var threshold = $routeParams.threshold || DEFAULT_THRESHOLD,
     project = $routeParams.project || '*',
     since = $location.search().since,
+    from = $location.search().from,
+    size = $location.search().size,
     date;
 
   if (since) {
     date = since;
   } else {
     date = "3-days-ago";
+  }
+  
+  if (!from) {
+    from = 0;
+  }
+  
+  if (!size) {
+    size = 10;
   }
 
   if (Number.isNaN(date.valueOf())) {
@@ -42,6 +52,8 @@ angular.module('PartyCrasherApp')
   $scope.search = search;
   $scope.search.date = date;
   $scope.search.project = project;
+  $scope.search.from = from;
+  $scope.search.size = size;
   $scope.search.thresholdIndex = THRESHOLDS.indexOf(threshold);
 
   /*
@@ -67,16 +79,17 @@ angular.module('PartyCrasherApp')
   function search() {
     var project = $scope.search.project,
       since = $scope.search.date,
+      from = $scope.search.from,
+      size = $scope.search.size,
       threshold = $scope.search.threshold;
     $scope.loading = true;
-    
-    PartyCrasher.search({ project, threshold, since})
+    PartyCrasher.search({ project, threshold, since, from, size })
       .then(results => {
         $scope.hasResults = results['top_buckets'].length > 0;
         $scope.results = results;
         $scope.loading = false;
         $scope.errorMessage = null;
-        setNewLocation(since);
+        setNewLocation(since, from, size);
         results['top_buckets'].forEach(function(thisBucket) {
           var id = thisBucket['id'];
           PartyCrasher.fetchBucket({ project, threshold, id })
@@ -91,19 +104,33 @@ angular.module('PartyCrasherApp')
         $scope.results = null;
         $scope.errorMessage = error.data.message;
         $scope.loading = false;
-        setNewLocation(since);
+        setNewLocation(since, from, size);
       });
   }
+  
+  function prevPage() {
+    $scope.search.from = ($scope.search.from | 0) - ($scope.search.size | 0);
+    search();
+  }
+  function nextPage() {
+    $scope.search.from = ($scope.search.from | 0) + ($scope.search.size | 0);
+    search();
+  }
+  
+  $scope.prevPage = prevPage;
+  $scope.nextPage = nextPage;
 
   /**
    * Sets the location from the search variables.
    */
-  function setNewLocation(date) {
+  function setNewLocation(date, from, size) {
     var project = $scope.search.project;
     var threshold = $scope.search.threshold;
 
     $location
       .search('since', date)
+      .search('from', from)
+      .search('size', size)
       .path(`/${project}/buckets/${threshold}`);
   }
 });

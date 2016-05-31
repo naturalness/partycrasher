@@ -1,5 +1,8 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import print_function
+
+import sys
 from datetime import datetime
 from collections import namedtuple, defaultdict
 
@@ -9,7 +12,7 @@ try:
 except:
     from configparser import ConfigParser
 
-from elasticsearch import Elasticsearch, NotFoundError, TransportError
+from elasticsearch import Elasticsearch, NotFoundError, TransportError, RequestError
 
 # Some of these imports are part of the public API...
 from partycrasher.crash import Crash
@@ -198,7 +201,8 @@ class PartyCrasher(object):
                       top_reports=reports,
                       first_seen=None)
 
-    def top_buckets(self, lower_bound, threshold=None, project=None):
+    def top_buckets(self, lower_bound, threshold=None, project=None, 
+                    from_=None, size=None):
         """
         Given a datetime lower_bound (from date), calculates the top buckets
         in the given timeframe for the given threshold (automatically
@@ -248,7 +252,7 @@ class PartyCrasher(object):
                         "top_buckets": {
                             "terms": {
                                 "field": "buckets." + threshold.to_elasticsearch(),
-                                "order": { "_count": "desc" }
+                                "order": { "_count": "desc" },
                             },
                             # Get the date of the latest crash per bucket.
                             "aggs": {
@@ -266,14 +270,34 @@ class PartyCrasher(object):
             # Do not send any hits back!
             "size": 0
         }
-
-        response = self.es.search(body=query, index='crashes')
+                                    
+        if size is None:
+          size = 10
+        
+        actual_size = size
+        
+        if from_ is not None:
+            assert from_ >= 0
+            actual_size = actual_size + from_
+        if size is not None:
+            assert size >= 0
+            (query["aggs"]["top_buckets_filtered"]["aggs"]
+                  ["top_buckets"]["terms"]["size"]) = actual_size
+        
+        try:
+            response = self.es.search(body=query, index='crashes')
+        except RequestError as e:
+            print(e.error, file=sys.stderr)
+            raise e
 
         # Oh, ElasticSearch! You and your verbose responses!
         top_buckets = (response['aggregations']
                        ['top_buckets_filtered']
                        ['top_buckets']
                        ['buckets'])
+        
+        if from_ is not None:
+            top_buckets = top_buckets[from_:]
 
         return [Bucket(id=bucket['key'], project=project, threshold=threshold,
                        total=bucket['doc_count'],

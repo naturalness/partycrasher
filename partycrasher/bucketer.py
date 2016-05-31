@@ -218,24 +218,24 @@ class MLT(Bucketer):
             if subexplanation["description"].startswith("weight"):
               flattened.append(subexplanation)
             else:
-              print(subexplanation["description"])
+              #print(subexplanation["description"])
               if "details" in subexplanation:
                 flattened.extend(flatten(subexplanation["details"]))
           return flattened
             
         explanation = flatten(explanation)
         explanation = sorted(explanation, key=itemgetter('value'), reverse=True)
-        with open("explanation", 'w') as f:
-          print(json.dumps(explanation, indent=2), file=f)
+        #with open("explanation", 'w') as f:
+          #print(json.dumps(explanation, indent=2), file=f)
           
         summary = []
         for i in explanation:
-          print(i['description'])
+          #print(i['description'])
           match = re.match(r'^weight\(([^\s:]+):([^\s]+) in .*$', i['description'])
           if match is not None:
             summary.append({'field': match.group(1), 'term': match.group(2), 'value': i['value']})
-        del summary[30:]
-        print(json.dumps(summary, indent=2, cls=ESCrashEncoder), file=sys.stderr)
+        #del summary[30:]
+        #print(json.dumps(summary, indent=2, cls=ESCrashEncoder), file=sys.stderr)
         
         return summary
         

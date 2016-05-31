@@ -592,6 +592,10 @@ def query_buckets(project=None, threshold=None):
         **Required**. Grab buckets since this date, represented as an ISO 8601
         date/time value (i.e, ``YYYY-MM-DD``), or a relative offset such as
         ``5-hours-ago``, ``3-days-ago`` or ``1-week-ago``, etc.
+    ``from``
+        Get page of results starting from this number.
+    ``size``
+        Get this number of results, starting from ``from``.
 
     Example
     -------
@@ -625,6 +629,14 @@ def query_buckets(project=None, threshold=None):
     assert threshold is not None
 
     since = request.args.get('since', '3-days-ago')
+    from_ = request.args.get('from', None)
+    size = request.args.get('size', None)
+    
+    if from_ is not None:
+      from_ = int(from_)
+    if size is not None:
+      size = int(size)
+    
     try:
         lower_bound = dateparser.parse(since.replace('-', ' '))
     except ValueError:
@@ -640,7 +652,9 @@ def query_buckets(project=None, threshold=None):
 
     buckets = crasher.top_buckets(lower_bound,
                                   project=project,
-                                  threshold=threshold)
+                                  threshold=threshold,
+                                  from_=from_,
+                                  size=size)
 
     return jsonify(since=lower_bound.isoformat(),
                    threshold=threshold,

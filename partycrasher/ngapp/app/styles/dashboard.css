@@ -141,7 +141,7 @@ a[href=''] {
     max-height: 30em;
 }
 
-input {
+input, button {
   background-color: white;
 }
 

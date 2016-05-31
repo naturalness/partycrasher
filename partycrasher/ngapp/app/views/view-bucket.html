@@ -8,7 +8,7 @@
   </header>
 
   <div class="row">
-    <div class="col-md-5">
+    <div class="col-md-3">
       <section class="panel panel-default">
         <div class="panel-heading">
           <h3 class="panel-title">Summary</h3>
@@ -34,7 +34,7 @@
         </div>
       </section>
     </div>
-    <div class="col-md-7">
+    <div class="col-md-9">
       <section class="panel panel-default latest-crashes">
         <header class="panel-heading">
           <h2 class="panel-title"> Latest Crashes </h2>
@@ -43,7 +43,8 @@
         <ul class="list-group">
           <li class="list-group-item" ng-repeat="crash in ::bucket.reports">
             <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a> 
-            from {{ ::crash.project }} {{ ::crash.date | fromNow }}
+            from {{ ::crash.project }} {{ ::crash.date | fromNow }}, keywords: 
+            <span pc-summary database-id="crash.id" project="crash.project"/>
           </li>
         </ul>
         </div>
