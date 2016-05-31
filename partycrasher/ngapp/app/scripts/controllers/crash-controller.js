@@ -23,5 +23,10 @@ angular.module('PartyCrasherApp')
       $scope.stack = report.stackTrace;
       $scope.context = report.contextData;
       $scope.buckets = report.buckets;
+      $scope.date = report.date;
+    });
+  PartyCrasher.fetchSummary({ project, id })
+    .then(summary => {
+      $scope.summary = summary;
     });
 });

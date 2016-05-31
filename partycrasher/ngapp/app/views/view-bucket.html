@@ -42,7 +42,8 @@
         <div class="panel-body">
         <ul class="list-group">
           <li class="list-group-item" ng-repeat="crash in ::bucket.reports">
-            <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a> {{ ::crash.date | fromNow }}
+            <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a> 
+            from {{ ::crash.project }} {{ ::crash.date | fromNow }}
           </li>
         </ul>
         </div>
@@ -64,16 +65,23 @@
             <a href="{{ ::report | uiUrl:'report' }}">{{ ::report.id }}</a>
           </h3>
         </header>
-        <ol class="mini stack-trace list-group">
-          <li ng-repeat="frame in ::report.stackTrace"
-              class="stack-frame list-group-item">
-            <code ng-if="frame.func">{{ ::frame.func }}</code>
-            <small ng-if="frame.filename">
-              {{ ::frame.filename }}{{ ::frame.line ? ':' + frame.line : '' }}
-            </small>
-            <span ng-if="frame.address">({{ ::frame.address }})</span>
-          </li>
-        </ol>
+        <div class="panel-body">
+          <p>
+            <strong>Keywords: </strong>
+            <span ng-repeat="item in report.summary | unique: 'term' | limitTo: 10">{{item.term}} </span>
+          </p>
+          <strong>Stacktrace: </strong>
+          <ol class="mini stack-trace list-group">
+            <li ng-repeat="frame in ::report.stackTrace"
+                class="stack-frame list-group-item">
+              <code ng-if="frame.func">{{ ::frame.func }}</code>
+              <small ng-if="frame.filename">
+                {{ ::frame.filename }}{{ ::frame.line ? ':' + frame.line : '' }}
+              </small>
+              <span ng-if="frame.address">({{ ::frame.address }})</span>
+            </li>
+          </ol>
+        </div>
       </div>
     </div>
   </section>

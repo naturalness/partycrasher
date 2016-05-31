@@ -10,16 +10,21 @@
     <div class="col-md-5">
       <section class="panel panel-default">
         <div class="panel-body">
-        <dl class="dl-x">
-          <dt> Date </dt>
-          <dd>{{ ::crash.date | date:'medium' }}</dd>
-          <dt> OS </dt>
-          <dd>{{ ::crash.os }}</dd>
-          <dt ng-if="::crash.build"> Build </dt>
-          <dd ng-if="::crash.build">{{ ::crash.build }}</dd>
-          <dt ng-if="::crash.version"> Version </dt>
-          <dd ng-if="::crash.version">{{ ::crash.version }}</dd>
-        </dl>
+          <dl class="dl-x">
+            <dt> Project </dt>
+            <dd>{{ ::crash.project }}</dd>
+            <dt> Date </dt>
+            <dd>{{ ::date | date:'medium' }} ({{ date | fromNow }})</dd>
+            <dt> OS </dt>
+            <dd>{{ ::crash.os }}</dd>
+            <dt ng-if="::crash.build"> Build </dt>
+            <dd ng-if="::crash.build">{{ ::crash.build }}</dd>
+            <dt ng-if="::crash.version"> Version </dt>
+            <dd ng-if="::crash.version">{{ ::crash.version }}</dd>
+            <dt> Keywords </dt>
+            <dd> <span ng-repeat="item in summary | limitTo: 10">{{item.term}} </span> </dd>
+          </dl>
+          
         </div>
       </section>
       

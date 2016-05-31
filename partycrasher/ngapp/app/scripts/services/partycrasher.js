@@ -36,6 +36,20 @@ angular.module('PartyCrasherApp')
     }
 
     /**
+     * Fetch a summary by (project, id) pair.
+     *
+     * Returns a Promise of the report.
+     */
+    fetchSummary({project, id}) {
+      if (!(project && id)) {
+        return Promise.reject(new Error('Must provide project and id'));
+      }
+
+      return $http.get(reportURL({ project, id }) + '/summary')
+        .then(({data}) => data);
+    }
+
+    /**
      * Searches for buckets.
      */
     search({ project, threshold, since }) {

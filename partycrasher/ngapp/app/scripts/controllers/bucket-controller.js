@@ -34,11 +34,16 @@ angular.module('PartyCrasherApp')
 
     $scope.sampleReports = bucket.reports.slice(-3).map(report => {
       /* Return a subset of the fields. */
-      return {
+      var thisReport = {
         id: report.id,
         project: report.project,
         href: report.href,
         stackTrace: report.stackTrace };
+      PartyCrasher.fetchSummary({ project, id })
+        .then(summary => {
+          thisReport.summary = summary;
+        });
+      return thisReport;
     });
 
     /* TODO: make this easier to use later. */

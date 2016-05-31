@@ -382,6 +382,35 @@ def view_report(project, report_id):
     else:
         return jsonify_resource(report)
 
+@app.route('/<project>/reports/<report_id>/summary')
+def report_summary(project, report_id):
+    """
+    .. api-doc-order: 2
+
+    Analyse a report and return the most significant bits
+    ======================
+    ::
+
+        GET /:project/reports/:report_id/summary HTTP/1.1
+
+    Summarises a processed report from the database.
+
+    .. code-block:: json
+
+        {
+            "database_id": "<report-id>",
+            "project": "<project>",
+        }
+
+    """
+
+    try:
+        summary = crasher.get_summary(report_id, project)
+    except partycrasher.ReportNotFoundError:
+        return jsonify(not_found=report_id), 404
+    else:
+        return jsonify_resource(summary)
+
 
 @app.route('/reports/dry-run', methods=['POST'])
 @app.route('/<project>/reports/dry-run', methods=['POST'])

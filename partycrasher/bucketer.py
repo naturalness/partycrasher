@@ -24,11 +24,15 @@ import json
 import uuid
 import time
 import sys
-
+import re
+from operator import itemgetter
+from sets import Set
+from datetime import datetime
+from elasticsearch import RequestError
 
 
 from crash import Crash, Buckets
-from es_crash import ESCrash
+from es_crash import ESCrash, ESCrashEncoder
 from threshold import Threshold
 
 
@@ -140,7 +144,101 @@ class MLT(Bucketer):
     @property
     def min_threshold(self):
         return self.thresholds[0]
+      
+    def bucket_explain(self, crash, index=None):
+        """
+        Queries ElasticSearch with MoreLikeThis and returns information
+        from a crash that was significant to the result.
+        """
 
+        if index is None:
+          index = self.index
+
+        if isinstance(crash, basestring):
+            crash = ESCrash(crash, index=index)
+
+        bucket_field = self.name
+        
+        body = self.make_more_like_this_query(crash, bucket_field)
+        body["explain"] = True
+        del body["query"]["more_like_this"]["docs"][0]["doc"]
+        body["query"]["more_like_this"]["docs"][0]["_id"] = crash["database_id"]
+        
+        skip_fields = Set([
+          'database_id',
+          'buckets',
+          'depth',
+          'date',
+        ])
+        
+        def all_but_skip_fields(c, prefix=""):
+          fields = Set()
+          if isinstance(c, dict):
+            for k, v in c.iteritems():
+              #print(prefix + k, file=sys.stderr)
+              if k not in skip_fields:
+                fields.add(prefix + k)
+                subfields = all_but_skip_fields(v, prefix + k + ".")
+                #print(len(fields))
+                fields.update(subfields)
+          elif isinstance(c, list):
+            for i in c:
+                subfields = all_but_skip_fields(i, prefix)
+                fields.update(subfields)
+          elif isinstance(c, basestring) or c is None:
+            pass
+          elif isinstance(c, datetime):
+            pass
+          else:
+            raise NotImplementedError("all_but_fields can't handle " + c.__class__.__name__)
+          return fields
+        
+        fields = list(all_but_skip_fields(crash))
+        #print(json.dumps(fields, indent=2), file=sys.stderr)
+        body["query"]["more_like_this"]["fields"] = fields
+        
+        try:
+          response = self.es.search(index=self.index, 
+                                  body=json.dumps(body, cls=ESCrashEncoder)
+                                  )
+        except RequestError as e:
+          print(e.error, file=sys.stderr)
+          raise
+        
+        try:
+          explanation = response['hits']['hits'][0]['_explanation']['details']
+        except:
+          print(json.dumps(body, indent=2, cls=ESCrashEncoder), file=sys.stderr)
+          print(json.dumps(response, indent=2), file=sys.stderr)
+          raise
+        
+        def flatten(explanation):
+          flattened = []
+          for subexplanation in explanation:
+            if subexplanation["description"].startswith("weight"):
+              flattened.append(subexplanation)
+            else:
+              print(subexplanation["description"])
+              if "details" in subexplanation:
+                flattened.extend(flatten(subexplanation["details"]))
+          return flattened
+            
+        explanation = flatten(explanation)
+        explanation = sorted(explanation, key=itemgetter('value'), reverse=True)
+        with open("explanation", 'w') as f:
+          print(json.dumps(explanation, indent=2), file=f)
+          
+        summary = []
+        for i in explanation:
+          print(i['description'])
+          match = re.match(r'^weight\(([^\s:]+):([^\s]+) in .*$', i['description'])
+          if match is not None:
+            summary.append({'field': match.group(1), 'term': match.group(2)})
+        print(json.dumps(summary, indent=2, cls=ESCrashEncoder), file=sys.stderr)
+        
+        return summary
+        
+      
     def bucket(self, crash, bucket_field=None):
         """
         Queries ElasticSearch with MoreLikeThis.
@@ -159,6 +257,7 @@ class MLT(Bucketer):
 
         body = self.make_more_like_this_query(crash, bucket_field)
         response = self.es.search(index=self.index, body=body)
+        
 
         try:
             matching_buckets = self.make_matching_buckets(response, bucket_field,
@@ -505,6 +604,11 @@ def common_properties(thresholds):
     string_not_analyzed = {
         'type': "string",
         'index': 'not_analyzed',
+    }
+
+    string_no = {
+        'type': "string",
+        'index': 'no',
     }
 
     bucket_properties = {

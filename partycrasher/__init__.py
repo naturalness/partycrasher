@@ -289,6 +289,14 @@ class PartyCrasher(object):
         except NotFoundError as e:
             raise KeyError(database_id)
 
+    def get_summary(self, database_id, project):
+        self._connect_to_elasticsearch()
+
+        try:
+            return self.bucketer.bucket_explain(database_id, index='crashes')
+        except NotFoundError as e:
+            raise KeyError(database_id)
+
     def get_projects(self):
         """
         Returns the list of all projects found in Elasticsearch.

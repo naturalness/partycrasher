@@ -77,6 +77,17 @@ angular.module('PartyCrasherApp')
         $scope.loading = false;
         $scope.errorMessage = null;
         setNewLocation(since);
+        results['top_buckets'].forEach(function(thisBucket) {
+          var id = thisBucket['id'];
+          PartyCrasher.fetchBucket({ project, threshold, id })
+            .then(bucket => {
+              var id = bucket['top_reports'][0]['database_id'];
+              PartyCrasher.fetchSummary({ project, id })
+                .then(summary => {
+                  thisBucket.summary = summary;
+                });
+            });
+        });
       }).catch(error => {
         $scope.hasResults = false;
         $scope.results = null;

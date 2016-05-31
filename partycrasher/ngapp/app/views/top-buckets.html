@@ -57,6 +57,7 @@
           <th> Bucket </th>
           <th> Project </th>
           <th> First Seen </th>
+          <th> Keywords </th>
         </tr>
       </thead>
 
@@ -72,6 +73,9 @@
           <td>{{ ::bucket.project }}</td>
 
           <td>{{ ::bucket.first_seen | fromNow }}</td>
+          <td>
+            <span ng-repeat="item in bucket.summary | unique: 'term' | limitTo: 10">{{item.term}} </span>
+          </td>
         </tr>
       </tbody>
     </table>
