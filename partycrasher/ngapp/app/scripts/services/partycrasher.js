@@ -6,11 +6,11 @@
 angular.module('PartyCrasherApp')
 .factory('PartyCrasher', function ($http, $httpParamSerializer) {
   class PartyCrasher {
-
     /**
      * Fetch a bucket by (project, threshold, id) tuple.
+     * Pagination is optionally supported using from and size.
      *
-     * Returns a Promise of data.
+     * Returns a Promise of the bucket data.
      */
     fetchBucket({project, threshold, id, from, size}) {
       if (!(project && threshold && id)) {
@@ -22,7 +22,7 @@ angular.module('PartyCrasherApp')
     }
 
     /**
-     * Fetch a bucket by (project, id) pair.
+     * Fetch a report by (project, id) pair.
      *
      * Returns a Promise of the report.
      */
@@ -59,10 +59,10 @@ angular.module('PartyCrasherApp')
   }
 
   function bucketURL({ project, threshold, id, from, size }) {
-    var query = $httpParamSerializer({ 
-                                      from: from || '0',
-                                      size: size || '10',
-                                    });
+    var query = $httpParamSerializer({
+      from: from || '0',
+      size: size || '10'
+    });
     return `/${project}/buckets/${threshold}/${id}?${query}`;
   }
 
@@ -72,11 +72,11 @@ angular.module('PartyCrasherApp')
   }
 
   function searchUrl({project, threshold, since, from, size}) {
-    var query = $httpParamSerializer({ 
-                                      since: since || '3-days-ago',
-                                      from: from || '0',
-                                      size: size || '10',
-                                    });
+    var query = $httpParamSerializer({
+      since: since || '3-days-ago',
+      from: from || '0',
+      size: size || '10'
+    });
 
     if (!project || project === '*') {
       /* Search ALL projects. */

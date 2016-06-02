@@ -2,15 +2,12 @@
 
 /**
  * @ngdoc function
- * @name ngappApp.controller:TopbucketsCtrl
+ * @name ngappApp.controller:TopBucketsController
  * @description
- * # TopbucketsCtrl
- * Controller of the ngappApp
  */
 angular.module('PartyCrasherApp')
 .controller('TopBucketsController', function (
   $scope,
-  $http,
   $routeParams,
   $location,
   DEFAULT_THRESHOLD,
@@ -28,13 +25,13 @@ angular.module('PartyCrasherApp')
   if (since) {
     date = since;
   } else {
-    date = "3-days-ago";
+    date = '3-days-ago';
   }
-  
+
   if (!from) {
     from = 0;
   }
-  
+
   if (!size) {
     size = 10;
   }
@@ -47,9 +44,13 @@ angular.module('PartyCrasherApp')
   $scope.loading = true;
   $scope.thresholds = THRESHOLDS;
 
+  /* Expose a few functions (defined below). */
+  $scope.search = search;
+  $scope.prevPage = prevPage;
+  $scope.nextPage = nextPage;
+
   /* Note! The weird date picker thing DEMANDS that the date property be
    * wrapped an object of some kind (viz. search). */
-  $scope.search = search;
   $scope.search.date = date;
   $scope.search.project = project;
   $scope.search.from = from | 0;
@@ -59,6 +60,8 @@ angular.module('PartyCrasherApp')
   /*
    * Allows returning the string value of the threshold, even if only the list
    * index value of the threshold is known.
+   *
+   * TODO: Refactor as directive?
    */
   Object.defineProperty($scope.search, 'threshold', {
     get: function () {
@@ -82,7 +85,10 @@ angular.module('PartyCrasherApp')
       from = $scope.search.from,
       size = $scope.search.size,
       threshold = $scope.search.threshold;
+
+    /* If we're searching, we're loadin' */
     $scope.loading = true;
+
     PartyCrasher.search({ project, threshold, since, from, size })
       .then(results => {
         $scope.hasResults = results['top_buckets'].length > 0;
@@ -90,9 +96,10 @@ angular.module('PartyCrasherApp')
         $scope.loading = false;
         $scope.errorMessage = null;
         setNewLocation(since, from, size);
+
         results['top_buckets'].forEach(function(thisBucket) {
           var id = thisBucket['id'];
-          PartyCrasher.fetchBucket({ project, threshold, id })
+          return PartyCrasher.fetchBucket({ project, threshold, id })
             .then(bucket => {
               var id = bucket['top_reports'][0]['database_id'];
               thisBucket.database_id = id;
@@ -107,7 +114,7 @@ angular.module('PartyCrasherApp')
         setNewLocation(since, from, size);
       });
   }
-  
+
   function prevPage() {
     $scope.search.from = ($scope.search.from | 0) - ($scope.search.size | 0);
     search();
@@ -116,9 +123,6 @@ angular.module('PartyCrasherApp')
     $scope.search.from = ($scope.search.from | 0) + ($scope.search.size | 0);
     search();
   }
-  
-  $scope.prevPage = prevPage;
-  $scope.nextPage = nextPage;
 
   /**
    * Sets the location from the search variables.
