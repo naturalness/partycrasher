@@ -5,8 +5,8 @@
    <span class="disclosure-hide">Hide</span>
 </label>
 <dl class="disclosure-contents dl-horizontal">
-  <dt ng-repeat-start="(key, value) in value">
-    {{ key }}
+  <dt ng-repeat-start="(key, value) in ::value">
+    {{ ::key }}
   </dt>
   <dd ng-repeat-end>
     <pc-tree value="value" />

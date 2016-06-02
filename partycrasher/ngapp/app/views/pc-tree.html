@@ -12,14 +12,14 @@
   </span>
 
   <span ng-switch-when="href">
-    <a href="{{ value }}">{{ value }}</a>
+    <a href="{{ ::value }}">{{ ::value }}</a>
   </span>
 
   <span ng-switch-when="string" class="monospace">
-    {{ value }}
+    {{ ::value }}
   </span>
 
   <span ng-switch-default>
-    <code> {{ value }} </code>
+    <code> {{ ::value }} </code>
   </span>
 </span>

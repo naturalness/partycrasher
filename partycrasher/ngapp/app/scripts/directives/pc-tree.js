@@ -1,3 +1,4 @@
+
 /**
  * Defines a tree component for displaying JSON.
  */
@@ -17,14 +18,17 @@ angular.module('PartyCrasherApp')
     }
   };
 
-
   function looksLikeHref(value) {
-    return !!value.match(/^http:\/\/[^\/]+\//);
+    return !!value.match(/^https?:\/\/[^\/]+\//);
   }
 
   /* Returns the type of the expression as a string. Note that the type is not
    * necessarily a JavaScript type. */
   function valueType(value) {
+    if (value === undefined)
+      /* Unstable value (probably unset in the scope). */
+      return undefined;
+
     if (value instanceof Array)
       return 'array';
     if (value === null)
