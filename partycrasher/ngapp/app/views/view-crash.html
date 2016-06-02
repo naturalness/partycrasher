@@ -5,7 +5,6 @@
     </h1>
   </header>
 
-
   <div class="row">
     <div class="col-md-5">
       <section class="panel panel-default">
@@ -14,7 +13,7 @@
             <dt> Project </dt>
             <dd>{{ ::crash.project }}</dd>
             <dt> Date </dt>
-            <dd>{{ ::date | date:'medium' }} ({{ date | fromNow }})</dd>
+            <dd ng-if="date">{{ ::date | date:'medium' }} ({{ date | fromNow }})</dd>
             <dt> OS </dt>
             <dd>{{ ::crash.os }}</dd>
             <dt ng-if="::crash.build"> Build </dt>

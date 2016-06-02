@@ -7,6 +7,10 @@
 angular.module('PartyCrasherApp')
   .filter('fromNow', function () {
     return function (input) {
+      if (input === undefined || input === null) {
+        return undefined;
+      }
+
       /* TODO:
        * Do some type-checking and warn if input values are malformed.  */
       return moment(input).fromNow();
