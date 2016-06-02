@@ -240,11 +240,10 @@ class RestServiceTestCase(unittest.TestCase):
         buckets = response.json().get('buckets')
         assert buckets is not None
         assert isinstance(buckets, dict)
+        assert len(buckets) >= 3
         assert isinstance(buckets.get('4.0'), dict)
         assert isinstance(buckets.get('4.0').get('id'), StringType)
         assert buckets.get('4.0').get('href', '').startswith('http://')
-        # Ensure that other values exist too!
-        assert isinstance(buckets.get('3.75'), dict)
 
         insert_date = response.json().get('date')
         assert insert_date is not None
@@ -586,12 +585,10 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(create_url, json=fake_true_date)
         assert response.status_code == 201
 
-        threshold = '3.75'
-        try:
-          bucket_url = response.json()[0]['buckets'][threshold]['href']
-        except (IndexError, KeyError):
-          self.fail('Could not find bucket {} in '
-                    '{!r}'.format(threshold, response.json()))
+        report_buckets = response.json()[0]['buckets']
+        threshold, bucket = get_arbitrary_bucket(report_buckets)
+        bucket_url = bucket.get('href')
+        assert bucket_url is not None and is_url(bucket_url)
 
         assert is_cross_origin_accessible(bucket_url)
         response = requests.get(bucket_url)
@@ -600,7 +597,7 @@ class RestServiceTestCase(unittest.TestCase):
         # The bucket is named after the first crash... I guess?
         #assert database_id_a in response.json().get('id')
         assert response.json().get('total') >= 1
-        assert response.json().get('threshold') == '3.75'
+        assert response.json().get('threshold') == threshold
         # Look at the top report; it must contain tfidf_trickery.
         assert (response.json().get('top_reports')[0].get('tfidf_trickery') ==
                 tfidf_trickery)
@@ -800,6 +797,23 @@ def is_url(text):
 
 def sorted_thresholds(buckets):
     return sorted((key for key in buckets if key != 'top_match'), key=float)
+
+def get_arbitrary_bucket(buckets):
+    """
+    Given buckets, returns a random bucket.
+    """
+    assert isinstance(buckets, dict),\
+        "Buckets does not appear to be a dict"
+    assert len(buckets) >= 3,\
+        "Not enough buckets to sample from"
+    buckets = buckets.copy()
+
+    try:
+        del buckets['top_match']
+    except KeyError:
+        pass
+
+    return random.choice(list(buckets.items()))
 
 
 def wait_for_elastic_search():
