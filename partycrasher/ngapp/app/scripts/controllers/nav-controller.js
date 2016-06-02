@@ -20,9 +20,4 @@ angular.module('PartyCrasherApp')
 
     return $route.current.name === name;
   };
-
-  $scope.urlFor = function (name, args) {
-    /* Reverse the link, but remove the leading forward slash. */
-    return namedRouteService.reverse(name, args).substr(1);
-  };
 });
