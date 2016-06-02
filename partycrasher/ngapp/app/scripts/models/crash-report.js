@@ -28,6 +28,10 @@ angular.module('PartyCrasherApp')
     }
 
     get stackTrace() {
+      if (!this._raw['stacktrace']) {
+        return undefined;
+      }
+
       return this._raw['stacktrace'].map(rawFrame => new StackFrame(rawFrame));
     }
 
