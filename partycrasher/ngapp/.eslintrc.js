@@ -17,12 +17,13 @@ module.exports = {
             "unix"
         ],
         "quotes": [
+            "off"
+        ],
+        "no-unused-vars": [
             "error",
-            "single",
-             {
-                 "avoidEscape": true,
-                 "allowTemplateLiterals": true
-             }
+            {
+                "argsIgnorePattern": '^_'
+            }
         ],
         "semi": [
             "error",
