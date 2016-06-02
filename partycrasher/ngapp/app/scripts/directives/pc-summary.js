@@ -5,7 +5,7 @@ angular.module('PartyCrasherApp')
   function link(scope, element, _attrs) {
     /* When database-id has stabilized, do a request. */
     scope.$watch('databaseId', function (value) {
-      if (typeof value == 'string') {
+      if (value === undefined) {
         return;
       }
 
