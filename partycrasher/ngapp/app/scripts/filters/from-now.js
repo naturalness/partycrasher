@@ -5,14 +5,18 @@
  * Requires moment().
  */
 angular.module('PartyCrasherApp')
-  .filter('fromNow', function () {
+  .filter('fromNow', function ($log) {
     return function (input) {
       if (input === undefined || input === null) {
         return undefined;
       }
 
-      /* TODO:
-       * Do some type-checking and warn if input values are malformed.  */
+      var date = moment(input);
+      if (!date.isValid()) {
+        $log.warn(`Tried to parse an invalid date: ${input}`);
+        return undefined;
+      }
+
       return moment(input).fromNow();
     };
   });
