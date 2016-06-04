@@ -30,7 +30,13 @@ ENV PYTHON_VERSION 2.7.11
 # if this is called "PIP_VERSION", pip explodes with "ValueError: invalid truth value '<VERSION>'"
 ENV PYTHON_PIP_VERSION 8.1.2
 
-# Install Python (from source, I guess)
+# gpg: key 18ADD4FF: public key "Benjamin Peterson <benjamin@python.org>" imported
+ENV GPG_KEY C01E1CAD5EA2C4F0B8E3571504C367C218ADD4FF
+
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+
+# Install Python
 RUN set -ex \
     && curl -fSL "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz" -o python.tar.xz \
     && curl -fSL "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz.asc" -o python.tar.xz.asc \
@@ -55,24 +61,22 @@ RUN set -ex \
             -o \
             \( -type f -a -name '*.pyc' -o -name '*.pyo' \) \
         \) -exec rm -rf '{}' + \
-    && rm -rf /usr/src/python ~/.cache \
+    && rm -rf /usr/src/python ~/.cache
 
-# Install Node and Bower.
-RUN curl -sL https://deb.nodesource.com/setup_4.x | bash - \
-    && apt-get install -y nodejs
+# Install Node, Bower
+RUN curl -fsL https://deb.nodesource.com/setup_4.x | bash - \
+    && apt-get install -y nodejs \
     && npm install -g bower
 
-# App stuff.
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
-
+# Install the Python app
 COPY requirements.txt /usr/src/app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /usr/src/app
 
+# Install deps
 RUN cd /usr/src/app/partycrasher/ngapp && \
     bower --allow-root --force-latest install
 
 ### Finally, the main command:
-CMD [ "python", "partycrasher/rest_service.py", "5000" ]
+CMD [ "python", "partycrasher/rest_service.py", "--port", "5000" ]
