@@ -26,13 +26,7 @@
       </select>
     </div>
 
-    <div class="form-group">
-      <label for="thresh=in"> Threshold </label>
-      <input type="range" id="thresh-in" ng-model="search.thresholdIndex"
-             min="0" max="{{ thresholds.length - 1}}" value="0" />
-      <span class="help-block"> <!-- TODO: write help text here!  --> </span>
-      <output>{{ search.threshold }}</output>
-    </div>
+    <pc-threshold-select threshold="search.threshold"></pc-threshold-select>
 
     <button type="submit" class="btn btn-default">
       <span class="glyphicon glyphicon-search" aria-hidden="true"></span> Search
@@ -79,7 +73,7 @@
         </tr>
       </tbody>
     </table>
-    <button ng-click="prevPage()" class="btn btn-default" ng-hide="search.from <= 0">Previous Page</button> 
+    <button ng-click="prevPage()" class="btn btn-default" ng-hide="search.from <= 0">Previous Page</button>
     <button ng-click="nextPage()" class="btn btn-default">Next Page</button>
   </div>
 

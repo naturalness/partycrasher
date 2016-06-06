@@ -4,6 +4,7 @@
  * @ngdoc function
  * @name ngappApp.controller:TopBucketsController
  * @description
+ * Controller of the ngappApp
  */
 angular.module('PartyCrasherApp')
 .controller('TopBucketsController', function (
@@ -12,8 +13,7 @@ angular.module('PartyCrasherApp')
   $location,
   DEFAULT_THRESHOLD,
   PartyCrasher,
-  PROJECT_NAMES,
-  THRESHOLDS
+  PROJECT_NAMES
 ) {
   var threshold = $routeParams.threshold || DEFAULT_THRESHOLD,
     project = $routeParams.project || '*',
@@ -42,7 +42,6 @@ angular.module('PartyCrasherApp')
 
   /* Initially, we're loading. */
   $scope.loading = true;
-  $scope.thresholds = THRESHOLDS;
 
   /* Expose a few functions (defined below). */
   $scope.search = search;
@@ -55,30 +54,13 @@ angular.module('PartyCrasherApp')
   $scope.search.project = project;
   $scope.search.from = from | 0;
   $scope.search.size = size | 0;
-  $scope.search.thresholdIndex = THRESHOLDS.indexOf(threshold);
-
-  /*
-   * Allows returning the string value of the threshold, even if only the list
-   * index value of the threshold is known.
-   *
-   * TODO: Refactor as directive?
-   */
-  Object.defineProperty($scope.search, 'threshold', {
-    get: function () {
-      return THRESHOLDS[$scope.search.thresholdIndex];
-    },
-
-    set: function () {
-      throw new Error(`Cannot directly set threshold.`);
-    }
-  });
+  $scope.search.threshold = threshold;
 
   $scope.projects = PROJECT_NAMES;
 
   /* Do the initial search. */
   search();
 
-  /* TODO: add generic query. */
   function search() {
     var project = $scope.search.project,
       since = $scope.search.date,

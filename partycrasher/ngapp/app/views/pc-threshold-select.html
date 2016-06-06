@@ -1,0 +1,7 @@
+<div class="form-group">
+  <label for="thresh=in"> Threshold </label>
+  <input type="range" id="thresh-in" ng-model="thresholdIndex"
+         min="0" max="{{ thresholds.length - 1}}" />
+  <span class="help-block"> <!-- TODO: write help text here!  --> </span>
+  <output>{{ threshold }}</output>
+</div>
