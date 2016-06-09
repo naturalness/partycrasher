@@ -17,7 +17,9 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import json, datetime
+from __future__ import print_function
+
+import sys, json, datetime
 import dateparser
 from collections import OrderedDict
 
@@ -59,10 +61,94 @@ class Buckets(object):
 
     # TODO: automatically convert keys of wrong type to Threshold
 
-class Stackframe(dict):
-    pass
+def stringify_value(v):
+    """ Force ints/bools to strings for ES """
+    if isinstance(v, list) and not isinstance(v, StringifiedList):
+	return StringifiedList(v)
+    elif isinstance(v, dict) and not isinstance(v, StringifiedDict):
+	return StringifiedDict(v)
+    elif isinstance(v, int):
+	return str(v)
+    elif isinstance(v, bool):
+	return str(v)
+    elif isinstance(v, float):
+	return str(v)
+    elif isinstance(v, bytes):
+        # Force strings to be unicoded
+        return v.decode(encoding='utf-8', errors='replace')
+    else:
+	return v
 
-class Stacktrace(list):
+
+class StringifiedDict(dict):
+    def __setitem__(self, key, val):
+        # First force strings to be unicoded
+        if isinstance(key, bytes):
+            key = key.decode(encoding='utf-8', errors='replace')
+        
+        val = stringify_value(val)
+	#print("key: " + key + "val: " + repr(val), file=sys.stderr)
+	if key == 'address':
+	    assert isinstance(val, basestring)
+
+        return super(StringifiedDict, self).__setitem__(key, val)
+
+    def normalize(self):
+        """
+        Checks ALL of the existing keys and remaps them to normalized values.
+
+        Note that due to normalization, the keys may shift. That is, this
+        condition does NOT hold.
+
+            frame[key] = value
+            frame[key] == value
+        """
+        # Use self.keys() so that we can remove items (it is impossible to
+        # modify the dictionary during iteration).
+        for key in self.keys():
+            # __setitem__ WILL change the
+            value = self[key]
+            del self[key]
+            self.__setitem__(key, value)
+
+    def __init__(self, *args):
+        super(StringifiedDict, self).__init__(*args)
+        if not (len(args) == 1 and isinstance(args[0], self.__class__)):
+            self.normalize()
+            
+class Stackframe(StringifiedDict):
+  pass
+
+class StringifiedList(list):
+    
+    """A list which can only contain stackframes..."""
+    def __init__(self, value=[], **kwargs):
+        if isinstance(value, list):
+            if len(value) == 0:
+                return
+            else:
+                self.extend(value)
+        else:
+            raise AttributeError
+
+    def extend(self, arg):
+        return super(StringifiedList, self).extend(map(stringify_value, arg))
+
+    def append(self, *args):
+        return self.extend(args)
+
+    def __setitem__(self, index, value):
+        return super(StringifiedList, self).__setitem__(index, stringify_value(value))
+
+    def __setslice__(self, i, j, seq):
+        return super(StringifiedList, self).__setitem__(i, j, map(stringify_value, seq))
+
+    def __eq__(self, other):
+        return (super(StringifiedList, self).__eq__(other)
+                and self.__class__ == other.__class__)
+
+
+class Stacktrace(StringifiedList):
 
     stackframe_class = Stackframe
 
@@ -98,7 +184,9 @@ class Stacktrace(list):
         return (super(Stacktrace, self).__eq__(other)
                 and self.__class__ == other.__class__)
 
+
 # TODO: MOVE DATE STUFF HERE.
+# TODO: Make subclass of StringifiedDict
 
 class Crash(dict):
 
@@ -194,8 +282,9 @@ class Crash(dict):
         # First force strings to be unicoded
         if isinstance(key, bytes):
             key = key.decode(encoding='utf-8', errors='replace')
-        if isinstance(val, bytes):
-            val = val.decode(encoding='utf-8', errors='replace')
+            
+        # Force ints/bools to strings for ES
+        val = stringify_value(val)
 
         # Now do conversions.
         if key in synonyms:
@@ -235,6 +324,7 @@ class Crash(dict):
                 else:
                     raise ValueError(key + " must be of type " +
                              self.canonical_fields[key]['type'].__name__)
+	
         else:
             return super(Crash, self).__setitem__(key, val)
 

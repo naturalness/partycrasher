@@ -15,7 +15,7 @@ except:
 from elasticsearch import Elasticsearch, NotFoundError, TransportError, RequestError
 
 # Some of these imports are part of the public API...
-from partycrasher.crash import Crash
+from partycrasher.crash import Crash, Stacktrace, Stackframe
 from partycrasher.es_crash import ESCrash
 from partycrasher.es_crash import ReportNotFoundError
 from partycrasher.bucketer import MLTCamelCase
@@ -160,6 +160,12 @@ class PartyCrasher(object):
         :raises IdenticalReportError:
         """
         true_crash = Crash(crash)
+        if 'stacktrace' in true_crash:
+	  assert isinstance(true_crash['stacktrace'], Stacktrace)
+	  assert isinstance(true_crash['stacktrace'][0], Stackframe)
+	  if 'address' in true_crash['stacktrace'][0]:
+	    assert isinstance(true_crash['stacktrace'][0]['address'], basestring)
+	  
 
         if dryrun:
             true_crash['buckets'] = self.bucketer.assign_buckets(true_crash)
