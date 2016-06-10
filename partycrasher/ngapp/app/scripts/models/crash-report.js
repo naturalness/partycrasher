@@ -4,10 +4,21 @@
  * function (CrashReport, $scope) { ... }
  */
 angular.module('PartyCrasherApp')
-.provider('CrashReport', function (StackFrame) {
+.provider('CrashReport', function (StackFrame, propertyByPath) {
+  var $log; /* $log must be injected in $get(). */
+
   class CrashReport {
     constructor(rawCrash) {
       this._raw = rawCrash;
+
+      window.lastCrash = this;
+    }
+
+    /**
+     * Grab some info by its path in the raw report data.
+     */
+    propertyByPath(...path) {
+      return propertyByPath(this._raw, ...path);
     }
 
     get id() {
@@ -28,7 +39,15 @@ angular.module('PartyCrasherApp')
     }
 
     get stackTrace() {
-      if (!this._raw['stacktrace']) {
+      var stackTrace = this._raw['stacktrace'];
+
+      if (!stackTrace) {
+        return undefined;
+      }
+
+      if (!(stackTrace instanceof Array)) {
+        $log.error(`Stack trace found in ${this.project}/${this.id} but it's
+                   not an array!`);
         return undefined;
       }
 
@@ -46,32 +65,21 @@ angular.module('PartyCrasherApp')
      * @return an object of { report_id, project, score, href }.
      */
     get topMatch() {
-      return this._raw['buckets']['top_match'];
+      return this.propertyByPath('buckets', 'top_match');
     }
 
     get buckets() {
       return _.pickBy(this._raw['buckets'], (_value, key) => {
-        return (isFinite(key));
+        /* Get THRESHOLDS only (the key `top_match` will coerce to NaN, hence
+         * be non-finite). */
+        return isFinite(key);
       });
-    }
-
-    /*== Some fields used in aggregations. ==*/
-
-    get os() {
-      return this._raw['os'];
-    }
-
-    get version() {
-      return undefined;
-    }
-
-    get build() {
-      return undefined;
     }
   }
 
   return {
-    $get: function() {
+    $get: function (_$log_) {
+      $log = _$log_;
       return CrashReport;
     }
   };
