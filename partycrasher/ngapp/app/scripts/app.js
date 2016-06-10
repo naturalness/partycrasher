@@ -12,6 +12,7 @@ angular
   .module('PartyCrasherApp', [
     'ngRoute',
     'ngNamedRoute',
+    'propertyByPath'
   ])
   .config(function ($routeProvider, $locationProvider, DEFAULT_THRESHOLD) {
     $routeProvider
