@@ -72,6 +72,13 @@ angular.module('PartyCrasherApp')
         });
       return thisReport;
     });
+
+    $scope.summary = bucket.summarize({
+      'package': ['Package'],
+      signal: ['Signal'],
+      cpu: ['cpu'],
+      uname: ['Uname']
+    });
   }
 
   function prevPage() {

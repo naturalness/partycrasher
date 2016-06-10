@@ -15,9 +15,10 @@
         </div>
         <div class="panel-body">
           <dl>
-            <pc-bucket-summary title="Version" stats="versions"></pc-bucket-summary>
-            <pc-bucket-summary title="OSes" stats="oses"></pc-bucket-summary>
-            <pc-bucket-summary title="Builds" stats="builds" /></pc-bucket-summary>
+            <pc-bucket-summary title="Package" stats="summary.package"></pc-bucket-summary>
+            <pc-bucket-summary title="uname" stats="summary.uname"></pc-bucket-summary>
+            <pc-bucket-summary title="Signal" stats="summary.signal" /></pc-bucket-summary>
+            <pc-bucket-summary title="CPU" stats="summary.cpu" /></pc-bucket-summary>
           </dl>
         </div>
       </section>
@@ -30,12 +31,12 @@
         <div class="panel-body">
         <ul class="list-group">
           <li class="list-group-item" ng-repeat="crash in ::bucket.reports">
-            <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a> 
-            from {{ ::crash.project }} {{ ::crash.date | fromNow }}, keywords: 
+            <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a>
+            from {{ ::crash.project }} {{ ::crash.date | fromNow }}, keywords:
             <span pc-summary database-id="crash.id" project="crash.project"/>
           </li>
         </ul>
-        <button ng-click="prevPage()" class="btn btn-default" ng-hide="from <= 0">Previous Page</button> 
+        <button ng-click="prevPage()" class="btn btn-default" ng-hide="from <= 0">Previous Page</button>
         <button ng-click="nextPage()" class="btn btn-default">Next Page</button>
         </div>
       </section>

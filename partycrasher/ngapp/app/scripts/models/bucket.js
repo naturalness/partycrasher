@@ -80,11 +80,30 @@ angular.module('PartyCrasherApp')
     }
 
     /**
+     * Given a object of properties and thier paths, returns an object with
+     * the same keysm and concrete statistics across all known reports in the
+     * bucket.
+     */
+    summarize(propertyMap) {
+      return _.mapValues(propertyMap, (description, property) => {
+        if (!Array.isArray(description)) {
+          throw new Error(`Incorrect description for ${property}`);
+        }
+
+        return this.summarizePropertyPath(...description);
+      });
+    }
+
+    /**
      * Counts the properties and returns them in descending order of
      * popularity.
      */
-    summarize(property) {
-      return new Counter(_.map(this.reports, property)).asSortedArray();
+    summarizePropertyPath(...path) {
+      var properties = _.map(
+        this.reports,
+        report => report.propertyByPath(...path)
+      );
+      return new Counter(properties).asSortedArray();
     }
   }
 
