@@ -10,8 +10,6 @@ angular.module('PartyCrasherApp')
   class CrashReport {
     constructor(rawCrash) {
       this._raw = rawCrash;
-
-      window.lastCrash = this;
     }
 
     /**
