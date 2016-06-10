@@ -30,6 +30,10 @@ angular.module('PartyCrasherApp')
 
     /* Return only line information. */
     var matches = filename.match(/:(\d+)$/);
+    if (!matches) {
+      return undefined;
+    }
+
     return matches[1];
   }
 
