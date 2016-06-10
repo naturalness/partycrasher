@@ -5,7 +5,7 @@
  */
 angular.module('PartyCrasherApp')
 .provider('Bucket', function () {
-  var _CrashReport;
+  var CrashReport;
 
   /**
    * Inner-class for counting distinct values.
@@ -33,9 +33,7 @@ angular.module('PartyCrasherApp')
     asSortedArray() {
       var unsorted = Array.from(this._count);
       return _(unsorted)
-        .sortBy(pair => {
-          return pair[1];
-        })
+        .sortBy(pair => pair[1])
         .map('0')
         .value();
     }
@@ -45,7 +43,7 @@ angular.module('PartyCrasherApp')
     constructor(rawBucket) {
       this._raw = rawBucket;
       this._reports = rawBucket['top_reports']
-        .map(rawReport => new _CrashReport(rawReport));
+        .map(rawReport => new CrashReport(rawReport));
     }
 
     get id() {
@@ -76,40 +74,25 @@ angular.module('PartyCrasherApp')
       return this._reports;
     }
 
-    /*== Cool metadata. ==*/
-
-    /**
-     * TODO: make "count" public.
-     */
-    get oses() {
-      return this._count('os');
-    }
-
-    get versions() {
-      return this._count('version');
-    }
-
-    get builds() {
-      return this._count('builds');
-    }
-    
+    /* TODO: what is this doing here? Remove? */
     get a_crash_id() {
       return this._raw['top_reports'][0]['database_id'];
     }
 
     /**
-     * Counts the properties and returns them in sorted order.
+     * Counts the properties and returns them in descending order of
+     * popularity.
      */
-    _count(property) {
+    summarize(property) {
       return new Counter(_.map(this.reports, property)).asSortedArray();
     }
   }
 
   return {
-    $get: function(CrashReport) {
+    $get: function(_CrashReport_) {
       /* Cannot inject CrashReport in provider definition; instead, inject it
        * here! */
-      _CrashReport = CrashReport;
+      CrashReport = _CrashReport_;
       return Bucket;
     }
   };
