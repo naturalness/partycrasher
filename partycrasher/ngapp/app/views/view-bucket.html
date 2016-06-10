@@ -15,21 +15,9 @@
         </div>
         <div class="panel-body">
           <dl>
-          <!--
-          <dt> First Seen </dt>
-          <dd> TODO </dd>
-          <dt> Last Seen </dt>
-          <dd> TODO </dd>
-          -->
-            <dt> Versions </dt>
-            <dd ng-if="versions">{{ ::versions.join(', ') }}</dd>
-            <dd ng-if="!versions"><em> No information </em></dd>
-            <dt> OSes </dt>
-            <dd ng-if="oses">{{ ::oses.join(', ') }}</dd>
-            <dd ng-if="!oses"><em> No information </em></dd>
-            <dt> Builds </dt>
-            <dd ng-if="builds">{{ ::builds.join(', ') }}</dd>
-            <dd ng-if="!builds"><em> No information </em></dd>
+            <pc-bucket-summary title="Version" stats="versions"></pc-bucket-summary>
+            <pc-bucket-summary title="OSes" stats="oses"></pc-bucket-summary>
+            <pc-bucket-summary title="Builds" stats="builds" /></pc-bucket-summary>
           </dl>
         </div>
       </section>
