@@ -71,6 +71,7 @@ class PartyCrasher(object):
     def __init__(self, config_file=None, thresholds=DEFAULT_THRESHOLDS):
         self.config = ConfigParser(default_config())
         self.thresholds = thresholds
+        self._checked_index_exists = False
 
         # TODO: Abstract config out.
         if config_file is not None:
@@ -79,6 +80,7 @@ class PartyCrasher(object):
         # self.es and self.bucketer are lazy properties.
         self._es = None
         self._bucketer = None
+        self._checked_index_exists = False
 
     @property
     def es_servers(self):
@@ -146,7 +148,11 @@ class PartyCrasher(object):
                                       thresholds=self.thresholds,
                                       lowercase=False, only_stack=False,
                                       index='crashes', elasticsearch=self.es)
-        self._bucketer.create_index()
+        if not self._checked_index_exists:
+            if self._es.indices.exists('crashes'):
+                self._checked_index_exists = True
+            else:
+                self._bucketer.create_index()
         self.es.cluster.health(wait_for_status='yellow')
         return self._es
 

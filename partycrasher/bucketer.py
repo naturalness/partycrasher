@@ -25,6 +25,7 @@ import uuid
 import time
 import sys
 import re
+import traceback
 from operator import itemgetter
 from sets import Set
 from datetime import datetime
@@ -460,6 +461,7 @@ class MLTIdentifier(MLT):
 class MLTCamelCase(MLT):
     """MLT intended to break up identifiers into sub-words"""
     def create_index(self):
+        traceback.print_stack()
         # Ignore 400 -- index already created.
         self.es.indices.create(index=self.index, ignore=400,
         body={
