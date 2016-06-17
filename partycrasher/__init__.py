@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 import sys
+import json
 from datetime import datetime
 from collections import namedtuple, defaultdict
 
@@ -368,6 +369,30 @@ class PartyCrasher(object):
         """
         self._connect_to_elasticsearch()
         return self
+      
+    def search(self, query_string, project=None, from_=None, size=None):
+        es_query = {
+            "query": {
+                "bool": { "must": [
+                    { "query_string": {
+                          "query": query_string,
+                      }},
+                ]}
+            }};
+        if project is not None:
+            es_query['query']['bool']['must'].append({
+                "filter": { "term": {
+                    "project": project
+                }}
+            });
+        if from_ is not None:
+            es_query["from"] = from_;
+        if size is not None:
+            es_query["size"] = size;
+        r = self._es.search(index='crashes', body=es_query)
+        print(json.dumps(r, indent=2), sys.stderr)
+        return r
+      
 
 
 def get_reports_by_bucket(response, threshold):

@@ -42,6 +42,13 @@ angular
         controller: 'CrashController'
       })
 
+      /* View search results. */
+      .when('/:project?/search', {
+        name: 'view-search',
+        templateUrl: 'views/view-search.html',
+        controller: 'SearchController'
+      })
+
       /* Unsure? Go to the home page! */
       .otherwise({
         redirectTo: '/'

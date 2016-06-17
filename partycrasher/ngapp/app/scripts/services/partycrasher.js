@@ -51,9 +51,15 @@ angular.module('PartyCrasherApp')
 
     /**
      * Searches for buckets.
+     * TODO: RENAME
      */
     search({ project, threshold, since, from, size }) {
       return $http.get(searchUrl({ project, threshold, since, from, size }))
+        .then(({data}) => data);
+    }
+
+    searchQuery({ project, q, from, size }) {
+      return $http.get(searchQueryUrl({ project, searchString: q, from, size }))
         .then(({data}) => data);
     }
   }
@@ -71,6 +77,7 @@ angular.module('PartyCrasherApp')
     return `/${project}/reports/${id}`;
   }
 
+  /* TODO: RENAME */
   function searchUrl({project, threshold, since, from, size}) {
     var query = $httpParamSerializer({
       since: since || '3-days-ago',
@@ -84,6 +91,22 @@ angular.module('PartyCrasherApp')
     } else {
       /* Search just this project. */
       return `/${project}/buckets/${threshold}?${query}`;
+    }
+  }
+
+  function searchQueryUrl({project, searchString, from, size}) {
+    var query = $httpParamSerializer({
+      searchString: searchString,
+      from: from || '0',
+      size: size || '10'
+    });
+
+    if (!project || project === '*') {
+      /* Search ALL projects. */
+      return `/*/search?${query}`;
+    } else {
+      /* Search just this project. */
+      return `/${project}/search?${query}`;
     }
   }
 

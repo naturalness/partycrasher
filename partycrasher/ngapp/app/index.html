@@ -47,6 +47,20 @@
             <li ng-class="{ active: isActive('view-report') }">
               <a href="{{ isActive('view-report') ? '#' : '' }}"> Report </a>
             </li>
+
+            <li ng-class="{ active: isActive('view-search') }" 
+                ng-controller="MenuSearchController">
+              <a href="{{ isActive('view-search') ? '#' : '' }}"> Search </a>
+              <form class="form-inline" ng-submit="search()">
+                <input type="text"
+                       id="query"
+                       ng-model="menuSearchQuery"
+                       >
+                <button type="submit" class="btn btn-default">
+                  <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                </button>
+              </form>
+            </li>
           </ul>
         </nav>
 
@@ -77,6 +91,8 @@
     <script src="scripts/controllers/crash-controller.js"></script>
     <script src="scripts/controllers/nav-controller.js"></script>
     <script src="scripts/controllers/top-buckets-controller.js"></script>
+    <script src="scripts/controllers/menu-search-controller.js"></script>
+    <script src="scripts/controllers/search-controller.js"></script>
     <script src="scripts/directives/pc-tree.js"></script>
     <script src="scripts/directives/pc-summary.js"></script>
     <script src="scripts/directives/pc-threshold-select.js"></script>

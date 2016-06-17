@@ -769,6 +769,38 @@ if False:
         """
         raise NotImplementedError()
 
+
+@app.route('/<project>/search')
+def search(project):
+    """
+    .. api-doc-order: 20
+
+    Perform a free-text search
+    ======================
+    ::
+
+        GET /:project/search?q=:search HTTP/1.1
+
+    Performs a free-text search on all crashes in a project.
+
+    .. code-block:: json
+
+        {
+            "database_id": "<report-id>",
+            "project": "<project>",
+        }
+
+    """
+    
+    query_string = request.args.get('q', '*')
+    from_ = request.args.get('from', None)
+    size = request.args.get('size', None)
+    if project == '*':
+        project = None
+
+    r = crasher.search(query_string, project=project, from_=from_, size=size)
+    return jsonify_resource(r['hits'])
+
 #############################################################################
 #                                 Utilities                                 #
 #############################################################################
