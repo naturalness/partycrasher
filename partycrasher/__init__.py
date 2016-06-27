@@ -381,16 +381,20 @@ class PartyCrasher(object):
             }};
         if project is not None:
             es_query['query']['bool']['must'].append({
-                "filter": { "term": {
+                "term": {
                     "project": project
-                }}
+                }
             });
         if from_ is not None:
             es_query["from"] = from_;
         if size is not None:
             es_query["size"] = size;
-        r = self._es.search(index='crashes', body=es_query)
-        print(json.dumps(r, indent=2), sys.stderr)
+        try:
+            r = self._es.search(index='crashes', body=es_query)
+        except RequestError as e:
+            print(e.info, file=sys.stderr)
+            raise
+        #print(json.dumps(r, indent=2), sys.stderr)
         return r
       
 

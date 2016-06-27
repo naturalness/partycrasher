@@ -718,6 +718,38 @@ class RestServiceTestCase(unittest.TestCase):
         Patch the project's default threshold.
         """
         raise NotImplementedError
+      
+    def test_free_search(self):
+        now = datetime.datetime.utcnow()
+
+        # Create a bunch of reports with IDENTICAL unique content
+        tfidf_trickery = str(uuid.uuid4())
+
+        # These will all go in the Alan Parsons Project
+        database_id_a = str(uuid.uuid4())
+        database_id_b = str(uuid.uuid4())
+        database_id_c = str(uuid.uuid4())
+
+        project = 'hamburgerpalace'
+
+        # Add multiple reports.
+        response = requests.post(self.path_to(project, 'reports'),
+                                 json=[
+                                     {'database_id': database_id_a,
+                                      'tfidf_trickery': tfidf_trickery},
+                                     {'database_id': database_id_b,
+                                      'tfidf_trickery': tfidf_trickery},
+                                     {'database_id': database_id_c,
+                                      'tfidf_trickery': tfidf_trickery}])
+        assert response.status_code == 201
+        
+        response = requests.get(self.path_to(project, 'search'), params={
+                'q': tfidf_trickery,
+            })
+        
+        assert response.status_code == 200
+        assert len(response.json().get('hits')) == 3
+
 
     def tearDown(self):
         # Kill the ENTIRE process group of the REST server.
