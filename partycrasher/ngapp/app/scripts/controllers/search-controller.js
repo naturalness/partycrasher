@@ -3,8 +3,8 @@ angular.module('PartyCrasherApp')
   $scope,
   $location,
   $routeParams,
-  PartyCrasher
-  
+  PartyCrasher,
+  CrashReport
 ) {
   var q = $routeParams.q;
   var project = $routeParams.project || '*';
@@ -23,15 +23,13 @@ angular.module('PartyCrasherApp')
     
     PartyCrasher.searchQuery({ project, q, from, size })
       .then(results => {
-          var hits = results['hits'];
-          debugger;
-          
+          var hits = _.map(results['hits'], '_source');
+          var reports = _.map(hits, (c) => {return new CrashReport(c);});
           $scope.hasResults = hits.length > 0;
-          $scope.reports = _.map(hits, '_source');
+          $scope.reports = reports;
           $scope.errorMessage = null;
           $scope.loading = false;
       }).catch(error => {
-          debugger;
           $scope.hasResults = false;
           $scope.reports = null;
           $scope.errorMessage = error.data.message;

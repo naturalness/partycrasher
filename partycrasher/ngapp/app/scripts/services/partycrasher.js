@@ -96,7 +96,7 @@ angular.module('PartyCrasherApp')
 
   function searchQueryUrl({project, searchString, from, size}) {
     var query = $httpParamSerializer({
-      searchString: searchString,
+      q: searchString,
       from: from || '0',
       size: size || '10'
     });
