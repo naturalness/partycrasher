@@ -725,7 +725,7 @@ class RestServiceTestCase(unittest.TestCase):
         # Create a bunch of reports with IDENTICAL unique content
         tfidf_trickery = str(uuid.uuid4())
 
-        # These will all go in the Alan Parsons Project
+        # These will all go in the hamburger palace
         database_id_a = str(uuid.uuid4())
         database_id_b = str(uuid.uuid4())
         database_id_c = str(uuid.uuid4())
@@ -743,11 +743,13 @@ class RestServiceTestCase(unittest.TestCase):
                                       'tfidf_trickery': tfidf_trickery}])
         assert response.status_code == 201
         
+        # Search for the tf.idf trickery.
         response = requests.get(self.path_to(project, 'search'), params={
                 'q': tfidf_trickery,
             })
         
         assert response.status_code == 200
+        # It should get back the three IDs we just inserted.
         assert len(response.json().get('hits')) == 3
 
 
