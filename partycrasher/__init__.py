@@ -3,7 +3,6 @@
 from __future__ import print_function
 
 import sys
-import json
 from datetime import datetime
 from collections import namedtuple, defaultdict
 
@@ -168,11 +167,11 @@ class PartyCrasher(object):
         """
         true_crash = Crash(crash)
         if 'stacktrace' in true_crash:
-	  assert isinstance(true_crash['stacktrace'], Stacktrace)
-	  assert isinstance(true_crash['stacktrace'][0], Stackframe)
-	  if 'address' in true_crash['stacktrace'][0]:
-	    assert isinstance(true_crash['stacktrace'][0]['address'], basestring)
-	  
+            assert isinstance(true_crash['stacktrace'], Stacktrace)
+            assert isinstance(true_crash['stacktrace'][0], Stackframe)
+            if 'address' in true_crash['stacktrace'][0]:
+                assert isinstance(true_crash['stacktrace'][0]['address'], basestring)
+
 
         if dryrun:
             true_crash['buckets'] = self.bucketer.assign_buckets(true_crash)
@@ -392,10 +391,12 @@ class PartyCrasher(object):
         try:
             r = self._es.search(index='crashes', body=es_query)
         except RequestError as e:
+            # TODO: use logger
             print(e.info, file=sys.stderr)
             raise
+
         raw_hits = r['hits']['hits']
-        print(json.dumps(raw_hits, indent=2), file=sys.stderr)
+        #print(json.dumps(raw_hits, indent=2), file=sys.stderr)
         
         results = []
 
@@ -405,7 +406,7 @@ class PartyCrasher(object):
             results.append(crash)
 
         return results
-      
+     
 
 
 def get_reports_by_bucket(response, threshold):
