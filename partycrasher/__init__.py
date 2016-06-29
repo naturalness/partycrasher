@@ -394,8 +394,17 @@ class PartyCrasher(object):
         except RequestError as e:
             print(e.info, file=sys.stderr)
             raise
-        #print(json.dumps(r, indent=2), sys.stderr)
-        return r
+        raw_hits = r['hits']['hits']
+        print(json.dumps(raw_hits, indent=2), file=sys.stderr)
+        
+        results = []
+
+        for hit in raw_hits:
+            report = hit['_source']
+            crash = Crash(report)
+            results.append(crash)
+
+        return results
       
 
 

@@ -799,7 +799,7 @@ def search(project):
         project = None
 
     r = crasher.search(query_string, project=project, from_=from_, size=size)
-    return jsonify_resource(r['hits'])
+    return jsonify_resource(r)
 
 #############################################################################
 #                                 Utilities                                 #

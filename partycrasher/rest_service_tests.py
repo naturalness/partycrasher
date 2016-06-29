@@ -748,7 +748,20 @@ class RestServiceTestCase(unittest.TestCase):
             })
         
         assert response.status_code == 200
-        assert len(response.json().get('hits')) == 3
+        r = response.json()
+        assert len(r) == 3
+        
+        database_urls = [
+          "http://localhost:" + str(self.port) + "/hamburgerpalace/reports/" + database_id_a,
+          "http://localhost:" + str(self.port) + "/hamburgerpalace/reports/" + database_id_b, 
+          "http://localhost:" + str(self.port) + "/hamburgerpalace/reports/" + database_id_c
+          ]
+        
+        print(r[0]['href'])
+        
+        assert r[0].get('href', '') in database_urls
+        assert r[1].get('href', '') in database_urls
+        assert r[2].get('href', '') in database_urls
 
 
     def tearDown(self):
