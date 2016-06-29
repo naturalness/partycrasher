@@ -782,13 +782,36 @@ def search(project):
         GET /:project/search?q=:search HTTP/1.1
 
     Performs a free-text search on all crashes in a project.
+    
+    ::
+    
+        HTTP/1.1 200 OK
 
     .. code-block:: json
 
-        {
-            "database_id": "<report-id>",
-            "project": "<project>",
-        }
+        [
+            {
+                "database_id": "<report-id>",
+                "href": "https://domain.tld/<project>/reports/<report-id>"
+                "buckets": {
+                    "4.0": {
+                        "bucket_id": "<bucket-id @ 4.0>",
+                        "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                    }
+                }
+            },
+            {
+                "database_id": "<report-id>",
+                "href": "https://domain.tld/<project>/reports/<report-id>"
+                "buckets": {
+                    "4.0": {
+                        "bucket_id": "<bucket-id @ 4.0>",
+                        "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                    }
+                }
+            },
+            ...
+        ]
 
     """
     
