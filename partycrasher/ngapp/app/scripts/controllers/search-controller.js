@@ -23,7 +23,7 @@ angular.module('PartyCrasherApp')
     
     PartyCrasher.searchQuery({ project, q, from, size })
       .then(results => {
-          var hits = _.map(results['hits'], '_source');
+          var hits = results;
           var reports = _.map(hits, (c) => {return new CrashReport(c);});
           $scope.hasResults = hits.length > 0;
           $scope.reports = reports;
