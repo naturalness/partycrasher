@@ -18,7 +18,6 @@
       <select ng-model="search.project" class="form-control" id="project-in">
         <option value="*"> All projects </option>
         <option disabled> &mdash; </option>
-        <!-- TODO: get list of projects. -->
         <option ng-repeat="project in ::projects" value="{{ ::project }}">
           {{ ::project }}
         </option>

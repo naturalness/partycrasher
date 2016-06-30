@@ -13,13 +13,12 @@
                 ng-model="search.query"
           >
         </div>
-        in 
+        in
         <div class="form-group">
           <label for="project-in"> Project </label>
           <select ng-model="search.project" class="form-control" id="project-in">
             <option value="*"> All projects </option>
             <option disabled> &mdash; </option>
-            <!-- TODO: get list of projects. -->
             <option ng-repeat="project in ::projects" value="{{ ::project }}">
               {{ ::project }}
             </option>
@@ -34,7 +33,6 @@
     </div>
   </div>
 
-  
   <div class="row">
     <div class="col-md-12">
       <section class="panel panel-default latest-crashes">
@@ -42,17 +40,21 @@
           <h2 class="panel-title"> Results </h2>
         </header>
         <div class="panel-body">
-        <p ng-if="loading"> Loading... </p>
-        <p ng-if="errorMessage">{{ errorMessage }}</p>
-        <ul class="list-group">
-          <li class="list-group-item" ng-repeat="crash in ::reports">
-            <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a>
-            from {{ ::crash.project }} {{ ::crash.date | fromNow }}, keywords:
-            <span pc-summary database-id="crash.id" project="crash.project"/>
-          </li>
-        </ul>
-        <button ng-click="prevPage()" class="btn btn-default" ng-hide="from <= 0">Previous Page</button>
-        <button ng-click="nextPage()" class="btn btn-default">Next Page</button>
+          <p ng-if="loading"> Loading... </p>
+          <p ng-if="errorMessage">{{ errorMessage }}</p>
+          <p ng-if="!hasResults"> No results found. </p>
+          <ul class="list-group">
+            <li class="list-group-item" ng-repeat="crash in reports">
+              <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a>
+              from {{ ::crash.project }} {{ ::crash.date | fromNow }}, keywords:
+              <span pc-summary database-id="crash.id" project="crash.project"/>
+            </li>
+          </ul>
+
+          <!-- TODO: support pagination.
+          <button ng-click="prevPage()" class="btn btn-default" ng-hide="from <= 0">Previous Page</button>
+          <button ng-click="nextPage()" class="btn btn-default">Next Page</button>
+          -->
         </div>
       </section>
     </div>
