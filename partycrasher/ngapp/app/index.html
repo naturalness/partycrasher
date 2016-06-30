@@ -48,18 +48,29 @@
               <a href="{{ isActive('view-report') ? '#' : '' }}"> Report </a>
             </li>
 
-            <li ng-class="{ active: isActive('view-search') }" 
+            <li ng-class="{ active: isActive('view-search') }"
                 ng-controller="MenuSearchController">
               <a href="{{ isActive('view-search') ? '#' : '' }}"> Search </a>
-              <form class="form-inline" ng-submit="search()">
-                <input type="text"
-                       id="query"
-                       ng-model="menuSearchQuery"
-                       >
-                <button type="submit" class="btn btn-default">
-                  <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-                </button>
-              </form>
+              <div>
+                <form class="form-inline" ng-submit="search()">
+                  <div class="form-group">
+                    <div class="input-group">
+                      <input type="text"
+                             placeholder="Search for..."
+                             class="form-control input-sm"
+                             id="query"
+                             ng-model="menuSearchQuery"
+                             >
+                      <span class="input-group-btn">
+                        <button type="submit" class="btn btn-default btn-sm">
+                          <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                          <span class="sr-only"> Search </span>
+                        </button>
+                      </span>
+                    </div>
+                  </div>
+                </form>
+              </div>
             </li>
           </ul>
         </nav>

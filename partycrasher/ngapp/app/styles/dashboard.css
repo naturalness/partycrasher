@@ -59,7 +59,8 @@ body {
   margin-bottom: 20px;
   margin-left: -20px;
 }
-.nav-sidebar > li > a {
+.nav-sidebar > li > a,
+.nav-sidebar > li > div {
   padding-right: 20px;
   padding-left: 20px;
 }
@@ -69,7 +70,12 @@ body {
   color: #fff;
   background-color: #428bca;
 }
-
+.nav-sidebar > li.active {
+  background-color: #428bca;
+}
+.nav-sidebar > li > div {
+  padding-bottom: 10px;
+}
 
 /*
  * Main content
