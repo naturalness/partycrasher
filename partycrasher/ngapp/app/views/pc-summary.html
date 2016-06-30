@@ -1,4 +1,7 @@
-<span ng-repeat="item in summary | limitTo: 10" 
+<span ng-repeat="item in summary | limitTo: 11"
       style="color: rgb({{item[1]}},{{item[1]}},{{item[1]}})">
-        {{item[0]}} 
+      <a named-route="'view-search'"
+         route-params="{project: '*'}"
+         route-query-params="{q: item[0]}"
+      >{{ item[0] }}</a>
 </span>

@@ -1,5 +1,6 @@
-
-
+/**
+ * Displays keywords for a crash.
+ */
 angular.module('PartyCrasherApp')
 .directive('pcSummary', function(PartyCrasher) {
   function link(scope, element, _attrs) {
@@ -22,7 +23,9 @@ angular.module('PartyCrasherApp')
     grouped = _.sortBy(_.toPairs(grouped), 1).reverse();
     var max = grouped[0][1];
     var min = grouped[grouped.length-1][1];
+
     return _.map(grouped, (i) => {
+      /* Create a greyscale value. */
       i[1] = 192 - _.floor(((i[1]-min)/(max-min)) * 192);
       return i;
     });
