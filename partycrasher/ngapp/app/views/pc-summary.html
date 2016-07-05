@@ -1,7 +1,8 @@
 <span ng-repeat="item in summary | limitTo: 11"
-      style="color: rgb({{item[1]}},{{item[1]}},{{item[1]}})">
+      >
       <a named-route="'view-search'"
          route-params="{project: '*'}"
          route-query-params="{q: item[0]}"
+         style="color: rgb({{item[1]}},{{item[1]}},{{item[1]}})"
       >{{ item[0] }}</a>
 </span>

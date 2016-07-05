@@ -17,10 +17,14 @@ angular.module('PartyCrasherApp')
   }
 
   function groupSummary(summary) {
-    var grouped = _.mapValues(_.groupBy(summary, "term"), (i) =>{
-      return _.sumBy(i, "value");
+//     var grouped = _.mapValues(_.groupBy(summary, "term"), (i) =>{
+//       return _.sumBy(i, "value");
+//     });
+//     grouped = _.sortBy(_.toPairs(grouped), 1).reverse();
+    var grouped = _.map(summary, (i) => {
+      return [i["field"] + ":" + i["term"], i["value"]];
     });
-    grouped = _.sortBy(_.toPairs(grouped), 1).reverse();
+    grouped = _.sortBy(grouped, 1).reverse();
     var max = grouped[0][1];
     var min = grouped[grouped.length-1][1];
 
