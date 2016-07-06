@@ -41,6 +41,7 @@ import time
 import unittest
 import uuid
 import dateparser
+import json
 
 # Terrible Python 2/3 hacks
 try:
@@ -821,6 +822,110 @@ class RestServiceTestCase(unittest.TestCase):
           + "/hamburgerpalace/reports/" 
           + database_id_c)
         
+    def test_top_buckets_query_and_date(self):
+        now = datetime.datetime.utcnow()
+
+        # Create a bunch of reports with IDENTICAL unique content
+        tfidf_trickery = str(uuid.uuid4())
+        tfidf_trickery_2 = str(uuid.uuid4())
+
+        # These will all go in the hamburger palace
+        database_id_a = str(uuid.uuid4())
+        database_id_b = str(uuid.uuid4())
+        database_id_c = str(uuid.uuid4())
+        database_id_d = str(uuid.uuid4())
+        #print(database_id_a)
+        #print(database_id_b)
+        #print(database_id_c)
+        #print(database_id_d)
+
+        project = 'X'
+
+        # Add multiple reports.
+        response = requests.post(self.path_to(project, 'reports'),
+                                 json=[
+                                     {'database_id': database_id_a,
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'date' : '2016-01-15T00:00:00Z'},
+                                     {'database_id': database_id_b,
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'date' : '2016-02-15T00:00:00Z'},
+                                     {'database_id': database_id_c,
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'date' : '2016-03-15T00:00:00Z'}, 
+                                     {'database_id': database_id_d,
+                                      'tfidf_trickery': tfidf_trickery_2,
+                                      'date' : '2016-03-15T00:00:00Z'}]) 
+        assert response.status_code == 201
+        
+        # Search for the tf.idf trickery.
+        response = requests.get(self.path_to(project, 'buckets', '11.0'),
+                                params={
+                                    'q': tfidf_trickery,
+                                    'since': '2000',
+                                })
+        
+        assert response.status_code == 200
+        r = response.json().get("top_buckets")
+        
+        #print(json.dumps(r, indent=2))
+        #assert False
+
+        # It should get back the three IDs we just inserted.
+        assert len(r) == 3
+        
+        database_urls = [
+          "http://localhost:" + str(self.port) + "/X/buckets/11.0/" + database_id_a,
+          "http://localhost:" + str(self.port) + "/X/buckets/11.0/" + database_id_b, 
+          "http://localhost:" + str(self.port) + "/X/buckets/11.0/" + database_id_c
+          ]
+        
+        print(r[0]['href'])
+        
+        assert r[0].get('href', '') in database_urls
+        assert r[1].get('href', '') in database_urls
+        assert r[2].get('href', '') in database_urls
+        
+        # Test date filtering
+        response = requests.get(self.path_to(project, 'buckets', '11.0'), params={
+                'q': tfidf_trickery,
+                'since': '2016-01-01',
+                'until': '2016-02-01'
+            })
+        assert response.status_code == 200
+        r = response.json().get("top_buckets")
+        assert len(r) == 1
+        assert r[0].get('href', '') == ("http://localhost:" 
+          + str(self.port) 
+          + "/X/buckets/11.0/" 
+          + database_id_a)
+
+        response = requests.get(self.path_to(project, 'buckets', '11.0'), params={
+                'q': tfidf_trickery,
+                'since': '2016-02-01',
+                'until': '2016-03-01'
+            })
+        assert response.status_code == 200
+        r = response.json().get("top_buckets")
+        assert len(r) == 1
+        assert r[0].get('href', '') == ("http://localhost:" 
+          + str(self.port) 
+          + "/X/buckets/11.0/" 
+          + database_id_b)
+
+        response = requests.get(self.path_to(project, 'buckets', '11.0'), params={
+                'q': tfidf_trickery,
+                'since': '2016-03-01',
+                'until': '2016-04-01'
+            })
+        assert response.status_code == 200
+        r = response.json().get("top_buckets")
+        assert len(r) == 1
+        assert r[0].get('href', '') == ("http://localhost:" 
+          + str(self.port) 
+          + "/X/buckets/11.0/" 
+          + database_id_c)
+
     def tearDown(self):
         # Kill the ENTIRE process group of the REST server.
         # This should really be the subprocess.Popen.terminate() behavior by

@@ -603,6 +603,11 @@ def query_buckets(project=None, threshold=None):
     Query parameters
     ----------------
 
+    ``q``
+        Only show buckets, with crashes matching this search query, 
+        in lucene search syntax. See
+        https://lucene.apache.org/core/2_9_4/queryparsersyntax.html
+        for details.
     ``since``
         **Required**. Grab buckets since this date, represented as an ISO 8601
         date/time value (i.e, ``YYYY-MM-DD``), or a relative offset such as
@@ -646,6 +651,7 @@ def query_buckets(project=None, threshold=None):
     """
     assert threshold is not None
 
+    query_string = request.args.get('q', None)
     since = request.args.get('since', '3-days-ago')
     from_ = request.args.get('from', None)
     size = request.args.get('size', None)
@@ -686,7 +692,8 @@ def query_buckets(project=None, threshold=None):
                                   threshold=threshold,
                                   from_=from_,
                                   size=size,
-                                  upper_bound=upper_bound)
+                                  upper_bound=upper_bound,
+                                  query_string=query_string)
     
     if upper_bound is not None:
         upper_bound_ret = upper_bound.isoformat()
@@ -696,7 +703,8 @@ def query_buckets(project=None, threshold=None):
     return jsonify(since=lower_bound.isoformat(),
                    until=upper_bound_ret,
                    threshold=threshold,
-                   top_buckets=list(buckets))
+                   top_buckets=list(buckets),
+                   q=query_string)
 
 
 @app.route('/reports', methods=['DELETE'])

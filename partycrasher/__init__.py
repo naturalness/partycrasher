@@ -218,8 +218,14 @@ class PartyCrasher(object):
                       top_reports=reports,
                       first_seen=None)
 
-    def top_buckets(self, lower_bound, threshold=None, project=None, 
-                    from_=None, size=None, upper_bound=None):
+    def top_buckets(self, 
+                    lower_bound, 
+                    threshold=None, 
+                    project=None, 
+                    from_=None, 
+                    size=None, 
+                    upper_bound=None,
+                    query_string=None):
         """
         Given a datetime lower_bound (from date), calculates the top buckets
         in the given timeframe for the given threshold (automatically
@@ -255,6 +261,18 @@ class PartyCrasher(object):
             filters.append({
                 "term": {
                     "project": project
+                }
+            })
+        
+        # this doesn't work on ES 2.3!
+        if query_string is not None:
+            print("Query string!", file=sys.stderr)
+            filters.append({
+                "query": {
+                    "query_string": {
+                        "query": query_string,
+                        "default_operator": "AND",
+                    }
                 }
             })
 
@@ -383,6 +401,12 @@ class PartyCrasher(object):
                 "bool": { "must": [
                     { "query_string": {
                           "query": query_string,
+                          # This is necessary due to how we tokenize things
+                          # which is not on whitespace I.E. if the user 
+                          # searched for CamelCaseThing it will be interpreted
+                          # as a search for Camel AND Case AND Thing rather
+                          # than Camel OR Case OR Thing
+                          "default_operator": "AND", 
                       }},
                 ]}
             }};
