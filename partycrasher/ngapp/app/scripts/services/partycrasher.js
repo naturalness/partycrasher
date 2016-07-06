@@ -57,9 +57,9 @@ angular.module('PartyCrasherApp')
         .then(({data}) => data);
     }
 
-    searchQuery({ project, q, from, size }) {
-      return $http.get(searchCrashUrl({ project, searchString: q, from, size }))
-        .then(({data}) => data);
+    searchQuery({ project, q, since, until, from, size }) {
+      var url = searchCrashUrl({ project, q, since, until, from, size });
+      return $http.get(url).then(({data}) => data);
     }
   }
 
@@ -94,11 +94,13 @@ angular.module('PartyCrasherApp')
     }
   }
 
-  function searchCrashUrl({project, searchString, from, size}) {
+  function searchCrashUrl({project, q, since, until, from, size}) {
     var query = $httpParamSerializer({
-      q: searchString,
+      q: q,
       from: from || '0',
-      size: size || '10'
+      size: size || '10',
+      since: since || null,
+      until: until || null,
     });
 
     if (!project || project === '*') {

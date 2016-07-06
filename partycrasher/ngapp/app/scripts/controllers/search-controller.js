@@ -13,16 +13,24 @@ angular.module('PartyCrasherApp')
   PROJECT_NAMES
 ) {
   var q = $routeParams.q;
-  var project = $routeParams.project || '*';
+  var project = $routeParams.project || null;
+  var from = $routeParams.from || 0;
+  var size = $routeParams.size || 10;
+  var since = $routeParams.since || null;
+  var until = $routeParams.until || null;
 
   $scope.projects = PROJECT_NAMES;
 
   $scope.search = search;
   $scope.search.query = q;
   $scope.search.project = project;
+  $scope.search.from = from | 0; // | 0 coerces to numeric type
+  $scope.search.size = size | 0;
+  $scope.search.since = since;
+  $scope.search.until = until;
 
   $scope.loading = true;
-  PartyCrasher.searchQuery({ project, q: query, from, size })
+  PartyCrasher.searchQuery({ project, q, since, until, from, size })
     .then(results => {
       var hits = results;
       var reports = _.map(hits, (c) => {return new CrashReport(c);});
@@ -40,10 +48,26 @@ angular.module('PartyCrasherApp')
   function search() {
     var query = $scope.search.query;
     var project = $scope.search.project;
-    var from = $location.search.from || 0;
-    var size = $location.search.size || 10;
+    var from = $scope.search.from;
+    var size = $scope.search.size;
+    var since = $scope.search.since;
+    var until = $scope.search.until;
     $location
       .search('q', query)
+      .search('since', since)
+      .search('until', until)
+      .search('from', from)
+      .search('size', size)
       .path(`/${project}/search`);
   }
+  
+  function prevPage() {
+    $location.search('from',
+                     ($scope.search.from | 0) - ($scope.search.size | 0));
+  }
+  function nextPage() {
+    $location.search('from',
+                    ($scope.search.from | 0) + ($scope.search.size | 0));
+  }
+
 });

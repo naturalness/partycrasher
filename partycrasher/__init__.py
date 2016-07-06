@@ -437,6 +437,10 @@ class PartyCrasher(object):
             # TODO: use logger
             print(e.info, file=sys.stderr)
             raise
+        except TransportError as e:
+            # TODO: use logger
+            print(e.info, file=sys.stderr)
+            raise
 
         raw_hits = r['hits']['hits']
         #print(json.dumps(raw_hits, indent=2), file=sys.stderr)
