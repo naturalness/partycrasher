@@ -653,8 +653,9 @@ class RestServiceTestCase(unittest.TestCase):
                     })
         assert response.json().get('since') == now.isoformat()
         until = dateparser.parse(response.json().get('until'))
+        print(str(until))
         assert datetime.datetime(2524, 12, 30) < until
-        assert datetime.datetime(2525, 01, 02) > until
+        assert datetime.datetime(2525, 12, 30) > until
         assert len(response.json().get('top_buckets')) >= 2
 
         # Get the top bucket.
@@ -747,11 +748,14 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(self.path_to(project, 'reports'),
                                  json=[
                                      {'database_id': database_id_a,
-                                      'tfidf_trickery': tfidf_trickery},
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'date' : '2016-01-15T00:00:00Z'},
                                      {'database_id': database_id_b,
-                                      'tfidf_trickery': tfidf_trickery},
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'date' : '2016-02-15T00:00:00Z'},
                                      {'database_id': database_id_c,
-                                      'tfidf_trickery': tfidf_trickery}])
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'date' : '2016-03-15T00:00:00Z'}])
         assert response.status_code == 201
         
         # Search for the tf.idf trickery.
@@ -776,7 +780,47 @@ class RestServiceTestCase(unittest.TestCase):
         assert r[0].get('href', '') in database_urls
         assert r[1].get('href', '') in database_urls
         assert r[2].get('href', '') in database_urls
+        
+        # Test date filtering
+        response = requests.get(self.path_to(project, 'search'), params={
+                'q': tfidf_trickery,
+                'since': '2016-01-01',
+                'until': '2016-02-01'
+            })
+        assert response.status_code == 200
+        r = response.json()
+        assert len(r) == 1
+        assert r[0].get('href', '') == ("http://localhost:" 
+          + str(self.port) 
+          + "/hamburgerpalace/reports/" 
+          + database_id_a)
 
+        response = requests.get(self.path_to(project, 'search'), params={
+                'q': tfidf_trickery,
+                'since': '2016-02-01',
+                'until': '2016-03-01'
+            })
+        assert response.status_code == 200
+        r = response.json()
+        assert len(r) == 1
+        assert r[0].get('href', '') == ("http://localhost:" 
+          + str(self.port) 
+          + "/hamburgerpalace/reports/" 
+          + database_id_b)
+
+        response = requests.get(self.path_to(project, 'search'), params={
+                'q': tfidf_trickery,
+                'since': '2016-03-01',
+                'until': '2016-04-01'
+            })
+        assert response.status_code == 200
+        r = response.json()
+        assert len(r) == 1
+        assert r[0].get('href', '') == ("http://localhost:" 
+          + str(self.port) 
+          + "/hamburgerpalace/reports/" 
+          + database_id_c)
+        
     def tearDown(self):
         # Kill the ENTIRE process group of the REST server.
         # This should really be the subprocess.Popen.terminate() behavior by

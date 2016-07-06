@@ -806,6 +806,26 @@ def search(project):
 
     Performs a free-text search on all crashes in a project.
     
+    Query parameters
+    ----------------
+
+
+    ``q``
+        What to search for, in lucene search syntax. See
+        https://lucene.apache.org/core/2_9_4/queryparsersyntax.html
+        for details.
+    ``since``
+        Search crashes occuring after this date, represented as an ISO 8601
+        date/time value (i.e, ``YYYY-MM-DD``), or a relative offset such as
+        ``5-hours-ago``, ``3-days-ago`` or ``1-week-ago``, etc.
+    ``until``
+        Search crashes occuring before this date as represented
+        as an ISO 8601 date/time value. Defaults to no limit.
+    ``from``
+        Get page of results starting from this number.
+    ``size``
+        Get this number of results, starting from ``from``.
+
     ::
     
         HTTP/1.1 200 OK
@@ -839,12 +859,44 @@ def search(project):
     """
     
     query_string = request.args.get('q', '*')
+    since = request.args.get('since', None)
+    until = request.args.get('until', None)
     from_ = request.args.get('from', None)
     size = request.args.get('size', None)
+    
+    if since is not None:
+        try:
+            since = dateparser.parse(since.replace('-', '_'))
+        except ValueError:
+            raise BadRequest('Could not understand date format for '
+                            '`until=` parameter. '
+                            'Supported formats are: ISO 8601 timestamps '
+                            'and relative dates. Refer to the API docs for '
+                            'more information: '
+                            'http://partycrasher.rtfd.org/',
+                            since=since)
+    if until is not None:
+        try:
+            until = dateparser.parse(until.replace('-', '_'))
+        except ValueError:
+            raise BadRequest('Could not understand date format for '
+                            '`until=` parameter. '
+                            'Supported formats are: ISO 8601 timestamps '
+                            'and relative dates. Refer to the API docs for '
+                            'more information: '
+                            'http://partycrasher.rtfd.org/',
+                            until=until)
+
+
     if project == '*':
         project = None
 
-    r = crasher.search(query_string, project=project, from_=from_, size=size)
+    r = crasher.search(query_string,
+                       since=since,
+                       until=until,
+                       project=project, 
+                       from_=from_, 
+                       size=size)
     return jsonify_resource(r)
 
 #############################################################################

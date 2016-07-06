@@ -372,7 +372,12 @@ class PartyCrasher(object):
         self._connect_to_elasticsearch()
         return self
       
-    def search(self, query_string, project=None, from_=None, size=None):
+    def search(self, query_string,
+               since=None,
+               until=None,
+               project=None, 
+               from_=None, 
+               size=None):
         es_query = {
             "query": {
                 "bool": { "must": [
@@ -385,6 +390,17 @@ class PartyCrasher(object):
             es_query['query']['bool']['must'].append({
                 "term": {
                     "project": project
+                }
+            });
+        if (since is not None) or (until is not None):
+            date_bounds = {}
+            if since is not None:
+                date_bounds['gt'] = since.isoformat()
+            if until is not None:
+                date_bounds['lt'] = until.isoformat()
+            es_query['query']['bool']['must'].append({
+                "range": {
+                    "date": date_bounds
                 }
             });
         if from_ is not None:
