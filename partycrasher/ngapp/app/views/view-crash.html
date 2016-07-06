@@ -33,8 +33,8 @@
         </div>
         <div class="panel-body">
         <dl class="dl-x dl-xs">
-          <dt ng-repeat-start="(key, value) in buckets">{{key}}</dt>
-          <dd ng-repeat-end><a href="{{::value | uiUrl: 'bucket'}}">{{value.id}}</a></dd>
+          <dt ng-repeat-start="bucket in buckets">{{bucket[0]}}</dt>
+          <dd ng-repeat-end><a href="{{::bucket[1] | uiUrl: 'bucket'}}">{{bucket[1].id}}</a></dd>
         </dl>
         </div>
       </section>

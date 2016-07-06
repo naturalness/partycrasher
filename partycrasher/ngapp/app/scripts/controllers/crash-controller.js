@@ -22,7 +22,13 @@ angular.module('PartyCrasherApp')
       var report = $scope.crash = new CrashReport(rawReport);
       $scope.stack = report.stackTrace;
       $scope.context = report.contextData;
-      $scope.buckets = report.buckets;
+      var buckets = report.buckets;
+      debugger;
+      buckets = _.toPairs(buckets);
+      buckets.sort((a, b) => {
+          return a[0] - b[0];
+      });
+      $scope.buckets = buckets;
       $scope.date = report.date;
     });
   PartyCrasher.fetchSummary({ project, id })
