@@ -607,6 +607,9 @@ def query_buckets(project=None, threshold=None):
         **Required**. Grab buckets since this date, represented as an ISO 8601
         date/time value (i.e, ``YYYY-MM-DD``), or a relative offset such as
         ``5-hours-ago``, ``3-days-ago`` or ``1-week-ago``, etc.
+    ``until``
+        Grab buckets with crashes up to but not after this date as represented
+        as an ISO 8601 date/time value. Defaults to no limit.
     ``from``
         Get page of results starting from this number.
     ``size``
@@ -646,6 +649,7 @@ def query_buckets(project=None, threshold=None):
     since = request.args.get('since', '3-days-ago')
     from_ = request.args.get('from', None)
     size = request.args.get('size', None)
+    upper_bound = request.args.get('until', None)
     
     if from_ is not None:
       from_ = int(from_)
@@ -664,14 +668,33 @@ def query_buckets(project=None, threshold=None):
                          'more information: '
                          'http://partycrasher.rtfd.org/',
                          since=since)
+    
+    if upper_bound is not None:
+        try:
+            upper_bound = dateparser.parse(upper_bound.replace('-', '_'))
+        except ValueError:
+            raise BadRequest('Could not understand date format for '
+                            '`until=` parameter. '
+                            'Supported formats are: ISO 8601 timestamps '
+                            'and relative dates. Refer to the API docs for '
+                            'more information: '
+                            'http://partycrasher.rtfd.org/',
+                            until=until)
 
     buckets = crasher.top_buckets(lower_bound,
                                   project=project,
                                   threshold=threshold,
                                   from_=from_,
-                                  size=size)
+                                  size=size,
+                                  upper_bound=upper_bound)
+    
+    if upper_bound is not None:
+        upper_bound_ret = upper_bound.isoformat()
+    else:
+        upper_bound_ret = None
 
     return jsonify(since=lower_bound.isoformat(),
+                   until=upper_bound_ret,
                    threshold=threshold,
                    top_buckets=list(buckets))
 

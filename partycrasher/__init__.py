@@ -219,7 +219,7 @@ class PartyCrasher(object):
                       first_seen=None)
 
     def top_buckets(self, lower_bound, threshold=None, project=None, 
-                    from_=None, size=None):
+                    from_=None, size=None, upper_bound=None):
         """
         Given a datetime lower_bound (from date), calculates the top buckets
         in the given timeframe for the given threshold (automatically
@@ -246,6 +246,9 @@ class PartyCrasher(object):
                 }
             }
         }]
+        
+        if upper_bound is not None:
+            filters[0]["range"]["date"]["lt"] = upper_bound.isoformat()
 
         # May filter optionally by project name.
         if project is not None:

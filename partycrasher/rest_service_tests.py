@@ -40,6 +40,7 @@ import subprocess
 import time
 import unittest
 import uuid
+import dateparser
 
 # Terrible Python 2/3 hacks
 try:
@@ -646,8 +647,14 @@ class RestServiceTestCase(unittest.TestCase):
         # We should find our newly created reports as the most populous
         # bucket.
         search_url = self.path_to(project, 'buckets', '4.0')
-        response = requests.get(search_url, params={'since': now.isoformat()})
+        response = requests.get(search_url, 
+            params={'since': now.isoformat(),
+                    'until': '2525'
+                    })
         assert response.json().get('since') == now.isoformat()
+        until = dateparser.parse(response.json().get('until'))
+        assert datetime.datetime(2524, 12, 30) < until
+        assert datetime.datetime(2525, 01, 02) > until
         assert len(response.json().get('top_buckets')) >= 2
 
         # Get the top bucket.
@@ -667,6 +674,10 @@ class RestServiceTestCase(unittest.TestCase):
 
         # This is a legacy field that no longer exists.
         assert 'top_reports' not in top_bucket
+        
+        #TODO: test adding things with various dates and check that
+        # since/until actually filter stuff out adn let the right stuff
+        # in
 
     def test_top_buckets_invalid_queries(self):
         """
