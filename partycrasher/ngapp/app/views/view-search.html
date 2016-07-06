@@ -7,7 +7,7 @@
     <div class="col-md-12">
       <form class="form-inline" ng-submit="search()">
         <div class="form-group">
-          <label for="date-in"> Search for </label>
+          <label for="query-in"> Search for </label>
           <input type="text"
                 id="query-in"
                 ng-model="search.query"
@@ -72,6 +72,8 @@
         </div>
       </section>
     </div>
+    <button ng-click="prevPage()" class="btn btn-default" ng-hide="search.from <= 0">Previous Page</button>
+    <button ng-click="nextPage()" class="btn btn-default">Next Page</button>
   </div>
 
 </main>

@@ -22,6 +22,7 @@ angular.module('PartyCrasherApp')
     from = $location.search().from,
     size = $location.search().size,
     date;
+  var q = $location.search().q || null;
 
   if (since) {
     date = since;
@@ -61,6 +62,7 @@ angular.module('PartyCrasherApp')
   $scope.search.from = from | 0; // | 0 coerces to numeric type
   $scope.search.size = size | 0;
   $scope.search.threshold = threshold;
+  $scope.search.query = q || "";
 
   $scope.projects = PROJECT_NAMES;
 
@@ -68,7 +70,7 @@ angular.module('PartyCrasherApp')
   $scope.loading = true;
 
   /* Actually do the search: only occurs on page load */
-  PartyCrasher.searchTopBuckets({ project, threshold, since, until, from, size })
+  PartyCrasher.searchTopBuckets({ project, threshold, q, since, until, from, size })
     .then(results => {
       $scope.hasResults = results['top_buckets'].length > 0;
       $scope.results = results;
@@ -104,8 +106,10 @@ angular.module('PartyCrasherApp')
       from = $scope.search.from,
       size = $scope.search.size,
       threshold = $scope.search.threshold;
+    var q = $scope.search.query || null;
     until = until || null;
     $location
+      .search('q', q)
       .search('since', since)
       .search('until', until)
       .search('from', from)

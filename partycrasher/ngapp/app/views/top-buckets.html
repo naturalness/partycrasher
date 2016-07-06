@@ -17,10 +17,16 @@
              ng-model="search.until"
              view="date"
       >
+      <label for="query-in"> with crashes containing </label>
+      <input type="text"
+            id="query-in"
+            ng-model="search.query"
+      >
+
     </div>
 
     <div class="form-group">
-      <label for="project-in"> Project </label>
+      <label for="project-in"> in project </label>
       <select ng-model="search.project" class="form-control" id="project-in">
         <option value="*"> All projects </option>
         <option disabled> &mdash; </option>

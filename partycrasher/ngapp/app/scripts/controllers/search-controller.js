@@ -69,5 +69,7 @@ angular.module('PartyCrasherApp')
     $location.search('from',
                     ($scope.search.from | 0) + ($scope.search.size | 0));
   }
+  $scope.prevPage = prevPage;
+  $scope.nextPage = nextPage;
 
 });

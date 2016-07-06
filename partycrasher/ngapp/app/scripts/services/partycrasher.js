@@ -52,8 +52,8 @@ angular.module('PartyCrasherApp')
     /**
      * Searches for buckets.
      */
-    searchTopBuckets({ project, threshold, since, until, from, size }) {
-      return $http.get(searchTopBucketsUrl({ project, threshold, since, until, from, size }))
+    searchTopBuckets({ project, threshold, q, since, until, from, size }) {
+      return $http.get(searchTopBucketsUrl({ project, threshold, q, since, until, from, size }))
         .then(({data}) => data);
     }
 
@@ -77,8 +77,9 @@ angular.module('PartyCrasherApp')
   }
 
   /* */
-  function searchTopBucketsUrl({project, threshold, since, until, from, size}) {
+  function searchTopBucketsUrl({project, threshold, q, since, until, from, size}) {
     var query = $httpParamSerializer({
+      q: q || null,
       since: since || '3-days-ago',
       until: until || null,
       from: from || '0',
