@@ -139,7 +139,9 @@ class PartyCrasher(object):
         """
         Establishes a connection to ElasticSearch. given configuration.
         """
-        self._es = Elasticsearch(self.es_servers)
+        self._es = Elasticsearch(self.es_servers,
+                                 retry_on_timeout=True,
+                                 )
 
         # XXX: Monkey-patch our instance to the global.
         ESCrash.es = self._es

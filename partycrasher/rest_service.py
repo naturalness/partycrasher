@@ -927,9 +927,6 @@ def ingest_one(report, project_name, dryrun=False):
     report = crasher.ingest(report, dryrun=dryrun)
     url = url_for_report(report)
 
-    # Commit things to the index such that any new inserts will bucket
-    # properly...
-    crasher.es.indices.refresh(index='crashes')
     return report, url
 
 

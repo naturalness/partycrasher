@@ -91,11 +91,12 @@ class ESCrashMeta(type):
                         response = cls.es.create(index=index,
                                                  doc_type='crash',
                                                  body=json.dumps(crash, cls=ESCrashEncoder),
-                                                 id=crash['database_id'])
+                                                 id=crash['database_id'],
+                                                 refresh=True)
                         assert response['created']
                     except elasticsearch.exceptions.ConflictError as e:
                         if 'DocumentAlreadyExistsException' in e.error:
-                            print("Got DocumentAlreadyExistsException on create!", file=stderr)
+                            print("Got DocumentAlreadyExistsException on create!", file=sys.stderr)
                             time.sleep(5) # Let ES think about its life...
                             already = cls.getrawbyid(crash['database_id'], index=index)
                             if not already is None:

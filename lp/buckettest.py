@@ -25,15 +25,11 @@ REPOSITORY_ROUTE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.join(REPOSITORY_ROUTE, 'partycrasher'))
 
 import crash
-from topN import TopN, TopNLoose, TopNAddress, TopNFile, TopNModule
-from es_crash import ESCrash
-from elasticsearch import Elasticsearch
-import elasticsearch.helpers
-from bucketer import MLT, MLTStandardUnicode, MLTLetters, MLTIdentifier, MLTCamelCase, MLTLerch, MLTNGram
-from threshold import Threshold
 import json
 import requests
 from rest_client import RestClient
+
+DONT_ACTUALLY_COMPUTE_PERF=True
 
 if len(sys.argv) < 2+1:
     print "Usage: " + sys.argv[0] + "oracle.json http://restservicehost:port/"
@@ -43,69 +39,9 @@ rest_service_url = sys.argv[2]
 
 client = RestClient(rest_service_url)
 
-es = Elasticsearch(["localhost"], retry_on_timeout=True)
-ESCrash.es = es
-
 beta = 1.0
 
 comparisons = {
-    #'ccx0.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[0.0, 'lowercase':False, 'only_stack':False}},
-    #'ccx1.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[1.0, 'lowercase':False, 'only_stack':False}},
-    #'ccx2.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[2.0, 'lowercase':False, 'only_stack':False}},
-    #'ccx3.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[3.0, 'lowercase':False, 'only_stack':False}},
-    #'ccx4_0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[4.0], 'lowercase':False, 'only_stack':False}},
-    #'ccx5.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[5.0, 'lowercase':False, 'only_stack':False}},
-    #'ccx6.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[6.0, 'lowercase':False, 'only_stack':False}},
-    #'ccx7.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[7.0, 'lowercase':False, 'only_stack':False}},
-    #'ccx8.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[8.0, 'lowercase':False, 'only_stack':False}},
-    #'ccx10.0': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[10.0, 'lowercase':False, 'only_stack':False}},
-    #'spcs': {'bucketer': MLT, 'kwargs': {'thresholds':[4.0, 'lowercase':False, 'only_stack': True}},
-    #'cc': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[4.0, 'lowercase':False}},
-    #'ngram5l': {'bucketer': MLTNGram, 'kwargs': {'thresholds':[4.0, 'lowercase':True, 'n':5}},
-    # done vvvv
-    #'ids': {'bucketer': MLTIdentifier, 'kwargs': {'thresholds':[4.0, 'lowercase':False, 'only_stack':True}},
-    #'idls': {'bucketer': MLTIdentifier, 'kwargs': {'thresholds':[4.0, 'lowercase':True, 'only_stack':True}},
-    #'ngram3l': {'bucketer': MLTNGram, 'kwargs': {'thresholds':[4.0, 'lowercase':True, 'n':3}},
-    #'spc': {'bucketer': MLT, 'kwargs': {'thresholds':[4.0, 'lowercase':False}},
-    #'spcl': {'bucketer': MLT, 'kwargs': {'thresholds':[4.0, 'lowercase':True}},
-    #'uni': {'bucketer': MLTStandardUnicode, 'kwargs': {'thresholds':[4.0, 'lowercase':False}},
-    #'unil': {'bucketer': MLTStandardUnicode, 'kwargs': {'thresholds':[4.0, 'lowercase':True}},
-    #'let': {'bucketer': MLTLetters, 'kwargs': {'thresholds':[4.0, 'lowercase':False}},
-    #'letl': {'bucketer': MLTLetters, 'kwargs': {'thresholds':[4.0, 'lowercase':True}},
-    #'id': {'bucketer': MLTIdentifier, 'kwargs': {'thresholds':[4.0, 'lowercase':False}},
-    #'idl': {'bucketer': MLTIdentifier, 'kwargs': {'thresholds':[4.0, 'lowercase':True}},
-    #'ccl': {'bucketer': MLTCamelCase, 'kwargs': {'thresholds':[4.0, 'lowercase':True}},
-    #'lerch0.25': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[0.25, 'only_stack':True}},
-    #'lerch0.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[0.0, 'only_stack':True}},
-    #'lerch0.5': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[0.5, 'only_stack':True}},
-    #'lerch1.5': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[1.5, 'only_stack':True}},
-    #'lerch1.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[1.0, 'only_stack':True}},
-    #'lerch2.25': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[2.25, 'only_stack':True}},
-    #'lerch3.25': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[3.25, 'only_stack':True}},
-    #'lerch3.5': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[3.5, 'only_stack':True}},
-    #'lerch3.75': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[3.75, 'only_stack':True}},
-    #'lerch4.5': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[4.5, 'only_stack':True}},
-    #'lerch5.5': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[5.5, 'only_stack':True}},
-    #'lerch7.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[7.0, 'only_stack':True}},
-    #'lerch2.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[2.0, 'only_stack':True}},
-    #'lerch2.5': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[2.5, 'only_stack':True}},
-    #'lerch2.75': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[2.75, 'only_stack':True}},
-    #'lerch3.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[3.0, 'only_stack':True}},
-    #'lerch4.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[4.0, 'only_stack':True}},
-    #'lerchc': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[4.0, 'only_stack':False}},
-    #'lerch5.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[5.0, 'only_stack':True}},
-    #'lerch6.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[6.0, 'only_stack':True}},
-    #'lerch8.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[8.0, 'only_stack':True}},
-    #'lerch10.0': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[10.0, 'only_stack':True}},
-    #'top1': {'comparer': TopN, 'kwargs': {'n':1}},
-    #'top2': {'comparer': TopN, 'kwargs': {'n':2}},
-    #'top3': {'comparer': TopN, 'kwargs': {'n':3}},
-    #'lerchcx': {'bucketer': MLTLerch, 'kwargs': {'thresholds':[4.0, 'only_stack':False}},
-    #'top1a': {'comparer': TopNAddress, 'kwargs': {'n':1}},
-    #'top1f' : {'comparer': TopNFile, 'kwargs': {'n':1}},
-    #'top1m' : {'comparer': TopNModule, 'kwargs': {'n':1}},
-    # trash pile vvvvv
-    #'top1l': {'comparer': TopNLoose, 'kwargs': {'n':1}},
 }
 
 response = requests.get(client.root_url)
@@ -251,7 +187,7 @@ for database_id in sorted(all_ids.keys()):
             assigned_to_oracle[simbucket][obucket] = 0
         assigned_to_oracle[simbucket][obucket] += 1
         assigned_totals[simbucket] += 1
-        if do_print:
+        if do_print and not DONT_ACTUALLY_COMPUTE_PERF:
             purity = 0.0
             N = crashes_so_far + 1
             for clustername, cluster in assigned_to_oracle.iteritems():
