@@ -8,7 +8,7 @@ mkdir -p "$LOG_DIR"
 WORK_DIR="$(pwd)/es/work"
 mkdir -p "$WORK_DIR"
 CONF_DIR="$(pwd)/es"
-CONF_FILE="es/elasticsearch.yml"
+#CONF_FILE="es/elasticsearch.yml"
 #export ES_HEAP_SIZE=10g
 
 "$ES_HOME/elasticsearch" \

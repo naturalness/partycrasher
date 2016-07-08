@@ -29,7 +29,9 @@ import json
 import requests
 from rest_client import RestClient
 
-DONT_ACTUALLY_COMPUTE_PERF=True
+DONT_ACTUALLY_COMPUTE_STATS=True
+BLOCK_SIZE=100
+PARALLEL=8
 
 if len(sys.argv) < 2+1:
     print "Usage: " + sys.argv[0] + "oracle.json http://restservicehost:port/"
@@ -95,9 +97,6 @@ for k, v in oracle_all.iteritems():
         all_buckets[bucket].append(database_id)
 
 print str(len(all_ids)) + " IDs found in oracle"
-crashes_so_far = 0
-print_after = 1000
-increasing_spacing = False
 
 def argmax(d):
     mv = None
@@ -126,70 +125,110 @@ except:
     print response.text
     raise
 
-interval = print_after
 
-for database_id in sorted(all_ids.keys()):
-    oracledata = oracle_all[database_id]
-    crashdata = crashes[database_id]
-    #print json.dumps(crashdata, indent=2)
-    if len(crashdata['stacktrace']) < 1:
-        print "Skipping: " + database_id
-        continue
-    do_print = False
-    if ((crashes_so_far >= print_after)
-        or (crashes_so_far >= (len(all_ids)-2))):
-        if increasing_spacing:
-            print_after = (int(math.sqrt(print_after)) + int(math.sqrt(interval))) ** 2
-        else:
-            print_after += interval
-        do_print = True
-        print "in %i/%i crashes and %i/%i bugkets:" % (crashes_so_far, len(all_ids), len(seen_buckets), len(all_buckets))
-        print "\tb3_P\tb3_R\tb3_F\tpurity\tinvpur\tpurF\tbuckets"
+def ingest_one(data):
+    crashdata = data['crashdata']
     response = requests.post(client.path_to('reports'), json=crashdata)
     simulationdata = response.json()
-    for comparison in sorted(comparisons.keys()):
-        comparison_data = comparisons[comparison]
-        if not ('oracle_to_assigned' in comparison_data):
-            comparison_data['oracle_to_assigned'] = {}
-            comparison_data['assigned_to_oracle'] = {}
-            comparison_data['oracle_totals'] = {}
-            comparison_data['assigned_totals'] = {}
-            comparison_data['bcubed'] = {}
-        oracle_to_assigned = comparison_data['oracle_to_assigned']
-        assigned_to_oracle = comparison_data['assigned_to_oracle']
-        oracle_totals = comparison_data['oracle_totals']
-        assigned_totals = comparison_data['assigned_totals']
-        bcubed = comparison_data['bcubed']
-        #print json.dumps(response.json(), indent=2)
-        #sys.exit(1)
-        #simulationdata = bucketer.assign_save_buckets(crash.Crash(crashdata))
-        simbuckets = simulationdata['buckets']
-        #print repr(simbuckets)
-        #for k in simbuckets.keys():
-            #print k.__hash__()
-        #print repr(comparison_data['threshold'].__hash__())
-        simbucket = simbuckets[str(comparison_data['threshold'])]['id']
-        #print repr(simbucket)
-        obucket = oracledata['bucket']
-        bcubed[database_id] = (simbucket, obucket)
-        #print simbucket + " // " + obucket
-        if not (obucket in oracle_to_assigned):
-            oracle_to_assigned[obucket] = {}
-            oracle_totals[obucket] = 0
-        if not (simbucket in oracle_to_assigned[obucket]):
-            oracle_to_assigned[obucket][simbucket] = 0
-        oracle_to_assigned[obucket][simbucket] += 1
-        oracle_totals[obucket] += 1
-        if not (simbucket in assigned_to_oracle):
-            assigned_to_oracle[simbucket] = {}
-            assigned_totals[simbucket] = 0
-        if not (obucket in assigned_to_oracle[simbucket]):
-            assigned_to_oracle[simbucket][obucket] = 0
-        assigned_to_oracle[simbucket][obucket] += 1
-        assigned_totals[simbucket] += 1
-        if do_print and not DONT_ACTUALLY_COMPUTE_PERF:
+    assert 'buckets' in simulationdata
+    data['simulationdata'] = simulationdata
+    return data
+
+# this must go after definition of functions which will be called in pool
+if PARALLEL > 1:
+    import multiprocessing
+    pool = multiprocessing.Pool(PARALLEL)
+
+def process_block(block, crashes_so_far):
+    print "Processing %i crashes..." % len(block)
+    # ingest
+    start = time.time()
+    if PARALLEL > 1:
+        r = pool.map_async(ingest_one, block, 1)
+        block_results = r.get()
+    else:
+        block_results = map(ingest_one, block)
+    finish = time.time()
+    print "%i crashes in %fs: %0.1fcrashes/s" % (
+      len(block),
+      finish-start,
+      len(block)/(finish-start))
+    # accumulate counts
+    for block_result in block_results:
+        # unpack
+        oracledata = block_result['oracledata']
+        crashdata = block_result['crashdata']
+        simulationdata = block_result['simulationdata']
+        database_id = block_result['database_id']
+        
+        # total up counts for each threshold
+        for comparison in sorted(comparisons.keys()):
+            comparison_data = comparisons[comparison]
+            if not ('oracle_to_assigned' in comparison_data):
+                comparison_data['oracle_to_assigned'] = {}
+                comparison_data['assigned_to_oracle'] = {}
+                comparison_data['oracle_totals'] = {}
+                comparison_data['assigned_totals'] = {}
+                comparison_data['bcubed'] = {}
+            oracle_to_assigned = comparison_data['oracle_to_assigned']
+            assigned_to_oracle = comparison_data['assigned_to_oracle']
+            oracle_totals = comparison_data['oracle_totals']
+            assigned_totals = comparison_data['assigned_totals']
+            bcubed = comparison_data['bcubed']
+            #print json.dumps(response.json(), indent=2)
+            #sys.exit(1)
+            #simulationdata = bucketer.assign_save_buckets(crash.Crash(crashdata))
+            simbuckets = simulationdata['buckets']
+            #print repr(simbuckets)
+            #for k in simbuckets.keys():
+                #print k.__hash__()
+            #print repr(comparison_data['threshold'].__hash__())
+            simbucket = simbuckets[str(comparison_data['threshold'])]['id']
+            #print repr(simbucket)
+            obucket = oracledata['bucket']
+            bcubed[database_id] = (simbucket, obucket)
+            #print simbucket + " // " + obucket
+            if not (obucket in oracle_to_assigned):
+                oracle_to_assigned[obucket] = {}
+                oracle_totals[obucket] = 0
+            if not (simbucket in oracle_to_assigned[obucket]):
+                oracle_to_assigned[obucket][simbucket] = 0
+            oracle_to_assigned[obucket][simbucket] += 1
+            oracle_totals[obucket] += 1
+            if not (simbucket in assigned_to_oracle):
+                assigned_to_oracle[simbucket] = {}
+                assigned_totals[simbucket] = 0
+            if not (obucket in assigned_to_oracle[simbucket]):
+                assigned_to_oracle[simbucket][obucket] = 0
+            assigned_to_oracle[simbucket][obucket] += 1
+            assigned_totals[simbucket] += 1
+            
+        bucket = oracledata['bucket']
+        # prevent ourselves from seeing the future!
+        if not bucket in seen_buckets:
+            seen_buckets[bucket] = [database_id]
+        else:
+            seen_buckets[bucket].append(database_id)
+        last_seen_buckets = seen_buckets
+
+    if not DONT_ACTUALLY_COMPUTE_STATS:
+        print "in %i/%i crashes and %i/%i bugkets:" % (crashes_so_far, len(all_ids), len(seen_buckets), len(all_buckets))
+        print "\tb3_P\tb3_R\tb3_F\tpurity\tinvpur\tpurF\tbuckets"
+        for comparison in sorted(comparisons.keys()):
+            comparison_data = comparisons[comparison]
+            if not ('oracle_to_assigned' in comparison_data):
+                comparison_data['oracle_to_assigned'] = {}
+                comparison_data['assigned_to_oracle'] = {}
+                comparison_data['oracle_totals'] = {}
+                comparison_data['assigned_totals'] = {}
+                comparison_data['bcubed'] = {}
+            oracle_to_assigned = comparison_data['oracle_to_assigned']
+            assigned_to_oracle = comparison_data['assigned_to_oracle']
+            oracle_totals = comparison_data['oracle_totals']
+            assigned_totals = comparison_data['assigned_totals']
+            bcubed = comparison_data['bcubed']
             purity = 0.0
-            N = crashes_so_far + 1
+            N = crashes_so_far
             for clustername, cluster in assigned_to_oracle.iteritems():
                 C = assigned_totals[clustername]
                 intersection = max(cluster.values())
@@ -257,24 +296,33 @@ for database_id in sorted(all_ids.keys()):
                 len(oracle_totals),
                 ])
             comparison_data['csvfileh'].flush()
-        #es.indices.refresh(index=comparison)
-        #es.indices.flush(index=comparison)
+        
+
+print_after = BLOCK_SIZE
+increasing_spacing = False
+interval = print_after
+ingest_block = []
+crashes_so_far = 0
+
+for database_id in sorted(all_ids.keys()):
+    oracledata = oracle_all[database_id]
+    crashdata = crashes[database_id]
+    #print json.dumps(crashdata, indent=2)
+    if len(crashdata['stacktrace']) < 1:
+        print "Skipping: " + database_id
+        continue
+    ingest_block.append({
+            'database_id': database_id,
+            'oracledata': oracledata,
+            'crashdata': crashdata
+        })
     crashes_so_far += 1
-    bucket = oracledata['bucket']
-    # prevent ourselves from seeing the future!
-    if not bucket in seen_buckets:
-        seen_buckets[bucket] = [database_id]
-    else:
-        seen_buckets[bucket].append(database_id)
-    def get_active():
-        nodes = es.nodes.stats()['nodes']
-        node = nodes[nodes.keys()[0]]
-        things = 0
-        for k, v in node['thread_pool'].iteritems():
-            things += v['active'] + v['queue']
-        #print things
-        return things
-    #while get_active() > 1:
-        #time.sleep(0.1)
-    last_seen_buckets = seen_buckets
+    if ((crashes_so_far >= print_after)
+        or (crashes_so_far >= (len(all_ids)-2))):
+        if increasing_spacing:
+            print_after = (int(math.sqrt(print_after)) + int(math.sqrt(interval))) ** 2
+        else:
+            print_after += interval
+        process_block(ingest_block, crashes_so_far)
+        ingest_block = []
 

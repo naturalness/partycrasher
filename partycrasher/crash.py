@@ -85,6 +85,8 @@ class StringifiedDict(dict):
         # First force strings to be unicoded
         if isinstance(key, bytes):
             key = key.decode(encoding='utf-8', errors='replace')
+        key = key.replace('.', '_')
+        key = key.replace(':', '_')
         
         val = stringify_value(val)
 	#print("key: " + key + "val: " + repr(val), file=sys.stderr)
@@ -186,9 +188,8 @@ class Stacktrace(StringifiedList):
 
 
 # TODO: MOVE DATE STUFF HERE.
-# TODO: Make subclass of StringifiedDict
 
-class Crash(dict):
+class Crash(StringifiedDict):
 
     stacktrace_class = Stacktrace
 

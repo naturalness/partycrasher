@@ -4,6 +4,7 @@ index.number_of_shards: 1
 index.number_of_replicas: 0
 index.store.throttle.type: none
 #index.merge.scheduler.max_thread_count: 1
+index.translog.durability: async
 
 ##################### Elasticsearch Configuration Example #####################
 

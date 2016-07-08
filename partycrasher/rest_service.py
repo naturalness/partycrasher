@@ -1033,3 +1033,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+else:
+    with open('partycrasher.cfg') as config_file:
+        crasher = partycrasher.PartyCrasher(config_file)
