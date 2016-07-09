@@ -23,7 +23,6 @@ angular.module('PartyCrasherApp')
       $scope.stack = report.stackTrace;
       $scope.context = report.contextData;
       var buckets = report.buckets;
-      debugger;
       buckets = _.toPairs(buckets);
       buckets.sort((a, b) => {
           return a[0] - b[0];

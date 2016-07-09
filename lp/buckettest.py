@@ -28,10 +28,14 @@ import crash
 import json
 import requests
 from rest_client import RestClient
+import copy
+from sets import Set
 
-DONT_ACTUALLY_COMPUTE_STATS=True
-BLOCK_SIZE=100
-PARALLEL=8
+DONT_ACTUALLY_COMPUTE_STATS=False
+BLOCK_SIZE=1000
+PARALLEL=16
+BOOTSTRAP_CRASHES=1000000 # WARNING: Destroys temporal relationships!
+RESET_STATS_AFTER_BLOCK=True
 
 if len(sys.argv) < 2+1:
     print "Usage: " + sys.argv[0] + "oracle.json http://restservicehost:port/"
@@ -43,60 +47,89 @@ client = RestClient(rest_service_url)
 
 beta = 1.0
 
-comparisons = {
-}
+def get_comparisons():
+    comparisons = {
+    }
 
-response = requests.get(client.root_url)
-thresholds = response.json()['config']['thresholds']
-#except:
-    #raise
-    #print response.status_code
-    #print response.text
-    #raise
+    response = requests.get(client.root_url)
+    thresholds = response.json()['config']['thresholds']
+    #except:
+        #raise
+        #print response.status_code
+        #print response.text
+        #raise
 
-for threshold in thresholds:
-    name = "T" + threshold
-    comparisons[name] = {'threshold': threshold}
+    for threshold in thresholds:
+        name = "T" + threshold
+        comparisons[name] = {'threshold': threshold}
 
-max_buckets = 1
+    for comparison in comparisons:
+        comparison_data = comparisons[comparison]
+        comparison_data['csvfileh'] = open(comparison + '.csv', 'wb')
+        comparison_data['csvfile'] = csv.writer(comparison_data['csvfileh'])
+        comparison_data['csvfile'].writerow([
+            'after',
+            'n',
+            'b3p',
+            'b3r',
+            'b3f',
+            'purity',
+            'invpur',
+            'purf',
+            'buckets',
+            'obuckets',
+            'time',
+            ])
+    return comparisons
 
-for comparison in comparisons:
-    comparison_data = comparisons[comparison]
-    comparison_data['csvfileh'] = open(comparison + '.csv', 'wb')
-    comparison_data['csvfile'] = csv.writer(comparison_data['csvfileh'])
-    comparison_data['csvfile'].writerow([
-        'n',
-        'b3p',
-        'b3r',
-        'b3f',
-        'purity',
-        'invpur',
-        'purf',
-        'buckets',
-        'obuckets',
-        ])
+def load_oracle_data(oracle_file_path):
+    with open(oracle_file_path, mode='r') as oracle_file:
+        oracle_file_data = json.load(oracle_file)
 
-with open(oracle_file_path, mode='r') as oracle_file:
-    oracle_file_data = json.load(oracle_file)
+    all_crashes = oracle_file_data['crashes']
+    oracle_all = oracle_file_data['oracle']
+    all_ids = {}
+    all_buckets = {}
 
-crashes = oracle_file_data['crashes']
-oracle_all = oracle_file_data['oracle']
-all_ids = {}
-all_buckets = {}
-seen_buckets = {'new':True}
+    del oracle_file_data
+    
+    print str(len(all_crashes)) + " crashes found in oracle"
 
-del oracle_file_data
+    crashes = {}
+    skipped_ids = Set()
 
-for k, v in oracle_all.iteritems():
-    database_id = v['database_id']
-    bucket = v['bucket']
-    all_ids[database_id] = bucket
-    if not bucket in all_buckets:
-        all_buckets[bucket] = [database_id]
+    for database_id, crash in all_crashes.items():
+        assert crash['database_id'] == database_id
+        if len(crash['stacktrace']) < 1:
+            print "Skipping: " + database_id
+            skipped_ids.add(database_id)
+            continue
+        crashes[database_id] = crash
+            
+            
+    for k, v in oracle_all.iteritems():
+        assert k == v['database_id']
+        database_id = v['database_id']
+        if database_id in skipped_ids:
+            continue
+        bucket = v['bucket']
+        all_ids[database_id] = bucket
+        if not bucket in all_buckets:
+            all_buckets[bucket] = [database_id]
+        else:
+            all_buckets[bucket].append(database_id)
+
+    print str(len(all_ids)) + " IDs used in oracle"
+
+    
+    if not BOOTSTRAP_CRASHES > 0:
+        total_ids = len(all_ids)
+        total_buckets = len(all_buckets)
     else:
-        all_buckets[bucket].append(database_id)
-
-print str(len(all_ids)) + " IDs found in oracle"
+        total_ids = BOOTSTRAP_CRASHES
+        total_buckets = len(all_buckets)
+    
+    return (crashes, oracle_all, all_ids, total_ids, total_buckets)
 
 def argmax(d):
     mv = None
@@ -107,23 +140,17 @@ def argmax(d):
             mk = k
     return (mk, mv)
 
-# reset simulation index for each comparison type
-# for time-travel prevention
-#print "Resetting indices..."
-#for comparison in sorted(comparisons.keys()):
-    #print "Deleting index %s" % comparison
-    #es.indices.delete(index=comparison, ignore=[400, 404])
-    #comparisons[comparison]['bucketer'].create_index()
-#es.cluster.health(wait_for_status='yellow')
-#print "Running simulations..."
-try:
-    response = requests.delete(client.path_to('reports'))
-    assert response.status_code == 200
-    del response
-except:
-    print response.status_code
-    print response.text
-    raise
+def reset_index():
+    # reset simulation index for each comparison type
+    # for time-travel prevention
+    try:
+        response = requests.delete(client.path_to('reports'))
+        assert response.status_code == 200
+        del response
+    except:
+        print response.status_code
+        print response.text
+        raise
 
 
 def ingest_one(data):
@@ -139,8 +166,10 @@ if PARALLEL > 1:
     import multiprocessing
     pool = multiprocessing.Pool(PARALLEL)
 
-def process_block(block, crashes_so_far):
-    print "Processing %i crashes..." % len(block)
+def process_block(block, crashes_so_far, comparisons, totals):
+    print "Processing %i crashes (%i to %i)..." % (len(block), 
+                                          crashes_so_far - len(block) + 1,
+                                          crashes_so_far)
     # ingest
     start = time.time()
     if PARALLEL > 1:
@@ -149,10 +178,11 @@ def process_block(block, crashes_so_far):
     else:
         block_results = map(ingest_one, block)
     finish = time.time()
+    ingest_time = finish-start
     print "%i crashes in %fs: %0.1fcrashes/s" % (
       len(block),
-      finish-start,
-      len(block)/(finish-start))
+      ingest_time,
+      len(block)/(ingest_time))
     # accumulate counts
     for block_result in block_results:
         # unpack
@@ -205,14 +235,24 @@ def process_block(block, crashes_so_far):
             
         bucket = oracledata['bucket']
         # prevent ourselves from seeing the future!
+        seen_buckets = totals['seen_buckets']
         if not bucket in seen_buckets:
             seen_buckets[bucket] = [database_id]
         else:
             seen_buckets[bucket].append(database_id)
-        last_seen_buckets = seen_buckets
+        totals['seen_crashes'].append(database_id)
 
     if not DONT_ACTUALLY_COMPUTE_STATS:
-        print "in %i/%i crashes and %i/%i bugkets:" % (crashes_so_far, len(all_ids), len(seen_buckets), len(all_buckets))
+        total_ids = totals['total_ids']
+        total_buckets = totals['total_buckets']
+        seen_buckets = totals['seen_buckets']
+        seen_crashes = totals['seen_crashes']
+        N = len(seen_crashes)
+        print "in %i, after %i/%i crashes and %i/%i bugkets:" % (N, 
+                                                       crashes_so_far,
+                                                       total_ids, 
+                                                       len(seen_buckets), 
+                                                       total_buckets)
         print "\tb3_P\tb3_R\tb3_F\tpurity\tinvpur\tpurF\tbuckets"
         for comparison in sorted(comparisons.keys()):
             comparison_data = comparisons[comparison]
@@ -228,7 +268,6 @@ def process_block(block, crashes_so_far):
             assigned_totals = comparison_data['assigned_totals']
             bcubed = comparison_data['bcubed']
             purity = 0.0
-            N = crashes_so_far
             for clustername, cluster in assigned_to_oracle.iteritems():
                 C = assigned_totals[clustername]
                 intersection = max(cluster.values())
@@ -285,6 +324,7 @@ def process_block(block, crashes_so_far):
                 len(assigned_totals)/len(oracle_totals)
                 )
             comparison_data['csvfile'].writerow([
+                crashes_so_far,
                 N,
                 precision,
                 recall,
@@ -294,35 +334,96 @@ def process_block(block, crashes_so_far):
                 F,
                 len(assigned_totals),
                 len(oracle_totals),
+                ingest_time,
                 ])
             comparison_data['csvfileh'].flush()
         
 
-print_after = BLOCK_SIZE
+interval = BLOCK_SIZE
 increasing_spacing = False
-interval = print_after
-ingest_block = []
-crashes_so_far = 0
 
-for database_id in sorted(all_ids.keys()):
-    oracledata = oracle_all[database_id]
-    crashdata = crashes[database_id]
-    #print json.dumps(crashdata, indent=2)
-    if len(crashdata['stacktrace']) < 1:
-        print "Skipping: " + database_id
-        continue
-    ingest_block.append({
+def iterate_crash(
+    database_id, 
+    oracledata, 
+    crashdata, 
+    comparisons,
+    totals,
+):
+    iterate_crash.ingest_block.append({
             'database_id': database_id,
             'oracledata': oracledata,
             'crashdata': crashdata
         })
-    crashes_so_far += 1
-    if ((crashes_so_far >= print_after)
-        or (crashes_so_far >= (len(all_ids)-2))):
+    iterate_crash.crashes_so_far += 1
+    if ((iterate_crash.crashes_so_far >= iterate_crash.print_after)
+        or (iterate_crash.crashes_so_far >= (totals['total_ids']-2))):
         if increasing_spacing:
-            print_after = (int(math.sqrt(print_after)) + int(math.sqrt(interval))) ** 2
+            iterate_crash.print_after = (
+                  (
+                      int(math.sqrt(iterate_crash.print_after)) 
+                      + int(math.sqrt(interval))
+                  )
+              ** 2)
         else:
-            print_after += interval
-        process_block(ingest_block, crashes_so_far)
-        ingest_block = []
+            iterate_crash.print_after += interval
+        if RESET_STATS_AFTER_BLOCK:
+            comparisons_block = {
+                  k: copy.copy(v) for k, v in comparisons.items()
+                  }
+            assert 'oracle_to_assigned' not in comparisons_block.values()[0]
+            totals['seen_buckets'] = {}
+            totals['seen_crashes'] = []
+        else:
+            comparisons_block = comparisons
+        process_block(iterate_crash.ingest_block, 
+                      iterate_crash.crashes_so_far,
+                      comparisons_block,
+                      totals)
+        iterate_crash.ingest_block = []
 
+# static variables
+iterate_crash.print_after = BLOCK_SIZE 
+iterate_crash.crashes_so_far = 0
+iterate_crash.ingest_block = []
+    
+def simulate(comparisons, oracle_data):
+    (crashes, oracle_all, all_ids, total_ids, total_buckets) = oracle_data
+    totals = {
+        'total_ids': total_ids,
+        'total_buckets': total_buckets,
+        'seen_buckets': {},
+        'seen_crashes': []
+        }
+    if not BOOTSTRAP_CRASHES > 0:
+        for database_id in sorted(all_ids.keys()):
+            oracledata = oracle_all[database_id]
+            crashdata = crashes[database_id]
+            #print json.dumps(crashdata, indent=2)
+            iterate_crash(
+              database_id,
+              oracledata,
+              crashdata,
+              comparisons,
+              totals,
+              )
+    else:
+        import random
+        for fake_i in range(0, BOOTSTRAP_CRASHES):
+            database_id = "fake:%010i" % fake_i
+            source_database_id = all_ids.keys()[
+              random.randrange(0, len(all_ids.keys()))]
+            oracledata = copy.copy(oracle_all[source_database_id])
+            oracledata['database_id'] = database_id
+            crashdata = copy.copy(crashes[source_database_id])
+            crashdata['database_id'] = database_id
+            iterate_crash(database_id,
+                          oracledata,
+                          crashdata,
+                          comparisons,
+                          totals,
+                          )
+        
+simulate(
+    get_comparisons(),
+    load_oracle_data(oracle_file_path)
+)
