@@ -95,7 +95,8 @@ class ESCrashMeta(type):
                                                  refresh=True)
                         assert response['created']
                     except elasticsearch.exceptions.ConflictError as e:
-                        if 'DocumentAlreadyExistsException' in e.error:
+                        if (('DocumentAlreadyExistsException' in e.error)
+                            or ('document_already_exists_exception' in e.error)):
                             print("Got DocumentAlreadyExistsException on create!", file=sys.stderr)
                             time.sleep(5) # Let ES think about its life...
                             already = cls.getrawbyid(crash['database_id'], index=index)
