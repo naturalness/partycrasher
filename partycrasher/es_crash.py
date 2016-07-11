@@ -98,8 +98,11 @@ class ESCrashMeta(type):
                         if (('DocumentAlreadyExistsException' in e.error)
                             or ('document_already_exists_exception' in e.error)):
                             print("Got DocumentAlreadyExistsException on create!", file=sys.stderr)
-                            time.sleep(5) # Let ES think about its life...
-                            already = cls.getrawbyid(crash['database_id'], index=index)
+                            already = None
+                            while already is None:
+                                print("Waiting for ElasticSearch to catch up...", file=sys.stderr)
+                                time.sleep(1) # Let ES think about its life...
+                                already = cls.getrawbyid(crash['database_id'], index=index)
                             if not already is None:
                                 # It got added...
                                 # I think what is happening here is that the

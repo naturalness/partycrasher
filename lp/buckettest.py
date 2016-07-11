@@ -32,11 +32,12 @@ import copy
 from sets import Set
 
 # TODO: argparse
-DONT_ACTUALLY_COMPUTE_STATS=False
-BLOCK_SIZE=1000
-PARALLEL=16
+DONT_ACTUALLY_COMPUTE_STATS=True
+BLOCK_SIZE=10000
+PARALLEL=8
 BOOTSTRAP_CRASHES=1000000 # WARNING: Destroys temporal relationships!
 RESET_STATS_AFTER_BLOCK=True
+TOTALLY_FAKE_DATA=False
 
 if len(sys.argv) < 2+1:
     print "Usage: " + sys.argv[0] + "oracle.json http://restservicehost:port/"
@@ -425,7 +426,10 @@ def simulate(comparisons, oracle_data):
                           )
         
 reset_index()
-simulate(
-    get_comparisons(),
-    load_oracle_data(oracle_file_path)
-)
+if TOTALLY_FAKE_DATA:
+    synthesize(get_comparisons())
+else:
+    simulate(
+        get_comparisons(),
+        load_oracle_data(oracle_file_path)
+    )
