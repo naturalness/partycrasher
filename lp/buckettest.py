@@ -31,6 +31,7 @@ from rest_client import RestClient
 import copy
 from sets import Set
 
+# TODO: argparse
 DONT_ACTUALLY_COMPUTE_STATS=False
 BLOCK_SIZE=1000
 PARALLEL=16
@@ -423,6 +424,7 @@ def simulate(comparisons, oracle_data):
                           totals,
                           )
         
+reset_index()
 simulate(
     get_comparisons(),
     load_oracle_data(oracle_file_path)
