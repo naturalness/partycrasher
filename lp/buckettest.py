@@ -30,14 +30,19 @@ import requests
 from rest_client import RestClient
 import copy
 from sets import Set
+import signal
+import subprocess
+import traceback
 
 # TODO: argparse
-DONT_ACTUALLY_COMPUTE_STATS=True
-BLOCK_SIZE=10000
+DONT_ACTUALLY_COMPUTE_STATS=False
+BLOCK_SIZE=1000
 PARALLEL=8
 BOOTSTRAP_CRASHES=1000000 # WARNING: Destroys temporal relationships!
+BOOTSTRAP_RESUME_AT=0 # This doesn't actually work properly yet, don't use it.
 RESET_STATS_AFTER_BLOCK=True
 TOTALLY_FAKE_DATA=False
+START_GUNICORN=True
 
 if len(sys.argv) < 2+1:
     print "Usage: " + sys.argv[0] + "oracle.json http://restservicehost:port/"
@@ -67,21 +72,25 @@ def get_comparisons():
 
     for comparison in comparisons:
         comparison_data = comparisons[comparison]
-        comparison_data['csvfileh'] = open(comparison + '.csv', 'wb')
-        comparison_data['csvfile'] = csv.writer(comparison_data['csvfileh'])
-        comparison_data['csvfile'].writerow([
-            'after',
-            'n',
-            'b3p',
-            'b3r',
-            'b3f',
-            'purity',
-            'invpur',
-            'purf',
-            'buckets',
-            'obuckets',
-            'time',
-            ])
+        if BOOTSTRAP_RESUME_AT == 0:
+            comparison_data['csvfileh'] = open(comparison + '.csv', 'wb')
+            comparison_data['csvfile'] = csv.writer(comparison_data['csvfileh'])
+            comparison_data['csvfile'].writerow([
+                'after',
+                'n',
+                'b3p',
+                'b3r',
+                'b3f',
+                'purity',
+                'invpur',
+                'purf',
+                'buckets',
+                'obuckets',
+                'time',
+                ])
+        else:
+            comparison_data['csvfileh'] = open(comparison + '.csv', 'ab')
+            comparison_data['csvfile'] = csv.writer(comparison_data['csvfileh'])
     return comparisons
 
 def load_oracle_data(oracle_file_path):
@@ -145,19 +154,33 @@ def argmax(d):
 def reset_index():
     # reset simulation index for each comparison type
     # for time-travel prevention
+    response = None
     try:
         response = requests.delete(client.path_to('reports'))
         assert response.status_code == 200
         del response
     except:
-        print response.status_code
-        print response.text
+        if response is not None:
+            print response.status_code
+            print response.text
         raise
 
 
 def ingest_one(data):
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
     crashdata = data['crashdata']
-    response = requests.post(client.path_to('reports'), json=crashdata)
+    retries = 3
+    while retries > 0:
+        try:
+            response = requests.post(client.path_to('reports'), json=crashdata)
+        except Exception as e:
+            retries -= 1
+            print "POST failed..."
+            print str(e)
+            if retries < 1:
+                raise
+        else:
+            break # don't retry if it worked
     simulationdata = response.json()
     assert 'buckets' in simulationdata
     data['simulationdata'] = simulationdata
@@ -169,6 +192,7 @@ if PARALLEL > 1:
     pool = multiprocessing.Pool(PARALLEL)
 
 def process_block(block, crashes_so_far, comparisons, totals):
+    global pool
     print "Processing %i crashes (%i to %i)..." % (len(block), 
                                           crashes_so_far - len(block) + 1,
                                           crashes_so_far)
@@ -176,7 +200,18 @@ def process_block(block, crashes_so_far, comparisons, totals):
     start = time.time()
     if PARALLEL > 1:
         r = pool.map_async(ingest_one, block, 1)
-        block_results = r.get()
+        #try:
+        block_results = r.get(999999) # set a large but finite timeout for old version of python as a work around for http://bugs.python.org/issue8296
+        #except KeyboardInterrupt:
+            #print 'Caught SIGINT, exiting...'
+            #pool.terminate()
+            #pool.join()
+            #if START_GUNICORN:
+                #stop_gunicorn()
+            #sys.exit(130)
+        pool.close()
+        pool.join()
+        pool = multiprocessing.Pool(PARALLEL)
     else:
         block_results = map(ingest_one, block)
     finish = time.time()
@@ -410,7 +445,7 @@ def simulate(comparisons, oracle_data):
               )
     else:
         import random
-        for fake_i in range(0, BOOTSTRAP_CRASHES):
+        for fake_i in range(BOOTSTRAP_RESUME_AT, BOOTSTRAP_CRASHES):
             database_id = "fake:%010i" % fake_i
             source_database_id = all_ids.keys()[
               random.randrange(0, len(all_ids.keys()))]
@@ -424,12 +459,55 @@ def simulate(comparisons, oracle_data):
                           comparisons,
                           totals,
                           )
+
+class GunicornStarter(object):
+    def __init__(self):
+        self.start_gunicorn()
+    
+    def start_gunicorn(self):
+        self.gunicorn = subprocess.Popen(['gunicorn',
+            '--access-logfile', 'gunicorn-access.log',
+            '--error-logfile',  'gunicorn-error.log',
+            '--log-level', 'debug',
+            '--workers', str(PARALLEL),
+            '--worker-class', 'sync',
+            '--bind', 'localhost:5000',
+            '--timeout', '60',
+            '--pid', 'gunicorn.pid',
+            '--capture-output',
+            'partycrasher.rest_service_validator',
+            ],
+            preexec_fn=os.setsid)
+        time.sleep(2)
+        print 'gunicorn started on %i' % (self.gunicorn.pid)
         
-reset_index()
-if TOTALLY_FAKE_DATA:
-    synthesize(get_comparisons())
-else:
-    simulate(
-        get_comparisons(),
-        load_oracle_data(oracle_file_path)
-    )
+    def stop_gunicorn(self):
+        if self.gunicorn.poll() is None:
+            os.killpg(os.getpgid(self.gunicorn.pid), signal.SIGTERM)
+        self.gunicorn.wait()
+     
+    def close(self):
+        self.stop_gunicorn()
+
+if START_GUNICORN:
+    gunicorn_starter = GunicornStarter()
+
+try:
+    if not BOOTSTRAP_RESUME_AT:
+        reset_index()
+    if TOTALLY_FAKE_DATA:
+        synthesize(get_comparisons())
+    else:
+        simulate(
+            get_comparisons(),
+            load_oracle_data(oracle_file_path)
+        )
+except:
+    traceback.print_exc()
+finally:
+    print 'Cleaing up...'
+    pool.terminate()
+    pool.join()
+    if START_GUNICORN:
+        gunicorn_starter.stop_gunicorn()
+

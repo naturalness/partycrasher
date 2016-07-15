@@ -46,7 +46,22 @@ reset: build kill run ## Rebuilds the `partycrasher` container and runs it.
 
 .PHONY: buckettest
 buckettest: lp.json ## Destroys the database, uploads, and evaluates data from Launchpad.
-	python lp/buckettest.py $< http://localhost:$(EXTERNAL_PORT)/
+# 	gunicorn --access-logfile gunicorn-access.log \
+# 		--error-logfile gunicorn-error.log \
+# 		--log-level debug \
+# 		--workers 32 \
+# 		--worker-class sync \
+# 		--bind localhost:5000 \
+# 		--timeout 60 \
+# 		--pid gunicorn.pid \
+# 		--capture-output \
+# 		--daemon partycrasher.rest_service_validator
+# 	sleep 1
+# 	echo "Gunicorn started on: " `cat gunicorn.pid`
+# 	sleep 1
+	python lp/buckettest.py $< http://localhost:$(EXTERNAL_PORT)/ || true
+# 	echo kill `cat gunicorn.pid`
+# 	kill `cat gunicorn.pid`
 
 # Downloads the crashes.
 lp.json.xz:

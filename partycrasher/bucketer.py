@@ -213,6 +213,9 @@ class MLT(Bucketer):
           print(json.dumps(response, indent=2), file=sys.stderr)
           raise
         
+        with open('explained', 'wb') as debug_file:
+            print(json.dumps(response['hits']['hits'][0]['_explanation'], indent=2), file=debug_file)
+
         def flatten(explanation):
           flattened = []
           for subexplanation in explanation:
