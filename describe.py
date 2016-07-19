@@ -75,8 +75,18 @@ class Crash(namedtuple('Crash', 'id stack context')):
 
         """
         for a, b in bigrams(self.stack):
-            if a.function == b.function:
-                return True
+            if a.function:
+                if a.function == b.function:
+                    dbg("Recursion in {crash}: {func}",
+                        crash=self.id,
+                        func=a.function)
+                    return True
+            if a.address:
+                if a.address == b.address:
+                    dbg("Recursion in {crash}: {addr:0X}",
+                        crash=self.id,
+                        addr=int(a.address, base=16))
+                    return True
         return False
 
     def tokenize(self, tokenizer):
@@ -160,12 +170,21 @@ class Corpus(namedtuple('Corpus', 'name crashes buckets')):
 
 
 class Distribution(object):
-    def __init__(self, entity):
-        self.entity = entity
+    def __init__(self, label):
+        self.label = label
         self.counter = Counter()
 
     def __iadd__(self, thing):
         self.counter[thing] += 1
+        return self
+
+    @property
+    def mean(self):
+        raise NotImplementedError
+
+    @property
+    def mode(self):
+        raise NotImplementedError
 
 
 class PatternTokenizer(object):
@@ -233,6 +252,7 @@ def load_from_json():
 
     dbg("Figuring out buckets...")
     for report_id, info in iteritems(oracle):
+        assert report_id == info['database_id']
         bucket_id = info['bucket']
         corpus.add_to_bucket(report_id, bucket_id)
 
@@ -254,9 +274,25 @@ def load():
     return load_from_pickle()
 
 
+# Collect means and totals (modes are trivial!)
+#  - per field
+#  - per bucket
+#  - per report
+#  - per corpus
+#
+# - Unique tokens [fbrc]
+# - Tokens per crash [bc]
+# - How many context fields? [r]
+# - Stack depth [r]
+# - Distribution of tokens [fbbc]
+#
 if __name__ == '__main__':
     corpus = load()
     dbg("Corpus loaded!")
 
     print("# crashes:", len(corpus.crashes))
     print("# buckets:", len(corpus.buckets))
+
+    for report_id, crash in iteritems(corpus.crashes):
+        if crash.has_recursion():
+            print(report_id, "recursion detected")
