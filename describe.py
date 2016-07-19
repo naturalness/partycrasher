@@ -191,6 +191,9 @@ class Distribution(object):
     def mode(self):
         raise NotImplementedError
 
+    def __str__(self):
+        return unicode(self).encode("utf-8")
+
 
 class OrdinalDistribution(Distribution):
     """
@@ -333,6 +336,10 @@ def load():
     return load_from_pickle()
 
 
+def lazy_setdefault(d, k, fn):
+    return d[k] if k in d else d.setdefault(k, fn())
+
+
 # Collect means and totals (modes are trivial!)
 #  - per field
 #  - per bucket
@@ -353,12 +360,25 @@ if __name__ == '__main__':
     print("# buckets:", len(corpus.buckets))
 
     dist = OrdinalDistribution('Max recursion depth per crash (corpus-wide)')
+    field_dists = {}
+
     for report_id, crash in iteritems(corpus.crashes):
+        # Report recursion depth.
         dist += crash.max_recursion_depth
+
+        # Figure out raw stats on token length.
+        for field, value in iteritems(crash.context):
+            when_new = lambda: OrdinalDistribution('Raw number of tokens in '+ str(field))
+            field_dist = lazy_setdefault(field_dists, field, when_new)
+            field_dist += len(camel(value))
+
+    # Print recursion depth.
     print(unicode(dist))
     crashes_with_recursion = sum(amount for value, amount in dist.counter.items() if value > 0)
-    print("Crashes that have recursion:", crashes_with_recursion, "out of",
-          len(corpus.crashes),
-          100.0 * crashes_with_recursion / len(corpus.crashes),
-          "%")
     dist.save_observations("recursion", key_label="max.depth")
+
+    print()
+
+    # Print token information for each field.
+    for dist in itervalues(field_dists):
+        print(dist)
