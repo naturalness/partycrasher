@@ -42,17 +42,25 @@ def bigrams(seq):
     return izip(first, second)
 
 
-class Crash(namedtuple('Crash', 'id stack context')):
-    @classmethod
-    def new(cls, report_id):
-        return cls(report_id, [], {})
+class Crash(object):
+    def __init__(self, id, project):
+        self.id = id
+        self.project = project
+        self.stack = []
+        self.context = {}
+        self.extra = {}
 
     @classmethod
     def parse(cls, report_id, raw_crash):
-        crash = cls.new(report_id)
+        project = raw_crash.pop('project')
+        del raw_crash['extra']
+        del raw_crash['database_id']
+
+        crash = cls(report_id, project)
         stack = raw_crash.pop('stacktrace', [])
         crash.stack.extend(StackFrame.parse(frame) for frame in stack)
         crash.context.update(raw_crash)
+
         return crash
 
     @property
@@ -186,6 +194,22 @@ class Distribution(object):
     def __str__(self):
         return unicode(self).encode("utf-8")
 
+    def __unicode__(self):
+        result = "{}:\n".format(self.label)
+
+        if hasattr(self, 'min'):
+            result += "\tMin:\t{} × {}\n".format(*self.min)
+        if hasattr(self, 'max'):
+            result += "\tMax:\t{} × {}\n".format(*self.max)
+        if hasattr(self, 'mode'):
+            result += "\tMode:\t{} × {}\n".format(*self.mode)
+        if hasattr(self, 'mean'):
+            result += "\tMean:\t{}\n".format(self.mean)
+        if hasattr(self, 'counter'):
+            result += "\tTop 3:\t{!r}\n".format(self.counter.most_common(n=3))
+
+        return result
+
 
 class NominalDistribution(Distribution):
     """
@@ -206,35 +230,6 @@ class NominalDistribution(Distribution):
             for key in self.counter.elements():
                 writer.writerow((key, '1'))
 
-    @property
-    def max(self):
-        key = max(iterkeys(self.counter))
-        return key, self.counter[key]
-
-    @property
-    def min(self):
-        key = min(iterkeys(self.counter))
-        return key, self.counter[key]
-
-    @property
-    def mean(self):
-        return None
-
-    def __unicode__(self):
-        return (
-            "{label}:\n"
-            "\tMin:\t{min[0]} × {min[1]}\n"
-            "\tMax:\t{max[0]}  × {max[1]}\n"
-            "\tMode:\t{mode[0]} × {mode[1]}\n"
-            "\tMean:\t{mean}\n"
-            "\tTop 3:\t{top3!r}"
-        ).format(label=self.label,
-                 min=self.min,
-                 max=self.max,
-                 mean=self.mean,
-                 mode=self.mode,
-                 top3=self.counter.most_common(3))
-
     def __len__(self):
         return sum(itervalues(self.counter))
 
@@ -246,7 +241,22 @@ class NominalDistribution(Distribution):
 class OrdinalDistribution(NominalDistribution):
     @property
     def mean(self):
-        return sum(iterkeys(self.counter)) / len(self)
+        return sum(self.counter.elements()) / len(self)
+
+    @property
+    def variance(self):
+        raise NotImplementedError
+
+    @property
+    def max(self):
+        key = max(iterkeys(self.counter))
+        return key, self.counter[key]
+
+    @property
+    def min(self):
+        key = min(iterkeys(self.counter))
+        return key, self.counter[key]
+
 
 
 class PatternTokenizer(object):
@@ -342,6 +352,8 @@ def lazy_setdefault(d, k, fn):
     return d[k] if k in d else d.setdefault(k, fn())
 
 
+# TODO: per corpus: figure out field length.
+
 # Collect means and totals (modes are trivial!)
 #  - per field
 #  - per bucket
@@ -365,6 +377,7 @@ if __name__ == '__main__':
 
     field_token_dists = {}
     field_count_dists = {}
+    field_presence_dist = NominalDistribution('Popular fields (corpus-wide)')
 
     dbg("Computing per-crash token distributions")
     for report_id, crash in iteritems(corpus.crashes):
@@ -373,6 +386,8 @@ if __name__ == '__main__':
 
         # Figure out raw stats on token length.
         for field, value in iteritems(crash.context):
+            field_presence_dist += field
+
             tokens = camel(value)
 
             when_new = lambda: OrdinalDistribution('Raw number of tokens in '+ str(field))
@@ -391,8 +406,12 @@ if __name__ == '__main__':
 
     print()
 
+    # Print field information
+    print(field_presence_dist)
+
+    print()
+
     # Print token information for each field.
     for field in field_count_dists:
         print(field_count_dists[field])
         print(field_token_dists[field])
-
