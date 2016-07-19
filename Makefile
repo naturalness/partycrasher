@@ -63,6 +63,16 @@ buckettest: lp.json ## Destroys the database, uploads, and evaluates data from L
 # 	echo kill `cat gunicorn.pid`
 # 	kill `cat gunicorn.pid`
 
+
+# Output summaries
+.PHONY:
+summary: recursion.csv recursion.R
+	Rscript recursion.R
+
+# Create the pickled corpus file.
+recursion.csv lp.corpus: lp.json describe.py
+	python describe.py
+
 # Downloads the crashes.
 lp.json.xz:
 	curl --fail --remote-name https://pizza.cs.ualberta.ca/$@
