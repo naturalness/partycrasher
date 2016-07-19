@@ -59,7 +59,7 @@ buckettest: lp.json ## Destroys the database, uploads, and evaluates data from L
 # 	sleep 1
 # 	echo "Gunicorn started on: " `cat gunicorn.pid`
 # 	sleep 1
-	python lp/buckettest.py $< http://localhost:$(EXTERNAL_PORT)/ || true
+	python lp/buckettest.py $< http://localhost:$(EXTERNAL_PORT)/
 # 	echo kill `cat gunicorn.pid`
 # 	kill `cat gunicorn.pid`
 
