@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-from __future__ import print_function, unicode_literals
+from __future__ import print_function, unicode_literals, division
 
 """
 Print descriptive statistics over launchpad data.
@@ -10,12 +10,13 @@ Print descriptive statistics over launchpad data.
 import os
 import sys
 import json
+import csv
 
 from collections import namedtuple, defaultdict, Counter
 from itertools import islice, tee
 
 import six
-from six import iteritems, itervalues
+from six import iterkeys, itervalues, iteritems
 from six.moves import zip as izip
 from six.moves import cPickle as pickle
 
@@ -54,15 +55,16 @@ class Crash(namedtuple('Crash', 'id stack context')):
         crash.context.update(raw_crash)
         return crash
 
+    @property
     def has_recursion(self):
         """
         >>> crash = Crash.new('0')
         >>> crash.stack.append(StackFrame.of(function='main'))
-        >>> crash.has_recursion()
+        >>> crash.has_recursion
         False
 
         >>> crash.stack.append(StackFrame.of(function='init'))
-        >>> crash.has_recursion()
+        >>> crash.has_recursion
         False
 
         >>> crash = Crash.new('1')
@@ -70,24 +72,29 @@ class Crash(namedtuple('Crash', 'id stack context')):
         >>> crash.stack.append(StackFrame.of(function='fib'))
         >>> crash.stack.append(StackFrame.of(function='fib'))
         >>> crash.stack.append(StackFrame.of(function='main'))
-        >>> crash.has_recursion()
+        >>> crash.has_recursion
         True
 
         """
+        return self.max_recursion_depth > 0
+
+
+    @property
+    def max_recursion_depth(self):
+        recursion_depth = [0]
+
         for a, b in bigrams(self.stack):
+            saw_recursion = False
             if a.function:
                 if a.function == b.function:
-                    dbg("Recursion in {crash}: {func}",
-                        crash=self.id,
-                        func=a.function)
-                    return True
-            if a.address:
-                if a.address == b.address:
-                    dbg("Recursion in {crash}: {addr:0X}",
-                        crash=self.id,
-                        addr=int(a.address, base=16))
-                    return True
-        return False
+                    recursion_depth[-1] += 1
+                    saw_recursion = True
+
+            if not saw_recursion and recursion_depth[-1] > 0:
+                #dbg("Recursion in {crash}: {func}", crash=self.id, func=a.function)
+                recursion_depth.append(0)
+
+        return max(recursion_depth)
 
     def tokenize(self, tokenizer):
         # From stack trace
@@ -170,13 +177,11 @@ class Corpus(namedtuple('Corpus', 'name crashes buckets')):
 
 
 class Distribution(object):
+    """
+    A distribution.
+    """
     def __init__(self, label):
         self.label = label
-        self.counter = Counter()
-
-    def __iadd__(self, thing):
-        self.counter[thing] += 1
-        return self
 
     @property
     def mean(self):
@@ -185,6 +190,60 @@ class Distribution(object):
     @property
     def mode(self):
         raise NotImplementedError
+
+
+class OrdinalDistribution(Distribution):
+    """
+    A distribution of ordinal data (e.g., recursion_depth).
+    """
+    def __init__(self, label):
+        super(OrdinalDistribution, self).__init__(label)
+        self.counter = Counter()
+
+    def __iadd__(self, thing):
+        self.counter[thing] += 1
+        return self
+
+    def save_observations(self, basename, key_label="key", amount_label="value"):
+        with open(basename+'.csv', 'wb') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow((key_label, amount_label))
+            for key in self.counter.elements():
+                writer.writerow((key, '1'))
+
+    @property
+    def max(self):
+        key = max(iterkeys(self.counter))
+        return key, self.counter[key]
+
+    @property
+    def min(self):
+        key = min(iterkeys(self.counter))
+        return key, self.counter[key]
+
+    @property
+    def mean(self):
+        return sum(iterkeys(self.counter)) / len(self)
+
+    @property
+    def mode(self):
+        return self.counter.most_common(n=1)[0]
+
+    def __len__(self):
+        return sum(itervalues(self.counter))
+
+    def __unicode__(self):
+        return (
+            "{label}:\n"
+            "\tMin:\t{min[0]} × {min[1]}\n"
+            "\tMax:\t{max[0]}  × {max[1]}\n"
+            "\tMode:\t{mode[0]} × {mode[1]}\n"
+            "\tMean:\t{mean}"
+        ).format(label=self.label,
+                 min=self.min,
+                 max=self.max,
+                 mean=self.mean,
+                 mode=self.mode)
 
 
 class PatternTokenizer(object):
@@ -293,6 +352,13 @@ if __name__ == '__main__':
     print("# crashes:", len(corpus.crashes))
     print("# buckets:", len(corpus.buckets))
 
+    dist = OrdinalDistribution('Max recursion depth per crash (corpus-wide)')
     for report_id, crash in iteritems(corpus.crashes):
-        if crash.has_recursion():
-            print(report_id, "recursion detected")
+        dist += crash.max_recursion_depth
+    print(unicode(dist))
+    crashes_with_recursion = sum(amount for value, amount in dist.counter.items() if value > 0)
+    print("Crashes that have recursion:", crashes_with_recursion, "out of",
+          len(corpus.crashes),
+          100.0 * crashes_with_recursion / len(corpus.crashes),
+          "%")
+    dist.save_observations("recursion", key_label="max.depth")
