@@ -43,7 +43,7 @@ def bigrams(seq):
 
 
 class Crash(object):
-    def __init__(self, id, project):
+    def __init__(self, id, project=None):
         self.id = id
         self.project = project
         self.stack = []
@@ -66,7 +66,7 @@ class Crash(object):
     @property
     def has_recursion(self):
         """
-        >>> crash = Crash.new('0')
+        >>> crash = Crash('0')
         >>> crash.stack.append(StackFrame.of(function='main'))
         >>> crash.has_recursion
         False
@@ -75,7 +75,7 @@ class Crash(object):
         >>> crash.has_recursion
         False
 
-        >>> crash = Crash.new('1')
+        >>> crash = Crash('1')
         >>> crash.stack.append(StackFrame.of(function='log'))
         >>> crash.stack.append(StackFrame.of(function='fib'))
         >>> crash.stack.append(StackFrame.of(function='fib'))
