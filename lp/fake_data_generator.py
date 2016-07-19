@@ -131,12 +131,74 @@ class Numbers(object):
         word = self.total
         self.total += 1
         return word
+
+class Strings(object):
+    def __init__(self, prefix, length):
+        self.prefix = prefix
+        self.length = length
+        self.numbers = Numbers()
+        self.format_ = '%0' + ("%i" % length) + 'i'
+    
+    def draw(self):
+        n = self.numbers.draw()
+        str_n = self.format_ % n
+        letters = str_n.translate(string.maketrans('0123456789', 'pqrstuvwxy')
+        return prefix + letters
+        
+        
+      
+class MetadataField(object):
+    """ Responsible for storing a metadata field's properties regardless of bug or document. """
+    def __init__(
+                 name_source,
+                 metadata_word_source, 
+                 field_word_alpha, 
+                 mean_len
+                ):
+        self.name = name_source.draw()
+        self.word_source = ChineseRestaurant(field_word_alpha, metadata_word_source)
+        self.mean_len
+
+    def draw_length():
+        length = stats.poisson.rvs(self.mean_len)
+        return length
+        
+    def draw():
+        content = []
+        length = self.draw_length()
+        for i in range(0, length):
+            content.append(word_source.draw())
+        return content
       
 class MetadataFields(object):
-    def __init__(word_source, len_total, nfields_total):
+    """ Responsible for storing all metadata fields regardless of bug or document. """
+    def __init__(
+                 metadata_word_source, 
+                 len_total, 
+                 nfields_total,
+                 field_word_alpha
+                ):
+        self.name_source = Strings('field', 5)
+        self.word_source = metadata_word_source
+        self.len_total = len_total
+        self.nfields_total = nfields_total
+        self.fields = []
+        
+    def get_field(self, index):
+        if index < len(self.fields):
+            return self.fields[index]
+        else:
+            assert index == len(self.fields)
+            mean_length = stats.gamma.rvs(len_total, scale=(1.0/nfields_total))
+            new_field = MetadataField(
+                                      self.name_source,
+                                      self.word_source,
+                                      field_word_alpha,
+                                      mean_length)
         
       
 class Bug(object):
+    """ Responsible for storing data related to a single bug """
     def __init__(field_alpha, field_source, word_alpha, word_source, field_len_alpha):
         self.field_gen = IndianBuffet(field_alpha, field_source)
         self.word_gens = []
@@ -153,10 +215,15 @@ class Bug(object):
     
       
 class CrashGen(object):
-    def __init__(fields, max_field_len, bug_alpha):
-        self.fields = fields
-        self.max_field_len = max_field_len
-        self.bug_source = ChineseRestaurant(bug_alpha, Numbers())
+    def __init__(fields, metadata_word_alpha, field_word_alpha, bug_alpha):
+        self.metadata_word_source = ChineseRestaurant(metadata_word_alpha, Strings('', 8))
+        self.fields = MetadataFields(
+                                     self.metadata_word_source,
+                                     len_total,
+                                     nfields_total,
+                                     field_word_alpha
+                                    )
+        self.bug_id_source = ChineseRestaurant(bug_alpha, Numbers())
         self.bugs = []
     
     def generate_crash():
