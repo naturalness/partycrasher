@@ -239,9 +239,9 @@ class NominalDistribution(Distribution):
 
     def __len__(self):
         """
-        How many observations total observations there are.
+        How many total obeservations there are.
         """
-        return sum(self.counter.elements())
+        return sum(itervalues(self.counter))
 
     @property
     def mode(self):
@@ -288,7 +288,7 @@ class RatioDistribution(IntervalDistribtion):
 
     @property
     def variance(self):
-        mean = self.mean ** 2
+        mean = self.mean
         obvs = len(self)
         return sum(amount / obvs * (value - mean) ** 2
                    for value, amount in iteritems(self.counter))
@@ -413,7 +413,7 @@ if __name__ == '__main__':
     print("# crashes:", len(corpus.crashes))
     print("# buckets:", len(corpus.buckets))
 
-    dist = OrdinalDistribution('Max recursion depth per crash (corpus-wide)')
+    dist = RatioDistribution('Max recursion depth per crash (corpus-wide)')
 
     field_token_dists = {}
     field_count_dists = {}
