@@ -164,7 +164,7 @@ class Bucket(object):
 
     def __contains__(self, key):
         if isinstance(self, crash):
-            for other in iteritem(self.crashes):
+            for other in iteritems(self.crashes):
                 if other is crash:
                     return True
             return False
@@ -186,7 +186,7 @@ class Corpus(namedtuple('Corpus', 'name crashes buckets')):
 
 class Distribution(object):
     """
-    A distribution.
+    Basic abstract class for all distributions.
     """
     def __init__(self, label):
         self.label = label
@@ -205,16 +205,30 @@ class Distribution(object):
             result += "\tMode:\t{} × {}\n".format(*self.mode)
         if hasattr(self, 'mean'):
             result += "\tMean:\t{}\n".format(self.mean)
+        if hasattr(self, 'variance'):
+            result += "\tVar:\t{}\n".format(self.variance)
         if hasattr(self, 'counter'):
             result += "\tTop 3:\t{!r}\n".format(self.counter.most_common(n=3))
 
         return result
 
+    def save_observations(self, basename, key_label="key", amount_label="value"):
+        """
+        Saves a CSV file containing each individual observation; this is
+        suitable for analysis in R.
+        """
+        with open(basename+'.csv', 'wb') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow((key_label, amount_label))
+            for key in self.counter.elements():
+                writer.writerow((key, '1'))
+
 
 class NominalDistribution(Distribution):
     """
-    A distribution of ordinal data (e.g., recursion_depth).
+    A distribution of nominal data (e.g., tokens).
     """
+
     def __init__(self, label):
         super(NominalDistribution, self).__init__(label)
         self.counter = Counter()
@@ -223,15 +237,11 @@ class NominalDistribution(Distribution):
         self.counter[thing] += 1
         return self
 
-    def save_observations(self, basename, key_label="key", amount_label="value"):
-        with open(basename+'.csv', 'wb') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow((key_label, amount_label))
-            for key in self.counter.elements():
-                writer.writerow((key, '1'))
-
     def __len__(self):
-        return sum(itervalues(self.counter))
+        """
+        How many observations total observations there are.
+        """
+        return sum(self.counter.elements())
 
     @property
     def mode(self):
@@ -239,13 +249,9 @@ class NominalDistribution(Distribution):
 
 
 class OrdinalDistribution(NominalDistribution):
-    @property
-    def mean(self):
-        return sum(self.counter.elements()) / len(self)
-
-    @property
-    def variance(self):
-        raise NotImplementedError
+    """
+    A distribution of ordinal data.
+    """
 
     @property
     def max(self):
@@ -258,9 +264,40 @@ class OrdinalDistribution(NominalDistribution):
         return key, self.counter[key]
 
 
+class IntervalDistribtion(OrdinalDistribution):
+    @property
+    def interval(self):
+        lower, _ = self.min
+        upper, _ = self.max
+        return lower, upper
+
+    @property
+    def range(self):
+        lower, upper = self.interval
+        return upper - lower
+
+    @property
+    def mean(self):
+        return sum(self.counter.elements()) / len(self)
+
+
+class RatioDistribution(IntervalDistribtion):
+    """
+    A distribution of ratio data (e.g., recursion depth).
+    """
+
+    @property
+    def variance(self):
+        mean = self.mean ** 2
+        obvs = len(self)
+        return sum(amount / obvs * (value - mean) ** 2
+                   for value, amount in iteritems(self.counter))
+
 
 class PatternTokenizer(object):
     """
+    A tokenizer based on a splitting regular expression.
+
     >>> lerch('a little bit of tea') == ['little']
     True
     >>> camel('call MooseX::FTPClass2_beta') == ["call", "Moose", "X", "FTP", "Class", "2", "beta"]
@@ -338,8 +375,11 @@ def load_from_json():
 
 def load_from_pickle():
     dbg("Loading from pickle...")
-    with open('lp.corpus', 'rb') as picklefile:
-        return pickle.load(picklefile)
+    try:
+        with open('lp.corpus', 'rb') as picklefile:
+            return pickle.load(picklefile)
+    except EOFError:
+        return load_from_json()
 
 
 def load():
@@ -390,7 +430,7 @@ if __name__ == '__main__':
 
             tokens = camel(value)
 
-            when_new = lambda: OrdinalDistribution('Raw number of tokens in '+ str(field))
+            when_new = lambda: RatioDistribution('Raw number of tokens in '+ str(field))
             count_dist = lazy_setdefault(field_count_dists, field, when_new)
             count_dist += len(tokens)
 
