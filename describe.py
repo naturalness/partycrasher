@@ -42,23 +42,31 @@ def bigrams(seq):
     return izip(first, second)
 
 
-class Crash(namedtuple('Crash', 'id stack context')):
-    @classmethod
-    def new(cls, report_id):
-        return cls(report_id, [], {})
+class Crash(object):
+    def __init__(self, id, project=None):
+        self.id = id
+        self.project = project
+        self.stack = []
+        self.context = {}
+        self.extra = {}
 
     @classmethod
     def parse(cls, report_id, raw_crash):
-        crash = cls.new(report_id)
+        project = raw_crash.pop('project')
+        del raw_crash['extra']
+        del raw_crash['database_id']
+
+        crash = cls(report_id, project)
         stack = raw_crash.pop('stacktrace', [])
         crash.stack.extend(StackFrame.parse(frame) for frame in stack)
         crash.context.update(raw_crash)
+
         return crash
 
     @property
     def has_recursion(self):
         """
-        >>> crash = Crash.new('0')
+        >>> crash = Crash('0')
         >>> crash.stack.append(StackFrame.of(function='main'))
         >>> crash.has_recursion
         False
@@ -67,7 +75,7 @@ class Crash(namedtuple('Crash', 'id stack context')):
         >>> crash.has_recursion
         False
 
-        >>> crash = Crash.new('1')
+        >>> crash = Crash('1')
         >>> crash.stack.append(StackFrame.of(function='log'))
         >>> crash.stack.append(StackFrame.of(function='fib'))
         >>> crash.stack.append(StackFrame.of(function='fib'))
@@ -156,7 +164,7 @@ class Bucket(object):
 
     def __contains__(self, key):
         if isinstance(self, crash):
-            for other in iteritem(self.crashes):
+            for other in iteritems(self.crashes):
                 if other is crash:
                     return True
             return False
@@ -178,41 +186,72 @@ class Corpus(namedtuple('Corpus', 'name crashes buckets')):
 
 class Distribution(object):
     """
-    A distribution.
+    Basic abstract class for all distributions.
     """
     def __init__(self, label):
         self.label = label
 
-    @property
-    def mean(self):
-        raise NotImplementedError
-
-    @property
-    def mode(self):
-        raise NotImplementedError
-
     def __str__(self):
         return unicode(self).encode("utf-8")
 
+    def __unicode__(self):
+        result = "{}:\n".format(self.label)
 
-class OrdinalDistribution(Distribution):
+        if hasattr(self, 'min'):
+            result += "\tMin:\t{} × {}\n".format(*self.min)
+        if hasattr(self, 'max'):
+            result += "\tMax:\t{} × {}\n".format(*self.max)
+        if hasattr(self, 'mode'):
+            result += "\tMode:\t{} × {}\n".format(*self.mode)
+        if hasattr(self, 'mean'):
+            result += "\tMean:\t{}\n".format(self.mean)
+        if hasattr(self, 'variance'):
+            result += "\tVar:\t{}\n".format(self.variance)
+        if hasattr(self, 'counter'):
+            result += "\tTop 3:\t{!r}\n".format(self.counter.most_common(n=3))
+
+        return result
+
+    def save_observations(self, basename, key_label="key", amount_label="value"):
+        """
+        Saves a CSV file containing each individual observation; this is
+        suitable for analysis in R.
+        """
+        with open(basename+'.csv', 'wb') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow((key_label, amount_label))
+            for key in self.counter.elements():
+                writer.writerow((key, '1'))
+
+
+class NominalDistribution(Distribution):
     """
-    A distribution of ordinal data (e.g., recursion_depth).
+    A distribution of nominal data (e.g., tokens).
     """
+
     def __init__(self, label):
-        super(OrdinalDistribution, self).__init__(label)
+        super(NominalDistribution, self).__init__(label)
         self.counter = Counter()
 
     def __iadd__(self, thing):
         self.counter[thing] += 1
         return self
 
-    def save_observations(self, basename, key_label="key", amount_label="value"):
-        with open(basename+'.csv', 'wb') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow((key_label, amount_label))
-            for key in self.counter.elements():
-                writer.writerow((key, '1'))
+    def __len__(self):
+        """
+        How many total obeservations there are.
+        """
+        return sum(itervalues(self.counter))
+
+    @property
+    def mode(self):
+        return self.counter.most_common(n=1)[0]
+
+
+class OrdinalDistribution(NominalDistribution):
+    """
+    A distribution of ordinal data.
+    """
 
     @property
     def max(self):
@@ -224,36 +263,46 @@ class OrdinalDistribution(Distribution):
         key = min(iterkeys(self.counter))
         return key, self.counter[key]
 
+
+class IntervalDistribtion(OrdinalDistribution):
+    @property
+    def interval(self):
+        lower, _ = self.min
+        upper, _ = self.max
+        return lower, upper
+
+    @property
+    def range(self):
+        lower, upper = self.interval
+        return upper - lower
+
     @property
     def mean(self):
-        return sum(iterkeys(self.counter)) / len(self)
+        return sum(self.counter.elements()) / len(self)
+
+
+class RatioDistribution(IntervalDistribtion):
+    """
+    A distribution of ratio data (e.g., recursion depth).
+    """
 
     @property
-    def mode(self):
-        return self.counter.most_common(n=1)[0]
-
-    def __len__(self):
-        return sum(itervalues(self.counter))
-
-    def __unicode__(self):
-        return (
-            "{label}:\n"
-            "\tMin:\t{min[0]} × {min[1]}\n"
-            "\tMax:\t{max[0]}  × {max[1]}\n"
-            "\tMode:\t{mode[0]} × {mode[1]}\n"
-            "\tMean:\t{mean}"
-        ).format(label=self.label,
-                 min=self.min,
-                 max=self.max,
-                 mean=self.mean,
-                 mode=self.mode)
+    def variance(self):
+        mean = self.mean
+        obvs = len(self)
+        return sum(amount / obvs * (value - mean) ** 2
+                   for value, amount in iteritems(self.counter))
 
 
 class PatternTokenizer(object):
     """
+    A tokenizer based on a splitting regular expression.
+
     >>> lerch('a little bit of tea') == ['little']
     True
-    >>> camel('XmlHttpRequest') == ['Xml', 'Http', 'Request']
+    >>> camel('call MooseX::FTPClass2_beta') == ["call", "Moose", "X", "FTP", "Class", "2", "beta"]
+    True
+    >>> camel('hello world') == ['hello', 'world']
     True
 
     """
@@ -275,7 +324,7 @@ class PatternTokenizer(object):
 # From ES Docs: https://github.com/elastic/elasticsearch/blob/1.6/docs/reference/analysis/analyzers/pattern-analyzer.asciidoc
 # 2016-01-27
 camel = PatternTokenizer(
-    '([^\\p{L}\\d]+)|'
+    '(?:[^\\p{L}\\d]+)|'
     '(?<=\\D)(?=\\d)|'
     '(?<=\\d)(?=\\D)|'
     '(?<=[\\p{L}&&[^\\p{Lu}]])(?=\\p{Lu})|'
@@ -326,8 +375,11 @@ def load_from_json():
 
 def load_from_pickle():
     dbg("Loading from pickle...")
-    with open('lp.corpus', 'rb') as picklefile:
-        return pickle.load(picklefile)
+    try:
+        with open('lp.corpus', 'rb') as picklefile:
+            return pickle.load(picklefile)
+    except EOFError:
+        return load_from_json()
 
 
 def load():
@@ -339,6 +391,8 @@ def load():
 def lazy_setdefault(d, k, fn):
     return d[k] if k in d else d.setdefault(k, fn())
 
+
+# TODO: per corpus: figure out field length.
 
 # Collect means and totals (modes are trivial!)
 #  - per field
@@ -359,26 +413,45 @@ if __name__ == '__main__':
     print("# crashes:", len(corpus.crashes))
     print("# buckets:", len(corpus.buckets))
 
-    dist = OrdinalDistribution('Max recursion depth per crash (corpus-wide)')
-    field_dists = {}
+    dist = RatioDistribution('Max recursion depth per crash (corpus-wide)')
 
+    field_token_dists = {}
+    field_count_dists = {}
+    field_presence_dist = NominalDistribution('Popular fields (corpus-wide)')
+
+    dbg("Computing per-crash token distributions")
     for report_id, crash in iteritems(corpus.crashes):
         # Report recursion depth.
         dist += crash.max_recursion_depth
 
         # Figure out raw stats on token length.
         for field, value in iteritems(crash.context):
-            when_new = lambda: OrdinalDistribution('Raw number of tokens in '+ str(field))
-            field_dist = lazy_setdefault(field_dists, field, when_new)
-            field_dist += len(camel(value))
+            field_presence_dist += field
+
+            tokens = camel(value)
+
+            when_new = lambda: RatioDistribution('Raw number of tokens in '+ str(field))
+            count_dist = lazy_setdefault(field_count_dists, field, when_new)
+            count_dist += len(tokens)
+
+            when_new = lambda: NominalDistribution('Unique tokens in '+ str(field))
+            token_dist = lazy_setdefault(field_token_dists, field, when_new)
+            for token in tokens:
+                token_dist += token
 
     # Print recursion depth.
-    print(unicode(dist))
+    print(dist)
     crashes_with_recursion = sum(amount for value, amount in dist.counter.items() if value > 0)
     dist.save_observations("recursion", key_label="max.depth")
 
     print()
 
+    # Print field information
+    print(field_presence_dist)
+
+    print()
+
     # Print token information for each field.
-    for dist in itervalues(field_dists):
-        print(dist)
+    for field in field_count_dists:
+        print(field_count_dists[field])
+        print(field_token_dists[field])
