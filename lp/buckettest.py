@@ -16,7 +16,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from __future__ import division
+from __future__ import division, print_function
 
 import os, sys, pprint, random, time, operator, math, csv
 
@@ -45,7 +45,7 @@ TOTALLY_FAKE_DATA=False
 START_GUNICORN=True
 
 if len(sys.argv) < 2+1:
-    print "Usage: " + sys.argv[0] + "oracle.json http://restservicehost:port/"
+    print("Usage: " + sys.argv[0] + "oracle.json http://restservicehost:port/")
 
 oracle_file_path = sys.argv[1]
 rest_service_url = sys.argv[2]
@@ -104,7 +104,7 @@ def load_oracle_data(oracle_file_path):
 
     del oracle_file_data
     
-    print str(len(all_crashes)) + " crashes found in oracle"
+    print(str(len(all_crashes)) + " crashes found in oracle")
 
     crashes = {}
     skipped_ids = Set()
@@ -112,7 +112,7 @@ def load_oracle_data(oracle_file_path):
     for database_id, crash in all_crashes.items():
         assert crash['database_id'] == database_id
         if len(crash['stacktrace']) < 1:
-            print "Skipping: " + database_id
+            print("Skipping: " + database_id)
             skipped_ids.add(database_id)
             continue
         crashes[database_id] = crash
@@ -130,7 +130,7 @@ def load_oracle_data(oracle_file_path):
         else:
             all_buckets[bucket].append(database_id)
 
-    print str(len(all_ids)) + " IDs used in oracle"
+    print(str(len(all_ids)) + " IDs used in oracle")
 
     
     if not BOOTSTRAP_CRASHES > 0:
@@ -161,27 +161,37 @@ def reset_index():
         del response
     except:
         if response is not None:
-            print response.status_code
-            print response.text
+            print(response.status_code)
+            print(response.text)
         raise
 
 
 def ingest_one(data):
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    if PARALLEL > 1:
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
     crashdata = data['crashdata']
     retries = 3
     while retries > 0:
         try:
             response = requests.post(client.path_to('reports'), json=crashdata)
+            assert (response.status_code == 201 or response.status_code == 303)
         except Exception as e:
             retries -= 1
-            print "POST failed..."
-            print str(e)
+            print(response.content)
+            traceback.print_exc()
+            print("POST failed...", file=sys.stderr)
+            sys.stderr.flush()
+            time.sleep(1)
             if retries < 1:
                 raise
         else:
             break # don't retry if it worked
-    simulationdata = response.json()
+    try:
+        simulationdata = response.json()
+    except ValueError as e:
+        print(response.content)
+        traceback.print_exc()
+        raise
     assert 'buckets' in simulationdata
     data['simulationdata'] = simulationdata
     return data
@@ -193,9 +203,9 @@ if PARALLEL > 1:
 
 def process_block(block, crashes_so_far, comparisons, totals):
     global pool
-    print "Processing %i crashes (%i to %i)..." % (len(block), 
+    print("Processing %i crashes (%i to %i)..." % (len(block), 
                                           crashes_so_far - len(block) + 1,
-                                          crashes_so_far)
+                                          crashes_so_far))
     # ingest
     start = time.time()
     if PARALLEL > 1:
@@ -216,10 +226,10 @@ def process_block(block, crashes_so_far, comparisons, totals):
         block_results = map(ingest_one, block)
     finish = time.time()
     ingest_time = finish-start
-    print "%i crashes in %fs: %0.1fcrashes/s" % (
+    print("%i crashes in %fs: %0.1fcrashes/s" % (
       len(block),
       ingest_time,
-      len(block)/(ingest_time))
+      len(block)/(ingest_time)))
     # accumulate counts
     for block_result in block_results:
         # unpack
@@ -285,12 +295,12 @@ def process_block(block, crashes_so_far, comparisons, totals):
         seen_buckets = totals['seen_buckets']
         seen_crashes = totals['seen_crashes']
         N = len(seen_crashes)
-        print "in %i, after %i/%i crashes and %i/%i bugkets:" % (N, 
+        print("in %i, after %i/%i crashes and %i/%i bugkets:" % (N, 
                                                        crashes_so_far,
                                                        total_ids, 
                                                        len(seen_buckets), 
-                                                       total_buckets)
-        print "\tb3_P\tb3_R\tb3_F\tpurity\tinvpur\tpurF\tbuckets"
+                                                       total_buckets))
+        print("\tb3_P\tb3_R\tb3_F\tpurity\tinvpur\tpurF\tbuckets")
         for comparison in sorted(comparisons.keys()):
             comparison_data = comparisons[comparison]
             if not ('oracle_to_assigned' in comparison_data):
@@ -350,7 +360,7 @@ def process_block(block, crashes_so_far, comparisons, totals):
             precision = precision/N
             recall = recall/N
             fscore = (1.0+(beta**2.0))*((precision*recall)/((beta**2.0)*precision+recall))
-            print "%s:\t%0.3f\t%0.3f\t%0.3f\t%0.3f\t%0.3f\t%0.3f\t%0.3f" \
+            print("%s:\t%0.3f\t%0.3f\t%0.3f\t%0.3f\t%0.3f\t%0.3f\t%0.3f" \
                 % (comparison,
                 precision,
                 recall,
@@ -359,7 +369,7 @@ def process_block(block, crashes_so_far, comparisons, totals):
                 ipurity,
                 F,
                 len(assigned_totals)/len(oracle_totals)
-                )
+                ))
             comparison_data['csvfile'].writerow([
                 crashes_so_far,
                 N,
@@ -478,8 +488,8 @@ class GunicornStarter(object):
             'partycrasher.rest_service_validator',
             ],
             preexec_fn=os.setsid)
-        time.sleep(2)
-        print 'gunicorn started on %i' % (self.gunicorn.pid)
+        time.sleep(5)
+        print('gunicorn started on %i' % (self.gunicorn.pid))
         
     def stop_gunicorn(self):
         if self.gunicorn.poll() is None:
@@ -505,9 +515,10 @@ try:
 except:
     traceback.print_exc()
 finally:
-    print 'Cleaing up...'
-    pool.terminate()
-    pool.join()
+    print('Cleaing up...')
+    if PARALLEL > 1:
+        pool.terminate()
+        pool.join()
     if START_GUNICORN:
         gunicorn_starter.stop_gunicorn()
 

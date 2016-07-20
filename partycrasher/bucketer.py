@@ -17,7 +17,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from __future__ import print_function
+from __future__ import print_function, division
 
 import os
 import json
@@ -26,6 +26,7 @@ import time
 import sys
 import re
 import traceback
+import math
 from operator import itemgetter
 from sets import Set
 from datetime import datetime
@@ -35,6 +36,11 @@ from elasticsearch import RequestError
 from crash import Crash, Buckets
 from es_crash import ESCrash, ESCrashEncoder
 from threshold import Threshold
+
+INITIAL_MLT_MAX_QUERY_TERMS=2500
+ENABLE_AUTO_MAX_QUERY_TERMS=True
+AUTO_MAX_QUERY_TERM_MINIMUM_DOCUMENTS=10
+AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS=1000
 
 
 class IndexNotUpdatedError(Exception):
@@ -137,6 +143,8 @@ class MLT(Bucketer):
         super(MLT, self).__init__(*args, **kwargs)
         self.thresholds = tuple(Threshold(value) for value in sorted(thresholds))
         self.only_stack = only_stack
+        if ENABLE_AUTO_MAX_QUERY_TERMS:
+            self.last_max_query_terms = INITIAL_MLT_MAX_QUERY_TERMS
 
     @property
     def thresh(self):
@@ -242,6 +250,45 @@ class MLT(Bucketer):
         #print(json.dumps(summary, indent=2, cls=ESCrashEncoder), file=sys.stderr)
         
         return summary
+      
+    def bucket_auto_max_query_terms(self, crash, bucket_field):
+        max_query_terms = self.last_max_query_terms
+        max_query_terms_lb = 1
+        max_query_terms_ub = INITIAL_MLT_MAX_QUERY_TERMS
+        while True:
+            body = self.make_more_like_this_query(crash, 
+                      bucket_field, 
+                      max_query_terms,
+                      AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS)
+            response = self.es.search(index=self.index, body=body)
+            if (response['terminated_early'] 
+                or (response['hits']['total'] 
+                    >= AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS)):
+                if max_query_terms == max_query_terms_lb:
+                    #print("Hit LB", file=sys.stderr)
+                    break
+                max_query_terms_ub = max_query_terms
+                max_query_terms = math.floor(
+                    float(max_query_terms+max_query_terms_lb)/2.0)
+            elif (response['hits']['total'] 
+                <= AUTO_MAX_QUERY_TERM_MINIMUM_DOCUMENTS):
+                if max_query_terms == max_query_terms_ub:
+                    #print("Hit UB", file=sys.stderr)
+                    break
+                max_query_terms_lb = max_query_terms
+                max_query_terms = math.ceil(
+                    float(max_query_terms+max_query_terms_ub)/2.0)
+            else:
+                #print("In range.", file=sys.stderr)
+                sys.stderr.flush()
+                break
+        print("max_query_terms: %i hits: %i" % (
+                  max_query_terms,
+                  response['hits']['total']),
+                  file=sys.stderr)
+        sys.stderr.flush()
+        self.last_max_query_terms = max_query_terms
+        return response
         
       
     def bucket(self, crash, bucket_field=None):
@@ -259,9 +306,11 @@ class MLT(Bucketer):
                 'stacktrace': crash['stacktrace'],
                 'database_id': crash['database_id']
             }
-
-        body = self.make_more_like_this_query(crash, bucket_field)
-        response = self.es.search(index=self.index, body=body)
+        if ENABLE_AUTO_MAX_QUERY_TERMS:
+            response = self.bucket_auto_max_query_terms(crash, bucket_field)
+        else:
+            body = self.make_more_like_this_query(crash, bucket_field, INITIAL_MLT_MAX_QUERY_TERMS)
+            response = self.es.search(index=self.index, body=body)
         
 
         try:
@@ -272,7 +321,11 @@ class MLT(Bucketer):
             time.sleep(1)
             return self.bucket(crash, bucket_field)
 
-    def make_more_like_this_query(self, crash, bucket_field):
+    def make_more_like_this_query(self, 
+                                  crash, 
+                                  bucket_field, 
+                                  max_query_terms,
+                                  terminate_after = None):
         body =  {
             # Only fetch database ID, buckets, and project.
             '_source': [bucket_field, 'database_id', 'project'],
@@ -290,7 +343,7 @@ class MLT(Bucketer):
                     #
                     # Search for WAY more terms than ElasticSearch would
                     # normally construct.
-                    'max_query_terms': 2500,
+                    'max_query_terms': max_query_terms,
                     # Force ElasticSearch to query... like, all the things.
                     'min_term_freq': 0,
                     'min_doc_freq': 0,
@@ -300,6 +353,9 @@ class MLT(Bucketer):
             'size': 1,
             'min_score': 0,
         }
+                        
+        if terminate_after is not None:
+            body['terminate_after'] = terminate_after
 
         return body
 
