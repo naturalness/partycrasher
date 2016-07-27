@@ -41,6 +41,7 @@ INITIAL_MLT_MAX_QUERY_TERMS=2500
 ENABLE_AUTO_MAX_QUERY_TERMS=True
 AUTO_MAX_QUERY_TERM_MINIMUM_DOCUMENTS=10
 AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS=1000
+MLT_MIN_SCORE=1.0 # auto detect from min threshold?
 
 
 class IndexNotUpdatedError(Exception):
@@ -255,12 +256,15 @@ class MLT(Bucketer):
         max_query_terms = self.last_max_query_terms
         max_query_terms_lb = 1
         max_query_terms_ub = INITIAL_MLT_MAX_QUERY_TERMS
+        response_at_least_one_hit = None
         while True:
             body = self.make_more_like_this_query(crash, 
                       bucket_field, 
                       max_query_terms,
                       AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS)
             response = self.es.search(index=self.index, body=body)
+            if response['hits']['total'] > 1:
+                response_at_least_one_hit = response
             if (response['terminated_early'] 
                 or (response['hits']['total'] 
                     >= AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS)):
@@ -288,6 +292,8 @@ class MLT(Bucketer):
                   file=sys.stderr)
         sys.stderr.flush()
         self.last_max_query_terms = max_query_terms
+        if response_at_least_one_hit is not None:
+            return response_at_least_one_hit
         return response
         
       
@@ -351,7 +357,7 @@ class MLT(Bucketer):
             },
             # Must fetch the TOP matching result only.
             'size': 1,
-            'min_score': 0,
+            'min_score': MLT_MIN_SCORE,
         }
                         
         if terminate_after is not None:

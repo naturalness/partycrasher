@@ -4,6 +4,9 @@ import sys
 import math
 from scipy import stats
 import numpy
+import json
+import string
+import datetime
 
 class ChineseRestaurant(object):
     def __init__(self, alpha, source):
@@ -142,46 +145,57 @@ class Strings(object):
     def draw(self):
         n = self.numbers.draw()
         str_n = self.format_ % n
-        letters = str_n.translate(string.maketrans('0123456789', 'pqrstuvwxy')
-        return prefix + letters
+        letters = str_n.translate(string.maketrans('0123456789', 'pqrstuvwxy'))
+        return (self.prefix + letters)
         
-        
+class PrefixedNumbers(object):        
+    def __init__(self, prefix, length):
+        self.prefix = prefix
+        self.length = length
+        self.numbers = Numbers()
+        self.format_ = '%0' + ("%i" % length) + 'i'
+    
+    def draw(self):
+        n = self.numbers.draw()
+        str_n = self.format_ % n
+        return self.prefix + str_n
       
-class MetadataField(object):
+class FakeMetadataField(object):
     """ Responsible for storing a metadata field's properties regardless of bug or document. """
-    def __init__(
+    def __init__(self,
                  name_source,
-                 metadata_word_source, 
+                 metadata_vocab, 
                  field_word_alpha, 
                  mean_len
                 ):
         self.name = name_source.draw()
-        self.word_source = ChineseRestaurant(field_word_alpha, metadata_word_source)
-        self.mean_len
+        self.word_source = ChineseRestaurant(field_word_alpha, metadata_vocab)
+        self.mean_len = mean_len
 
-    def draw_length():
-        length = stats.poisson.rvs(self.mean_len)
+    def draw_length(self):
+        length = stats.poisson.rvs(self.mean_len - 1) + 1
         return length
         
-    def draw():
+    def draw(self):
         content = []
         length = self.draw_length()
         for i in range(0, length):
             content.append(word_source.draw())
         return content
       
-class MetadataFields(object):
+class FakeMetadataFields(object):
     """ Responsible for storing all metadata fields regardless of bug or document. """
-    def __init__(
-                 metadata_word_source, 
+    def __init__(self,
+                 metadata_vocab, 
                  len_total, 
                  nfields_total,
                  field_word_alpha
                 ):
         self.name_source = Strings('field', 5)
-        self.word_source = metadata_word_source
+        self.metadata_vocab = metadata_vocab
         self.len_total = len_total
         self.nfields_total = nfields_total
+        self.field_word_alpha = field_word_alpha
         self.fields = []
         
     def get_field(self, index):
@@ -189,48 +203,127 @@ class MetadataFields(object):
             return self.fields[index]
         else:
             assert index == len(self.fields)
-            mean_length = stats.gamma.rvs(len_total, scale=(1.0/nfields_total))
-            new_field = MetadataField(
+            mean_length = stats.gamma.rvs(self.len_total,
+                                          scale=(1.0/self.nfields_total))
+            new_field = FakeMetadataField(
                                       self.name_source,
-                                      self.word_source,
-                                      field_word_alpha,
+                                      self.metadata_vocab,
+                                      self.field_word_alpha,
                                       mean_length)
+            self.fields.append(new_field)
+            return new_field
         
       
-class Bug(object):
+class FakeBug(object):
     """ Responsible for storing data related to a single bug """
-    def __init__(field_alpha, field_source, word_alpha, word_source, field_len_alpha):
-        self.field_gen = IndianBuffet(field_alpha, field_source)
-        self.word_gens = []
-        self.word_alpha = word_alpha
-        self.word_source = word_source
+    def __init__(self,
+                 bug_field_word_alpha,
+                 fields, 
+                 nfields_alpha,
+                 name):
+        self.field_gen = IndianBuffet(nfields_alpha, Numbers())
+        self.field_word_gens = []
+        self.bug_field_word_alpha = bug_field_word_alpha
+        self.name = name
+        self.fields = fields
     
-    def draw_crash():
-        fields = self.field_gen.draw()
-        for f in fields:
-            if f > len(self.word_gens)-1:
-                self.word_gens.append(ChineseRestaurant(word_alpha, word_source))
+    def draw_field_contents(self, field, field_number):
+        field_word_gen = self.field_word_gens[field_number]
+        field_contents = []
+        field_length = field.draw_length()
+        for word_number in range(0, field_length):
+            field_contents.append(field_word_gen.draw())
+        return " ".join(field_contents)
+    
+    def draw_crash(self):
+        crash_metadata = {}
+        field_numbers = self.field_gen.draw()
+        for field_number in field_numbers:
+            field = self.fields.get_field(field_number)
+            if field_number > len(self.field_word_gens)-1:
+                self.field_word_gens.append(ChineseRestaurant(
+                    self.bug_field_word_alpha, 
+                    field.word_source))
+            crash_metadata[field.name] = self.draw_field_contents(field,
+                                                             field_number)
+        return crash_metadata
             
-    
-    
-      
-class CrashGen(object):
-    def __init__(fields, metadata_word_alpha, field_word_alpha, bug_alpha):
-        self.metadata_word_source = ChineseRestaurant(metadata_word_alpha, Strings('', 8))
-        self.fields = MetadataFields(
-                                     self.metadata_word_source,
-                                     len_total,
-                                     nfields_total,
-                                     field_word_alpha
-                                    )
+class FakeCrashGen(object):
+    def __init__(self,
+                 bug_alpha,
+                 bug_field_word_alpha,
+                 nfields_alpha,
+                 metadata_fields,
+                 crash_name_gen,
+                 bug_name_gen,
+                 start_datetime,
+                 mean_crashes_per_second):
+        self.bug_field_word_alpha = bug_field_word_alpha
+        self.nfields_alpha = nfields_alpha
+        self.fields_source = metadata_fields
+        self.crash_name_gen = crash_name_gen
+        self.bug_name_gen = bug_name_gen
         self.bug_id_source = ChineseRestaurant(bug_alpha, Numbers())
+        self.last_datetime = start_datetime
+        self.mean_crashes_per_second = mean_crashes_per_second
         self.bugs = []
+     
+    def generate_timestamp(self):
+        delta_seconds = stats.expon.rvs(0, self.mean_crashes_per_second)
+        delta = datetime.timedelta(0, delta_seconds)
+        new_time = self.last_datetime + delta
+        self.last_datetime = new_time
+        return new_time.isoformat()
     
-    def generate_crash():
-        self.bug_number = self.bug_source.draw()
-        if self.bug_number == len(self.bugs):
+    def generate_crash(self):
+        bug_number = self.bug_id_source.draw()
+        if bug_number == len(self.bugs):
             # New bug!
-            self.bugs[self.bug_number] = ChineseRestaurant()
+            self.bugs.append(FakeBug(self.bug_field_word_alpha,
+                                     self.fields_source,
+                                     self.nfields_alpha,
+                                     self.bug_name_gen.draw()
+                                     )
+                             )
+        bug = self.bugs[bug_number]
+        crash = bug.draw_crash()
+        crash['database_id'] = self.crash_name_gen.draw()
+        crash['date'] = self.generate_timestamp()
+        return (crash, bug.name)
+      
+def example_fake_crash_gen():
+    metadata_vocab_alpha = 1000
+    metadata_field_word_alpha = 100
+    bug_metadata_field_word_alpha = 10
+    
+    metadata_total_words = 1000
+    metadata_total_fields = 500
+    
+    metadata_nfields_alpha = 10
+    
+    bug_alpha = 1000
+    
+    metadata_vocab = ChineseRestaurant(metadata_vocab_alpha, Strings('', 8))
+    metadata_fields = FakeMetadataFields(metadata_vocab,
+                                         metadata_total_words,
+                                         metadata_total_fields,
+                                         metadata_field_word_alpha)
+    
+    crash_name_gen = PrefixedNumbers('fake', 8)
+    bug_name_gen = PrefixedNumbers('bug', 6)
+    
+    start_datetime = datetime.datetime(1980, 01, 01, 0, 0, 0)
+    mean_crashes_per_second = 60
+    
+    return FakeCrashGen(bug_alpha,
+                             bug_metadata_field_word_alpha,
+                             metadata_nfields_alpha,
+                             metadata_fields,
+                             crash_name_gen,
+                             bug_name_gen,
+                             start_datetime,
+                             mean_crashes_per_second)
+                             
 
 class PoissonChisq(object):
     """ Used by the testing code only! """
@@ -378,6 +471,11 @@ class TestFakeDataGenerator(unittest.TestCase):
         print "Number of dishes for each restaurant:"
         restaurant_dishes.test()
         restaurant_dishes_bogus.test()
+   
+    def test_fake_crash_generation(self):
+        crash_gen = example_fake_crash_gen()
+        print json.dumps(crash_gen.generate_crash(), indent=2)
+      
             
 if __name__ == '__main__':
     unittest.main()
