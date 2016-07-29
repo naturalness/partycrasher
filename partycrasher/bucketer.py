@@ -41,7 +41,7 @@ INITIAL_MLT_MAX_QUERY_TERMS=2500
 ENABLE_AUTO_MAX_QUERY_TERMS=True
 AUTO_MAX_QUERY_TERM_MINIMUM_DOCUMENTS=10
 AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS=1000
-MLT_MIN_SCORE=1.0 # auto detect from min threshold?
+MLT_MIN_SCORE=10.0 # auto detect from min threshold?
 
 
 class IndexNotUpdatedError(Exception):
@@ -547,7 +547,22 @@ class MLTCamelCase(MLT):
         body={
             'mappings': {
                 'crash': {
-                    'properties': common_properties(self.thresholds)
+                    'properties': common_properties(self.thresholds),
+                    'dynamic_templates': [
+                      {
+                        'data': {
+                          'match': '*',
+                          'match_mapping_type': 'string',
+                          'mapping': {
+                            'type': 'string',
+                            'analyzer': 'default',
+                            'norms': {
+                              'enabled': False
+                            },
+                          }
+                        }
+                      }
+                    ]
                 }
             },
             'settings': {
@@ -728,7 +743,6 @@ def common_properties(thresholds):
             # Create all the subfield appropriate for buckets
             "properties": bucket_properties
         },
-        # TODO: convert into _type
         'project': {
             'type': 'string',
             'index': 'not_analyzed',
