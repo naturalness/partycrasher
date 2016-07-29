@@ -231,8 +231,6 @@ class ESCrashEncoder(CrashEncoder):
         else:
             return CrashEncoder.default(self, o)
 
-
-
 import unittest
 class TestCrash(unittest.TestCase):
 

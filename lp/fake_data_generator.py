@@ -173,7 +173,7 @@ class FakeMetadataField(object):
         self.mean_len = mean_len
 
     def draw_length(self):
-        length = stats.poisson.rvs(self.mean_len - 1) + 1
+        length = stats.poisson.rvs(self.mean_len)
         return length
         
     def draw(self):
@@ -293,8 +293,8 @@ class FakeCrashGen(object):
       
 def example_fake_crash_gen():
     metadata_vocab_alpha = 1000
-    metadata_field_word_alpha = 100
-    bug_metadata_field_word_alpha = 10
+    metadata_field_word_alpha = 10
+    bug_metadata_field_word_alpha = 5
     
     metadata_total_words = 1000
     metadata_total_fields = 500
@@ -303,7 +303,7 @@ def example_fake_crash_gen():
     
     bug_alpha = 1000
     
-    metadata_vocab = ChineseRestaurant(metadata_vocab_alpha, Strings('', 8))
+    metadata_vocab = ChineseRestaurant(metadata_vocab_alpha, Strings('', 0))
     metadata_fields = FakeMetadataFields(metadata_vocab,
                                          metadata_total_words,
                                          metadata_total_fields,
@@ -474,7 +474,14 @@ class TestFakeDataGenerator(unittest.TestCase):
    
     def test_fake_crash_generation(self):
         crash_gen = example_fake_crash_gen()
-        print json.dumps(crash_gen.generate_crash(), indent=2)
+        for i in range(0, 15000):
+            crash = crash_gen.generate_crash()
+            if crash[1] == 'bug000001':
+                print json.dumps(crash, indent=2, sort_keys=True)
+
+        #for i in range(0, 20):
+            #print json.dumps(crash_gen.generate_crash(), indent=2, sort_keys=True)
+
       
             
 if __name__ == '__main__':

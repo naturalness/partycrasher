@@ -57,17 +57,12 @@ class Bucketer(object):
     The default analyzer breaks on whitespace.
     """
 
-    def __init__(self, name=None, index='crashes',
+    def __init__(self, index='crashes',
                  elasticsearch=None, lowercase=False):
-
-        # Autogenerate the name from the class's name.
-        if name is None:
-            name = self.__class__.__name__.lower()
 
         if elasticsearch is None:
             raise ValueError('No ElasticSearch instance specified!')
 
-        self.name = name
         self.index = index
         self.es = elasticsearch
         self.lowercase = lowercase
@@ -83,7 +78,7 @@ class Bucketer(object):
             filter_ = []
 
         properties = {
-            self.name: {
+            'buckets': {
                 'type': 'string',
                 'index': 'not_analyzed'
             }
@@ -115,6 +110,7 @@ class Bucketer(object):
         """
         Returns a dictionary of type to value.
         """
+        assert 'buckets' not in crash
         return self.bucket(crash)
 
     def assign_save_buckets(self, crash, buckets=None):
@@ -126,10 +122,7 @@ class Bucketer(object):
         if buckets is None:
             buckets = self.assign_buckets(crash)
 
-        ## Learned the hard way that we can't use setdefault...
-        saved_buckets = crash.get(self.name, Buckets()).copy()
-        saved_buckets.update(buckets)
-        crash[self.name] = saved_buckets
+        crash["buckets"] = buckets
 
         saved_crash = ESCrash(crash, index=self.index)
 
@@ -139,11 +132,10 @@ class Bucketer(object):
 
 class MLT(Bucketer):
 
-    def __init__(self, thresholds=(4.0,), only_stack=False,
+    def __init__(self, thresholds=(4.0,), 
                  *args, **kwargs):
         super(MLT, self).__init__(*args, **kwargs)
         self.thresholds = tuple(Threshold(value) for value in sorted(thresholds))
-        self.only_stack = only_stack
         if ENABLE_AUTO_MAX_QUERY_TERMS:
             self.last_max_query_terms = INITIAL_MLT_MAX_QUERY_TERMS
 
@@ -155,24 +147,36 @@ class MLT(Bucketer):
     def min_threshold(self):
         return self.thresholds[0]
       
-    def bucket_explain(self, crash, index=None):
+    def make_mlt_query_explain(self,
+                                crash,
+                                index=None,
+                                use_existing=None,
+                                max_query_terms=None,
+                                terminate_after=None):
         """
         Queries ElasticSearch with MoreLikeThis and returns information
         from a crash that was significant to the result.
         """
 
         if index is None:
-          index = self.index
+            index = self.index
 
         if isinstance(crash, basestring):
             crash = ESCrash(crash, index=index)
+            if use_existing is None:
+                use_existing = True
+        else:
+            if use_existing is None:
+                use_existing = False
 
-        bucket_field = self.name
-        
-        body = self.make_more_like_this_query(crash, bucket_field)
+        body = self.make_more_like_this_query(crash, 
+                                              max_query_terms,
+                                              terminate_after)
         body["explain"] = True
-        del body["query"]["more_like_this"]["docs"][0]["doc"]
-        body["query"]["more_like_this"]["docs"][0]["_id"] = crash["database_id"]
+        if use_existing:
+            # Prevent crash from being its own highest match when its already in ES
+            del body["query"]["more_like_this"]["docs"][0]["doc"]
+            body["query"]["more_like_this"]["docs"][0]["_id"] = crash["database_id"]
         
         skip_fields = Set([
           'database_id',
@@ -204,17 +208,16 @@ class MLT(Bucketer):
           return fields
         
         fields = list(all_but_skip_fields(crash))
+        
+        #self.ensure_field_mappings(fields)
+        
         #print(json.dumps(fields, indent=2), file=sys.stderr)
         body["query"]["more_like_this"]["fields"] = fields
         
-        try:
-          response = self.es.search(index=self.index, 
-                                  body=json.dumps(body, cls=ESCrashEncoder)
-                                  )
-        except RequestError as e:
-          print(e.error, file=sys.stderr)
-          raise
+        return body
         
+        
+    def get_explanation_from_response(self, response):
         try:
           explanation = response['hits']['hits'][0]['_explanation']['details']
         except:
@@ -252,16 +255,16 @@ class MLT(Bucketer):
         
         return summary
       
-    def bucket_auto_max_query_terms(self, crash, bucket_field):
+    def bucket_auto_max_query_terms(self, crash, use_existing):
         max_query_terms = self.last_max_query_terms
         max_query_terms_lb = 1
         max_query_terms_ub = INITIAL_MLT_MAX_QUERY_TERMS
         response_at_least_one_hit = None
         while True:
-            body = self.make_more_like_this_query(crash, 
-                      bucket_field, 
-                      max_query_terms,
-                      AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS)
+            body = self.make_mlt_query_explain(crash,
+                      use_existing=use_existing,
+                      max_query_terms=max_query_terms,
+                      terminate_after=AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS)
             response = self.es.search(index=self.index, body=body)
             if response['hits']['total'] > 1:
                 response_at_least_one_hit = response
@@ -295,46 +298,58 @@ class MLT(Bucketer):
         if response_at_least_one_hit is not None:
             return response_at_least_one_hit
         return response
+    
+    def bucket_explain(self, crash):
+        """
+        Queries ElasticSearch with MoreLikeThis.
+        Returns the explanation of the top hit.
+        """
+        if ENABLE_AUTO_MAX_QUERY_TERMS:
+            response = self.bucket_auto_max_query_terms(
+              crash,
+              use_existing=True)
+        else:
+            body = self.make_mlt_query_explain(
+                crash, 
+                use_existing=True, 
+                max_query_terms=INITIAL_MLT_MAX_QUERY_TERMS)
+            response = self.es.search(index=self.index, body=body)
         
+        return get_explanation_from_response(response)
       
-    def bucket(self, crash, bucket_field=None):
+    def bucket(self, crash):
         """
         Queries ElasticSearch with MoreLikeThis.
         Returns the bucket assignment for each threshold.
         Returns an OrderedDict of {Threshold(...): 'id'}
         """
-        if bucket_field is None:
-            bucket_field = self.name
-
-        # Compare only the stack trace
-        if self.only_stack:
-            crash = {
-                'stacktrace': crash['stacktrace'],
-                'database_id': crash['database_id']
-            }
         if ENABLE_AUTO_MAX_QUERY_TERMS:
-            response = self.bucket_auto_max_query_terms(crash, bucket_field)
+            response = self.bucket_auto_max_query_terms(
+                crash,
+                use_existing=False)
         else:
-            body = self.make_more_like_this_query(crash, bucket_field, INITIAL_MLT_MAX_QUERY_TERMS)
+            body = self.make_mlt_query_explain(
+                crash,
+                use_existing=False,
+                max_query_terms=INITIAL_MLT_MAX_QUERY_TERMS)
             response = self.es.search(index=self.index, body=body)
         
-
         try:
-            matching_buckets = self.make_matching_buckets(response, bucket_field,
-                                                          default=crash['database_id'])
+            matching_buckets = self.make_matching_buckets(
+                response,
+                default=crash['database_id'])
             return matching_buckets
         except IndexNotUpdatedError:
             time.sleep(1)
-            return self.bucket(crash, bucket_field)
+            return self.bucket(crash)
 
     def make_more_like_this_query(self, 
                                   crash, 
-                                  bucket_field, 
                                   max_query_terms,
                                   terminate_after = None):
         body =  {
             # Only fetch database ID, buckets, and project.
-            '_source': [bucket_field, 'database_id', 'project'],
+            '_source': ['buckets', 'database_id', 'project'],
             'query': {
                 'more_like_this': {
                     # NOTE: This style only works in ElasticSearch 1.x...
@@ -365,7 +380,7 @@ class MLT(Bucketer):
 
         return body
 
-    def make_matching_buckets(self, matches, bucket_field, default=None):
+    def make_matching_buckets(self, matches, default=None):
         if default is None:
             raise ValueError('Must provide a string default bucket name')
 
@@ -398,7 +413,7 @@ class MLT(Bucketer):
         matching_buckets = Buckets()
         for threshold in sorted(self.thresholds, key=float):
             if similarity >= float(threshold):
-                bucket_id = get_bucket_id(top_match, threshold, bucket_field)
+                bucket_id = get_bucket_id(top_match, threshold)
                 #print(bucket_id)
                 # Assign this report to the existing bucket.
                 matching_buckets[threshold] = bucket_id
@@ -417,15 +432,15 @@ class MLT(Bucketer):
         else:
             matching_buckets['top_match'] = None
 
-        return matching_buckets
+        return Buckets(matching_buckets)
 
     def assign_save_buckets(self, crash):
         buckets = self.assign_buckets(crash)
         assert isinstance(buckets, Buckets)
         return super(MLT, self).assign_save_buckets(crash, buckets)
 
-    def alt_bucket(self, crash, bucket_field='bucket'):
-        return self.bucket(crash, bucket_field)
+    def alt_bucket(self, crash):
+        return self.bucket(crash)
 
 
 class MLTStandardUnicode(MLT):
@@ -636,7 +651,7 @@ class MLTNGram(MLT):
         )
 
 
-def get_bucket_id(result, threshold, bucket_field='buckets'):
+def get_bucket_id(result, threshold):
     """
     Given a crash JSON, returns the bucket field associated with this
     particular threshold.
@@ -645,13 +660,13 @@ def get_bucket_id(result, threshold, bucket_field='buckets'):
     crash = result['_source']
 
     try:
-        buckets = crash[bucket_field]
+        buckets = crash['buckets']
     except KeyError:
         # We couldn't find the bucket field. ASSUME that this means that
         # its bucket assignment has not yet propegated to whatever shard
         # returned the results.
         message = ('Bucket field {!r} not found in crash: '
-                   '{!r}'.format(bucket_field, crash))
+                   '{!r}'.format('buckets', crash))
         raise IndexNotUpdatedError(message)
 
     try:
