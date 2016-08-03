@@ -15,9 +15,9 @@
     <a href="{{ ::value }}">{{ ::value }}</a>
   </span>
 
-  <span ng-switch-when="string" class="monospace">
-    {{ ::value }}
-  </span>
+  <span ng-switch-when="string" 
+        class="monospace" 
+        style="white-space: pre-line;">{{ ::value }}</span>
 
   <span ng-switch-default>
     <code> {{ ::value }} </code>

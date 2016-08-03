@@ -58,6 +58,12 @@
               </dd>
               <dt ng-if="frame.address"> Address </dd>
               <dd ng-if="frame.address">{{ ::frame.address }}</dd>
+              <dt ng-repeat-start="(key, value) in ::frame.others">
+                <small>{{ ::key }}</small>
+              </dt>
+              <dd ng-repeat-end>
+                <small style="white-space: pre-line;">{{ ::value }}</small>
+              </dd>
             </dl>
           </li>
         </ol>

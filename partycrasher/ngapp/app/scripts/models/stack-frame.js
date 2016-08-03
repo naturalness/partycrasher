@@ -44,4 +44,22 @@ angular.module('PartyCrasherApp')
   get func() {
     return this._raw['function'];
   }
+  
+  get others() {
+    var others = {};
+    for (var key in this._raw) {
+      if (this._raw.hasOwnProperty(key)) {
+        if (key != 'address' && key != 'function' && key != 'file' && key != 'depth') {
+          var val = this._raw[key];
+          if (val.length > 0) {
+            if (val.constructor === Array) {
+              val = val.join("\n");
+            }
+            others[key] = val;
+          }
+        }
+      }
+    }
+    return others;
+  }
 });
