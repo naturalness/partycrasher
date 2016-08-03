@@ -172,6 +172,7 @@ def ingest_one(data):
     crashdata = data['crashdata']
     retries = 3
     while retries > 0:
+        response = None
         try:
             response = requests.post(client.path_to('reports'), json=crashdata)
             assert (response.status_code == 201 or response.status_code == 303)

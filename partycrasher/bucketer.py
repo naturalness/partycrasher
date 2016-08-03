@@ -139,6 +139,9 @@ class MLT(Bucketer):
         self.thresholds = tuple(Threshold(value) for value in sorted(thresholds))
         if ENABLE_AUTO_MAX_QUERY_TERMS:
             self.last_max_query_terms = INITIAL_MLT_MAX_QUERY_TERMS
+        self.max_top_match_score = 0
+        self.total_top_match_scores = 0
+        self.total_matches = 0
 
     @property
     def thresh(self):
@@ -210,27 +213,30 @@ class MLT(Bucketer):
         
         fields = list(all_but_skip_fields(crash))
         
-        fields_normal = []
-        fields_boost = []
-        
-        for field in fields:
-            if field.startswith('stacktrace.'):
-                fields_boost.append(field)
-            else:
-                fields_normal.append(field)
-        
-        mlt_normal = body["query"]["more_like_this"]
-        mlt_normal["fields"] = fields_normal
-        mlt_boost = copy.deepcopy(mlt_normal)
-        mlt_boost["fields"] = fields_boost
-        mlt_boost["boost"] = 2.0
-        del body["query"]["more_like_this"]
-        body["query"]["bool"] = {
-            "should": [
-                {"more_like_this": mlt_normal},
-                {"more_like_this": mlt_boost}
-            ]
-        }
+        if False:
+            fields_normal = []
+            fields_boost = []
+            
+            for field in fields:
+                if field.startswith('stacktrace.'):
+                    fields_boost.append(field)
+                else:
+                    fields_normal.append(field)
+            
+            mlt_normal = body["query"]["more_like_this"]
+            mlt_normal["fields"] = fields_normal
+            mlt_boost = copy.deepcopy(mlt_normal)
+            mlt_boost["fields"] = fields_boost
+            #mlt_boost["boost"] = 2.0
+            del body["query"]["more_like_this"]
+            body["query"]["bool"] = {
+                "should": [
+                    {"more_like_this": mlt_normal},
+                    {"more_like_this": mlt_boost}
+                ]
+            }
+        else:
+            body["query"]["more_like_this"]["fields"] = fields
         
         #self.ensure_field_mappings(fields)
         
@@ -451,6 +457,14 @@ class MLT(Bucketer):
                 'project': top_match['_source']['project'],
                 'score': top_match['_score']
             }
+            self.total_top_match_scores += top_match['_score']
+            self.total_matches += 1
+            self.max_top_match_score = max(self.max_top_match_score, top_match['_score'])
+            print('score %f avg %f max %f' % (
+              top_match['_score'],
+              self.total_top_match_scores / self.total_matches,
+              self.max_top_match_score
+              ), file=sys.stderr)
         else:
             matching_buckets['top_match'] = None
 
