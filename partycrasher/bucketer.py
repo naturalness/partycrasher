@@ -556,7 +556,10 @@ class MLTCamelCase(MLT):
                           'mapping': {
                             'type': 'string',
                             'analyzer': 'default',
-                            'term_vector': 'yes',
+                            # The ES documentation indicates this should improve
+                            # speed but it doesn't seem to actually do so
+                            #'term_vector': 'yes',
+                            # This can enable a second tokenizer for ever field
                             #'fields': {
                                 #'ws': {
                                     #'type': 'string',
@@ -564,6 +567,7 @@ class MLTCamelCase(MLT):
                                     #'term_vector': 'yes',
                                 #}
                             #}
+                            # Disabling field norms does not seem to help anything
                             #'norms': {
                               #'enabled': False
                             #},

@@ -206,15 +206,15 @@ class PartyCrasher(object):
                 }
             }}},
             "sort": { "date": { "order": "desc" }},
-            "aggregations": {
-                "significant": {
-                    "significant_terms": {
-                        "field": "_all",
-                        "mutual_information": {},
-                        "size": 100
-                     }
-                }
-            }
+            #"aggregations": {
+                #"significant": {
+                    #"significant_terms": {
+                        #"field": "_all",
+                        #"mutual_information": {},
+                        #"size": 100
+                     #}
+                #}
+            #}
         }
                 
         if from_ is not None:
