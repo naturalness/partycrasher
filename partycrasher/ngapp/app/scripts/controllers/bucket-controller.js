@@ -79,6 +79,7 @@ angular.module('PartyCrasherApp')
       cpu: ['cpu'],
       uname: ['Uname']
     });
+    $scope.total = data['total'];
   }
 
   function prevPage() {

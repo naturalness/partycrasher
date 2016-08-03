@@ -1,7 +1,7 @@
 <main>
   <header class="page-header row">
     <h1> Bucket {{ ::bucket.id }} <small class="bucket-total">
-      <ng-pluralize count="::bucket.total"
+      <ng-pluralize count="::total"
         when="{ 'one': '1 crash', 'other': '{} crashes' }" />
         total
       </small></h1>

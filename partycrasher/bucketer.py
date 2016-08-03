@@ -27,6 +27,7 @@ import sys
 import re
 import traceback
 import math
+import copy
 from operator import itemgetter
 from sets import Set
 from datetime import datetime
@@ -209,10 +210,31 @@ class MLT(Bucketer):
         
         fields = list(all_but_skip_fields(crash))
         
+        fields_normal = []
+        fields_boost = []
+        
+        for field in fields:
+            if field.startswith('stacktrace.'):
+                fields_boost.append(field)
+            else:
+                fields_normal.append(field)
+        
+        mlt_normal = body["query"]["more_like_this"]
+        mlt_normal["fields"] = fields_normal
+        mlt_boost = copy.deepcopy(mlt_normal)
+        mlt_boost["fields"] = fields_boost
+        mlt_boost["boost"] = 2.0
+        del body["query"]["more_like_this"]
+        body["query"]["bool"] = {
+            "should": [
+                {"more_like_this": mlt_normal},
+                {"more_like_this": mlt_boost}
+            ]
+        }
+        
         #self.ensure_field_mappings(fields)
         
         #print(json.dumps(fields, indent=2), file=sys.stderr)
-        body["query"]["more_like_this"]["fields"] = fields
         
         return body
         
