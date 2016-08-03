@@ -2,7 +2,7 @@
  * Displays keywords for a crash.
  */
 angular.module('PartyCrasherApp')
-.directive('pcSummary', function(PartyCrasher) {
+.directive('pcSummary', function(PartyCrasher, CrashReport) {
   function link(scope, element, _attrs) {
     /* When database-id has stabilized, do a request. */
     scope.$watch('databaseId', function (value) {
@@ -13,7 +13,23 @@ angular.module('PartyCrasherApp')
       /* Value has stabilized, so we can fetch the summary! */
       PartyCrasher.fetchSummary({ project: scope.project, id: value })
         .then(summary => { scope.summary = groupSummary(summary); });
+      PartyCrasher.fetchReport({ project: scope.project, id: value })
+        .then(rawReport => { 
+          scope.stackhead = extractHead(new CrashReport(rawReport));
+        });
     });
+  }
+  
+  function extractHead(crash) {
+      var stack = crash.stackTrace;
+      var head = [];
+      
+      stack.forEach((frame) => {
+          if (frame.func) {
+              head.push([frame.func, 'stacktrace.function:'+frame.func]);
+          }
+      });
+      return head;
   }
 
   function groupSummary(summary) {
@@ -25,6 +41,21 @@ angular.module('PartyCrasherApp')
       return [i["field"] + ":" + i["term"], i["value"]];
     });
     grouped = _.sortBy(grouped, 1).reverse();
+    
+    var head = [];
+    var tail = [];
+    grouped.forEach (term => {
+        if (head.length < 2 
+           && term[0].startsWith("stacktrace.function")) {
+             head.push(term);
+        } else {
+             tail.push(term);
+        }
+        
+    });
+    
+    grouped = head.concat(tail);
+    
     var max = grouped[0][1];
     var min = grouped[grouped.length-1][1];
 
