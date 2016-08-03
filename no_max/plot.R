@@ -16,8 +16,8 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-allcolors <- c(rgb(0, 0, 0), rgb(0.25, 0.25, 0.25), rgb(0.5, 0, 0))
-colors <- rep(allcolors[1:3], each=1, times=2)
+allcolors <- c(rgb(0, 0, 0), rgb(0.25, 0.25, 0.25), rgb(0.5, 0, 0), rgb(0, 0.75, 0.75))
+colors <- rep(allcolors[1:4], each=1, times=2)
 fcolors <- rep(allcolors[5:7], times=6)
 linetype <- rep(c(1,2), each=10)
 plotchar <- rep(c(22, 21, 24, 23, 25), 10)
@@ -102,23 +102,22 @@ svg(filename="no_max.svg", width=page_width, height=height,
     family="Latin Modern Roman", pointsize=10)
 mypar(c(1,2))
 nomax = read.csv("T4.0.csv")
-nomax = nomax[nomax$after < 800000, ]
 nomax$time = nomax$time/1000
 mysol = read.csv("../auto_max_query_terms/T4.0.csv")
 mysol1 = read.csv("../min1/T4.0.csv")
-normless = read.csv("../min1/T60.0.csv")
+normless = read.csv("../T4.0.csv")
 mysol$time = mysol$time/1000
 mysol1$time = mysol1$time/1000
 normless$time = normless$time/1000
 modelnomax = rlm(nomax$time ~ nomax$after)
 modelmysol = rlm(mysol$time ~ mysol$after)
 modelmysol1 = rlm(mysol1$time ~ mysol1$after)
-xlim = c(0, 1025000)
+xlim = c(0, 225000)
 # print(modelnomax)
 lnames = list("Fixed MQT", "Auto MQT", "Auto MQT min_score=1")
 print(summary(modelmysol)$coefficients)
-plota(list(nomax$after, mysol$after, mysol1$after), 
-      list(nomax$time, mysol$time, mysol1$time), "Time Per Crash", 
+plota(list(nomax$after, mysol$after, mysol1$after, normless$after), 
+      list(nomax$time, mysol$time, mysol1$time, normless$time), "Time Per Crash", 
       xlim=xlim, ylim=c(0,0.4),
       lnames,
       lpos="topleft")
@@ -130,9 +129,9 @@ modelmysol1 = rlm(mysol1$b3f ~ mysol1$after)
 # print(modelnomax)
 # print(modelmysol)
 
-plota(list(nomax$after, mysol$after, mysol1$after), 
-      list(nomax$b3f, mysol$b3f, mysol1$b3f), "F-Score @ T=4.0", 
-      xlim=xlim, ylim=c(0.0,1.0),
+plota(list(nomax$after, mysol$after, mysol1$after, normless$after), 
+      list(nomax$b3f, mysol$b3f, mysol1$b3f, normless$b3f), "F-Score @ T=4.0", 
+      xlim=xlim, ylim=c(0.7,1.0),
       lnames,
       lpos="topleft")
 plotablines(list(modelnomax, modelmysol, modelmysol1))

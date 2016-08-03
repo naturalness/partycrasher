@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 import sys
+import json
 from datetime import datetime
 from collections import namedtuple, defaultdict
 
@@ -25,16 +26,17 @@ from partycrasher.threshold import Threshold
 __version__ = u'0.1.0'
 
 DEFAULT_THRESHOLDS = (
+    '1.0',
+    '2.0',
+    '3.0',
+    '4.0',
+    '5.0',
+    '6.0',
+    '7.0',
+    '8.0',
+    '9.0',
     '10.0',
-    '20.0',
-    '30.0',
-    '40.0',
-    '50.0',
-    '60.0',
-    '70.0',
-    '80.0',
-    '90.0',
-    '99.0')
+    '11.0')
 
 class BucketNotFoundError(KeyError):
     """
@@ -197,12 +199,22 @@ class PartyCrasher(object):
         threshold = Threshold(threshold)
 
         query = {
+            "query": { "constant_score": {
             "filter": {
                 "term": {
                     "buckets." + threshold.to_elasticsearch(): bucket_id
                 }
-            },
-            "sort": { "date": { "order": "desc" }}
+            }}},
+            "sort": { "date": { "order": "desc" }},
+            "aggregations": {
+                "significant": {
+                    "significant_terms": {
+                        "field": "_all",
+                        "mutual_information": {},
+                        "size": 100
+                     }
+                }
+            }
         }
                 
         if from_ is not None:
@@ -210,6 +222,9 @@ class PartyCrasher(object):
             query["size"] = size;
 
         response = self.es.search(body=query, index='crashes')
+        with open('bucket_response', 'wb') as debug_file:
+            print(json.dumps(response, indent=2), file=debug_file)
+        
         reports_found = response['hits']['total']
 
         # Since no reports were found, assume the bucket does not exist (at
@@ -364,7 +379,7 @@ class PartyCrasher(object):
         self._connect_to_elasticsearch()
 
         try:
-            return self.bucketer.bucket_explain(database_id, index='crashes')
+            return self.bucketer.bucket_explain(database_id)
         except NotFoundError as e:
             raise KeyError(database_id)
 

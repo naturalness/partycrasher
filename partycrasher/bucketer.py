@@ -41,7 +41,7 @@ INITIAL_MLT_MAX_QUERY_TERMS=2500
 ENABLE_AUTO_MAX_QUERY_TERMS=True
 AUTO_MAX_QUERY_TERM_MINIMUM_DOCUMENTS=10
 AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS=1000
-MLT_MIN_SCORE=10.0 # auto detect from min threshold?
+MLT_MIN_SCORE=1.0 # auto detect from min threshold?
 
 
 class IndexNotUpdatedError(Exception):
@@ -225,8 +225,8 @@ class MLT(Bucketer):
           print(json.dumps(response, indent=2), file=sys.stderr)
           raise
         
-        with open('explained', 'wb') as debug_file:
-            print(json.dumps(response['hits']['hits'][0]['_explanation'], indent=2), file=debug_file)
+        #with open('explained', 'wb') as debug_file:
+            #print(json.dumps(response['hits']['hits'][0]['_explanation'], indent=2), file=debug_file)
 
         def flatten(explanation):
           flattened = []
@@ -315,7 +315,7 @@ class MLT(Bucketer):
                 max_query_terms=INITIAL_MLT_MAX_QUERY_TERMS)
             response = self.es.search(index=self.index, body=body)
         
-        return get_explanation_from_response(response)
+        return self.get_explanation_from_response(response)
       
     def bucket(self, crash):
         """
@@ -556,9 +556,17 @@ class MLTCamelCase(MLT):
                           'mapping': {
                             'type': 'string',
                             'analyzer': 'default',
-                            'norms': {
-                              'enabled': False
-                            },
+                            'term_vector': 'yes',
+                            #'fields': {
+                                #'ws': {
+                                    #'type': 'string',
+                                    #'analyzer': 'whitespace'
+                                    #'term_vector': 'yes',
+                                #}
+                            #}
+                            #'norms': {
+                              #'enabled': False
+                            #},
                           }
                         }
                       }
