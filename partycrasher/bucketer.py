@@ -581,9 +581,9 @@ class MLTCamelCase(MLT):
                                 #}
                             #}
                             # Disabling field norms does not seem to help anything
-                            'norms': {
-                              'enabled': False
-                            },
+                            #'norms': {
+                              #'enabled': False
+                            #},
                           }
                         }
                       }
