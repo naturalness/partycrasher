@@ -16,7 +16,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-allcolors <- c(rgb(0.5, 0.5, 0), rgb(0.5, 0.5, 0.5), rgb(0.5, 0, 0), rgb(0, 0.5, 0.5))
+allcolors <- c(rgb(0.5, 0.5, 0), rgb(0.5, 0.5, 0.5), rgb(0, 0.5, 0), rgb(1, 0, 0))
 colors <- rep(allcolors[1:4], each=1, times=2)
 fcolors <- rep(allcolors[5:7], times=6)
 linetype <- rep(c(1,2), each=10)

@@ -37,10 +37,10 @@ import traceback
 # TODO: argparse
 DONT_ACTUALLY_COMPUTE_STATS=False
 BLOCK_SIZE=1000
-PARALLEL=8
-BOOTSTRAP_CRASHES=1000000 # WARNING: Destroys temporal relationships!
+PARALLEL=1
+BOOTSTRAP_CRASHES=0 # WARNING: Destroys temporal relationships!
 BOOTSTRAP_RESUME_AT=0 # This doesn't actually work properly yet, don't use it.
-RESET_STATS_AFTER_BLOCK=True
+RESET_STATS_AFTER_BLOCK=False
 TOTALLY_FAKE_DATA=False
 START_GUNICORN=True
 

@@ -38,7 +38,7 @@ from crash import Crash, Buckets
 from es_crash import ESCrash, ESCrashEncoder
 from threshold import Threshold
 
-INITIAL_MLT_MAX_QUERY_TERMS=2500
+INITIAL_MLT_MAX_QUERY_TERMS=25
 ENABLE_AUTO_MAX_QUERY_TERMS=True
 AUTO_MAX_QUERY_TERM_MINIMUM_DOCUMENTS=10
 AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS=1000
@@ -213,30 +213,7 @@ class MLT(Bucketer):
         
         fields = list(all_but_skip_fields(crash))
         
-        if False:
-            fields_normal = []
-            fields_boost = []
-            
-            for field in fields:
-                if field.startswith('stacktrace.'):
-                    fields_boost.append(field)
-                else:
-                    fields_normal.append(field)
-            
-            mlt_normal = body["query"]["more_like_this"]
-            mlt_normal["fields"] = fields_normal
-            mlt_boost = copy.deepcopy(mlt_normal)
-            mlt_boost["fields"] = fields_boost
-            #mlt_boost["boost"] = 2.0
-            del body["query"]["more_like_this"]
-            body["query"]["bool"] = {
-                "should": [
-                    {"more_like_this": mlt_normal},
-                    {"more_like_this": mlt_boost}
-                ]
-            }
-        else:
-            body["query"]["more_like_this"]["fields"] = fields
+        body["query"]["more_like_this"]["fields"] = fields
         
         #self.ensure_field_mappings(fields)
         
@@ -253,8 +230,8 @@ class MLT(Bucketer):
           print(json.dumps(response, indent=2), file=sys.stderr)
           raise
         
-        #with open('explained', 'wb') as debug_file:
-            #print(json.dumps(response['hits']['hits'][0]['_explanation'], indent=2), file=debug_file)
+        with open('explained', 'wb') as debug_file:
+            print(json.dumps(response['hits']['hits'][0]['_explanation'], indent=2), file=debug_file)
 
         def flatten(explanation):
           flattened = []
@@ -604,9 +581,9 @@ class MLTCamelCase(MLT):
                                 #}
                             #}
                             # Disabling field norms does not seem to help anything
-                            #'norms': {
-                              #'enabled': False
-                            #},
+                            'norms': {
+                              'enabled': False
+                            },
                           }
                         }
                       }
