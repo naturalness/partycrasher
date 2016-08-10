@@ -65,6 +65,15 @@ angular.module('PartyCrasherApp')
   $scope.search.query = q || "";
 
   $scope.projects = PROJECT_NAMES;
+  
+  $scope.searchCrashesUrl = '/ui' + PartyCrasher.searchCrashUrl({
+      project,
+      q,
+      since,
+      until,
+      from,
+      size});
+
 
   /* If we're searching, we're loadin' */
   $scope.loading = true;

@@ -43,6 +43,10 @@
       <span class="glyphicon glyphicon-search" aria-hidden="true"></span> Search
      </button>
   </form>
+  
+  <div>
+    <a href="{{ searchCrashesUrl}}">Show crashes instead of buckets</a>
+  </div>
 
   <p ng-if="loading"> Loading... </p>
   <p ng-if="errorMessage">{{ errorMessage }}</p>

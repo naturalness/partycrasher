@@ -10,7 +10,8 @@ angular.module('PartyCrasherApp')
   $routeParams,
   PartyCrasher,
   CrashReport,
-  PROJECT_NAMES
+  PROJECT_NAMES,
+  DEFAULT_THRESHOLD
 ) {
   var q = $routeParams.q;
   var project = $routeParams.project || null;
@@ -28,6 +29,16 @@ angular.module('PartyCrasherApp')
   $scope.search.size = size | 0;
   $scope.search.since = since;
   $scope.search.until = until;
+  
+  $scope.searchBucketsUrl = '/ui' +  PartyCrasher.searchTopBucketsUrl({
+    project,
+    threshold: DEFAULT_THRESHOLD,
+    q,
+    since,
+    until,
+    from,
+    size});
+
 
   $scope.loading = true;
   PartyCrasher.searchQuery({ project, q, since, until, from, size })
