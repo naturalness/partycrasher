@@ -156,7 +156,8 @@ class MLT(Bucketer):
                                 index=None,
                                 use_existing=None,
                                 max_query_terms=None,
-                                terminate_after=None):
+                                terminate_after=None,
+                                dont_explain=False):
         """
         Queries ElasticSearch with MoreLikeThis and returns information
         from a crash that was significant to the result.
@@ -176,7 +177,7 @@ class MLT(Bucketer):
         body = self.make_more_like_this_query(crash, 
                                               max_query_terms,
                                               terminate_after)
-        body["explain"] = True
+        body["explain"] = (not dont_explain)
         if use_existing:
             # Prevent crash from being its own highest match when its already in ES
             del body["query"]["more_like_this"]["docs"][0]["doc"]
@@ -260,7 +261,7 @@ class MLT(Bucketer):
         
         return summary
       
-    def bucket_auto_max_query_terms(self, crash, use_existing):
+    def bucket_auto_max_query_terms(self, crash, use_existing, dont_explain=False):
         max_query_terms = self.last_max_query_terms
         max_query_terms_lb = 1
         max_query_terms_ub = INITIAL_MLT_MAX_QUERY_TERMS
@@ -269,7 +270,8 @@ class MLT(Bucketer):
             body = self.make_mlt_query_explain(crash,
                       use_existing=use_existing,
                       max_query_terms=max_query_terms,
-                      terminate_after=AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS)
+                      terminate_after=AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS,
+                      dont_explain=dont_explain)
             response = self.es.search(index=self.index, body=body)
             if response['hits']['total'] > 1:
                 response_at_least_one_hit = response
@@ -331,12 +333,14 @@ class MLT(Bucketer):
         if ENABLE_AUTO_MAX_QUERY_TERMS:
             response = self.bucket_auto_max_query_terms(
                 crash,
-                use_existing=False)
+                use_existing=False,
+                dont_explain=True)
         else:
             body = self.make_mlt_query_explain(
                 crash,
                 use_existing=False,
-                max_query_terms=INITIAL_MLT_MAX_QUERY_TERMS)
+                max_query_terms=INITIAL_MLT_MAX_QUERY_TERMS,
+                dont_explain=True)
             response = self.es.search(index=self.index, body=body)
         
         try:
@@ -375,8 +379,7 @@ class MLT(Bucketer):
                     'min_doc_freq': 0,
                 },
             },
-            # Must fetch the TOP matching result only.
-            'size': 1,
+            'size': 100,
             'min_score': MLT_MIN_SCORE,
         }
                         
@@ -390,13 +393,21 @@ class MLT(Bucketer):
             raise ValueError('Must provide a string default bucket name')
 
         raw_matches = matches['hits']['hits']
-        assert len(raw_matches) in (0, 1), 'Unexpected amount of matches...'
+        #assert len(raw_matches) in (0, 1), 'Unexpected amount of matches...'
 
-        if len(raw_matches) == 1:
-            top_match = raw_matches[0]
-        else:
-            # Sentinel object; this will never match a threshold.
-            top_match = { '_score': -1000000 }
+        top_match = { '_score': -1000000 }
+        for raw_match in raw_matches:
+            assert '_source' in raw_match
+            assert 'buckets' in raw_match['_source']
+            assert 'top_match' in raw_match['_source']['buckets']
+            if raw_match['_source']['buckets']['top_match']:
+                prec_score = raw_match['_source']['buckets']['top_match']['score']
+            else:
+                prec_score = 0
+            score = raw_match['_score']
+            if prec_score < score:
+                top_match = raw_match
+                break
 
         # JSON structure:
         # matches['hit']['hits] ~> [
@@ -428,7 +439,7 @@ class MLT(Bucketer):
                 matching_buckets[threshold] = default
 
         # Add the top match.
-        if raw_matches:
+        if '_source' in top_match:
             matching_buckets['top_match'] = {
                 'report_id': top_match['_source']['database_id'],
                 'project': top_match['_source']['project'],
