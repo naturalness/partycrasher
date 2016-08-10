@@ -379,7 +379,7 @@ class MLT(Bucketer):
                     'min_doc_freq': 0,
                 },
             },
-            'size': 100,
+            'size': 1,
             'min_score': MLT_MIN_SCORE,
         }
                         
@@ -405,7 +405,7 @@ class MLT(Bucketer):
             else:
                 prec_score = 0
             score = raw_match['_score']
-            if prec_score < score:
+            if True:
                 top_match = raw_match
                 break
 
