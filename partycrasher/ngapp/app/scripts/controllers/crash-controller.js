@@ -16,7 +16,7 @@ angular.module('PartyCrasherApp')
 ) {
   var project = $routeParams.project,
     id = $routeParams.id;
-
+    
   PartyCrasher.fetchReport({ project, id })
     .then(rawReport => {
       var report = $scope.crash = new CrashReport(rawReport);
@@ -29,9 +29,15 @@ angular.module('PartyCrasherApp')
       });
       $scope.buckets = buckets;
       $scope.date = report.date;
-    });
-  PartyCrasher.fetchSummary({ project, id })
-    .then(summary => {
-      $scope.summary = summary;
+      
+      var precedentId = rawReport['buckets']['top_match']['report_id'];
+      var precedentProject = rawReport['buckets']['top_match']['project'];
+      $scope.precedentScore = rawReport['buckets']['top_match']['score'];
+      
+      PartyCrasher.fetchReport({project: precedentProject, id: precedentId})
+        .then(rawPrecedent => {
+          var precedent = new CrashReport(rawPrecedent);
+          $scope.precedent = precedent;
+        });
     });
 });

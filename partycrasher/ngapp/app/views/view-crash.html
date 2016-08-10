@@ -5,7 +5,7 @@
     </h1>
   </header>
 
-  <div class="row">
+  <div class="row" ng-if="crash">
     <div class="col-md-5">
       <section class="panel panel-default">
         <div class="panel-body">
@@ -35,6 +35,24 @@
         <dl class="dl-x dl-xs">
           <dt ng-repeat-start="bucket in buckets">{{bucket[0]}}</dt>
           <dd ng-repeat-end><a href="{{::bucket[1] | uiUrl: 'bucket'}}">{{bucket[1].id}}</a></dd>
+        </dl>
+        </div>
+      </section>
+
+      <section class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">Precedent</h3>
+        </div>
+        <div class="panel-body" ng-if="precedent">
+        <dl class="dl-x">
+          <dt>Report</dt>
+          <dd><a href="{{ ::precedent | uiUrl:'report' }}">{{ ::precedent.id }}</a></dd>
+          <dt>Stacktrace</dt>
+          <dd><span mini-trace crash="crash"></span></dd>
+          <dt>Keywords</dt>
+          <dd><span pc-summary database-id="crash.id" project="crash.project"></span></dd>
+          <dt>Score</dt>
+          <dd>{{ precedentScore }}</dd>
         </dl>
         </div>
       </section>
