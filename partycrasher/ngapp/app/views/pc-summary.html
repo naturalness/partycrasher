@@ -1,13 +1,4 @@
-<span ng-repeat="item in stackhead | limitTo: 2"
-      >
-      <a named-route="'view-search'"
-         route-params="{project: '*'}"
-         route-query-params="{q: item[1]}"
-      >{{ item[0] }}</a>
-</span>
-
-<span ng-repeat="item in summary | limitTo: 11"
-      >
+<span ng-repeat="item in summary | limitTo: 11">
       <a named-route="'view-search'"
          route-params="{project: '*'}"
          route-query-params="{q: item[0]}"

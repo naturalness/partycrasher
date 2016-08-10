@@ -29,13 +29,30 @@
           <h2 class="panel-title"> Latest Crashes </h2>
         </header>
         <div class="panel-body">
-        <ul class="list-group">
-          <li class="list-group-item" ng-repeat="crash in ::bucket.reports">
-            <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a>
-            from {{ ::crash.project }} {{ ::crash.date | fromNow }}, keywords:
-            <span pc-summary database-id="crash.id" project="crash.project"/>
-          </li>
-        </ul>
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th> Crash </th>
+              <th> Stacktrace </th>
+              <th> Keywords </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="crash in ::bucket.reports">
+              <td>
+                <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a>
+                from {{ ::crash.project }} {{ ::crash.date | fromNow }}
+              </td>
+              <td>
+                <span mini-trace crash="crash"></span>
+              </td>
+              <td>
+                Keywords:
+                <span pc-summary database-id="crash.id" project="crash.project"></span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
         <button ng-click="prevPage()" class="btn btn-default" ng-hide="from <= 0">Previous Page</button>
         <button ng-click="nextPage()" class="btn btn-default">Next Page</button>
         </div>

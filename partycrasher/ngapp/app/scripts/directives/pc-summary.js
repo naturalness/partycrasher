@@ -13,25 +13,9 @@ angular.module('PartyCrasherApp')
       /* Value has stabilized, so we can fetch the summary! */
       PartyCrasher.fetchSummary({ project: scope.project, id: value })
         .then(summary => { scope.summary = groupSummary(summary); });
-      PartyCrasher.fetchReport({ project: scope.project, id: value })
-        .then(rawReport => { 
-          scope.stackhead = extractHead(new CrashReport(rawReport));
-        });
     });
   }
   
-  function extractHead(crash) {
-      var stack = crash.stackTrace;
-      var head = [];
-      
-      stack.forEach((frame) => {
-          if (frame.func) {
-              head.push([frame.func, 'stacktrace.function:'+frame.func]);
-          }
-      });
-      return head;
-  }
-
   function groupSummary(summary) {
 //     var grouped = _.mapValues(_.groupBy(summary, "term"), (i) =>{
 //       return _.sumBy(i, "value");

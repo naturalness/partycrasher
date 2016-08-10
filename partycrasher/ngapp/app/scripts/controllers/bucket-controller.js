@@ -66,10 +66,6 @@ angular.module('PartyCrasherApp')
         href: report.href,
         stackTrace: report.stackTrace
       };
-      PartyCrasher.fetchSummary({ project, id })
-        .then(summary => {
-          thisReport.summary = summary;
-        });
       return thisReport;
     });
 

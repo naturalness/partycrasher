@@ -1,0 +1,7 @@
+<ol>
+      <li ng-repeat="item in stackhead | limitTo: 2">
+      <a named-route="'view-search'"
+         route-params="{project: '*'}"
+         route-query-params="{q: item[1]}"
+      >{{ item[0] }}</a></li>
+</ol>

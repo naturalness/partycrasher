@@ -62,6 +62,7 @@
           <th> Bucket </th>
           <th> Project </th>
           <th> First Seen </th>
+          <th> Stacktrace </th>
           <th> Keywords </th>
         </tr>
       </thead>
@@ -79,7 +80,10 @@
 
           <td>{{ ::bucket.first_seen | fromNow }}</td>
           <td>
-            <span pc-summary database-id="bucket.database_id" project="bucket.project"/>
+            <span mini-trace database-id="bucket.database_id" project="bucket.project"></span>
+          </td>
+          <td>
+            <span pc-summary database-id="bucket.database_id" project="bucket.project"></span>
           </td>
         </tr>
       </tbody>
