@@ -172,11 +172,11 @@ li>.dl-x {
 }
 
 .dl-xs dt {
-  width: calc(3.5ch);
+  width: calc(5.5ch);
 }
 
 .dl-xs dd {
-  margin-left: calc(3.5ch + 20px);
+  margin-left: calc(5.5ch + 20px);
 }
 
 .panel-title>a {
