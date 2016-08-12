@@ -43,7 +43,7 @@ ENABLE_AUTO_MAX_QUERY_TERMS=True
 AUTO_MAX_QUERY_TERM_MINIMUM_DOCUMENTS=10
 AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS=1000
 MLT_MIN_SCORE=1.0 # auto detect from min threshold?
-
+STRICTLY_INCREASING=True
 
 class IndexNotUpdatedError(Exception):
     """
@@ -379,7 +379,7 @@ class MLT(Bucketer):
                     'min_doc_freq': 0,
                 },
             },
-            'size': 1,
+            'size': 100,
             'min_score': MLT_MIN_SCORE,
         }
                         
@@ -405,7 +405,7 @@ class MLT(Bucketer):
             else:
                 prec_score = 0
             score = raw_match['_score']
-            if True:
+            if (not STRICTLY_INCREASING) or (score >= 0.9 * prec_score):
                 top_match = raw_match
                 break
 
