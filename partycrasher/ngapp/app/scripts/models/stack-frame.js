@@ -23,18 +23,12 @@ angular.module('PartyCrasherApp')
   }
 
   get line() {
-    var filename = this._raw['file'];
-    if (!filename) {
+    var line = this._raw['fileline'];
+    if (!line) {
       return undefined;
+    } else {
+      return line;
     }
-
-    /* Return only line information. */
-    var matches = filename.match(/:(\d+)$/);
-    if (!matches) {
-      return undefined;
-    }
-
-    return matches[1];
   }
 
   get module() {

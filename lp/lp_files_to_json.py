@@ -38,8 +38,8 @@ for bucketdir in os.listdir(topdir):
     bucketdir = os.path.join(topdir, bucketdir)
     assert os.path.isdir(bucketdir)
     buglist = os.listdir(bucketdir)
-    if len(buglist) < 2:
-        continue
+    #if len(buglist) < 2:
+        #continue
     buckets.append(bucket)
     for bugdir in buglist:
         bugdir = os.path.join(bucketdir, bugdir)

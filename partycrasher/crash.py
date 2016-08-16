@@ -78,15 +78,18 @@ def stringify_value(v):
         return v.decode(encoding='utf-8', errors='replace')
     else:
 	return v
-
+      
+def fix_key_for_es(key):
+    if isinstance(key, bytes):
+        key = key.decode(encoding='utf-8', errors='replace')
+    key = key.replace('.', '_')
+    key = key.replace(':', '_')
+    return key
 
 class StringifiedDict(dict):
     def __setitem__(self, key, val):
         # First force strings to be unicoded
-        if isinstance(key, bytes):
-            key = key.decode(encoding='utf-8', errors='replace')
-        key = key.replace('.', '_')
-        key = key.replace(':', '_')
+        key = fix_key_for_es(key)
         
         val = stringify_value(val)
 	#print("key: " + key + "val: " + repr(val), file=sys.stderr)

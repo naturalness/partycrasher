@@ -19,7 +19,7 @@
 
 from __future__ import print_function
 
-from crash import Crash, Stacktrace, Stackframe
+from crash import Crash, Stacktrace, Stackframe, fix_key_for_es
 
 import os, re, io, gzip, json, sys
 import dateparser
@@ -174,7 +174,7 @@ class LaunchpadFrame(Stackframe):
                     frame['dylib'] = match.group(5)
                     matched = True
             if not matched:  #number address in function (args) at file
-                match = re.match(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\((.*?)\)\s+at\s+(\S+)\s*$', line)
+                match = re.match(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\((.*?)\)\s+at\s+(.+?)\s*$', line)
                 if match is not None:
                     frame['depth'] = int(match.group(1))
                     frame['address'] = match.group(2)
@@ -236,12 +236,18 @@ class LaunchpadFrame(Stackframe):
                     frame['function'] = match.group(2)
                     matched = True
         except:
-            print(line, file=stderr)
+            print(line, file=sys.stderr)
             raise
         if frame['function'] == '??':
             frame['function'] = None
         leftover_extras = []
-        if extras is not None:
+        if 'file' in frame:
+            match = re.match(r'^([^:]+):(\d+)\s*$', frame['file'])
+            if match is not None:
+                frame['file'] = match.group(1)
+                frame['fileline'] = match.group(2)
+                #print(frame['file'] + " : " + frame['fileline'], file=sys.stderr)
+        elif extras is not None:
             for extra in extras:
                 extra_matched = False
                 if not extra_matched:
@@ -337,9 +343,12 @@ class LaunchpadCrash(Crash):
                 if match is not None:
                     #print repr(match.group(1)) + '|||' + repr(match.group(2))
                     crash[match.group(1)] = match.group(2)
-                    prevfield = match.group(1)
+                    prevfield = fix_key_for_es(match.group(1))
                 else:
-                    crash[prevfield] += line + "\n"
+                    if prevfield.lower() != 'date':
+                        crash[prevfield] += line + "\n"
+                    else:
+                        crash['extra'] += line + "\n"
             for key, value in list(crash.iteritems()): # limit the number of field mappings that ES creates
                 if not key in save_fields:
                     del crash[key]
@@ -355,9 +364,11 @@ class LaunchpadCrash(Crash):
                 ]
             for fname in try_files:
                 try_stack_path = os.path.join(path, fname)
+                #print(try_stack_path, file=sys.stderr)
                 for skipname in skip_files:
                     if skipname in try_stack_path:
                         try_stack_path = None
+                        break
                 if try_stack_path is None:
                     continue
                 if os.path.isfile(try_stack_path):
