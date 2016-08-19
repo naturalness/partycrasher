@@ -21,6 +21,9 @@ from __future__ import division, print_function
 import os, sys, pprint, random
 import crash
 import json
+import re
+import csv
+import datetime
 Crash = crash.Crash
 
 topdir = sys.argv[1]
@@ -32,6 +35,95 @@ no_stacktrace = 0
 
 crashes = dict()
 oracle = dict()
+
+idsfile = open('ids_okay', 'wb')
+idsbucketsfile = open('ids_okay_buckets', 'wb')
+
+packages = dict()
+
+def rec_package(crash):
+    package = None
+    if 'SourcePackage' in crash:
+        package = crash['SourcePackage']
+    elif 'Package' in crash:
+        package = crash['Package']
+    else:
+        return
+    if package not in packages:
+        packages[package] = []
+    packages[package].append(crash['database_id'])
+
+def save_packages():
+    with open('packages.csv', 'wb') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Package', 'Count'])
+        packages_sorted = sorted(packages.items(), key=lambda x: len(x[1]))
+        for package in packages_sorted:
+            writer.writerow([
+                package[0],
+                len(package[1])
+            ])
+
+def save_packages():
+    with open('packages.csv', 'wb') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Package', 'Count'])
+        packages_sorted = sorted(packages.items(), key=lambda x: len(x[1]))
+        for package in packages_sorted:
+            writer.writerow([
+                package[0],
+                len(package[1])
+            ])
+
+buckets_dist = dict()
+
+def rec_bucket(crash, bucket):
+    if bucket not in buckets_dist:
+        buckets_dist[bucket] = []
+    buckets_dist[bucket].append(crash['database_id'])
+
+def save_buckets_dist():
+    with open('buckets_dist.csv', 'wb') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Bucket', 'Count'])
+        buckets_sorted = sorted(buckets_dist.items(), key=lambda x: len(x[1]))
+        for bucket in buckets_sorted:
+            writer.writerow([
+                bucket[0],
+                len(bucket[1])
+            ])
+            
+date_ranges = dict()
+
+def rec_date_info(crash, bucket):
+    if bucket not in date_ranges:
+        date_ranges[bucket] = {
+            'min': datetime.datetime.min,
+            'max': datetime.datetime.max
+            }
+    date_range = date_ranges[bucket]
+    if crash['date'] > date_range['min']:
+        date_range['min'] = crash['date']
+    if crash['date'] < date_range['max']:
+        date_range['max'] = crash['date']
+
+def save_date_ranges():
+    with open('date_ranges.csv', 'wb') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Bucket', 'Count', 'Delta', 'First', 'Last'])
+        for date_range in date_ranges:
+            date_range['delta'] = date_range['max'] - date_range['min']
+        date_ranges_sorted = sorted(date_ranges.items(),
+            key = lambda x: x[1]['delta'])
+        for date_range in date_ranges_sorted:
+            writer.writerow([
+                date_range[0],
+                buckets_dist[date_range[0]],
+                date_range[1]['delta'],
+                date_range[1]['min'],
+                date_range[1]['max']
+                ])
+    
 
 for bucketdir in os.listdir(topdir):
     bucket = bucketdir
@@ -63,7 +155,20 @@ for bucketdir in os.listdir(topdir):
                 })
             oracle[database_id] = oracledata
             bugs_total += 1
+            match = re.match(r'[^:]+:(\d+)$', database_id)
+            sql_id = match.group(1)
+            print(str(sql_id), file=idsfile)
+            if len(buglist) >= 2:
+                print(str(sql_id), file=idsbucketsfile)
+            rec_package(crashdata)
+            rec_bucket(crashdata, bucket)
+            rec_date_info(crashdata, bucket)
 print(str(bugs_total) + " loaded", file=sys.stderr)
 print(str(no_stacktrace) + " thrown out because of unparsable stacktraces", file=sys.stderr)
 print(json.dumps({'crashes': crashes, 'oracle': oracle}, cls=crash.CrashEncoder, indent=2))
 
+idsbucketsfile.close()
+idsfile.close()
+save_packages()
+save_buckets_dist()
+save_date_ranges()

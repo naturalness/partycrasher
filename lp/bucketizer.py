@@ -65,9 +65,9 @@ def main():
         bugkets[v] = bugkets.get(v, [])
         bugkets[v].append(k)
     cursor = db.cursor()
-    cursor.execute("SELECT name, url, lp_id, issues.description FROM issues_ext_launchpad INNER JOIN issues INNER JOIN attachments ON (attachments.issue_id = issues.id AND issues_ext_launchpad.issue_id = issues.id);")
+    cursor.execute("SELECT name, url, lp_id, issues.description, issues.submitted_on FROM issues_ext_launchpad INNER JOIN issues INNER JOIN attachments ON (attachments.issue_id = issues.id AND issues_ext_launchpad.issue_id = issues.id);")
     for row in cursor:
-        name, url, bugid, description = row
+        name, url, bugid, description, submitted_on = row
         if re.search('Stacktrace', name, flags=re.IGNORECASE) is None:
             continue
         bugket_id = bugs_to_bugkets[bugid]
@@ -97,6 +97,7 @@ def main():
         if not os.path.isfile(postpath): # we get this multiple times due to our join denormalizing
             with open(postpath, "w") as post_file:
                 post_file.write(description)
+                post_file.write("\nDate: " + submitted_on.isoformat())
                 print postpath
 
 
