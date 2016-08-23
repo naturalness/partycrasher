@@ -31,12 +31,28 @@ from path import Path
 
 SCHEMA = r"""
 -- Stores the database ID, its JSON representation, and the oracle bucket ID.
-CREATE TABLE IF NOT EXISTS crash(id, json, bucket_id);
+CREATE TABLE IF NOT EXISTS crash(
+    id          TEXT,
+    json        BLOB, -- UTF-8 blob.
+    bucket_id   TEXT
+);
 
 -- Allow indexing by database_id.
 CREATE INDEX IF NOT EXISTS crash_id ON crash (id);
 
--- TODO: Add stuff here!
+-- Stores instances of recursion.
+CREATE TABLE IF NOT EXISTS recursion(
+    crash_id    TEXT,
+    depth       INTEGER, -- At what depth was the first recursion stack frame
+                         -- found? 0 = top of the stack; N = bottom of stack
+                         -- (usually main() or start())
+    length      INTEGER  -- How many frames of recursion are there?
+);
+
+-- Allow indexing by database_id.
+CREATE INDEX IF NOT EXISTS recursion_crash_id ON recursion (crash_id);
+
+-- TODO: Store bucket field? Is there enough justification for it?
 """
 
 # Decodes JSON Objects as ordered dictionaries (sometimes order matters).
@@ -58,9 +74,10 @@ def dbg(message, **kwargs):
 
 def bigrams(seq):
     """
+    Yields bigrams from the given sequence.
+
     >>> list(bigrams(range(4)))
     [(0, 1), (1, 2), (2, 3)]
-
     """
     first, second = tee(seq, 2)
     second = islice(second, 1, None)
@@ -312,6 +329,9 @@ class Corpus:
         return "Corpus({!r})".format(self.conn)
 
     def insert_crash(self, report_id, crash, bucket_id):
+        """
+        Inserts a parsable crash into the database.
+        """
         assert not isinstance(crash, str)
         with self.conn:
             cursor = self.conn.cursor()
