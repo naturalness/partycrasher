@@ -1,6 +1,7 @@
 IMAGE_NAME = partycrasher:latest
 EXTERNAL_PORT = 5000
 
+SQLITE = sqlite3 -csv -header
 CORPUS_NAME = lp_big
 
 # Stolen from:
@@ -72,7 +73,7 @@ summary: recursion.R $(CORPUS_NAME).sqlite
 	Rscript $<
 
 # Create the pickled corpus file.
-$(CORPUS_NAME).sqlite: recursion_info.py $(CORPUS_NAME).json 
+$(CORPUS_NAME).sqlite: recursion_info.py $(CORPUS_NAME).json
 	python $<
 
 # Downloads the crashes.
@@ -82,3 +83,14 @@ $(CORPUS_NAME).sqlite: recursion_info.py $(CORPUS_NAME).json
 # How to decompress any xz file.
 %: %.xz
 	xz --decompress --keep $<
+
+
+recursion_results/length.csv: lp_big.sqlite
+	$(SQLITE) $< \
+		'SELECT length, COUNT(*) as count FROM recursion GROUP BY length' \
+		> $@
+
+recursion_results/depth.csv: lp_big.sqlite
+	$(SQLITE) $< \
+		'SELECT depth, COUNT(*) as count FROM recursion GROUP BY depth' \
+		> $@

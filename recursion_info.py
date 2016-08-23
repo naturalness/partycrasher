@@ -32,13 +32,11 @@ from path import Path
 SCHEMA = r"""
 -- Stores the database ID, its JSON representation, and the oracle bucket ID.
 CREATE TABLE IF NOT EXISTS crash(
-    id          TEXT,
-    json        BLOB, -- UTF-8 blob.
-    bucket_id   TEXT
+    id              TEXT PRIMARY KEY,
+    json            TEXT,       -- JSON encoded
+    stack_length    INTEGER,    -- Length of the primary stack trace
+    bucket_id       TEXT
 );
-
--- Allow indexing by database_id.
-CREATE INDEX IF NOT EXISTS crash_id ON crash (id);
 
 -- Stores instances of recursion.
 CREATE TABLE IF NOT EXISTS recursion(
@@ -114,9 +112,9 @@ class StackFrame(BaseStackFrame):
         if filename is not None:
             assert isinstance(filename, six.string_types)
         if line_number is not None:
-            assert isinstance(line_number, int)
+            assert isinstance(line_number, six.integer_types)
         if address is not None:
-            assert isinstance(address, int)
+            assert isinstance(address, six.integer_types)
             assert 0 <= address <= 2**64-1
 
     def to_dict(self):
@@ -248,6 +246,11 @@ class Crash(object):
 
     def find_recursion(self):
         """
+        Returns a list of (depth, length) pairs of instances of recursion
+        within this crash's stack trace. Note that "depth" is zero-indexed
+        (top of the stack is depth=0), and that the length is always at least
+        2 (it counts the number of frames involved in the recursion).
+
         >>> stack = []
         >>> stack.append(StackFrame.of(function='log'))
         >>> stack.append(StackFrame.of(function='fib'))
@@ -403,24 +406,28 @@ class Corpus:
     def __repr__(self):
         return "Corpus({!r})".format(self.conn)
 
-    def insert_crash(self, report_id, crash, bucket_id):
+    def insert_crash(self, report_id, raw_crash, bucket_id):
         """
         Inserts a parsable crash into the database.
         """
-        assert not isinstance(crash, str)
+        assert not isinstance(raw_crash, str)
+        crash = parse_crash(raw_crash)
+
         with self.conn:
             cursor = self.conn.cursor()
             cursor.execute(
-                'INSERT INTO crash (id, json, bucket_id) VALUES'
-                ' (?, ?, ?)', (report_id, json.dumps(crash), bucket_id)
+                'INSERT INTO crash (id, json, stack_length, bucket_id) VALUES'
+                ' (?, ?, ?, ?)',
+                (report_id, json.dumps(raw_crash), len(crash.stack_trace),
+                 bucket_id)
             )
-            # TODO: also, figure out recursion!
 
-    def _find_recursion(self, stack_trace):
-        """
-        Returns all instances of recursion in a stack_trace.
-        """
-        pass
+            # Insert all instances of recursion
+            for depth, length in crash.find_recursion():
+                cursor.execute(
+                    'INSERT INTO recursion (crash_id, depth, length) VALUES'
+                    ' (?, ?, ?)', (report_id, depth, length)
+                )
 
     def count_buckets(self):
         cursor = self.conn.cursor()
@@ -465,14 +472,14 @@ def load_from_json(filename):
 
     # Maps id-> { database_id, bucket }
     oracle = database['oracle']
-    # Maps id -> { stacktrace, ... }
+    # Maps id -> { stacktrace, others... }
     raw_crashes = database['crashes']
 
     corpus = Corpus(filename.namebase + '.sqlite')
 
     dbg("Parsing crashes...")
     for crash_id, crash_data in iteritems(raw_crashes):
-        bucket_id = oracle[crash_id]
+        bucket_id = oracle[crash_id]['bucket']
         corpus.insert_crash(crash_id, crash_data, bucket_id)
 
     return corpus
@@ -484,8 +491,13 @@ def load_from_database(filename):
 
 
 def load(database_name):
-    json_filename = database_name.namebase + '.json'
-    db_filename = database_name.namebase + '.sqlite'
+    database_name = Path(database_name)
+    json_filename = Path(database_name.namebase + '.json')
+    db_filename = Path(database_name.namebase + '.sqlite')
     if not db_filename.exists() or json_filename.mtime > db_filename.mtime:
         return load_from_json(json_filename)
     return load_from_database(db_filename)
+
+
+if __name__ == '__main__':
+    load('lp_big.json')
