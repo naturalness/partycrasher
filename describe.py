@@ -182,12 +182,6 @@ class Crash(object):
         else:
             self._meta = OrderedDict(metadata)
 
-        self.id = id
-        self.project = project
-        self.stack = []
-        self.context = {}
-        self.extra = {}
-
     def __getitem__(self, index):
         """
         Returns a stack frame.
@@ -197,7 +191,7 @@ class Crash(object):
         elif isinstance(index, int):
             return self._stack[index]
         else:
-            raise IndexError('Not sure how to handle index: {}'.format(index))
+            raise IndexError('Not sure how to handle index: {!r}'.format(index))
 
     def __getattr__(self, name):
         """
@@ -396,6 +390,7 @@ class Corpus:
                 'INSERT INTO crash (id, json, bucket_id) VALUES'
                 ' (?, ?, ?)', (report_id, json.dumps(crash), bucket_id)
             )
+            # TODO: also, figure out recursion!
 
     def count_buckets(self):
         cursor = self.conn.cursor()
@@ -430,38 +425,32 @@ class Corpus:
                 continue
             corpus.insert_crash(report_id, crashes[report_id], bucket_id)
 
-def load_from_json():
-    raise NotImplementedError
-    dbg("Parsing JSON...")
+def load_from_json(filename):
+    dbg("Loading {filename}...", filename=filename)
 
-    with open('lp.json', 'r') as jsonfile:
+    with open(filename, 'r') as jsonfile:
         database = json.load(jsonfile)
+
+    dbg("Loaded {size} bytes of content.", size=sys.getsizeof(database, '???'))
 
     # Maps id-> { database_id, bucket }
     oracle = database['oracle']
     # Maps id -> { stacktrace, ... }
     raw_crashes = database['crashes']
 
-    corpus = Corpus.new('launchpad')
+    corpus = Corpus(filename.namebase + '.sqlite')
 
     dbg("Parsing crashes...")
-    for dbid, crash_data in iteritems(raw_crashes):
-        corpus.crashes[dbid] = Crash.parse(dbid, crash_data)
-
-    dbg("Figuring out buckets...")
-    for report_id, info in iteritems(oracle):
-        assert report_id == info['database_id']
-        bucket_id = info['bucket']
-        corpus.add_to_bucket(report_id, bucket_id)
-
-    with open('lp.corpus', 'wb') as picklefile:
-        pickle.dump(corpus, picklefile)
+    for crash_id, crash_data in iteritems(raw_crashes):
+        bucket_id = oracle[crash_id]
+        corpus.insert_crash(crash_id, crash_data, bucket_id)
 
     return corpus
 
 
 def load_from_database(filename):
-    raise NotImplementedError
+    assert filename.exists()
+    return Corpus(filename)
 
 
 def load(database_name):
