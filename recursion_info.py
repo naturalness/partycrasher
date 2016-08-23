@@ -256,6 +256,11 @@ class Crash(object):
         >>> crash = Crash('1', 'launchpad', stack, {})
         >>> crash.find_recursion()
         [(1, 2)]
+
+        >>> stack.insert(0, StackFrame.of(function='log'))
+        >>> crash = Crash('2', 'launchpad', stack, {})
+        >>> crash.find_recursion()
+        [(0, 2), (2, 2)]
         """
         saw_recursion = False
         recursion_length = []
