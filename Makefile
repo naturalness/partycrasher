@@ -1,6 +1,8 @@
 IMAGE_NAME = partycrasher:latest
 EXTERNAL_PORT = 5000
 
+CORPUS_NAME = lp_big
+
 # Stolen from:
 # https://gist.github.com/rcmachado/af3db315e31383502660#gistcomment-1585632
 .PHONY: help
@@ -66,17 +68,17 @@ buckettest: lp.json ## Destroys the database, uploads, and evaluates data from L
 
 # Output summaries
 .PHONY:
-summary: recursion.csv recursion.R
-	Rscript recursion.R
+summary: recursion.R $(CORPUS_NAME).sqlite
+	Rscript $<
 
 # Create the pickled corpus file.
-recursion.csv lp.corpus: lp.json describe.py
-	python describe.py
+$(CORPUS_NAME).sqlite: recursion_info.py $(CORPUS_NAME).json 
+	python $<
 
 # Downloads the crashes.
-lp.json.xz:
+%.json.xz:
 	curl --fail --remote-name https://pizza.cs.ualberta.ca/$@
 
+# How to decompress any xz file.
 %: %.xz
 	xz --decompress --keep $<
-

@@ -27,3 +27,4 @@ var/
 /lp.json.xz
 lp.corpus
 gunicorn-*.log
+lp_big.json
