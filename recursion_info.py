@@ -413,6 +413,10 @@ class Corpus:
         assert not isinstance(raw_crash, str)
         crash = parse_crash(raw_crash)
 
+        if len(crash.stack_trace) == 0:
+            dbg("Ignoring crash with empty stack trace: {id}", id=report_id)
+            return
+
         with self.conn:
             cursor = self.conn.cursor()
             cursor.execute(

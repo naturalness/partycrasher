@@ -99,3 +99,8 @@ recursion_results/num_instances.csv: lp_big.sqlite
 	$(SQLITE) $< \
 		'SELECT num_instances, COUNT(crash) as count FROM (SELECT crash.id as crash, COUNT(crash_id) as num_instances FROM crash LEFT JOIN recursion ON crash.id = crash_id GROUP BY crash.id) GROUP BY num_instances' \
 		> $@
+
+recursion_results/stack_length.csv: lp_big.sqlite
+	$(SQLITE) $< \
+		'SELECT stack_length, COUNT(*) as count from crash GROUP BY stack_length' \
+		> $@
