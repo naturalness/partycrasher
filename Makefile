@@ -94,3 +94,8 @@ recursion_results/depth.csv: lp_big.sqlite
 	$(SQLITE) $< \
 		'SELECT depth, COUNT(*) as count FROM recursion GROUP BY depth' \
 		> $@
+
+recursion_results/num_instances.csv: lp_big.sqlite
+	$(SQLITE) $< \
+		'SELECT num_instances, COUNT(crash) as count FROM (SELECT crash.id as crash, COUNT(crash_id) as num_instances FROM crash LEFT JOIN recursion ON crash.id = crash_id GROUP BY crash.id) GROUP BY num_instances' \
+		> $@
