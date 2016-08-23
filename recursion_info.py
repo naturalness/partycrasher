@@ -256,24 +256,43 @@ class Crash(object):
         True
 
         """
-        return self.max_recursion_depth > 0
+        return len(self.find_recursion()) > 0
 
-    @property
-    def max_recursion_depth(self):
-        recursion_depth = [0]
+    def find_recursion(self):
+        """
+        >>> crash = Crash('1')
+        >>> crash.stack.append(StackFrame.of(function='log'))
+        >>> crash.stack.append(StackFrame.of(function='fib'))
+        >>> crash.stack.append(StackFrame.of(function='fib'))
+        >>> crash.stack.append(StackFrame.of(function='main'))
+        >>> crash.find_recursion()
+        [(1, 2)]
+        """
+        saw_recursion = False
+        recursion_length = []
+        recursion_depth = []
 
-        for a, b in bigrams(self.stack):
-            saw_recursion = False
-            if a.function:
-                if a.function == b.function:
-                    recursion_depth[-1] += 1
+        for depth, consecutive_frames in enumerate(bigrams(self.stack)):
+            a, b = consecutive_frames
+
+            if saw_recursion:
+                if a.function and a.function == b.function:
+                    # Increase the count of identical frames.
+                    recursion_length[-1] += 1
+                else:
+                    # Exit the recursion state.
+                    saw_recursion = False
+            else:
+                if a.function and a.function == b.function:
+                    # Enter "recursion" state
                     saw_recursion = True
+                    # Recursion length of two (two identical frames).
+                    recursion_length.append(2)
+                    recursion_depth.append(depth)
+                # Otherwise, remain in "no recursion" state"
 
-            if not saw_recursion and recursion_depth[-1] > 0:
-                #dbg("Recursion in {crash}: {func}", crash=self.id, func=a.function)
-                recursion_depth.append(0)
-
-        return max(recursion_depth)
+        # Combine the results.
+        return list(zip(recursion_depth, recursion_length))
 
 
 def to_address(value):
@@ -341,6 +360,17 @@ class CrashInfo:
         return self._crash
 
 
+class RecursionInfo(namedtuple('RecursionInfo', 'crash_id depth length')):
+    """
+    Metadata about found instance of recursion.
+    """
+    def __init__(self, crash_id, count, length):
+        assert isinstance(depth, int)
+        assert isinstance(length, int)
+        assert count >= 0
+        assert length > 1
+
+
 class Corpus:
     """
     Represents a corpus, backed by a database file.
@@ -391,6 +421,12 @@ class Corpus:
                 ' (?, ?, ?)', (report_id, json.dumps(crash), bucket_id)
             )
             # TODO: also, figure out recursion!
+
+    def _find_recursion(self, stack_trace):
+        """
+        Returns all instances of recursion in a stack_trace.
+        """
+        pass
 
     def count_buckets(self):
         cursor = self.conn.cursor()
