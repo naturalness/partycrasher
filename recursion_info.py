@@ -105,14 +105,14 @@ class StackFrame(BaseStackFrame):
         Assert the integrity of the data.
         """
         if module is not None:
-            assert isinstance(module, str)
+            assert isinstance(module, six.string_types)
         if function is not None:
-            assert isinstance(function, str)
+            assert isinstance(function, six.string_types)
         if arguments is not None:
             assert iter(arguments)
             # TODO: enforce all arguments to be str? assert all([isinstance(arg, str) for arg in arguments])
         if filename is not None:
-            assert isinstance(filename, str)
+            assert isinstance(filename, six.string_types)
         if line_number is not None:
             assert isinstance(line_number, int)
         if address is not None:
@@ -221,37 +221,25 @@ class Crash(object):
                                frames=self._stack,
                                project=self.project,
                                metadata=self.context)
-
-    @classmethod
-    def parse(cls, report_id, raw_crash):
-        project = raw_crash.pop('project')
-        del raw_crash['extra']
-        del raw_crash['database_id']
-
-        crash = cls(report_id, project)
-        stack = raw_crash.pop('stacktrace', [])
-        crash.stack.extend(StackFrame.parse(frame) for frame in stack)
-        crash.context.update(raw_crash)
-
-        return crash
-
     @property
     def has_recursion(self):
         """
-        >>> crash = Crash('0')
-        >>> crash.stack.append(StackFrame.of(function='main'))
+        >>> stack = [StackFrame.of(function='main')]
+        >>> crash = Crash('0', 'launchpad', stack, {})
         >>> crash.has_recursion
         False
 
-        >>> crash.stack.append(StackFrame.of(function='init'))
+        >>> stack.append(StackFrame.of(function='init'))
+        >>> crash = Crash('1', 'launchpad', stack, {})
         >>> crash.has_recursion
         False
 
-        >>> crash = Crash('1')
-        >>> crash.stack.append(StackFrame.of(function='log'))
-        >>> crash.stack.append(StackFrame.of(function='fib'))
-        >>> crash.stack.append(StackFrame.of(function='fib'))
-        >>> crash.stack.append(StackFrame.of(function='main'))
+        >>> stack = []
+        >>> stack.append(StackFrame.of(function='log'))
+        >>> stack.append(StackFrame.of(function='fib'))
+        >>> stack.append(StackFrame.of(function='fib'))
+        >>> stack.append(StackFrame.of(function='main'))
+        >>> crash = Crash('2', 'launchpad', stack, {})
         >>> crash.has_recursion
         True
 
@@ -260,11 +248,12 @@ class Crash(object):
 
     def find_recursion(self):
         """
-        >>> crash = Crash('1')
-        >>> crash.stack.append(StackFrame.of(function='log'))
-        >>> crash.stack.append(StackFrame.of(function='fib'))
-        >>> crash.stack.append(StackFrame.of(function='fib'))
-        >>> crash.stack.append(StackFrame.of(function='main'))
+        >>> stack = []
+        >>> stack.append(StackFrame.of(function='log'))
+        >>> stack.append(StackFrame.of(function='fib'))
+        >>> stack.append(StackFrame.of(function='fib'))
+        >>> stack.append(StackFrame.of(function='main'))
+        >>> crash = Crash('1', 'launchpad', stack, {})
         >>> crash.find_recursion()
         [(1, 2)]
         """
@@ -272,7 +261,7 @@ class Crash(object):
         recursion_length = []
         recursion_depth = []
 
-        for depth, consecutive_frames in enumerate(bigrams(self.stack)):
+        for depth, consecutive_frames in enumerate(bigrams(self.stack_trace)):
             a, b = consecutive_frames
 
             if saw_recursion:
