@@ -184,7 +184,7 @@ class Crash(object):
         """
         Returns a stack frame.
         """
-        if isinstance(index, str):
+        if isinstance(index, six.string_types):
             return self._meta[index]
         elif isinstance(index, int):
             return self._stack[index]
@@ -305,7 +305,7 @@ def decode_json(string):
     """
     Decodes a JSON string correctly for use with parse_crash.
     """
-    assert isinstance(string, str)
+    assert isinstance(string, six.string_types)
     return json_decoder.decode(string)
 
 
@@ -314,8 +314,11 @@ def parse_crash(raw_crash):
     Parses a string or OrderedDict into a Crash instance.
     """
     # Automatically parse a JSON string.
-    if isinstance(raw_crash, str):
+    if isinstance(raw_crash, six.string_types):
         raw_crash = decode_json(raw_crash)
+
+    # We will mutate the input, so copy it.
+    raw_crash = raw_crash.copy()
 
     # Get rid of the report id, stacktrace, and project.
     # TODO: date ingested
@@ -410,7 +413,7 @@ class Corpus:
         """
         Inserts a parsable crash into the database.
         """
-        assert not isinstance(raw_crash, str)
+        assert not isinstance(raw_crash, six.string_types)
         crash = parse_crash(raw_crash)
 
         if len(crash.stack_trace) == 0:
@@ -466,13 +469,12 @@ class Corpus:
                 continue
             corpus.insert_crash(report_id, crashes[report_id], bucket_id)
 
+
 def load_from_json(filename):
     dbg("Loading {filename}...", filename=filename)
 
     with open(filename, 'r') as jsonfile:
         database = json.load(jsonfile)
-
-    dbg("Loaded {size} bytes of content.", size=sys.getsizeof(database, '???'))
 
     # Maps id-> { database_id, bucket }
     oracle = database['oracle']
@@ -504,4 +506,10 @@ def load(database_name):
 
 
 if __name__ == '__main__':
-    load('lp_big.json')
+    corpus = load('lp_big.json')
+
+    if len(sys.argv) == 2:
+        _, crash_id = sys.argv
+
+        from pprint import pprint
+        pprint(corpus[crash_id].crash)
