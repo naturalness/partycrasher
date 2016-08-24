@@ -223,7 +223,7 @@ class Crash(object):
 
     def __str__(self):
         """
-        Pretty prints the crash.
+        Pretty prints the crash in pseudo-GDB style.
         """
 
         def text():
@@ -242,17 +242,13 @@ class Crash(object):
 
             yield ''
 
-            for num, frame in enumerate(self.stack_trace, start=1):
-                if frame.filename:
-                    yield (
-                        '{n:4d}: {f.function} @ {f.filename}:{f.line_number}'
-                        ' <0x{f.address:08x}>'.format(n=num, f=frame)
-                    )
-                else:
-                    yield (
-                        '{n:4d}: {f.function} '
-                        '<0x{f.address:08x}>'.format(n=num, f=frame)
-                    )
+            for num, frame in enumerate(self.stack_trace):
+                location_info = (' at {f.filename}:{f.line_number}'
+                                 if frame.filename else '').format(f=frame)
+                yield (
+                    '#{n:<4d} 0x{f.address:016x} {f.function} (){loc} '
+                    .format(n=num, f=frame, loc=location_info)
+                )
 
         return '\n'.join(text())
 
