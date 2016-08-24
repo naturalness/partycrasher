@@ -84,28 +84,11 @@ $(CORPUS_NAME).sqlite: recursion_info.py $(CORPUS_NAME).json
 %: %.xz
 	xz --decompress --keep $<
 
+CSVS = $(addsuffix .csv,$(basename $(wildcard recursion_results/*.sql)))
 
-recursion_results/length.csv: lp_big.sqlite
-	$(SQLITE) $< \
-		'SELECT length, COUNT(*) as count FROM recursion GROUP BY length' \
-		> $@
+.PHONY: csvs
+csvs: $(CSVS)
 
-recursion_results/depth.csv: lp_big.sqlite
-	$(SQLITE) $< \
-		'SELECT depth, COUNT(*) as count FROM recursion GROUP BY depth' \
-		> $@
-
-recursion_results/num_instances.csv: lp_big.sqlite
-	$(SQLITE) $< \
-		'SELECT num_instances, COUNT(crash) as count FROM (SELECT crash.id as crash, COUNT(crash_id) as num_instances FROM crash LEFT JOIN recursion ON crash.id = crash_id GROUP BY crash.id) GROUP BY num_instances' \
-		> $@
-
-recursion_results/stack_length.csv: lp_big.sqlite
-	$(SQLITE) $< \
-		'SELECT stack_length, COUNT(*) as count from crash GROUP BY stack_length' \
-		> $@
-
-recursion_results/recursion_proportion.csv: lp_big.sqlite
-	$(SQLITE) $< \
-		'SELECT crash.id as crash, COALESCE(SUM(recursion.length), 0) as recursion_length, stack_length FROM crash LEFT JOIN recursion ON crash.id = crash_id GROUP BY crash.id' \
-		> $@
+# Create a CSV from an SQL query over the crashes database.
+%.csv: %.sql $(CORPUS_NAME).sqlite
+	sqlite3 -header -csv $(CORPUS_NAME).sqlite < $< > $@
