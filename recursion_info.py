@@ -245,9 +245,11 @@ class Crash(object):
             for num, frame in enumerate(self.stack_trace):
                 location_info = (' at {f.filename}:{f.line_number}'
                                  if frame.filename else '').format(f=frame)
+                address = ('0x{f.address:016x} '
+                           if frame.address else '').format(f=frame)
                 yield (
-                    '#{n:<4d} 0x{f.address:016x} {f.function} (){loc} '
-                    .format(n=num, f=frame, loc=location_info)
+                    '#{n:<4d} {addr}{f.function} (){loc} '
+                    .format(n=num, f=frame, loc=location_info, addr=address)
                 )
 
         return '\n'.join(text())
