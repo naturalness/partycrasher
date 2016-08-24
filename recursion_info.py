@@ -12,6 +12,7 @@ Mostly deals with recursion stuff.
 import csv
 import json
 import os
+import re
 import sqlite3
 import sys
 
@@ -219,6 +220,43 @@ class Crash(object):
                                frames=self._stack,
                                project=self.project,
                                metadata=self.context)
+
+    def __str__(self):
+        """
+        Pretty prints the crash.
+        """
+
+        def text():
+            num = int(re.search(r'''[1-9][0-9]*''', self.id).group(0), 10)
+            yield 'Crash ' + str(self.id)
+            yield 'See: https://bugs.launchpad.net/ubuntu/+bug/{}'.format(num)
+
+            yield ''
+
+            if 'SourcePackage' in self.context:
+                yield 'Package: ' + self.SourcePackage
+            if 'Title' in self.context:
+                yield 'Title: ' + self.Title
+            if 'cpu' in self.context:
+                yield 'CPU: ' + self.cpu
+
+            yield ''
+
+            for num, frame in enumerate(self.stack_trace, start=1):
+                if frame.filename:
+                    yield (
+                        '{n:4d}: {f.function} @ {f.filename}:{f.line_number}'
+                        ' <0x{f.address:08x}>'.format(n=num, f=frame)
+                    )
+                else:
+                    yield (
+                        '{n:4d}: {f.function} '
+                        '<0x{f.address:08x}>'.format(n=num, f=frame)
+                    )
+
+        return '\n'.join(text())
+
+
     @property
     def has_recursion(self):
         """
@@ -508,8 +546,7 @@ def load(database_name):
 if __name__ == '__main__':
     corpus = load('lp_big.json')
 
+    # Look-up one crash:
     if len(sys.argv) == 2:
         _, crash_id = sys.argv
-
-        from pprint import pprint
-        pprint(corpus[crash_id].crash)
+        print(corpus[crash_id].crash)
