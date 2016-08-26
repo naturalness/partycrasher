@@ -1,5 +1,5 @@
--- Returns the IDs of all crashes with recursion.
-SELECT crash.id
+-- Returns the IDs of crashes WITHOUT direct recursion
+SELECT crash.id as report_id
 FROM crash LEFT JOIN recursion ON crash.id = crash_id
 WHERE stack_length = 2000
 GROUP BY crash.id
