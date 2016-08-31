@@ -57,17 +57,36 @@
         <header class="panel-heading">
           <h2 class="panel-title"> Results </h2>
         </header>
-        <div class="panel-body">
+        <div class="panel-body table-responsive">
           <p ng-if="loading"> Loading... </p>
           <p ng-if="errorMessage">{{ errorMessage }}</p>
           <p ng-if="!hasResults"> No results found. </p>
-          <ul class="list-group">
-            <li class="list-group-item" ng-repeat="crash in reports">
-              <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a>
-              from {{ ::crash.project }} {{ ::crash.date | fromNow }}, keywords:
-              <span pc-summary database-id="crash.id" project="crash.project"/>
-            </li>
-          </ul>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th> # </th>
+                <th> Crash </th>
+                <th> Date </th>
+                <th> Stacktrace </th>
+                <th> Keywords </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr ng-repeat="crash in reports">
+                <td>{{ $index + 1 + search.from }}</td>
+                <td>{{ ::crash.project }}</td>
+
+                <td>{{ ::crash.date | fromNow }}</td>
+                <td>
+                  <span mini-trace database-id="crash.id" project="crash.project"></span>
+                </td>
+                <td>
+                  <span pc-summary database-id="crash.id" project="crash.project"></span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
           <!-- TODO: support pagination.
           <button ng-click="prevPage()" class="btn btn-default" ng-hide="from <= 0">Previous Page</button>

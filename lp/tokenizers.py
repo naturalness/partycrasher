@@ -6,10 +6,11 @@ TOKENIZERS FOR THE TOKENIZING GOD!
 """
 
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 
 import regex
 import six
+import sys
 
 
 class PatternTokenizer(object):
@@ -30,6 +31,7 @@ class PatternTokenizer(object):
         self.transform = transform or (lambda x: x)
 
     def __call__(self, string):
+        #print(string, file=sys.stderr)
         tokens = self.pattern.splititer(self.transform(string))
         min_len = self.min
         max_len = self.max

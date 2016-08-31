@@ -24,6 +24,7 @@ import json
 import re
 import csv
 import datetime
+from tokenizers import PatternTokenizer, camel
 Crash = crash.Crash
 
 topdir = sys.argv[1]
@@ -177,6 +178,61 @@ def save_signals():
                 len(signal[1])
             ])
 
+lengths = dict()
+
+def iterate_all_fields(c, prefix, method):
+    if isinstance(c, dict):
+        for k, v in c.iteritems():
+            subfields = iterate_all_fields(v, prefix + k + ".", method)
+    elif isinstance(c, list):
+        for i in c:
+            subfields = iterate_all_fields(i, prefix, method)
+    elif isinstance(c, basestring) or c is None:
+        if prefix[-1] == '.':
+            prefix = prefix[:-1]
+        method(prefix, c)
+    elif isinstance(c, datetime.datetime):
+        pass
+    else:
+        raise NotImplementedError("can't handle " + c.__class__.__name__)
+    return
+
+def rec_lengths(crash):
+    def rec_length(key, value):
+        if key not in lengths:
+            lengths[key] = []
+        if value is None:
+            length = 0
+        else:
+            length = len(camel.__call__(value))
+        lengths[key].append((crash['database_id'], length))
+
+    iterate_all_fields(crash, "", rec_length)
+    
+def save_lengths():
+    length_counts = []
+    with open('lengths.csv', 'wb') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Crash', 'Field', 'Length'])
+        for field, v in lengths.items():
+            for i in v:
+                dbid = i[0]
+                length = i[1]
+                if field == 'stacktrace.function':
+                    writer.writerow([
+                        dbid, field, length
+                    ])
+                if len(length_counts) - 1 < length:
+                    for l in range(len(length_counts) - 1, length + 2):
+                        length_counts.append(0)
+                length_counts[length] += 1
+    with open('length_counts.csv', 'wb') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Length', 'Count'])
+        for i in range(0, len(length_counts)):
+            writer.writerow([i, length_counts[i]])
+
+
 
 for bucketdir in os.listdir(topdir):
     bucket = bucketdir
@@ -218,6 +274,7 @@ for bucketdir in os.listdir(topdir):
             rec_date_info(crashdata, bucket)
             rec_architecture(crashdata)
             rec_signal(crashdata)
+            rec_lengths(crashdata)
 print(str(bugs_total) + " loaded", file=sys.stderr)
 print(str(no_stacktrace) + " thrown out because of unparsable stacktraces", file=sys.stderr)
 print(json.dumps({'crashes': crashes, 'oracle': oracle}, cls=crash.CrashEncoder, indent=2))
@@ -229,3 +286,4 @@ save_buckets_dist()
 save_date_ranges()
 save_architectures()
 save_signals()
+save_lengths()

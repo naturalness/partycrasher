@@ -14,7 +14,7 @@ par(
     mex=mex,
     lwd=(1/shrink),
     oma=c(0,0,0,0),
-    xpd=NA,
+    xpd=FALSE,
     tcl=0.5,
     xaxs="i",
     yaxs="i",
@@ -219,3 +219,133 @@ title(xlab="Architecture", line=1.25)
 40592-sum(architectures$Count)
 
 dev.off()
+
+length(buckets$Count[buckets$Count==2])
+length(buckets$Count[buckets$Count==1])
+
+
+library(fitdistrplus)
+library(logspline)
+
+reclengths = read.csv("../recursion_results/length.csv")
+reclengths_filtered = reclengths[reclengths$length < 50,]
+expanded = reclengths[rep(row.names(reclengths_filtered), reclengths_filtered$count), 1]-2
+
+lengthmax = max(reclengths$length)
+
+x = reclengths$length
+# xgap <- ifelse(x > 40, x-2000+50, x)
+
+svg(filename="reclengths.svg", width=col_width*2, height=height, 
+    family="Latin Modern Roman", pointsize=10)
+mypar(c(1,2))
+
+par(mar=c(1.75,2.0,1,1)+0.0)
+plot(x, reclengths$count, 
+  type="h",
+  main="", ylab="", xlab="", 
+  axes=FALSE, log="y",
+    xlim=c(0, lengthmax),
+   ylim=c(0.75, max(reclengths$count))
+  )
+library(plotrix)
+axis(2, mgp=c(1.25, 0.25, 0), lwd=(1/shrink), 
+  at=c(1,10,100,1000,10000,max(reclengths$count)),
+  labels=c(1,10,100,1000,"",max(reclengths$count))) 
+axis(1, mgp=c(1.5, 0.5, 0), lwd=(1/shrink), tcl=0,
+#   at=c(0,10,20,30,50,60),
+#   labels=c(0,10,20,30,1990,2000)
+  )
+title(ylab="Crashes", line=1.0)
+title(xlab="Recursion Length", line=1.25)
+
+
+par(mar=c(1.75,2.0,1,1)+0.0)
+plot(x, reclengths$count, 
+  type="h",
+  main="", ylab="", xlab="", 
+  axes=FALSE, log="y",
+    xlim=c(0, 30),
+   ylim=c(0.75, max(reclengths$count))
+  )
+library(plotrix)
+axis(2, mgp=c(1.25, 0.25, 0), lwd=(1/shrink), 
+  at=c(1,10,100,1000,10000,max(reclengths$count)),
+  labels=c(1,10,100,1000,"",max(reclengths$count))) 
+axis(1, mgp=c(1.5, 0.5, 0), lwd=(1/shrink), tcl=0,
+#   at=c(0,10,20,30,50,60),
+#   labels=c(0,10,20,30,1990,2000)
+  )
+# axis.break(1,40,style="slash")
+poisparm = fitdist(expanded, "pois", method="mle")
+poisparm
+poisfit = dpois(seq(0, 2000), poisparm[[1]][[1]]) * sum(reclengths$count)
+geomparm = fitdist(expanded, "geom", method="mle")
+geomparm
+geomfit = dgeom(seq(0, 2000), geomparm[[1]][[1]]) * sum(reclengths$count)
+nbinomparm = fitdist(expanded, "nbinom", method="mle")
+nbinomparm
+nbinomfit = dnbinom(seq(0, 2000), size=nbinomparm[[1]][[2]], mu=nbinomparm[[1]][[2]]) * sum(reclengths$count)
+lines(seq(0,  2000)+2, poisfit, col=linecolor, cex=linesx)
+lines(seq(0,  2000)+2, nbinomfit, col=rgb(0,0,1), cex=linesx)
+lines(seq(0,  2000)+2, geomfit, col=rgb(0,1,0), cex=linesx)
+legend("topright", 
+        legend=c(
+              "Poisson Distribution",
+              "Negative Binomial Distribution",
+              "Geometric Distribution"
+            ), col=c(
+              linecolor,
+              rgb(0,0,1),
+              rgb(0,1,0)
+            ),
+        lty=c(1),
+        cex=mex*0.9, pt.cex=linesx, bty="n")
+
+title(ylab="Crashes", line=1.0)
+title(xlab="Recursion Length", line=1.25)
+
+dev.off()
+
+# descdist(expanded, discrete=TRUE)
+
+stacklengths = read.csv("../recursion_results/stack_length.csv")
+stacklengths_filtered = stacklengths[stacklengths$stack_length < 50,]
+expanded = stacklengths[rep(row.names(stacklengths_filtered), stacklengths_filtered$count), 1]-1
+
+lengthmax = max(stacklengths$count)
+
+svg(filename="stacklengths.svg", width=col_width, height=height, 
+    family="Latin Modern Roman", pointsize=10)
+mypar(c(1,1))
+par(mar=c(1.75,2.0,1,1)+0.0)
+plot(stacklengths$stack_length, stacklengths$count, 
+  type="h",
+  main="", ylab="", xlab="", 
+  axes=FALSE, log="xy",
+   xlim=c(0.8, 2654),
+   ylim=c(0.5, lengthmax)
+  )
+axis(2, mgp=c(1.25, 0.25, 0), lwd=(1/shrink), at=c(1, 5, 10, 50, 100, 500, 1000, 2207)) 
+axis(1, mgp=c(1.5, 0.5, 0), lwd=(1/shrink), at=c(1, 10, 100, 1000, 2654))
+poisparm = fitdist(expanded, "pois", method="mle")
+poisparm
+poisfit = dpois(seq(0, 2000), poisparm[[1]][[1]]) * sum(stacklengths$count)
+geomparm = fitdist(expanded, "geom", method="mle")
+geomparm
+geomfit = dgeom(seq(0, 2000), geomparm[[1]][[1]]) * sum(stacklengths$count)
+nbinomparm = fitdist(expanded, "nbinom", method="mle")
+nbinomparm
+nbinomfit = dnbinom(seq(0, 2000), size=nbinomparm[[1]][[2]], mu=nbinomparm[[1]][[2]]) * sum(stacklengths$count)
+# lines(seq(0,  2000)+2, poisfit, col=linecolor, cex=linesx)
+# lines(seq(0,  2000)+2, nbinomfit, col=rgb(0,0,1), cex=linesx)
+lines(seq(0,  2000)+2, geomfit, col=linecolor, cex=linesx)
+title(ylab="Crashes", line=1.0)
+title(xlab="Stack Length", line=1.25)
+legend("topright", legend=c("Geometric Distribution"), col=c(linecolor),
+        lty=c(1),
+        cex=mex*0.9, pt.cex=linesx, bty="n")
+
+dev.off()
+
+lengthmax
