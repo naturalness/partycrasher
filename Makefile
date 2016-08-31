@@ -92,3 +92,11 @@ csvs: $(CSVS)
 # Create a CSV from an SQL query over the crashes database.
 %.csv: %.sql $(CORPUS_NAME).sqlite
 	sqlite3 -header -csv $(CORPUS_NAME).sqlite < $< > $@
+
+recursion_results/entropy_with_recursion.csv: recursion_results/2000_with_recursion.csv
+	echo "id,entropy" > $@
+	./get-ent.sh $< >> $@
+
+recursion_results/entropy_without_recursion.csv: recursion_results/2000_without_recursion.csv
+	echo "id,entropy" > $@
+	./get-ent.sh $< >> $@

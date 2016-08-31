@@ -1,0 +1,15 @@
+sqlite> SELECT crash.id FROM crash JOIN recursion ON crash.id = crash_id WHERE recursion.length > 1990 AND recursion.length < 2000 GROUP BY crash.id;
+launchpad:0000147132
+launchpad:0000288603
+launchpad:0000298452
+launchpad:0000520224
+launchpad:0000547217
+launchpad:0000556912
+launchpad:0000652026
+launchpad:0000654612
+launchpad:0000734939
+launchpad:0000939512
+launchpad:0001161268
+launchpad:0001161463
+launchpad:0001162331
+launchpad:0001507211
