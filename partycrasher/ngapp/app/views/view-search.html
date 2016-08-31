@@ -66,6 +66,7 @@
               <tr>
                 <th> # </th>
                 <th> Crash </th>
+                <th> Project </th>
                 <th> Date </th>
                 <th> Stacktrace </th>
                 <th> Keywords </th>
@@ -75,6 +76,9 @@
             <tbody>
               <tr ng-repeat="crash in reports">
                 <td>{{ $index + 1 + search.from }}</td>
+                <td>
+                  <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a>
+                </td>
                 <td>{{ ::crash.project }}</td>
 
                 <td>{{ ::crash.date | fromNow }}</td>
@@ -87,6 +91,13 @@
               </tr>
             </tbody>
           </table>
+          <ul class="list-group">
+            <li class="list-group-item" ng-repeat="crash in reports">
+              <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a>
+              from {{ ::crash.project }} {{ ::crash.date | fromNow }}, keywords:
+              <span pc-summary database-id="crash.id" project="crash.project"/>
+            </li>
+          </ul>
 
           <!-- TODO: support pagination.
           <button ng-click="prevPage()" class="btn btn-default" ng-hide="from <= 0">Previous Page</button>
