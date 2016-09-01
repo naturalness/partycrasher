@@ -91,13 +91,6 @@
               </tr>
             </tbody>
           </table>
-          <ul class="list-group">
-            <li class="list-group-item" ng-repeat="crash in reports">
-              <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a>
-              from {{ ::crash.project }} {{ ::crash.date | fromNow }}, keywords:
-              <span pc-summary database-id="crash.id" project="crash.project"/>
-            </li>
-          </ul>
 
           <!-- TODO: support pagination.
           <button ng-click="prevPage()" class="btn btn-default" ng-hide="from <= 0">Previous Page</button>

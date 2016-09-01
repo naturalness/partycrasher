@@ -41,19 +41,19 @@
 
       <section class="panel panel-default">
         <div class="panel-heading">
-          <h3 class="panel-title">Precedent</h3>
+          <h3 class="panel-title">Precedents</h3>
         </div>
-        <div class="panel-body" ng-if="precedent">
-        <dl class="dl-x">
-          <dt>Report</dt>
-          <dd><a href="{{ ::precedent | uiUrl:'report' }}">{{ ::precedent.id }}</a></dd>
-          <dt>Stacktrace</dt>
-          <dd><span mini-trace crash="precedent"></span></dd>
-          <dt>Keywords</dt>
-          <dd><span pc-summary database-id="precedent.id" project="precedent.project"></span></dd>
-          <dt>Score</dt>
-          <dd>{{ precedentScore }}</dd>
-        </dl>
+        <div class="panel-body">
+          <dl class="dl-x dl-b" ng-repeat="precedent in precedents">
+            <dt>Report</dt>
+            <dd><a href="{{ ::precedent | uiUrl:'report' }}">{{ ::precedent.id }}</a></dd>
+            <dt>Stacktrace</dt>
+            <dd><span mini-trace crash="precedent"></span></dd>
+            <dt>Keywords</dt>
+            <dd><span pc-summary database-id="precedent.id" project="precedent.project"></span></dd>
+            <dt>Score</dt>
+            <dd>{{ precedent.score }}</dd>
+          </dl>
         </div>
       </section>
     </div>

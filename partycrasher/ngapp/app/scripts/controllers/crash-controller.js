@@ -30,14 +30,30 @@ angular.module('PartyCrasherApp')
       $scope.buckets = buckets;
       $scope.date = report.date;
       
-      var precedentId = rawReport['buckets']['top_match']['report_id'];
-      var precedentProject = rawReport['buckets']['top_match']['project'];
-      $scope.precedentScore = rawReport['buckets']['top_match']['score'];
+      var precedentId1 = rawReport['buckets']['top_match']['report_id'];
+      var precedentProject1 = rawReport['buckets']['top_match']['project'];
+      var precedentScore1 = rawReport['buckets']['top_match']['score'];
       
-      PartyCrasher.fetchReport({project: precedentProject, id: precedentId})
-        .then(rawPrecedent => {
-          var precedent = new CrashReport(rawPrecedent);
-          $scope.precedent = precedent;
-        });
+      $scope.precedents = [];
+      
+      var getPrecedents = (id, project, score, limit) => {
+        if (limit > 0) {
+          PartyCrasher.fetchReport({id, project})
+            .then(rawPrecedent => {
+              var precedent = new CrashReport(rawPrecedent);
+              precedent['score'] = score;
+              $scope.precedents.push(precedent);
+              if (rawPrecedent['buckets']['top_match']) {
+                var precedentId = rawPrecedent['buckets']['top_match']['report_id'];
+                var precedentProject = rawPrecedent['buckets']['top_match']['project'];
+                var precedentScore = rawPrecedent['buckets']['top_match']['score'];
+                getPrecedents(precedentId, precedentProject, precedentScore, limit -1);
+              }
+            });
+        }
+      };
+      
+      getPrecedents(precedentId1, precedentProject1, precedentScore1, 10);
+      
     });
 });
