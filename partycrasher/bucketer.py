@@ -583,7 +583,7 @@ class MLTCamelCase(MLT):
                             # The ES documentation indicates this should improve
                             # speed but it doesn't seem to actually do so
                             #'term_vector': 'yes',
-                            # This can enable a second tokenizer for ever field
+                            # This can enable a second tokenizer for every field
                             #'fields': {
                                 #'ws': {
                                     #'type': 'string',
@@ -788,5 +788,18 @@ def common_properties(thresholds):
             # Do not index, because our analysis has not studied this yet!
             # Plus, Elastic won't index anyway...
             'index': 'not_analyzed'
-        }
+        },
+        'stacktrace': { 'properties': {
+        'function': {
+            'type': 'string',
+            'analyzer': 'default',
+            # Enable a second tokenizer
+            'fields': {
+                'whole': {
+                    'type': 'string',
+                    'analyzer': 'keyword'
+                    #'term_vector': 'yes',
+                }
+            }
+        }}}
     }

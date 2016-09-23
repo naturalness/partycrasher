@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import sys
 import json
+import math
 from datetime import datetime
 from collections import namedtuple, defaultdict
 
@@ -369,11 +370,38 @@ class PartyCrasher(object):
 
     def get_crash(self, database_id, project):
         self._connect_to_elasticsearch()
-
+        crash = None
         try:
-            return ESCrash(database_id, index='crashes')
+            crash = ESCrash(database_id, index='crashes')
         except NotFoundError as e:
             raise KeyError(database_id)
+          
+        response = self.es.termvectors(index='crashes', doc_type='crash',
+                                  id=database_id,
+                                  fields='stacktrace.function.whole',
+                                  term_statistics=True,
+                                  offsets=False,
+                                  positions=False)
+        
+        with open('termvectors', 'wb') as termvectorsfile:
+            print(json.dumps(response, indent=2), file=termvectorsfile)
+            
+        vectors = response['term_vectors']['stacktrace.function.whole']
+            
+        all_doc_count = float(vectors['field_statistics']['doc_count'])
+        
+        crash = Crash(crash)
+        
+        for frame in crash['stacktrace']:
+            if 'function' in frame and frame['function']:
+                function = frame['function']
+                term = vectors['terms'][function]
+                relativedf = float(term['doc_freq'])/all_doc_count
+                logdf = -1.0 * math.log(relativedf, 2)
+                print(logdf, file=sys.stderr)
+                frame['logdf'] = logdf
+          
+        return crash
 
     def get_summary(self, database_id, project):
         self._connect_to_elasticsearch()

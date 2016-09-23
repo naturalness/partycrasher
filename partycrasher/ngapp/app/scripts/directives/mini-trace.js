@@ -29,7 +29,9 @@ angular.module('PartyCrasherApp')
       
       stack.forEach((frame) => {
           if (frame.func) {
-              head.push([frame.func, 'stacktrace.function:'+frame.func]);
+              if (frame._raw['logdf'] > 5) {
+                  head.push([frame.func, 'stacktrace.function:'+frame.func]);
+              }
           }
       });
       return head;
