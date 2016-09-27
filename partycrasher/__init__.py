@@ -398,7 +398,7 @@ class PartyCrasher(object):
                 term = vectors['terms'][function]
                 relativedf = float(term['doc_freq'])/all_doc_count
                 logdf = -1.0 * math.log(relativedf, 2)
-                print(logdf, file=sys.stderr)
+                #print(logdf, file=sys.stderr)
                 frame['logdf'] = logdf
           
         return crash

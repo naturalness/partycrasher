@@ -27,9 +27,22 @@ angular.module('PartyCrasherApp')
       var stack = crash.stackTrace;
       var head = [];
       
+      var maxlogdf = 0.0;
+      
+      stack.forEach((frame) => {
+        if (frame.func) {
+          if (frame._raw['logdf'] > maxlogdf) {
+            maxlogdf = frame._raw['logdf'];
+          }
+        }
+      });
+      
+      var started = false;
+      
       stack.forEach((frame) => {
           if (frame.func) {
-              if (frame._raw['logdf'] > 5) {
+              if (frame._raw['logdf'] > 0.9 * maxlogdf || started) {
+                  started = true;
                   head.push([frame.func, 'stacktrace.function:'+frame.func]);
               }
           }

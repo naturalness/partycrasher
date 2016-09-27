@@ -44,7 +44,7 @@
                 from {{ ::crash.project }} {{ ::crash.date | fromNow }}
               </td>
               <td>
-                <span mini-trace crash="crash"></span>
+                <span mini-trace database-id="crash.id" project="crash.project"></span>
               </td>
               <td>
                 Keywords:
