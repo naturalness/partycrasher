@@ -58,11 +58,14 @@ class Bucketer(object):
     The default analyzer breaks on whitespace.
     """
 
-    def __init__(self, index='crashes',
+    def __init__(self, index=None,
                  elasticsearch=None, lowercase=False):
 
         if elasticsearch is None:
             raise ValueError('No ElasticSearch instance specified!')
+
+        if index is None:
+            raise ValueError('No ElasticSearch index specified!')
 
         self.index = index
         self.es = elasticsearch
@@ -405,7 +408,7 @@ class MLT(Bucketer):
             else:
                 prec_score = 0
             score = raw_match['_score']
-            if (not STRICTLY_INCREASING) or (score >= 0.9 * prec_score):
+            if (not STRICTLY_INCREASING) or (score >= prec_score):
                 top_match = raw_match
                 break
 

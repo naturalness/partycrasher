@@ -48,9 +48,11 @@ class ESCrashMeta(type):
     # I seriously tried.
     _cached = {}
 
-    def __call__(cls, crash=None, index='crashes', unsafe=False):
+    def __call__(cls, crash=None, index=None, unsafe=False):
         # This is the case that the constructor was called with a whole
         # crash datastructure
+        if index is None:
+            raise ValueError('No ElasticSearch index specified!')
         if index not in cls._cached:
             cls._cached[index] = WeakValueDictionary()
         if isinstance(crash, Crash):
@@ -145,7 +147,9 @@ class ESCrash(Crash):
     crashes = {}
 
     @classmethod
-    def getrawbyid(cls, database_id, index='crashes'):
+    def getrawbyid(cls, database_id, index=None):
+        if index is None:
+            raise ValueError('No ElasticSearch index specified!')
         if cls.es is None:
             raise RuntimeError('Forgot to monkey-patch ES connection to ESCrash!')
 
@@ -159,7 +163,9 @@ class ESCrash(Crash):
 
         return Crash(response['_source'])
 
-    def __init__(self, index='crashes', crash=None):
+    def __init__(self, index=None, crash=None):
+        if index is None:
+            raise ValueError('No ElasticSearch index specified!')
         self.index = index
         self.hot = False
         super(ESCrash, self).__init__(crash)

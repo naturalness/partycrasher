@@ -7,6 +7,7 @@ import json
 import math
 from datetime import datetime
 from collections import namedtuple, defaultdict
+from pydoc import locate
 
 # Python 2/3 hack.
 try:
@@ -20,24 +21,10 @@ from elasticsearch import Elasticsearch, NotFoundError, TransportError, RequestE
 from partycrasher.crash import Crash, Stacktrace, Stackframe
 from partycrasher.es_crash import ESCrash
 from partycrasher.es_crash import ReportNotFoundError
-from partycrasher.bucketer import MLTCamelCase
 from partycrasher.threshold import Threshold
 
 
 __version__ = u'0.1.0'
-
-DEFAULT_THRESHOLDS = (
-    '1.0',
-    '2.0',
-    '3.0',
-    '4.0',
-    '5.0',
-    '6.0',
-    '7.0',
-    '8.0',
-    '9.0',
-    '10.0',
-    '11.0')
 
 class BucketNotFoundError(KeyError):
     """
@@ -79,15 +66,16 @@ class Project(namedtuple('Project', 'name')):
 
 
 class PartyCrasher(object):
-    def __init__(self, config_file=None, thresholds=DEFAULT_THRESHOLDS):
+    def __init__(self, config_file=None):
         self.config = ConfigParser(default_config())
-        self.thresholds = thresholds
         self._checked_index_exists = False
 
         # TODO: Abstract config out.
         if config_file is not None:
             self.config.readfp(config_file)
 
+        self.thresholds = (
+            self.config.get('partycrasher.bucket', 'thresholds').split())
         # self.es and self.bucketer are lazy properties.
         self._es = None
         self._bucketer = None
@@ -99,6 +87,13 @@ class PartyCrasher(object):
         Configured ES server list
         """
         return self.config.get('partycrasher.elastic', 'hosts').split()
+
+    @property
+    def es_index(self):
+        """
+        Configured ES server list
+        """
+        return self.config.get('partycrasher.elastic', 'indexbase')
 
     @property
     def allow_delete_all(self):
@@ -132,7 +127,7 @@ class PartyCrasher(object):
         Default threshould to use if none are provided.
         """
         # TODO: determine from static/dynamic configuration
-        return Threshold(4.0)
+        return Threshold(self.config.get('partycrasher.bucket', 'default_threshold'))
 
     def delete_and_recreate_index(self):
         """
@@ -140,7 +135,7 @@ class PartyCrasher(object):
         reports.
         """
         assert self.allow_delete_all
-        self.es.indices.delete(index='crashes')
+        self.es.indices.delete(index=self.es_index)
         self.es.cluster.health(wait_for_status='yellow')
         self._bucketer.create_index()
         self.es.cluster.health(wait_for_status='yellow')
@@ -156,12 +151,13 @@ class PartyCrasher(object):
 
         # XXX: Monkey-patch our instance to the global.
         ESCrash.es = self._es
-
-        self._bucketer = MLTCamelCase(thresholds=self.thresholds,
+        tokenization_name = self.config.get('partycrasher.bucket', 'tokenization')
+        tokenization = locate(tokenization_name)
+        self._bucketer = tokenization(thresholds=self.thresholds,
                                       lowercase=False,
-                                      index='crashes', elasticsearch=self.es)
+                                      index=self.es_index, elasticsearch=self.es)
         if not self._checked_index_exists:
-            if self._es.indices.exists('crashes'):
+            if self._es.indices.exists(self.es_index):
                 self._checked_index_exists = True
             else:
                 self._bucketer.create_index()
@@ -222,7 +218,7 @@ class PartyCrasher(object):
             query["from"] = from_;
             query["size"] = size;
 
-        response = self.es.search(body=query, index='crashes')
+        response = self.es.search(body=query, index=self.es_index)
         with open('bucket_response', 'wb') as debug_file:
             print(json.dumps(response, indent=2), file=debug_file)
         
@@ -348,7 +344,7 @@ class PartyCrasher(object):
                   ["top_buckets"]["terms"]["size"]) = actual_size
         
         try:
-            response = self.es.search(body=query, index='crashes')
+            response = self.es.search(body=query, index=self.es_index)
         except RequestError as e:
             print(e.error, file=sys.stderr)
             raise e
@@ -372,11 +368,11 @@ class PartyCrasher(object):
         self._connect_to_elasticsearch()
         crash = None
         try:
-            crash = ESCrash(database_id, index='crashes')
+            crash = ESCrash(database_id, index=self.es_index)
         except NotFoundError as e:
             raise KeyError(database_id)
           
-        response = self.es.termvectors(index='crashes', doc_type='crash',
+        response = self.es.termvectors(index=self.es_index, doc_type='crash',
                                   id=database_id,
                                   fields='stacktrace.function.whole',
                                   term_statistics=True,
@@ -427,7 +423,7 @@ class PartyCrasher(object):
         }
 
         try:
-            results = self.es.search(body=query, index='crashes')
+            results = self.es.search(body=query, index=self.es_index)
         except TransportError:
             # Occurs when the index has just been freshly created.
             return None
@@ -484,7 +480,7 @@ class PartyCrasher(object):
         if size is not None:
             es_query["size"] = size;
         try:
-            r = self._es.search(index='crashes', body=es_query)
+            r = self._es.search(index=self.es_index, body=es_query)
         except RequestError as e:
             # TODO: use logger
             print(e.info, file=sys.stderr)
@@ -532,6 +528,9 @@ def default_config():
         },
         'partycrasher.elastic': {
             'primary': 'localhost:9200'
+        },
+        'partycrasher.elastic': {
+            'indexbase': 'crashes'
         },
         'partycrasher': {
             'allow_delete_all': False,
