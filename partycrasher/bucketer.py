@@ -239,6 +239,10 @@ class MLT(Bucketer):
           return fields
         
         fields = list(all_but_skip_fields(crash))
+        # including the extra field seems to improve recall at the expense of precision
+        # overall F-score seems to go down so I'm not sure this is worthwhile
+        #if 'stacktrace.function' in fields:
+        #    fields.append('stacktrace.function.whole')
         
         body["query"]["more_like_this"]["fields"] = fields
         
