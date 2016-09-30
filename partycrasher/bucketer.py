@@ -32,18 +32,12 @@ from operator import itemgetter
 from sets import Set
 from datetime import datetime
 from elasticsearch import RequestError
+from distutils.util import strtobool
 
 
 from crash import Crash, Buckets
 from es_crash import ESCrash, ESCrashEncoder
 from threshold import Threshold
-
-INITIAL_MLT_MAX_QUERY_TERMS=25
-ENABLE_AUTO_MAX_QUERY_TERMS=True
-AUTO_MAX_QUERY_TERM_MINIMUM_DOCUMENTS=10
-AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS=1000
-MLT_MIN_SCORE=1.0 # auto detect from min threshold?
-STRICTLY_INCREASING=True
 
 class IndexNotUpdatedError(Exception):
     """
@@ -58,8 +52,11 @@ class Bucketer(object):
     The default analyzer breaks on whitespace.
     """
 
-    def __init__(self, index=None,
-                 elasticsearch=None, lowercase=False):
+    def __init__(self, 
+                 index=None,
+                 elasticsearch=None, 
+                 lowercase=False,
+                 config=None):
 
         if elasticsearch is None:
             raise ValueError('No ElasticSearch instance specified!')
@@ -67,9 +64,13 @@ class Bucketer(object):
         if index is None:
             raise ValueError('No ElasticSearch index specified!')
 
+        if config is None:
+            raise ValueError('No configuration specified!')
+
         self.index = index
         self.es = elasticsearch
         self.lowercase = lowercase
+        self.config = config
 
     def bucket(self, crash):
         assert isinstance(crash, Crash)
@@ -140,8 +141,30 @@ class MLT(Bucketer):
                  *args, **kwargs):
         super(MLT, self).__init__(*args, **kwargs)
         self.thresholds = tuple(Threshold(value) for value in sorted(thresholds))
-        if ENABLE_AUTO_MAX_QUERY_TERMS:
-            self.last_max_query_terms = INITIAL_MLT_MAX_QUERY_TERMS
+        self.enable_auto_max_query_terms = (
+          strtobool(
+            self.config.get('partycrasher.bucket', 
+                            'enable_auto_max_query_terms')))
+        self.initial_mlt_max_query_terms = (
+          int(
+            self.config.get('partycrasher.bucket', 
+                            'initial_mlt_max_query_terms')))
+        self.auto_max_query_term_maximum_documents = (
+          int(
+            self.config.get('partycrasher.bucket', 
+                          'auto_max_query_term_maximum_documents')))
+        self.auto_max_query_term_minimum_documents = (
+          int(
+            self.config.get('partycrasher.bucket', 
+                          'auto_max_query_term_minimum_documents')))
+        self.mlt_min_score = (
+          float(
+            self.config.get('partycrasher.bucket', 'mlt_min_score')))
+        self.strictly_increasing = (
+          strtobool(
+            self.config.get('partycrasher.bucket', 'strictly_increasing')))
+        if self.enable_auto_max_query_terms:
+            self.last_max_query_terms = self.initial_mlt_max_query_terms
         self.max_top_match_score = 0
         self.total_top_match_scores = 0
         self.total_matches = 0
@@ -267,20 +290,20 @@ class MLT(Bucketer):
     def bucket_auto_max_query_terms(self, crash, use_existing, dont_explain=False):
         max_query_terms = self.last_max_query_terms
         max_query_terms_lb = 1
-        max_query_terms_ub = INITIAL_MLT_MAX_QUERY_TERMS
+        max_query_terms_ub = self.initial_mlt_max_query_terms
         response_at_least_one_hit = None
         while True:
             body = self.make_mlt_query_explain(crash,
                       use_existing=use_existing,
                       max_query_terms=max_query_terms,
-                      terminate_after=AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS,
+                      terminate_after=self.auto_max_query_term_maximum_documents,
                       dont_explain=dont_explain)
             response = self.es.search(index=self.index, body=body)
             if response['hits']['total'] > 1:
                 response_at_least_one_hit = response
             if (response['terminated_early'] 
                 or (response['hits']['total'] 
-                    >= AUTO_MAX_QUERY_TERM_MAXIMUM_DOCUMENTS)):
+                    >= self.auto_max_query_term_maximum_documents)):
                 if max_query_terms == max_query_terms_lb:
                     #print("Hit LB", file=sys.stderr)
                     break
@@ -288,7 +311,7 @@ class MLT(Bucketer):
                 max_query_terms = math.floor(
                     float(max_query_terms+max_query_terms_lb)/2.0)
             elif (response['hits']['total'] 
-                <= AUTO_MAX_QUERY_TERM_MINIMUM_DOCUMENTS):
+                <= self.auto_max_query_term_minimum_documents):
                 if max_query_terms == max_query_terms_ub:
                     #print("Hit UB", file=sys.stderr)
                     break
@@ -314,7 +337,7 @@ class MLT(Bucketer):
         Queries ElasticSearch with MoreLikeThis.
         Returns the explanation of the top hit.
         """
-        if ENABLE_AUTO_MAX_QUERY_TERMS:
+        if self.enable_auto_max_query_terms:
             response = self.bucket_auto_max_query_terms(
               crash,
               use_existing=True)
@@ -322,7 +345,7 @@ class MLT(Bucketer):
             body = self.make_mlt_query_explain(
                 crash, 
                 use_existing=True, 
-                max_query_terms=INITIAL_MLT_MAX_QUERY_TERMS)
+                max_query_terms=self.initial_mlt_max_query_terms)
             response = self.es.search(index=self.index, body=body)
         
         return self.get_explanation_from_response(response)
@@ -333,7 +356,7 @@ class MLT(Bucketer):
         Returns the bucket assignment for each threshold.
         Returns an OrderedDict of {Threshold(...): 'id'}
         """
-        if ENABLE_AUTO_MAX_QUERY_TERMS:
+        if self.enable_auto_max_query_terms:
             response = self.bucket_auto_max_query_terms(
                 crash,
                 use_existing=False,
@@ -342,7 +365,7 @@ class MLT(Bucketer):
             body = self.make_mlt_query_explain(
                 crash,
                 use_existing=False,
-                max_query_terms=INITIAL_MLT_MAX_QUERY_TERMS,
+                max_query_terms=self.initial_mlt_max_query_terms,
                 dont_explain=True)
             response = self.es.search(index=self.index, body=body)
         
@@ -383,7 +406,7 @@ class MLT(Bucketer):
                 },
             },
             'size': 100,
-            'min_score': MLT_MIN_SCORE,
+            'min_score': self.mlt_min_score,
         }
                         
         if terminate_after is not None:
@@ -408,7 +431,7 @@ class MLT(Bucketer):
             else:
                 prec_score = 0
             score = raw_match['_score']
-            if (not STRICTLY_INCREASING) or (score >= prec_score):
+            if (not self.strictly_increasing) or (score >= prec_score):
                 top_match = raw_match
                 break
 

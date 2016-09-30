@@ -22,6 +22,7 @@ from partycrasher.crash import Crash, Stacktrace, Stackframe
 from partycrasher.es_crash import ESCrash
 from partycrasher.es_crash import ReportNotFoundError
 from partycrasher.threshold import Threshold
+from partycrasher.bucketer import MLTCamelCase # this can be removed but it is here so proper syntax errors are printed
 
 
 __version__ = u'0.1.0'
@@ -152,10 +153,13 @@ class PartyCrasher(object):
         # XXX: Monkey-patch our instance to the global.
         ESCrash.es = self._es
         tokenization_name = self.config.get('partycrasher.bucket', 'tokenization')
+        print("Using bucketer: %s" % (tokenization_name), file=sys.stderr)
         tokenization = locate(tokenization_name)
         self._bucketer = tokenization(thresholds=self.thresholds,
                                       lowercase=False,
-                                      index=self.es_index, elasticsearch=self.es)
+                                      index=self.es_index, 
+                                      elasticsearch=self.es,
+                                      config=self.config)
         if not self._checked_index_exists:
             if self._es.indices.exists(self.es_index):
                 self._checked_index_exists = True
