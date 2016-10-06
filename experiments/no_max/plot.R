@@ -105,19 +105,17 @@ nomax = read.csv("T4.0.csv")
 nomax$time = nomax$time/1000
 mysol = read.csv("../auto_max_query_terms/T4.0.csv")
 mysol1 = read.csv("../min1/T4.0.csv")
-boosttrace = read.csv("../T4.0.csv")
 mysol$time = mysol$time/1000
 mysol1$time = mysol1$time/1000
-boosttrace$time = boosttrace$time/1000
 modelnomax = rlm(nomax$time ~ nomax$after)
 modelmysol = rlm(mysol$time ~ mysol$after)
 modelmysol1 = rlm(mysol1$time ~ mysol1$after)
 xlim = c(0, 225000)
 # print(modelnomax)
-lnames = list("Fixed MQT", "Auto MQT", "Auto MQT min_score=1", "Trace Boost")
+lnames = list("Fixed MQT", "Auto MQT", "Auto MQT min_score=1")
 print(summary(modelmysol)$coefficients)
-plota(list(nomax$after, mysol$after, mysol1$after, boosttrace$after), 
-      list(nomax$time, mysol$time, mysol1$time, boosttrace$time), "Time Per Crash", 
+plota(list(nomax$after, mysol$after, mysol1$after), 
+      list(nomax$time, mysol$time, mysol1$time), "Time Per Crash", 
       xlim=xlim, ylim=c(0,0.4),
       lnames,
       lpos="topleft")
@@ -129,8 +127,8 @@ modelmysol1 = rlm(mysol1$b3f ~ mysol1$after)
 # print(modelnomax)
 # print(modelmysol)
 
-plota(list(nomax$after, mysol$after, mysol1$after, boosttrace$after), 
-      list(nomax$b3f, mysol$b3f, mysol1$b3f, boosttrace$b3f), "F-Score @ T=4.0", 
+plota(list(nomax$after, mysol$after, mysol1$after), 
+      list(nomax$b3f, mysol$b3f, mysol1$b3f), "F-Score @ T=4.0", 
       xlim=xlim, ylim=c(0.7,1.0),
       lnames,
       lpos="topleft")

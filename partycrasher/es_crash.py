@@ -88,6 +88,10 @@ class ESCrashMeta(type):
                     # Ensure this is UTC ISO format
                     now = datetime.datetime.utcnow()
                     crash.setdefault('date', now.isoformat())
+                    if 'stacktrace' in crash and crash['stacktrace'] is not None:
+                        for frame in crash['stracktracke']:
+                            if 'logdf' in frame:
+                                raise ValueError("logdf should not be stored in ElasticSearch")
                     crash_es_safe = crash.copy()
                     try:
                         response = cls.es.create(index=index,

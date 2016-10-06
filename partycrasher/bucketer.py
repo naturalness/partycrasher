@@ -824,6 +824,7 @@ def common_properties(thresholds):
             'type': 'string',
             'analyzer': 'default',
             # Enable a second tokenizer
+            # This is used for chopping off the tops of stacks automatically
             'fields': {
                 'whole': {
                     'type': 'string',
