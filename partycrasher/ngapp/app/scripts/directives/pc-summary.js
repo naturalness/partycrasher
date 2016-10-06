@@ -22,14 +22,15 @@ angular.module('PartyCrasherApp')
 //     });
 //     grouped = _.sortBy(_.toPairs(grouped), 1).reverse();
     var grouped = _.map(summary, (i) => {
-      return [i["field"] + ":\"" + i["term"], i["value"]] + "\"";
+      return [i["field"] + ":\"" + i["term"] + "\"", i["value"]];
     });
     grouped = _.sortBy(grouped, 1).reverse();
     
     var head = [];
     var tail = [];
     grouped.forEach (term => {
-        if (head.length < 2 
+        if (head.length < 0 /* dont push stacktrace.function to the top now
+                               that mini-trace works */
            && term[0].startsWith("stacktrace.function")) {
              head.push(term);
         } else {
