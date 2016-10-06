@@ -43,7 +43,7 @@ angular.module('PartyCrasherApp')
           if (frame.func) {
               if (frame._raw['logdf'] > 0.9 * maxlogdf || started) {
                   started = true;
-                  head.push([frame.func, 'stacktrace.function:'+frame.func]);
+                  head.push([frame.func, 'stacktrace.function:"'+frame.func+'"']);
               }
           }
       });
