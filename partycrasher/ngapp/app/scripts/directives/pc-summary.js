@@ -22,7 +22,7 @@ angular.module('PartyCrasherApp')
 //     });
 //     grouped = _.sortBy(_.toPairs(grouped), 1).reverse();
     var grouped = _.map(summary, (i) => {
-      return [i["field"] + ":\"" + i["term"] + "\"", i["value"]];
+      return [i["field"] + i["term"], i["value"]];
     });
     grouped = _.sortBy(grouped, 1).reverse();
     
