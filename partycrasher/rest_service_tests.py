@@ -441,6 +441,8 @@ class RestServiceTestCase(unittest.TestCase):
         report = sample_crashes.CRASH_1.copy()
         report['database_id'] = first_id
         response = requests.post(create_url, json=report)
+        if response.status_code != 201:
+            print(response.text)
         assert response.status_code == 201
 
         # Wait a bit...
@@ -529,6 +531,8 @@ class RestServiceTestCase(unittest.TestCase):
         # Now fetch it!
         report_url = self.path_to('alan_parsons', 'reports', database_id)
         response = requests.get(report_url)
+        if response.status_code != 200:
+            print(json.dumps(response.json(), indent=2))
         assert response.status_code == 200
         assert response.json().get('database_id').endswith(database_id)
         assert response.json().get('project') == 'alan_parsons'

@@ -383,23 +383,30 @@ class PartyCrasher(object):
                                   offsets=False,
                                   positions=False)
         
-        with open('termvectors', 'wb') as termvectorsfile:
-            print(json.dumps(response, indent=2), file=termvectorsfile)
-            
-        vectors = response['term_vectors']['stacktrace.function.whole']
-            
-        all_doc_count = float(vectors['field_statistics']['doc_count'])
+        #with open('termvectors', 'wb') as termvectorsfile:
+            #print(json.dumps(response, indent=2), file=termvectorsfile)
         
-        crash = Crash(crash)
-        
-        for frame in crash['stacktrace']:
-            if 'function' in frame and frame['function']:
-                function = frame['function']
-                term = vectors['terms'][function]
-                relativedf = float(term['doc_freq'])/all_doc_count
-                logdf = -1.0 * math.log(relativedf, 2)
-                #print(logdf, file=sys.stderr)
-                frame['logdf'] = logdf
+        if 'stacktrace.function.whole' in response['term_vectors']:
+            vectors = response['term_vectors']['stacktrace.function.whole']
+            
+            all_doc_count = float(vectors['field_statistics']['doc_count'])
+            
+            crash = Crash(crash)
+            
+            # Sometimes there's extra functions on top of the stack for 
+            # logging/cleanup/handling/rethrowing/whatever that get called 
+            # after the fault but before the trace is generated, and are 
+            # present for multiple crash locations. So except on the 
+            # full detail page, we don't want to display them. 
+            # This is for that.
+            for frame in crash['stacktrace']:
+                if 'function' in frame and frame['function']:
+                    function = frame['function']
+                    term = vectors['terms'][function]
+                    relativedf = float(term['doc_freq'])/all_doc_count
+                    logdf = -1.0 * math.log(relativedf, 2)
+                    #print(logdf, file=sys.stderr)
+                    frame['logdf'] = logdf
           
         return crash
 
