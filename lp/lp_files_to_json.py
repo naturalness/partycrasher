@@ -179,6 +179,7 @@ def save_signals():
             ])
 
 lengths = dict()
+ulengths = dict()
 
 def iterate_all_fields(c, prefix, method):
     if isinstance(c, dict):
@@ -206,6 +207,11 @@ def rec_lengths(crash):
         else:
             length = len(camel.__call__(value))
         lengths[key].append((crash['database_id'], length))
+        if value is not None:
+            #print(key + " " + value + " " + str(length), file=sys.stderr)
+            if key not in ulengths:
+                ulengths[key] = dict()
+            ulengths[key][value] = length
 
     iterate_all_fields(crash, "", rec_length)
     
@@ -231,6 +237,11 @@ def save_lengths():
         writer.writerow(['Length', 'Count'])
         for i in range(0, len(length_counts)):
             writer.writerow([i, length_counts[i]])
+    with open('unique_lengths.csv', 'wb') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Length'])
+        for k, v in ulengths['stacktrace.function'].items():
+            writer.writerow([v])
 
 
 

@@ -833,6 +833,13 @@ def search(project):
         Get page of results starting from this number.
     ``size``
         Get this number of results, starting from ``from``.
+    ``sort``
+        Change how the results are sorted. Specifies a field name such
+        as ``date``.
+    ``order``
+        Should be ``asc`` or ``desc``. Default is ``desc``.
+        Determines whether the results should be sorted in 
+        ascending or descending order.
 
     ::
     
@@ -871,6 +878,8 @@ def search(project):
     until = request.args.get('until', None)
     from_ = request.args.get('from', None)
     size = request.args.get('size', None)
+    sort = request.args.get('sort', None)
+    order = request.args.get('order', None)
     
     if since is not None:
         try:
@@ -898,13 +907,21 @@ def search(project):
 
     if project == '*':
         project = None
+    
+    if order is not None:
+        if not (order == "asc" or order == "desc"):
+            raise BadRequest('Couldn\'t understand sort order. Should be'
+                            'asc or desc.')
+
 
     r = crasher.search(query_string,
                        since=since,
                        until=until,
                        project=project, 
                        from_=from_, 
-                       size=size)
+                       size=size,
+                       sort=sort,
+                       order=order)
     return jsonify_resource(r)
 
 #############################################################################

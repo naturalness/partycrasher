@@ -454,7 +454,9 @@ class PartyCrasher(object):
                until=None,
                project=None, 
                from_=None, 
-               size=None):
+               size=None,
+               sort=None,
+               order=None):
         es_query = {
             "query": {
                 "bool": { "must": [
@@ -468,7 +470,12 @@ class PartyCrasher(object):
                           "default_operator": "AND", 
                       }},
                 ]}
-            }};
+            }, 
+        }
+        if sort is not None:
+            if order is None:
+                order = "desc"
+            es_query["sort"] = [{sort: {"order": order}}]
         if project is not None:
             es_query['query']['bool']['must'].append({
                 "term": {
