@@ -311,7 +311,7 @@ class MLT(Bucketer):
                 if max_query_terms == max_query_terms_lb:
                     #print("Hit LB", file=sys.stderr)
                     break
-                max_query_terms_ub = max_query_terms
+                max_query_terms_ub = max_query_terms - 1
                 max_query_terms = math.floor(
                     float(max_query_terms+max_query_terms_lb)/2.0)
             elif (response['hits']['total'] 
@@ -319,7 +319,7 @@ class MLT(Bucketer):
                 if max_query_terms == max_query_terms_ub:
                     #print("Hit UB", file=sys.stderr)
                     break
-                max_query_terms_lb = max_query_terms
+                max_query_terms_lb = max_query_terms + 1
                 max_query_terms = math.ceil(
                     float(max_query_terms+max_query_terms_ub)/2.0)
             else:
