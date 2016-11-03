@@ -5,7 +5,9 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-
+   
+   data-format
+   
    rest-api
 
 Indices and tables
