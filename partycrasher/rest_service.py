@@ -18,6 +18,8 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from __future__ import print_function
+
 import os
 import sys
 import time
@@ -1051,5 +1053,9 @@ def main():
 if __name__ == '__main__':
     main()
 else:
-    with open('partycrasher.cfg') as config_file:
-        crasher = partycrasher.PartyCrasher(config_file)
+    try:
+        with open('partycrasher.cfg') as config_file:
+            crasher = partycrasher.PartyCrasher(config_file)
+    except IOError:
+        print("Couldn't load config file, wont work in gunicorn",
+              file=sys.stderr)

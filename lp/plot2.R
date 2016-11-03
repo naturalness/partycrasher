@@ -174,7 +174,8 @@ betaparm2 = fitdist(x, "beta", method="mle")
 betaparm2
 # d = dbeta(seq(0, 1, length= length(x)+1), 0.01907475, 2.35506635)
 # d2 = dbeta(seq(0, 1, length= length(x)+1), 0.01907475, 2.14096941)
-d = pbeta(seq(0, 1, length= length(x)+1), betaparm[[1]][[1]], betaparm[[1]][[2]])
+pbetax = exp(seq(log(1/(24*365.25*4)), log(1), length= length(x)+1))
+d = pbeta(pbetax, betaparm[[1]][[1]], betaparm[[1]][[2]])
 library(goftest)
 ks.test(x, pbeta,  betaparm[[1]][[1]], betaparm[[1]][[2]])
 cvm.test(x, pbeta,  betaparm[[1]][[1]], betaparm[[1]][[2]])
@@ -193,25 +194,25 @@ mypar(c(1,1))
 par(mar=c(2.75,3.0,1,1)+0.0)
 plot(ecdf(x), 
   main="", ylab="", xlab="", 
-  axes=FALSE, log="y",
-#   xlim=c(0.8, length(x)+1),
-  ylim=c(1/24, 365.25*4)/1500
+  axes=FALSE, log="x",
+   xlim=c(1/(24*365.25*4), 1.0),
+#   ylim=c(1/24, 365.25*4)/1500
   )
-lines(seq(1,  length(d))/length(d), d, col=linecolor)
+lines(pbetax, d, col=linecolor)
 # lines(seq(1,  length(x)), d2, col=rgb(1,0,1))
-legend  ("topright", 
-        legend=c("Empirical Distribution",
-                 "Beta Distribution"), 
+legend  ("topleft", 
+        legend=c("Empirical CDF",
+                 "Beta CDF"), 
         col=c(rgb(0,0,0), linecolor),
         lty=c(1,1),
         bty="n")
-axis(2, 
-  at=c(1/24,1,7,30,365.25,365.25*4)/1500,
-  labels=c("Hour", "Day", "Week", "Month", "Year", "4Y")
+axis(1, 
+   at=c(1/24,1,7,30,365.25,365.25*4)/(365.25*4),
+   labels=c("Hour", "Day", "Week", "Month", "Year", "4Y")
   )
-axis(1)
-title(ylab="Lifetime", line=2)
-title(xlab="Bucket #", line=1.75)
+axis(2)
+title(ylab="Fraction of Buckets", line=2)
+title(xlab="Lifetime less than", line=1.75)
 
 dev.off()
 quit()
