@@ -1,4 +1,4 @@
--- Returns the IDs of crashes with direct recursion
+-- Returns the IDs of crashes with trivial, unbounded recursion
 SELECT crash.id as report_id
 FROM crash LEFT JOIN recursion ON crash.id = crash_id
 WHERE stack_length = 2000
