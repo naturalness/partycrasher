@@ -6,7 +6,7 @@ This directory contains the documentation published on [ReadTheDocs].
 The pages are generated using [Sphinx] from [reStructuredText] sources.
 It also **runs** `partycrasher/rest_service.py`.
 
-[ReadTheDocs]: https://partycrasher.rtfd.io/
+[ReadTheDocs]: http://partycrasher.rtfd.io/
 [Sphinx]: http://www.sphinx-doc.org/en/1.4.8/
 [ReStructuredText]: http://docutils.sourceforge.net/rst.html
 
