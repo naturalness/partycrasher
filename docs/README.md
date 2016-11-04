@@ -43,6 +43,14 @@ the documentation build to fail, don't add anything to sinister to the
 run on import!
 
 
+Adding a new page
+-----------------
+
+1. Add a new `.rst` file to this directory.
+2. Add the name of your `.rst` file without the extension to
+   `index.rst` under the `.. toctree::` directive.
+
+
 Managing the automatic build
 ----------------------------
 
