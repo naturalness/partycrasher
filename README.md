@@ -1,6 +1,8 @@
 # PartyCrasher
 
 [![Build Status](https://travis-ci.org/naturalness/partycrasher.svg?branch=master)](https://travis-ci.org/naturalness/partycrasher)
+[![Documentation Status](https://readthedocs.org/projects/partycrasher/badge/?version=latest)](http://partycrasher.readthedocs.io/en/latest/?badge=latest)
+
 
 PartyCrasher is a framework for automatically grouping crash reports
 based on the contents of stack traces and other
