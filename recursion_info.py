@@ -546,6 +546,9 @@ def load(database_name):
 
 def stack_traces(corpus, filename, first_only=False):
     with io.open(filename, 'w', encoding='utf-8') as csv_file:
+        # The header, of sorts.
+        print("name", file=csv_file)
+
         for entry in corpus:
             for frame in entry.crash.stack_trace:
                 if frame.function:

@@ -87,12 +87,12 @@ $(CORPUS_NAME).sqlite: recursion_info.py $(CORPUS_NAME).json
 CSVS = $(addsuffix .csv,$(basename $(wildcard recursion_results/*.sql)))
 
 .PHONY: csvs
-csvs: $(CSVS) functions.csv first-functions.csv
+csvs: $(CSVS) lp/functions.csv lp/first-functions.csv
 
-functions.csv: recursion_info.py $(CORPUS_NAME).sqlite
+lp/functions.csv: recursion_info.py $(CORPUS_NAME).sqlite
 	./$< functions $@
 
-first-functions.csv: recursion_info.py $(CORPUS_NAME).sqlite
+lp/first-functions.csv: recursion_info.py $(CORPUS_NAME).sqlite
 	./$< first-functions $@
 
 
