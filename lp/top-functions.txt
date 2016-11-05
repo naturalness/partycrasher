@@ -1,0 +1,10 @@
+35771 g_signal_emit_valist
+32100 g_signal_emit
+30264 g_closure_invoke
+21000 gtk_grab_notify_foreach
+15821 g_main_context_dispatch
+15477 main
+15009 signal_emit_unlocked_R
+13809 PyEval_EvalFrameEx
+12738 g_main_loop_run
+12526 QGtkStyle::drawControl
