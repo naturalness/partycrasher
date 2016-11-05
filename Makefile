@@ -87,7 +87,14 @@ $(CORPUS_NAME).sqlite: recursion_info.py $(CORPUS_NAME).json
 CSVS = $(addsuffix .csv,$(basename $(wildcard recursion_results/*.sql)))
 
 .PHONY: csvs
-csvs: $(CSVS)
+csvs: $(CSVS) functions.csv first-functions.csv
+
+functions.csv: recursion_info.py $(CORPUS_NAME).sqlite
+	./$< functions $@
+
+first-functions.csv: recursion_info.py $(CORPUS_NAME).sqlite
+	./$< first-functions $@
+
 
 # Create a CSV from an SQL query over the crashes database.
 %.csv: %.sql $(CORPUS_NAME).sqlite

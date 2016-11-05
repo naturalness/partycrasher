@@ -9,7 +9,7 @@ Print descriptive statistics of launchpad data.
 Mostly deals with recursion stuff.
 """
 
-import csv
+import io
 import json
 import os
 import re
@@ -329,6 +329,9 @@ class Crash(object):
 
 
 def to_address(value):
+    """
+    Convert whatever string there is into an int.
+    """
     if value is None:
         return None
     try:
@@ -541,10 +544,42 @@ def load(database_name):
     return load_from_database(db_filename)
 
 
-if __name__ == '__main__':
-    corpus = load('lp_big.json')
+def stack_traces(corpus, filename, first_only=False):
+    with io.open(filename, 'w', encoding='utf-8') as csv_file:
+        for entry in corpus:
+            for frame in entry.crash.stack_trace:
+                if frame.function:
+                    print(frame.function, file=csv_file)
+                if first_only:
+                    break
 
-    # Look-up one crash:
-    if len(sys.argv) == 2:
-        _, crash_id = sys.argv
+
+if __name__ == '__main__':
+    corpus = load('lp_big')
+
+    if len(sys.argv) < 2:
+        exit(0)
+
+    subcommand = sys.argv[1]
+    args = sys.argv[2:]
+
+    if subcommand == 'lookup':
+        # Look-up one crash:
+        crash_id, = args
         print(corpus[crash_id].crash)
+    elif subcommand == 'functions':
+        # Print all function names
+        filename, = args
+        stack_traces(corpus, filename)
+    elif subcommand == 'first-functions':
+        # Print all function names of the FIRST stack frame.
+        filename, = args
+        stack_traces(corpus, filename, first_only=True)
+    else:
+        print((
+            "Usage:\n"
+            "   {prog} lookup <crash_id>\n"
+            "   {prog} functions <filename.csv>\n"
+            "   {prog} first-functions <filename.csv>\n"
+        ).format(prog=sys.argv[0]), file=sys.stdout)
+        exit(-1)
