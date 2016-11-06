@@ -19,6 +19,23 @@ Mandatory Properties
 database_id
 -----------
 
+The ``database_id`` field acts as a primary key, and appears in the URL for each crash. It is typically a reference
+to the external database from which the crash report originated. These must be unique for each crash. If a second
+crash is uploaded with the same ``database_id``, an error will occur. If multiple external sources of crash reports
+are used, the id should be prefixed with the source name to avoid collisions.
+
+.. code-block:: JSON
+
+  {
+    ...
+    "database_id": "launchpad:0000450543",
+    ...
+  }
+  
+.. code-block:: URL
+
+   http://localhost:5000/Ubuntu/reports/launchpad:0000450543
+
 date
 ----
 
@@ -40,39 +57,512 @@ PartyCrasher knows they are dates and not strings.
   
 project
 -------
+
+The ``project`` field indicates what piece of software a crash report is for. This allows crashes to be easily filtered.
+It is mandatory, and also appears in URLs. The ``project`` field allows a single PartyCrasher instance to bucket
+crashes from multiple projects, so that multiple instances of PartyCrasher are not required. However, crashes
+from multiple projects may still be bucketed together.
+
+.. code-block:: JSON
+
+  {
+    ...
+    "project": "Ubuntu",
+    ...
+  }
+
+.. code-block:: URL
+
+   http://localhost:5000/Ubuntu/reports/launchpad:0000450543
   
 stacktrace
 ----------
 
-Must be a list of objects.
+The ``stacktrace`` field stores the stack trace of the crash. Stack traces are also sometimes called tracebacks. This should be the main thread, if stack traces for multiple threads are available.  Must be a list of objects, with each object representing a stack frame at the time of the crash.  The first item in the list should be the top of the stack, and last item in the list should be the bottom of the stack. In other words, the first item in the list should be the frame for the function which crashed, and the last item in the list should be the frame for the main function of the program. ``stacktrace`` is required but may be an empty list.
 
+.. code-block:: JSON
 
-Optional Properties
-===================
+  {
+  ...
+    "stacktrace": [
+      {
+        "address": "0xff99cd48", 
+        "depth": "0", 
+        "function": "g_main_loop_run"
+      }, 
+      {
+        "address": "0xf688eccf", 
+        "depth": "1", 
+        "dylib": "/usr/lib/flashplugin-installer/libflashplayer.so", 
+        "function": null
+      }, 
+      ...,
+    ],
+    ...
+  }
 
 stacktrace.function
 -------------------
 
-The textual function name.
+Each stack frame object in the ``stacktrace`` list must contain a ``function`` property. This property should contain
+the function name as a string. This should be the fully qualified function name, including the class name, template information, etc. It may be ``null`` if the name is unknown due to missing symbols. See the examples above and below.
+
+Optional Properties
+===================
 
 stacktrace.address
 ------------------
 
+A stack frame object in the ``stacktrace`` list may contain an ``address`` property indicating the address of the frame in the stack. This can be in any format, but it needs to be in a string.
+For best results the format should be a decimal integer. See the example below. May also be used for the address
+of the function in memory.
+
+stacktrace.dylib
+----------------
+
+A stack frame object in the ``stacktrace`` list may contain a ``dylib`` property. The ``dylib`` property should be a string specifing what dynamic library the function in the frame is from. For example, the name of a ``.so`` or ``.dll`` file.
+
 stacktrace.file
 ---------------
+
+A stack frame object in the ``stacktrace`` list may contain a ``file`` property. The ``file`` property should be a string specifying what **source** file the function is defined in. It is beneficial to include a path with relevant directory (folder) names.
 
 stacktrace.fileline
 -------------------
 
+A stack frame object in the ``stacktrace`` list may contain a ``fileline`` property. The ``fileline`` property should be an integer formatted as a string indicating what line in the source file indicated by ``stacktrace.file`` called the function above the current frame in the stack, or crashed. 
+
+.. code-block:: JSON
+
+    {
+      ...
+      "stacktrace": [
+        ...
+        {
+          "address": "4895406", 
+          "depth": "2", 
+          "file": "abort.c", 
+          "fileline": "92",
+          "function": "abort", 
+        },
+        ...
+        {
+          "address": "3056248405", 
+          "depth": "8", 
+          "dylib": "/usr/lib/libQtGui.so.4", 
+          "function": "QCommonStyle::drawControl", 
+        }, 
+        ...
+      ],
+      ...
+    }
+    
+Other Properties
+----------------
+
+Other properties may be included in either the crash, or the stack frames. They may be arbitrarily structured JSON
+objects, lists, strings, and nulls. Numbers and booleans are not allowed due to the way PartyCrasher searches for crashes. 
+Strings that consist of
+dates or times in ISO format must be added to a list inside PartyCrasher's source, due to the way 
+ElasticSearch treats dates.
 
 Generated Properties
 ====================
 
 These properties are generated by PartyCrasher and will be overwritten.
-They should NOT be uploaded to PartyCrasher.
+They should NOT be present in any data uploaded to PartyCrasher.
 
 buckets
 -------
 
+The ``buckets`` property of a crash report stores information about what buckets PartyCrasher has placed the crash in and why. It is an object containing properties for each threshold at which buckets were assigned for the crash, plus
+a ``top-match`` property which contains information about the closest matching crash.
+
+For each bucket, the name of
+the bucket property indicates the threshold at which that bucket was assigned. 
+Additionally, each bucket object contains several properties. The ``href`` property contains a URL to retrieve
+the bucket from PartyCrasher. The ``id`` property gives a string that identifies bucket at a particular threshold.
+Bucket ``id`` s are unique within a threshold, but multiple buckets may exist with the same ``id`` at multiple
+thresholds.
+
+The ``top-match`` object also has several properties. The ``href`` property gives a URL to retrieve the closest
+matching report from PartyCrasher. The ``report_id`` and ``project`` properties indicate
+the ``database_id`` and ``project`` of the closest match, respectively. The ``score`` is the ElasticSearch score
+indicating how similar the crash was to its closest match.
+
+
+.. code-block:: JSON
+
+  {
+    ...
+    "buckets": {
+      "1.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/1.0/launchpad:0000116712", 
+        "id": "launchpad:0000116712", 
+        "project": "Ubuntu", 
+        "threshold": "1.0", 
+        "total": null
+      }, 
+      "10.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/10.0/launchpad:0000450543", 
+        "id": "launchpad:0000450543", 
+        "project": "Ubuntu", 
+        "threshold": "10.0", 
+        "total": null
+      }, 
+      "11.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/11.0/launchpad:0000450543", 
+        "id": "launchpad:0000450543", 
+        "project": "Ubuntu", 
+        "threshold": "11.0", 
+        "total": null
+      }, 
+      "2.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/2.0/launchpad:0000122585", 
+        "id": "launchpad:0000122585", 
+        "project": "Ubuntu", 
+        "threshold": "2.0", 
+        "total": null
+      }, 
+      "3.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/3.0/launchpad:0000126040", 
+        "id": "launchpad:0000126040", 
+        "project": "Ubuntu", 
+        "threshold": "3.0", 
+        "total": null
+      }, 
+      "4.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/4.0/launchpad:0000246647", 
+        "id": "launchpad:0000246647", 
+        "project": "Ubuntu", 
+        "threshold": "4.0", 
+        "total": null
+      }, 
+      "5.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/5.0/launchpad:0000444770", 
+        "id": "launchpad:0000444770", 
+        "project": "Ubuntu", 
+        "threshold": "5.0", 
+        "total": null
+      }, 
+      "6.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/6.0/launchpad:0000450543", 
+        "id": "launchpad:0000450543", 
+        "project": "Ubuntu", 
+        "threshold": "6.0", 
+        "total": null
+      }, 
+      "7.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/7.0/launchpad:0000450543", 
+        "id": "launchpad:0000450543", 
+        "project": "Ubuntu", 
+        "threshold": "7.0", 
+        "total": null
+      }, 
+      "8.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/8.0/launchpad:0000450543", 
+        "id": "launchpad:0000450543", 
+        "project": "Ubuntu", 
+        "threshold": "8.0", 
+        "total": null
+      }, 
+      "9.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/9.0/launchpad:0000450543", 
+        "id": "launchpad:0000450543", 
+        "project": "Ubuntu", 
+        "threshold": "9.0", 
+        "total": null
+      }, 
+      "top_match": {
+        "href": "http://buttercup:5000/Ubuntu/reports/launchpad:0000444770", 
+        "project": "Ubuntu", 
+        "report_id": "launchpad:0000444770", 
+        "score": "5.913951"
+      }
+    },
+    ...
+  }
+
+href
+----
+
+The ``href`` property gives the URL from which the crash report may be retrived from PartyCrasher.
+
+.. code-block:: JSON
+  
+  {
+    ...
+    "href": "http://buttercup:5000/Ubuntu/reports/launchpad:0000450543", 
+    ...
+  }
+
 stacktrace.logdf
 ----------------
+
+The ``logdf`` property of stack frames indicates how rare the function is. It is the negative base-2 logarithm of the 
+number of crashes in which this function appears divided by the total number of crashes. A ``logdf`` of 0 indicates
+this function name appears in every crash. A ``logdf`` of 10 indicates this function name only appears in one out of
+every 1024 crashes. It is computed from the ``function`` property. It will not appear in frames 
+where ``function`` is null.
+
+.. code-block:: JSON
+
+  {
+    ...
+    "stacktrace": [
+      ...
+      {
+        ...
+        "function": "gtk_main", 
+        "logdf": "2.66208067724",
+        ...
+      },
+      ...
+    ],
+    ...
+  }
+  
+Example
+=======
+
+.. code-block:: JSON
+
+  {
+    "CrashCounter": "1", 
+    "Disassembly": "0xff99cd48:", 
+    "ExecutablePath": "/usr/lib/nspluginwrapper/i386/linux/npviewer.bin", 
+    "Package": "nspluginwrapper 1.2.2-0ubuntu5", 
+    "ProcCmdline": "/usr/lib/nspluginwrapper/i386/linux/npviewer.bin --plugin /usr/lib/flashplugin-installer/libflashplayer.so --connection /org/wrapper/NSPlugins/libflashplayer.so/5580-6", 
+    "ProcEnviron": " PATH=(custom, user)\n LANG=fr_FR.UTF-8\n SHELL=/bin/bash\n", 
+    "Signal": "11", 
+    "SourcePackage": "nspluginwrapper", 
+    "Title": "npviewer.bin crashed with SIGSEGV", 
+    "Uname": "Linux 2.6.28-15-generic x86_64", 
+    "UserGroups": "adm admin cdrom dialout kqemu lpadmin plugdev sambashare", 
+    "buckets": {
+      "1.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/1.0/launchpad:0000116712", 
+        "id": "launchpad:0000116712", 
+        "project": "Ubuntu", 
+        "threshold": "1.0", 
+        "total": null
+      }, 
+      "10.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/10.0/launchpad:0000450543", 
+        "id": "launchpad:0000450543", 
+        "project": "Ubuntu", 
+        "threshold": "10.0", 
+        "total": null
+      }, 
+      "11.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/11.0/launchpad:0000450543", 
+        "id": "launchpad:0000450543", 
+        "project": "Ubuntu", 
+        "threshold": "11.0", 
+        "total": null
+      }, 
+      "2.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/2.0/launchpad:0000122585", 
+        "id": "launchpad:0000122585", 
+        "project": "Ubuntu", 
+        "threshold": "2.0", 
+        "total": null
+      }, 
+      "3.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/3.0/launchpad:0000126040", 
+        "id": "launchpad:0000126040", 
+        "project": "Ubuntu", 
+        "threshold": "3.0", 
+        "total": null
+      }, 
+      "4.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/4.0/launchpad:0000246647", 
+        "id": "launchpad:0000246647", 
+        "project": "Ubuntu", 
+        "threshold": "4.0", 
+        "total": null
+      }, 
+      "5.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/5.0/launchpad:0000444770", 
+        "id": "launchpad:0000444770", 
+        "project": "Ubuntu", 
+        "threshold": "5.0", 
+        "total": null
+      }, 
+      "6.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/6.0/launchpad:0000450543", 
+        "id": "launchpad:0000450543", 
+        "project": "Ubuntu", 
+        "threshold": "6.0", 
+        "total": null
+      }, 
+      "7.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/7.0/launchpad:0000450543", 
+        "id": "launchpad:0000450543", 
+        "project": "Ubuntu", 
+        "threshold": "7.0", 
+        "total": null
+      }, 
+      "8.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/8.0/launchpad:0000450543", 
+        "id": "launchpad:0000450543", 
+        "project": "Ubuntu", 
+        "threshold": "8.0", 
+        "total": null
+      }, 
+      "9.0": {
+        "href": "http://buttercup:5000/Ubuntu/buckets/9.0/launchpad:0000450543", 
+        "id": "launchpad:0000450543", 
+        "project": "Ubuntu", 
+        "threshold": "9.0", 
+        "total": null
+      }, 
+      "top_match": {
+        "href": "http://buttercup:5000/Ubuntu/reports/launchpad:0000444770", 
+        "project": "Ubuntu", 
+        "report_id": "launchpad:0000444770", 
+        "score": "5.913951"
+      }
+    }, 
+    "cpu": "amd64", 
+    "database_id": "launchpad:0000450543", 
+    "date": "2016-11-03T19:14:02.827181", 
+    "extra": "StacktraceTop:  ?? ()\n ?? () from /usr/lib/flashplugin-installer/libflashplayer.so\n ?? () from /usr/lib/flashplugin-installer/libflashplayer.so\n ?? () from /usr/lib/flashplugin-installer/libflashplayer.so\n ?? () from /usr/lib/flashplugin-installer/libflashplayer.so\n\nBinary package hint: nspluginwrapper\nI cannot attach it to bug 444770\n\n\n", 
+    "href": "http://buttercup:5000/Ubuntu/reports/launchpad:0000450543", 
+    "os": "Ubuntu 9.04", 
+    "project": "Ubuntu", 
+    "stacktrace": [
+      {
+        "address": "0xff99cd48", 
+        "args": "", 
+        "depth": "0", 
+        "extra": [
+          "#0  0xff99cd48 in ?? ()"
+        ], 
+        "function": null
+      }, 
+      {
+        "address": "0xf688eccf", 
+        "args": "", 
+        "depth": "1", 
+        "dylib": "/usr/lib/flashplugin-installer/libflashplayer.so", 
+        "extra": [
+          "#1  0xf688eccf in ?? () from /usr/lib/flashplugin-installer/libflashplayer.so"
+        ], 
+        "function": null
+      }, 
+      {
+        "address": "0xf6c107a4", 
+        "args": "", 
+        "depth": "2", 
+        "dylib": "/usr/lib/flashplugin-installer/libflashplayer.so", 
+        "extra": [
+          "#2  0xf6c107a4 in ?? () from /usr/lib/flashplugin-installer/libflashplayer.so"
+        ], 
+        "function": null
+      }, 
+      {
+        "address": "0xf68a4731", 
+        "args": "", 
+        "depth": "3", 
+        "dylib": "/usr/lib/flashplugin-installer/libflashplayer.so", 
+        "extra": [
+          "#3  0xf68a4731 in ?? () from /usr/lib/flashplugin-installer/libflashplayer.so"
+        ], 
+        "function": null
+      }, 
+      {
+        "address": "0xf688eae3", 
+        "args": "", 
+        "depth": "4", 
+        "dylib": "/usr/lib/flashplugin-installer/libflashplayer.so", 
+        "extra": [
+          "#4  0xf688eae3 in ?? () from /usr/lib/flashplugin-installer/libflashplayer.so"
+        ], 
+        "function": null
+      }, 
+      {
+        "address": "0xf7a972b6", 
+        "args": "", 
+        "depth": "5", 
+        "dylib": "/usr/lib32/libglib-2.0.so.0", 
+        "extra": [
+          "#5  0xf7a972b6 in ?? () from /usr/lib32/libglib-2.0.so.0"
+        ], 
+        "function": null
+      }, 
+      {
+        "address": "0xf7a96b88", 
+        "args": "", 
+        "depth": "6", 
+        "dylib": "/usr/lib32/libglib-2.0.so.0", 
+        "extra": [
+          "#6  0xf7a96b88 in g_main_context_dispatch () from /usr/lib32/libglib-2.0.so.0"
+        ], 
+        "function": "g_main_context_dispatch", 
+        "logdf": "1.21725774612"
+      }, 
+      {
+        "address": "0xf7a9a0eb", 
+        "args": "", 
+        "depth": "7", 
+        "dylib": "/usr/lib32/libglib-2.0.so.0", 
+        "extra": [
+          "#7  0xf7a9a0eb in ?? () from /usr/lib32/libglib-2.0.so.0"
+        ], 
+        "function": null
+      }, 
+      {
+        "address": "0xf7a9a5ba", 
+        "args": "", 
+        "depth": "8", 
+        "dylib": "/usr/lib32/libglib-2.0.so.0", 
+        "extra": [
+          "#8  0xf7a9a5ba in g_main_loop_run () from /usr/lib32/libglib-2.0.so.0"
+        ], 
+        "function": "g_main_loop_run", 
+        "logdf": "1.43171166882"
+      }, 
+      {
+        "address": "0xf7d157d9", 
+        "args": "", 
+        "depth": "9", 
+        "dylib": "/usr/lib32/libgtk-x11-2.0.so.0", 
+        "extra": [
+          "#9  0xf7d157d9 in gtk_main () from /usr/lib32/libgtk-x11-2.0.so.0"
+        ], 
+        "function": "gtk_main", 
+        "logdf": "2.66208067724"
+      }, 
+      {
+        "address": "0x0804f3f4", 
+        "args": "", 
+        "depth": "10", 
+        "extra": [
+          "#10 0x0804f3f4 in ?? ()"
+        ], 
+        "function": null
+      }, 
+      {
+        "address": "0xf779f775", 
+        "args": "", 
+        "depth": "11", 
+        "dylib": "/lib32/libc.so.6", 
+        "extra": [
+          "#11 0xf779f775 in __libc_start_main () from /lib32/libc.so.6"
+        ], 
+        "function": "__libc_start_main", 
+        "logdf": "1.93522878569"
+      }, 
+      {
+        "address": "0x0804b451", 
+        "args": "", 
+        "depth": "12", 
+        "extra": [
+          "#12 0x0804b451 in ?? ()"
+        ], 
+        "function": null
+      }
+    ], 
+    "type": "Crash"
+  }
