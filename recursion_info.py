@@ -544,17 +544,40 @@ def load(database_name):
     return load_from_database(db_filename)
 
 
-def stack_traces(corpus, filename, first_only=False):
+def print_first_function_names(corpus, filename):
+    """
+    Prints the function name at the top-of-the-stack for each crash.
+    """
     with io.open(filename, 'w', encoding='utf-8') as csv_file:
-        # The header, of sorts.
-        print("name", file=csv_file)
+        # the header
+        print('name,signal', file=csv_file)
 
         for entry in corpus:
-            for frame in entry.crash.stack_trace:
-                if frame.function:
-                    print(frame.function, file=csv_file)
-                if first_only:
-                    break
+            crash = entry.crash
+            if len(crash.stack_trace) < 1:
+                break
+            frame = crash.stack_trace[0]
+
+            if frame.function:
+                # print function name and signal
+                print(frame.function.replace(',', ''),
+                      crash.context.get('Signal', ''),
+                      file=csv_file, sep=',')
+
+
+def print_function_names(corpus, filename):
+    """
+    Prints the **set** of function names for each crash.
+    """
+    with io.open(filename, 'w', encoding='utf-8') as csv_file:
+        # the header, of sorts.
+        print('name', file=csv_file)
+
+        for entry in corpus:
+            names = set(frame.function for frame in entry.crash.stack_trace
+                        if frame.function)
+            for name in names:
+                print(name, file=csv_file)
 
 
 if __name__ == '__main__':
@@ -573,11 +596,11 @@ if __name__ == '__main__':
     elif subcommand == 'functions':
         # Print all function names
         filename, = args
-        stack_traces(corpus, filename)
+        print_function_names(corpus, filename)
     elif subcommand == 'first-functions':
         # Print all function names of the FIRST stack frame.
         filename, = args
-        stack_traces(corpus, filename, first_only=True)
+        print_first_function_names(corpus, filename)
     else:
         print((
             "Usage:\n"
