@@ -573,11 +573,18 @@ def print_function_names(corpus, filename):
         # the header, of sorts.
         print('name', file=csv_file)
 
+        quantity = 0
+
         for entry in corpus:
             names = set(frame.function for frame in entry.crash.stack_trace
                         if frame.function)
+            if names:
+                quantity += 1
+
             for name in names:
                 print(name, file=csv_file)
+
+    print("Crashes with any function names:", quantity)
 
 
 if __name__ == '__main__':
