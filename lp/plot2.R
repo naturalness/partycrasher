@@ -49,8 +49,15 @@ options(scipen=5)
 npackages = length(packages$Count)
 packagemax = max(packages$Count)
 
+summary(packages$Count)
+sd(packages$Count)
+skewness(packages$Count)
+kurtosis(packages$Count)
+sum(packages$Count)
+
 require(zipfR)
 packagesspc = tfl2spc(tfl(packages$Count))
+packagesspc
 packagesfzm = lnre("fzm", packagesspc)
 packagesfzm
 packagesfzm.spc = lnre.spc(packagesfzm, N(packagesfzm))
@@ -81,8 +88,8 @@ plot(seq(1, npackages), revpackages$Count,
   type="h",
   main="", ylab="", xlab="", 
   axes=FALSE, log="xy",
-  xlim=c(0.8, npackages+1),
-  ylim=c(1, packagemax))
+  xlim=c(0.74, npackages+1),
+  ylim=c(0.74, packagemax))
 axis(2, at=c(1,2,5,10,20,50,100,200,500,1000,packagemax)) 
 axis(1, at=c(1,2,5,10,20,50,100,200,500,1000,npackages))
 title(xlab="Package", line=1.75)
@@ -97,6 +104,8 @@ nbuckets = length(buckets$Count)
 bucketmax = max(buckets$Count)
 
 bucketsspc = tfl2spc(tfl(buckets$Count))
+bucketsspc
+
 bucketsfzm = lnre("fzm", bucketsspc)
 bucketsfzm
 bucketsfzm.spc = lnre.spc(bucketsfzm, N(bucketsfzm))
@@ -118,6 +127,12 @@ legend("topright",
        )
 dev.off()
 
+summary(buckets$Count)
+sd(buckets$Count)
+skewness(buckets$Count)
+kurtosis(buckets$Count)
+
+
 
 svg(filename="buckets.svg", width=col_width, height=height, 
     family="Latin Modern Roman", pointsize=8)
@@ -127,8 +142,8 @@ plot(seq(1, nbuckets), revbuckets$Count,
   type="h",
   main="", ylab="", xlab="", 
   axes=FALSE, log="xy",
-  xlim=c(0.8, nbuckets+1),
-  ylim=c(1, bucketmax))
+  xlim=c(0.74, nbuckets+1),
+  ylim=c(0.74, bucketmax))
 axis(2, at=c(1,2,5,10,20,50,bucketmax)) 
 axis(1, at=c(1,2,5,10,20,50,100,200,500,1000,nbuckets))
 title(xlab="Bucket", line=1.75)
@@ -165,6 +180,13 @@ date_ranges = read.csv("date_ranges.csv")
 revdate_ranges <- date_ranges[rev(rownames(date_ranges)),]
 ndate_ranges = length(date_ranges$Count)
 date_rangemax = max(date_ranges$Delta)
+
+summary(date_ranges$Delta)
+sd(date_ranges$Delta)
+skewness(date_ranges$Delta)
+kurtosis(date_ranges$Delta)
+
+
 x=revdate_ranges[revdate_ranges$Count>2,][[3]]/(24*60*60)
 x=x/1500
 betaparm = fitdist(x, "beta", method="mme")
@@ -215,7 +237,7 @@ title(ylab="Fraction of Buckets", line=2)
 title(xlab="Lifetime less than", line=1.75)
 
 dev.off()
-quit()
+
 
 # 
 # descdist(revdate_ranges$Delta, discrete=FALSE, boot=100)
@@ -233,29 +255,77 @@ quit()
 y=revdate_ranges[revdate_ranges$Count>=2,][[3]]/(24*60*60)
 x=revdate_ranges[revdate_ranges$Count>=2,][[2]]
 
+library(fields)
+library(RColorBrewer)
+
 linecolor=rgb(1,0,0)
 svg(filename="date_v_size.svg", width=col_width, height=height, 
     family="Latin Modern Roman", pointsize=8)
 mypar(c(1,1))
 par(mar=c(2.75,3.0,1,1)+0.0)
-plot(x, y, 
-  type="p",
-  main="", ylab="", xlab="", 
-  axes=FALSE, log="xy",
-  xlim=c(1.75, max(x)+2),
-  ylim=c(1/24, 365.25*4),
-  col=rgb(0, 0, 0, 0.25),
-  pch=c(3))
-# lines(seq(1,  length(x)), d2, col=rgb(1,0,1))
+
+xres=28
+yres=34
+
+x.bin <- seq(log(1.75), log(max(x)+2), length.out=xres+1)
+y.bin <- seq(log(1/24), log(365.25*4), length.out=yres+1)
+freq <- as.data.frame(
+            table(
+                 findInterval(log(x), x.bin, all.inside=TRUE),
+                 findInterval(log(y), y.bin, all.inside=TRUE)
+            )
+         )
+freq[,1] <- as.numeric(freq[,1])
+freq[,2] <- as.numeric(freq[,2])
+freq2D <- matrix(0, nrow=xres, ncol=yres)
+df = data.frame(x=x, y=y)
+for (i in 1:nrow(df)) {
+  freq2D[findInterval(log(df[i,"x"]), x.bin, all.inside=TRUE), findInterval(log(df[i,"y"]), y.bin, all.inside=TRUE)] <-  freq2D[findInterval(log(df[i,"x"]), x.bin, all.inside=TRUE), findInterval(log(df[i,"y"]), y.bin, all.inside=TRUE)] + 1
+}
+freq2D
+# freq
+# freq2D[cbind(freq[,1], freq[,2])] <- freq[,3]
+ticks = c(1,2,5,10,20,50,max(freq2D))
+my_palette <- colorRampPalette(c("#2c7bb6", "#ffffbf", "#d7191c"))(n = 16)
+image.plot(x.bin, y.bin, log(freq2D),
+      xaxt="n", yaxt="n",
+      nlevel=16, zlim=log(c(1,max(freq2D))),
+      axis.args=list(at=log(ticks), labels=ticks),
+      col=my_palette,
+      legend.lab="Number of Buckets"
+     )
+points(log(x), log(y), type="p", pch=16, col=rgb(0, 0, 0, 1), cex=0.5)
 axis(2, 
-  at=c(1/24,1,7,30,365.25,365.25*4),
+  at=log(c(1/24,1,7,30,365.25,365.25*4)),
   labels=c("Hour", "Day", "Week", "Month", "Year", "4Y")
   )
-axis(1)
+blergh=c(2,5,10,20,50,100)
+axis(1, 
+  at=log(blergh),
+  labels=blergh
+  )
 title(ylab="Lifetime", line=2)
 title(xlab="Bucket Size", line=1.75)
-
 dev.off()
+
+# plot(hexbin(x, y)
+#   type="p",
+#   main="", ylab="", xlab="", 
+#   axes=FALSE, 
+#   log="xy",
+#   xlim=c(1.75, max(x)+2),
+#   ylim=c(1/24, 365.25*4),
+#   col=rgb(0, 0, 0, 0.25),
+#   pch=c(3)
+#   )
+# lines(seq(1,  length(x)), d2, col=rgb(1,0,1))
+# axis(2, 
+#   at=c(1/24,1,7,30,365.25,365.25*4),
+#   labels=c("Hour", "Day", "Week", "Month", "Year", "4Y")
+#   )
+# axis(1)
+
+
 
 cor.test(x,y, method="pearson")
 cor.test(x,y, method="spearman")
@@ -337,8 +407,10 @@ reclengths = read.csv("../recursion_results/length.csv")
 sum(reclengths$count)
 reclengths_filtered = reclengths[reclengths$length < 20,]
 expanded = reclengths[rep(row.names(reclengths_filtered), reclengths_filtered$count), 1]-2
-
+expanded_all = reclengths[rep(row.names(reclengths), reclengths$count), 1]
 lengthmax = max(reclengths$length)
+
+
 
 x = reclengths$length
 # xgap <- ifelse(x > 40, x-2000+50, x)
@@ -421,8 +493,15 @@ dev.off()
 stacklengths = read.csv("../recursion_results/stack_length.csv")
 stacklengths_filtered = stacklengths[stacklengths$stack_length < 50,]
 expanded = stacklengths[rep(row.names(stacklengths_filtered), stacklengths_filtered$count), 1]-1
+expanded_all = stacklengths[rep(row.names(stacklengths), stacklengths$count), 1]
 
 lengthmax = max(stacklengths$count)
+
+summary(expanded_all)
+sd(expanded_all)
+skewness(expanded_all)
+kurtosis(expanded_all)
+
 
 svg(filename="stacklengths.svg", width=col_width, height=height, 
     family="Latin Modern Roman", pointsize=8)
@@ -461,6 +540,12 @@ dev.off()
 
 
 fnlengths = read.csv("lengths.csv")
+
+summary(fnlengths$Length)
+sd(fnlengths$Length)
+skewness(fnlengths$Length)
+kurtosis(fnlengths$Length)
+quit()
 lengthmax = max(tabulate(fnlengths$Length))
 countslen = max(fnlengths$Length)
 svg(filename="fnlengths.svg", width=col_width, height=height*1.33, 
@@ -548,3 +633,30 @@ legend("topright", legend=c("Gamma Distribution"), col=c(linecolor),
 title(ylab="Number of Unique Function Names", line=2.0)
 title(xlab="Function Name Length in Tokens", line=1.75)
 dev.off()
+
+
+firstfn <- read.csv("first-functions-full.4zipfR.csv")
+firstspc = tfl2spc(tfl(firstfn$count))
+firstfzm = lnre("fzm", firstspc)
+firstfzm
+firstfzm.spc = lnre.spc(firstfzm, N(firstfzm))
+
+svg(filename="firstfzm.svg", width=col_width, height=height, 
+    family="Latin Modern Roman", pointsize=8)
+mypar(c(1,1))
+par(mar=c(2.75,3.0,1,1)+0.0)
+plot(firstspc, firstfzm.spc, log="xy", 
+                  xlab="",
+                  ylab="")
+title(xlab="Number of Crashes", line=1.75)
+title(ylab="Number of Top Functions", line=2)
+legend("topright", 
+       legend=c("Empirical Data", "Finite Zipf-Mandelbrot"),
+       pch=c(1,3),
+       col=c(rgb(0,0,0), rgb(1,0,0),
+       lty=c(1,1)),
+       bty='n'
+       )
+dev.off()
+
+firstlib <- read.csv("top_libs.csv")

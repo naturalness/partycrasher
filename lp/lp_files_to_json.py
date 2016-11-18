@@ -24,6 +24,7 @@ import json
 import re
 import csv
 import datetime
+import operator
 from tokenizers import PatternTokenizer, camel
 Crash = crash.Crash
 
@@ -243,6 +244,28 @@ def save_lengths():
         for k, v in ulengths['stacktrace.function'].items():
             writer.writerow([v])
 
+libs = dict()
+
+def rec_libs(crash):
+    if len(crash['stacktrace']) >= 1:
+        frame = crash['stacktrace'][0]
+        if 'dylib' in frame:
+            dylib = frame['dylib']
+            print(dylib, file=sys.stderr)
+            match = re.search(r".+/([^/.]+)\.", dylib)
+            if match is not None:
+              dylib = match.group(1)
+              print(dylib, file=sys.stderr)
+              if dylib not in libs:
+                  libs[dylib] = 0
+              libs[dylib] += 1
+            
+def save_libs():
+    with open('top_libs.csv', 'wb') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Lib', 'Count'])
+        for k, v in sorted(libs.items(), key=operator.itemgetter(1), reverse=True):
+            writer.writerow([k, v])
 
 
 for bucketdir in os.listdir(topdir):
@@ -286,6 +309,7 @@ for bucketdir in os.listdir(topdir):
             rec_architecture(crashdata)
             rec_signal(crashdata)
             rec_lengths(crashdata)
+            rec_libs(crashdata)
 print(str(bugs_total) + " loaded", file=sys.stderr)
 print(str(no_stacktrace) + " thrown out because of unparsable stacktraces", file=sys.stderr)
 print(json.dumps({'crashes': crashes, 'oracle': oracle}, cls=crash.CrashEncoder, indent=2))
@@ -298,3 +322,4 @@ save_date_ranges()
 save_architectures()
 save_signals()
 save_lengths()
+save_libs()
