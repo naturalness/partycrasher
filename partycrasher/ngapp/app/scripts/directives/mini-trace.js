@@ -31,7 +31,7 @@ angular.module('PartyCrasherApp')
       
       stack.forEach((frame) => {
         if (frame.func) {
-          if (frame._raw['logdf'] > maxlogdf) {
+          if (parseFloat(frame._raw['logdf']) > maxlogdf) {
             maxlogdf = frame._raw['logdf'];
           }
         }
@@ -41,7 +41,7 @@ angular.module('PartyCrasherApp')
       
       stack.forEach((frame) => {
           if (frame.func) {
-              if (frame._raw['logdf'] > 0.9 * maxlogdf || started) {
+              if (parseFloat(frame._raw['logdf']) > 0.9 * maxlogdf || started) {
                   started = true;
                   head.push([frame.func, 'stacktrace.function:"'+frame.func+'"']);
               }
