@@ -116,6 +116,13 @@ class Bucketer(object):
         Returns a dictionary of type to value.
         """
         assert 'buckets' not in crash
+        if 'force_bucket' in crash:
+            buckets = self.bucket(crash)
+            print("Warning: overriding buckets to %s with force_bucket!" % (crash['force_bucket']), file=sys.stderr)
+            for key in buckets:
+                if key != 'top_match':
+                    buckets[key] = crash['force_bucket']
+            return buckets            
         return self.bucket(crash)
 
     def assign_save_buckets(self, crash, buckets=None):

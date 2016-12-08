@@ -58,6 +58,15 @@ class Buckets(object):
         new = Buckets()
         new._od = self._od.copy()
         return new
+    
+    def keys(self, *args, **kwargs):
+        return self._od.keys(*args, **kwargs)
+
+    def iterkeys(self, *args, **kwargs):
+        return self._od.iterkeys(*args, **kwargs)
+
+    def __iter__(self, *args, **kwargs):
+        return self._od.__iter__(*args, **kwargs)
 
     # TODO: automatically convert keys of wrong type to Threshold
 

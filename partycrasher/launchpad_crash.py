@@ -25,6 +25,7 @@ import os, re, io, gzip, json, sys
 import dateparser
 import unicodedata
 from logging import critical, error, warning, info, debug
+import datetime
 
 # list of commonly found fields in lp crash reports,
 # used to prevent ES from making lots of useless mappings
@@ -331,28 +332,30 @@ class LaunchpadCrash(Crash):
         crash = LaunchpadCrash()
         if os.path.isdir(path):
             post_path = os.path.join(path, "Post.txt")
-            if not os.path.isfile(post_path):
-                raise NotImplementedError("Missing %s, I don't know how to load this." % (post_path))
-            with open(post_path) as postfile: post = postfile.read()
             crash['database_id'] = 'launchpad:' + os.path.basename(path)
-            prevfield = 'extra'
-            crash['extra'] = ''
-            for line in post.split('\n'):
-                line = fixline(line)
-                match = re.match(r'^(\S[^:]+):\s*(.*)\s*$', line)
-                if match is not None:
-                    #print repr(match.group(1)) + '|||' + repr(match.group(2))
-                    crash[match.group(1)] = match.group(2)
-                    prevfield = fix_key_for_es(match.group(1))
-                else:
-                    if prevfield.lower() != 'date':
-                        crash[prevfield] += line + "\n"
+            if os.path.isfile(post_path):
+                #raise NotImplementedError("Missing %s, I don't know how to load this." % (post_path))
+                with open(post_path) as postfile: post = postfile.read()
+                prevfield = 'extra'
+                crash['extra'] = ''
+                for line in post.split('\n'):
+                    line = fixline(line)
+                    match = re.match(r'^(\S[^:]+):\s*(.*)\s*$', line)
+                    if match is not None:
+                        #print repr(match.group(1)) + '|||' + repr(match.group(2))
+                        crash[match.group(1)] = match.group(2)
+                        prevfield = fix_key_for_es(match.group(1))
                     else:
-                        crash['extra'] += line + "\n"
-            for key, value in list(crash.iteritems()): # limit the number of field mappings that ES creates
-                if not key in save_fields:
-                    del crash[key]
-                    crash['extra'] += key + ": " + value + "\n"
+                        if prevfield.lower() != 'date':
+                            crash[prevfield] += line + "\n"
+                        else:
+                            crash['extra'] += line + "\n"
+                for key, value in list(crash.iteritems()): # limit the number of field mappings that ES creates
+                    if not key in save_fields:
+                        del crash[key]
+                        crash['extra'] += key + ": " + value + "\n"
+            else:
+                crash['date'] = datetime.datetime.now()
             stack_path = None
             try_files = [
                 "Stacktrace.txt (retraced)",

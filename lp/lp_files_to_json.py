@@ -276,11 +276,13 @@ for bucketdir in os.listdir(topdir):
     #if len(buglist) < 2:
         #continue
     buckets.append(bucket)
+    print(bucket, file=sys.stderr)
     for bugdir in buglist:
         bugdir = os.path.join(bucketdir, bugdir)
+        print(bugdir, file=sys.stderr)
         assert os.path.isdir(bugdir)
         #print repr(os.listdir(bugdir))
-        if len(os.listdir(bugdir)) > 1:
+        if len(os.listdir(bugdir)) >= 1:
             database_id = 'launchpad:'+os.path.basename(bugdir)
             try:
                 print("Disk: " + database_id, file=sys.stderr)

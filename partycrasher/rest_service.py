@@ -199,6 +199,10 @@ def add_report(project=None):
 
     The response contains the bucket assignments, as well as the canonical URL
     to access the report.
+    
+    The report may also have a ``force_bucket`` property which will force
+    the report to be bucketed in a particular bucket. This is only useful
+    for testing purposes.
 
     ::
 
