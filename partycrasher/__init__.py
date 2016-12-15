@@ -417,6 +417,15 @@ class PartyCrasher(object):
             return self.bucketer.bucket_explain(database_id)
         except NotFoundError as e:
             raise KeyError(database_id)
+    
+    def compare(self, database_id, other_id):
+        self._connect_to_elasticsearch()
+
+        try:
+            return self.bucketer.compare(database_id, other_id)
+        except NotFoundError as e:
+            raise KeyError(database_id)
+        
 
     def get_projects(self):
         """

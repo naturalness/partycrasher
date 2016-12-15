@@ -418,6 +418,36 @@ def report_summary(project, report_id):
         return jsonify_resource(summary)
 
 
+@app.route('/<project>/reports/<report_id>/compare/<other_id>')
+@app.route('/reports/<report_id>/compare/<other_id>')
+def report_compare(report_id, other_id):
+    """
+    .. api-doc-order: 2
+
+    Compare two reports and return various things
+    ======================
+    ::
+
+        GET /reports/:report_id/compare/:other_id HTTP/1.1
+
+    Comp
+
+    .. code-block:: json
+
+        {
+            "database_id": "<report-id>",
+            TBD
+        }
+
+    """
+
+    try:
+        summary = crasher.compare(report_id, other_id)
+    except partycrasher.ReportNotFoundError:
+        return jsonify(not_found=report_id), 404
+    else:
+        return jsonify_resource(summary)
+
 @app.route('/reports/dry-run', methods=['POST'])
 @app.route('/<project>/reports/dry-run', methods=['POST'])
 def ask_about_report(project=None):

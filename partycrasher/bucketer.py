@@ -72,6 +72,19 @@ class Bucketer(object):
         self.lowercase = lowercase
         self.config = config
 
+        self.index_number_of_shards = (
+          int(
+            self.config.get('partycrasher.elastic', 
+                            'number_of_shards')))
+        self.index_number_of_replicas = (
+          int(
+            self.config.get('partycrasher.elastic', 
+                            'number_of_replicas')))
+        self.index_translog_durability = (
+          self.config.get('partycrasher.elastic', 'translog_durability'))
+        self.index_throttle_type = (
+          self.config.get('partycrasher.elastic', 'throttle_type'))
+
     def bucket(self, crash):
         assert isinstance(crash, Crash)
         raise NotImplementedError("I don't know how to generate a signature for this crash.")
@@ -106,10 +119,19 @@ class Bucketer(object):
                             'filter': filter_,
                             }
                         }
-                    }
+                    },
+                'index': self.index_settings(),
                 }
             }
         )
+                
+    def index_settings(self):
+        return {
+                        'number_of_shards': self.index_number_of_shards,
+                        'number_of_replicas': self.index_number_of_replicas,
+                        'store.throttle.type': self.index_throttle_type,
+                        'translog.durability': self.index_translog_durability
+                    };
 
     def assign_buckets(self, crash):
         """
@@ -184,6 +206,42 @@ class MLT(Bucketer):
     def min_threshold(self):
         return self.thresholds[0]
       
+    def make_more_like_this_query(self, 
+                                  crash, 
+                                  max_query_terms,
+                                  terminate_after = None):
+        body =  {
+            # Only fetch database ID, buckets, and project.
+            '_source': ['buckets', 'database_id', 'project'],
+            'query': {
+                'more_like_this': {
+                    # NOTE: This style only works in ElasticSearch 1.x...
+                    'docs': [
+                        {
+                            '_index': self.index,
+                            '_type': 'crash',
+                            'doc': crash,
+                        }
+                    ],
+                    # Avoid some ElasticSearch optimizations:
+                    #
+                    # Search for WAY more terms than ElasticSearch would
+                    # normally construct.
+                    'max_query_terms': max_query_terms,
+                    # Force ElasticSearch to query... like, all the things.
+                    'min_term_freq': 0,
+                    'min_doc_freq': 0,
+                },
+            },
+            'size': 100,
+            'min_score': self.mlt_min_score,
+        }
+                        
+        if terminate_after is not None:
+            body['terminate_after'] = terminate_after
+
+        return body
+
     def make_mlt_query_explain(self,
                                 crash,
                                 index=None,
@@ -192,8 +250,7 @@ class MLT(Bucketer):
                                 terminate_after=None,
                                 dont_explain=False):
         """
-        Queries ElasticSearch with MoreLikeThis and returns information
-        from a crash that was significant to the result.
+        Builds the more_like_this query.
         """
 
         if index is None:
@@ -219,6 +276,7 @@ class MLT(Bucketer):
         skip_fields = Set([
           'database_id',
           'buckets',
+          'force_bucket',
           'depth',
           'date',
         ])
@@ -250,6 +308,8 @@ class MLT(Bucketer):
         # overall F-score seems to go down so I'm not sure this is worthwhile
         #if 'stacktrace.function' in fields:
         #    fields.append('stacktrace.function.whole')
+        for field in fields:
+            assert "buckets" not in field
         
         body["query"]["more_like_this"]["fields"] = fields
         
@@ -389,42 +449,6 @@ class MLT(Bucketer):
             time.sleep(1)
             return self.bucket(crash)
 
-    def make_more_like_this_query(self, 
-                                  crash, 
-                                  max_query_terms,
-                                  terminate_after = None):
-        body =  {
-            # Only fetch database ID, buckets, and project.
-            '_source': ['buckets', 'database_id', 'project'],
-            'query': {
-                'more_like_this': {
-                    # NOTE: This style only works in ElasticSearch 1.x...
-                    'docs': [
-                        {
-                            '_index': self.index,
-                            '_type': 'crash',
-                            'doc': crash,
-                        }
-                    ],
-                    # Avoid some ElasticSearch optimizations:
-                    #
-                    # Search for WAY more terms than ElasticSearch would
-                    # normally construct.
-                    'max_query_terms': max_query_terms,
-                    # Force ElasticSearch to query... like, all the things.
-                    'min_term_freq': 0,
-                    'min_doc_freq': 0,
-                },
-            },
-            'size': 100,
-            'min_score': self.mlt_min_score,
-        }
-                        
-        if terminate_after is not None:
-            body['terminate_after'] = terminate_after
-
-        return body
-
     def make_matching_buckets(self, matches, default=None):
         if default is None:
             raise ValueError('Must provide a string default bucket name')
@@ -502,6 +526,35 @@ class MLT(Bucketer):
 
     def alt_bucket(self, crash):
         return self.bucket(crash)
+      
+    def compare(self, crash, other_id):
+        """
+        Queries ElasticSearch with MoreLikeThis.
+        Used for comparing two documents.
+        """
+        mlt_body = self.make_mlt_query_explain(
+            crash, 
+            max_query_terms=self.initial_mlt_max_query_terms)
+        mlt_query = mlt_body['query']
+        query = {
+            'bool': {
+                'filter': {
+                    'ids': {
+                        'values': [other_id]
+                    }
+                },
+                'should': mlt_query
+            }
+        }
+        mlt_body['query'] = query
+        mlt_body['min_score'] = -1000.0
+        
+        response = self.es.search(index=self.index, body=mlt_body)
+        with open('comparison', 'wb') as debug_file:
+            #print(json.dumps(response['hits']['hits'][0]['_explanation'], indent=2), file=debug_file)
+            print(json.dumps(response, indent=2), file=debug_file)
+        
+        return self.get_explanation_from_response(response)
 
 
 class MLTStandardUnicode(MLT):
@@ -529,7 +582,8 @@ class MLTStandardUnicode(MLT):
                             'filter': filter_,
                             }
                         }
-                    }
+                    },
+                'index': self.index_settings(),
                 }
             }
         )
@@ -560,7 +614,9 @@ class MLTLetters(MLT):
                             'filter': [],
                             }
                         }
-                    }
+                    },
+                'index': self.index_settings(),
+
                 }
             }
         )
@@ -594,7 +650,9 @@ class MLTIdentifier(MLT):
                             'lowercase': self.lowercase,
                            }
                         }
-                    }
+                    },
+                'index': self.index_settings(),
+
                 }
             }
         )
@@ -604,8 +662,9 @@ class MLTCamelCase(MLT):
     def create_index(self):
         traceback.print_stack()
         # Ignore 400 -- index already created.
+        # /!\ BUG However this will hide IllegalArgumentExceptions also
         self.es.indices.create(index=self.index, ignore=400,
-        body={
+            body={
             'mappings': {
                 'crash': {
                     'properties': common_properties(self.thresholds),
@@ -649,7 +708,9 @@ class MLTCamelCase(MLT):
                             'lowercase': self.lowercase,
                            }
                         }
-                    }
+                    },
+                'index': self.index_settings(),
+
                 }
             }
         )
@@ -689,7 +750,8 @@ class MLTLerch(MLT):
                             'filter': ['lowercase', 'lerch'],
                             }
                         }
-                    }
+                    },
+                'index': self.index_settings(),
                 }
             }
         )
@@ -733,7 +795,8 @@ class MLTNGram(MLT):
                             'filter': filter_,
                             }
                         }
-                    }
+                    },
+                'index': self.index_settings(),
                 }
             }
         )
