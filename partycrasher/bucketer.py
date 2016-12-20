@@ -84,6 +84,12 @@ class Bucketer(object):
           self.config.get('partycrasher.elastic', 'translog_durability'))
         self.index_throttle_type = (
           self.config.get('partycrasher.elastic', 'throttle_type'))
+        self.similarity = (
+          self.config.get('partycrasher.elastic', 'similarity'))
+        self.similarity_k1 = (
+          self.config.get('partycrasher.elastic', 'similarity_k1'))
+        self.similarity_b = (
+          self.config.get('partycrasher.elastic', 'similarity_b'))
 
     def bucket(self, crash):
         assert isinstance(crash, Crash)
@@ -126,12 +132,26 @@ class Bucketer(object):
         )
                 
     def index_settings(self):
+        similarity_config = {}
+        if self.similarty == 'BM25':
+            similarity_config = {
+                'type': 'BM25',
+                'k1': float(self.similarity_k1),
+                'b': float(self.similarity_b)
+            }
+        else:
+            similarity_config = {
+                'type':  self.similarity
+            }
         return {
                         'number_of_shards': self.index_number_of_shards,
                         'number_of_replicas': self.index_number_of_replicas,
                         'store.throttle.type': self.index_throttle_type,
-                        'translog.durability': self.index_translog_durability
-                    };
+                        'translog.durability': self.index_translog_durability,
+                        'similarity': {
+                            'default': similarity_config,
+                        },
+               };
 
     def assign_buckets(self, crash):
         """
