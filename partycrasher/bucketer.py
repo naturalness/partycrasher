@@ -133,7 +133,7 @@ class Bucketer(object):
                 
     def index_settings(self):
         similarity_config = {}
-        if self.similarty == 'BM25':
+        if self.similarity == 'BM25':
             similarity_config = {
                 'type': 'BM25',
                 'k1': float(self.similarity_k1),
