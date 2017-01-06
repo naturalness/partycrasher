@@ -43,14 +43,9 @@ BOOTSTRAP_RESUME_AT=0 # This doesn't actually work properly yet, don't use it.
 RESET_STATS_AFTER_BLOCK=False
 TOTALLY_FAKE_DATA=False
 START_GUNICORN=True
-
-if len(sys.argv) < 2+1:
-    print("Usage: " + sys.argv[0] + "oracle.json http://restservicehost:port/")
-
-oracle_file_path = sys.argv[1]
-rest_service_url = sys.argv[2]
-
-client = RestClient(rest_service_url)
+client=None
+interval = BLOCK_SIZE
+increasing_spacing = False
 
 beta = 1.0
 
@@ -387,8 +382,6 @@ def process_block(block, crashes_so_far, comparisons, totals):
             comparison_data['csvfileh'].flush()
         
 
-interval = BLOCK_SIZE
-increasing_spacing = False
 
 def iterate_crash(
     database_id, 
@@ -429,11 +422,6 @@ def iterate_crash(
                       totals)
         iterate_crash.ingest_block = []
 
-# static variables
-iterate_crash.print_after = BLOCK_SIZE 
-iterate_crash.crashes_so_far = 0
-iterate_crash.ingest_block = []
-    
 def simulate(comparisons, oracle_data):
     (crashes, oracle_all, all_ids, total_ids, total_buckets) = oracle_data
     totals = {
@@ -499,27 +487,47 @@ class GunicornStarter(object):
      
     def close(self):
         self.stop_gunicorn()
+        
+def buckettest(oracle_file_path, rest_service_url):
+    global client
+    client = RestClient(rest_service_url)
 
-if START_GUNICORN:
-    gunicorn_starter = GunicornStarter()
+    # static variables
+    iterate_crash.print_after = BLOCK_SIZE 
+    iterate_crash.crashes_so_far = 0
+    iterate_crash.ingest_block = []
+    
 
-try:
-    if not BOOTSTRAP_RESUME_AT:
-        reset_index()
-    if TOTALLY_FAKE_DATA:
-        synthesize(get_comparisons())
-    else:
-        simulate(
-            get_comparisons(),
-            load_oracle_data(oracle_file_path)
-        )
-except:
-    traceback.print_exc()
-finally:
-    print('Cleaing up...')
-    if PARALLEL > 1:
-        pool.terminate()
-        pool.join()
     if START_GUNICORN:
-        gunicorn_starter.stop_gunicorn()
+        gunicorn_starter = GunicornStarter()
 
+    try:
+        if not BOOTSTRAP_RESUME_AT:
+            reset_index()
+        if TOTALLY_FAKE_DATA:
+            synthesize(get_comparisons())
+        else:
+            simulate(
+                get_comparisons(),
+                load_oracle_data(oracle_file_path)
+            )
+    except:
+        traceback.print_exc()
+    finally:
+        print('Cleaing up...')
+        if PARALLEL > 1:
+            pool.terminate()
+            pool.join()
+        if START_GUNICORN:
+            gunicorn_starter.stop_gunicorn()
+
+    
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2+1:
+        print("Usage: " + sys.argv[0] + "oracle.json http://restservicehost:port/")
+
+    oracle_file_path = sys.argv[1]
+    rest_service_url = sys.argv[2]
+
+    buckettest(oracle_file_path, rest_service_url)
