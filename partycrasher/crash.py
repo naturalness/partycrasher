@@ -394,8 +394,14 @@ class CrashEncoder(json.JSONEncoder):
         if isinstance(o, datetime.datetime):
             serialized = o.isoformat()
             return serialized
+        if isinstance(o, Buckets):
+            return o._od
         else:
             return json.JSONEncoder.default(self, o)
+
+def pretty(thing):
+    return json.dumps(thing, cls=CrashEncoder, indent=2)
+
 
 import unittest
 class TestCrash(unittest.TestCase):

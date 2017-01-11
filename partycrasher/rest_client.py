@@ -20,6 +20,10 @@
 
 from __future__ import print_function
 
+import requests
+
+from partycrasher.crash import Crash
+
 
 class RestClient:
     
@@ -38,3 +42,24 @@ class RestClient:
         Create a URL path, relative to the current origin.
         """
         return '/'.join((self.origin,) + args)
+
+    def get_a_bunch_of_crashes(self, date_range_start, limit):
+      bunch = []
+      step = 100
+      for from_ in range(0, limit, step):
+          query = {
+            'from': from_,
+            'since': date_range_start,
+            'size': step,
+          }
+          response = requests.get(self.path_to('*', 'search'), params=query)
+          response.raise_for_status()
+          for crash in response.json():
+              crash = Crash(crash)
+              bunch.append(crash)
+      return bunch
+    
+    def compare(self, id_a, id_b):
+        response = requests.get(self.path_to(id_a, 'compare', id_b))
+        response.raise_for_status()
+        return response.json()
