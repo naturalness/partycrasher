@@ -418,9 +418,9 @@ def report_summary(project, report_id):
         return jsonify_resource(summary)
 
 
-@app.route('/<project>/reports/<report_id>/compare/<other_id>')
-@app.route('/reports/<report_id>/compare/<other_id>')
-def report_compare(report_id, other_id):
+@app.route('/<project>/reports/<report_id>/compare')
+@app.route('/reports/<report_id>/compare')
+def report_compare(report_id):
     """
     .. api-doc-order: 2
 
@@ -441,8 +441,10 @@ def report_compare(report_id, other_id):
 
     """
 
+
+    other_ids = request.get_json()
     try:
-        summary = crasher.compare(report_id, other_id)
+        summary = crasher.compare(report_id, other_ids)
     except partycrasher.ReportNotFoundError:
         return jsonify(not_found=report_id), 404
     else:

@@ -59,7 +59,9 @@ class RestClient:
               bunch.append(crash)
       return bunch
     
-    def compare(self, id_a, id_b):
-        response = requests.get(self.path_to(id_a, 'compare', id_b))
+    def compare(self, id_, others):
+        response = requests.get(self.path_to('reports', id_, 'compare'), json=others)
         response.raise_for_status()
+        responsedata = response.json()
+        return responsedata
         return response.json()

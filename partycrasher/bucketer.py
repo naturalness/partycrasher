@@ -35,7 +35,7 @@ from elasticsearch import RequestError
 from distutils.util import strtobool
 
 
-from crash import Crash, Buckets
+from crash import Crash, Buckets, pretty
 from es_crash import ESCrash, ESCrashEncoder
 from threshold import Threshold
 
@@ -236,7 +236,7 @@ class MLT(Bucketer):
             'query': {
                 'more_like_this': {
                     # NOTE: This style only works in ElasticSearch 1.x...
-                    'docs': [
+                    'like': [
                         {
                             '_index': self.index,
                             '_type': 'crash',
@@ -277,9 +277,10 @@ class MLT(Bucketer):
             index = self.index
 
         if isinstance(crash, basestring):
-            crash = ESCrash(crash, index=index)
+            crash = Crash(ESCrash(crash, index=index))
+            del crash['buckets']
             if use_existing is None:
-                use_existing = True
+                use_existing = False # this should be true but ES seems to be broken?
         else:
             if use_existing is None:
                 use_existing = False
@@ -290,8 +291,8 @@ class MLT(Bucketer):
         body["explain"] = (not dont_explain)
         if use_existing:
             # Prevent crash from being its own highest match when its already in ES
-            del body["query"]["more_like_this"]["docs"][0]["doc"]
-            body["query"]["more_like_this"]["docs"][0]["_id"] = crash["database_id"]
+            del body["query"]["more_like_this"]["like"][0]["doc"]
+            body["query"]["more_like_this"]["like"][0]["_id"] = crash["database_id"]
         
         skip_fields = Set([
           'database_id',
@@ -547,20 +548,22 @@ class MLT(Bucketer):
     def alt_bucket(self, crash):
         return self.bucket(crash)
       
-    def compare(self, crash, other_id):
+    def compare(self, crash, other_ids):
         """
         Queries ElasticSearch with MoreLikeThis.
         Used for comparing two documents.
         """
         mlt_body = self.make_mlt_query_explain(
             crash, 
-            max_query_terms=self.initial_mlt_max_query_terms)
+            max_query_terms=self.initial_mlt_max_query_terms,
+            dont_explain=True)
         mlt_query = mlt_body['query']
+        mlt_query['more_like_this']['max_query_terms'] = 19000
         query = {
             'bool': {
                 'filter': {
                     'ids': {
-                        'values': [other_id]
+                        'values': other_ids
                     }
                 },
                 'should': mlt_query
@@ -568,14 +571,24 @@ class MLT(Bucketer):
         }
         mlt_body['query'] = query
         mlt_body['min_score'] = -1000.0
+        mlt_body['size'] = len(other_ids)
         
-        response = self.es.search(index=self.index, body=mlt_body)
-        with open('comparison', 'wb') as debug_file:
-            #print(json.dumps(response['hits']['hits'][0]['_explanation'], indent=2), file=debug_file)
-            print(json.dumps(response, indent=2), file=debug_file)
+        response = self.es.search(index=self.index, body=pretty(mlt_body))
         
-        return self.get_explanation_from_response(response)
-
+        if True:
+            with open('comparison', 'wb') as debug_file:
+                print(pretty(mlt_body), file=debug_file)
+                #print(json.dumps(response['hits']['hits'][0]['_explanation'], indent=2), file=debug_file)
+                print(json.dumps(response, indent=2), file=debug_file)
+        
+        results_by_id = {}
+        for hit in response['hits']['hits']:
+            results_by_id[hit['_source']['database_id']] = hit['_score']
+        results = []
+        for id_ in other_ids:
+            if id_ in results_by_id:
+                results.append(results_by_id[id_])
+        return results
 
 class MLTStandardUnicode(MLT):
     """MLT with an analyzer breaking on spaces and then lowercasing"""

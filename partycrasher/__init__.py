@@ -418,11 +418,11 @@ class PartyCrasher(object):
         except NotFoundError as e:
             raise KeyError(database_id)
     
-    def compare(self, database_id, other_id):
+    def compare(self, database_id, other_ids):
         self._connect_to_elasticsearch()
 
         try:
-            return self.bucketer.compare(database_id, other_id)
+            return self.bucketer.compare(database_id, other_ids)
         except NotFoundError as e:
             raise KeyError(database_id)
         
@@ -507,7 +507,7 @@ class PartyCrasher(object):
         if size is not None:
             es_query["size"] = size;
         try:
-            r = self._es.search(index=self.es_index, body=es_query)
+            r = self.es.search(index=self.es_index, body=es_query)
         except RequestError as e:
             # TODO: use logger
             print(e.info, file=sys.stderr)
