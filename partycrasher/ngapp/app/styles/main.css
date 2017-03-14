@@ -109,3 +109,21 @@ input[type=checkbox].disclosure {
 .monospace {
   font-family: monospace;
 }
+
+.dateparent {
+  display: inline-block;
+  position: relative;
+  height: 0;
+}
+
+.datetip {
+  display: none;
+  z-index: 10;
+  border: 2px solid black;
+  position: absolute;
+  padding: 0.5em;
+  left: 0px;
+  bottom: 0.5em;
+  background: white;
+  white-space: nowrap;
+}
