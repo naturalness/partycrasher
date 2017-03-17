@@ -468,15 +468,13 @@ class MLT(Bucketer):
         try:
             matching_buckets = self.make_matching_buckets(
                 response,
-                default=random_bucketid())
+                default=None)
             return matching_buckets
         except IndexNotUpdatedError:
             time.sleep(1)
             return self.bucket(crash)
 
     def make_matching_buckets(self, matches, default=None):
-        if default is None:
-            raise ValueError('Must provide a string default bucket name')
 
         raw_matches = matches['hits']['hits']
         #assert len(raw_matches) in (0, 1), 'Unexpected amount of matches...'
@@ -522,7 +520,10 @@ class MLT(Bucketer):
             else:
                 #print("default: " + default)
                 # Create a new bucket.
-                matching_buckets[threshold] = default
+                if default is not None:
+                    matching_buckets[threshold] = default
+                else: # default is None
+                    matching_buckets[threshold] = random_bucketid()
 
         # Add the top match.
         if '_source' in top_match:

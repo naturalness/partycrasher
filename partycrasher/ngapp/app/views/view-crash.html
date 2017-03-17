@@ -31,14 +31,23 @@
         <div class="panel-heading">
           <h3 class="panel-title">Buckets</h3>
         </div>
-        <div class="panel-body">
-        <dl class="dl-x dl-xs">
-          <dt ng-repeat-start="bucket in buckets">{{bucket[0]}}</dt>
-          <dd ng-repeat-end>
-            <a href="{{::bucket[1] | uiUrl: 'bucket'}}">{{bucket[1].id}}</a>
-            (<ng-pluralize count="bucket[1].total" when="{ 'one': '1 crash)', 'other': '{} crashes)' }"/>
-          </dd>
-        </dl>
+        <div class="panel-body table-responsive" style="padding: 0;">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <td>Thr.</td>
+              <td>Bucket</td>
+              <td>Crashes</td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="bucket in buckets">
+              <td>{{bucket[0]}}</td>
+              <td><a href="{{::bucket[1] | uiUrl: 'bucket'}}">{{bucket[1].id}}</a></td>
+              <td>{{bucket[1].total}}</td>
+            </tr>
+          </tbody>
+        </table>
         </div>
       </section>
 
