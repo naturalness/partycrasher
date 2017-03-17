@@ -19,15 +19,19 @@ angular.module('PartyCrasherApp')
       /* Value has stabilized, so we can fetch the summary! */
       PartyCrasher.fetchReport({ project: scope.project, id: value })
         .then(rawReport => { 
-          scope.stackhead = extractHead(new CrashReport(rawReport));
+          [scope.stackhead, scope.stackmore] = extractHead(new CrashReport(rawReport));
         });
     });
   }
   function extractHead(crash) {
       var stack = crash.stackTrace;
       var head = [];
+      var more = [];
       
       var maxlogdf = 0.0;
+      
+      var maxhead = 3;
+      var maxmore = 3;
       
       stack.forEach((frame) => {
         if (frame.func) {
@@ -39,15 +43,34 @@ angular.module('PartyCrasherApp')
       
       var started = false;
       
+      var i = 0;
+      
       stack.forEach((frame) => {
+          i = i + 1;
           if (frame.func) {
+              var depth = i;
+              if (frame._raw['depth']) {
+                depth = frame._raw['depth'];
+              }
+              var prepared = [frame.func, 'stacktrace.function:"'+frame.func+'"', depth];
+              var inhead = false;
+              if (head.length < maxhead) {
+                head.push(prepared);
+                inhead = true;
+              }
               if (parseFloat(frame._raw['logdf']) > 0.9 * maxlogdf || started) {
                   started = true;
-                  head.push([frame.func, 'stacktrace.function:"'+frame.func+'"']);
+                  if (more.length < maxmore && (! inhead)) {
+                      more.push(prepared);
+                  }
               }
           }
       });
-      return head;
+      if ((more.length > 0) && ((head[head.length-1][2] + 1) >= more[0][2])) {
+        head = head.concat(more);
+        more = []
+      }
+      return [head, more];
   }
 
   return {

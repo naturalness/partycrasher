@@ -1,7 +1,21 @@
-<ol>
-      <li ng-repeat="item in stackhead | limitTo: 2">
+<ol style="margin-bottom: 0;">
+  <span ng-repeat="item in stackhead">
+      <li  value="{}">
       <a named-route="'view-search'"
          route-params="{project: '*'}"
          route-query-params="{q: item[1]}"
       >{{ item[0] }}</a></li>
+  </span>
 </ol>
+<span ng-if="stackmore.length > 1">
+  <ol style="margin-top: -0.5em;">
+    <li style="list-style: none;">...</li>
+    <span ng-repeat="item in stackmore">
+      <li  value="{{ item[2] }}">
+      <a named-route="'view-search'"
+         route-params="{project: '*'}"
+         route-query-params="{q: item[1]}"
+      >{{ item[0] }}</a></li>
+    </span>
+  </ol>
+</span>
