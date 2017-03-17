@@ -53,6 +53,22 @@ angular.module('PartyCrasherApp')
         }
       };
       
+      function getBucketTotal(bucket) {
+        PartyCrasher.fetchBucket({ 
+          project: bucket[1].project,
+          threshold: bucket[1].threshold,
+          id: bucket[1].id,
+          from: 0,
+          size: 0 }).then(
+          data => {
+            bucket[1].total = data['total'];
+          })
+      }
+      
+      for (var bucket of buckets) {
+        getBucketTotal(bucket);
+      }
+      
       getPrecedents(precedentId1, precedentProject1, precedentScore1, 10);
       
     });

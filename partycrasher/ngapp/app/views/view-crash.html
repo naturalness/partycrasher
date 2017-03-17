@@ -34,7 +34,10 @@
         <div class="panel-body">
         <dl class="dl-x dl-xs">
           <dt ng-repeat-start="bucket in buckets">{{bucket[0]}}</dt>
-          <dd ng-repeat-end><a href="{{::bucket[1] | uiUrl: 'bucket'}}">{{bucket[1].id}}</a></dd>
+          <dd ng-repeat-end>
+            <a href="{{::bucket[1] | uiUrl: 'bucket'}}">{{bucket[1].id}}</a>
+            (<ng-pluralize count="bucket[1].total" when="{ 'one': '1 crash)', 'other': '{} crashes)' }"/>
+          </dd>
         </dl>
         </div>
       </section>
