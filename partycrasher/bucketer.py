@@ -39,12 +39,16 @@ from crash import Crash, Buckets, pretty
 from es_crash import ESCrash, ESCrashEncoder
 from threshold import Threshold
 
+from base64 import b64encode
+def random_bucketid():
+    """Generates a random string for a bucket ID"""
+    return b64encode(os.urandom(12), ":_")
+
 class IndexNotUpdatedError(Exception):
     """
     When ElasticSearch has not yet propegated a required update. The solution
     to this is usually to just retry the query.
     """
-
 
 class Bucketer(object):
     """
@@ -464,7 +468,7 @@ class MLT(Bucketer):
         try:
             matching_buckets = self.make_matching_buckets(
                 response,
-                default=crash['database_id'])
+                default=random_bucketid())
             return matching_buckets
         except IndexNotUpdatedError:
             time.sleep(1)
