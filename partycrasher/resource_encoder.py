@@ -19,8 +19,8 @@
 import re
 from datetime import datetime
 from collections import OrderedDict
-
-from partycrasher import Crash, Bucket, Project, Threshold
+from partycrasher.crash import Crash
+from partycrasher.api import Bucket, Project, Threshold
 from rest_api_utils import href
 
 from flask import json, request, redirect, make_response

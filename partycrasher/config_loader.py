@@ -1,8 +1,7 @@
 #!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
-#  Copyright (C) 2016 Joshua Charles Campbell
-#  Copyright (C) 2016 Eddie Antonio Santos
+#  Copyright (C) 2017 Joshua Charles Campbell
 
 #  This program is free software; you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License
@@ -18,9 +17,12 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from partycrasher import rest_service
+from __future__ import print_function, division
+from runpy import run_path
 
-rest_service.crasher.config.ElasticSearch.allow_delete_all = True
-application = rest_service.app
-app = rest_service.app
-app.debug = True
+class Config(object):
+    def __init__(self, file_path):
+        self._config = run_path(file_path)
+        
+    def __getattr__(self, attr):
+        return self._config[attr]

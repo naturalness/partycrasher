@@ -23,7 +23,6 @@ import os
 import json
 import uuid
 import time
-import sys
 import re
 import traceback
 import math
@@ -34,10 +33,17 @@ from datetime import datetime
 from elasticsearch import RequestError
 from distutils.util import strtobool
 
+import logging
+logger = logging.getLogger(__name__)
+error = logger.error
+warn = logger.warn
+info = logger.info
+debug = logger.debug
 
 from crash import Crash, Buckets, pretty
 from es_crash import ESCrash, ESCrashEncoder
 from threshold import Threshold
+from more_like_this import MoreLikeThis
 
 from base64 import b64encode
 def random_bucketid():
@@ -76,24 +82,13 @@ class Bucketer(object):
         self.lowercase = lowercase
         self.config = config
 
-        self.index_number_of_shards = (
-          int(
-            self.config.get('partycrasher.elastic', 
-                            'number_of_shards')))
-        self.index_number_of_replicas = (
-          int(
-            self.config.get('partycrasher.elastic', 
-                            'number_of_replicas')))
-        self.index_translog_durability = (
-          self.config.get('partycrasher.elastic', 'translog_durability'))
-        self.index_throttle_type = (
-          self.config.get('partycrasher.elastic', 'throttle_type'))
-        self.similarity = (
-          self.config.get('partycrasher.elastic', 'similarity'))
-        self.similarity_k1 = (
-          self.config.get('partycrasher.elastic', 'similarity_k1'))
-        self.similarity_b = (
-          self.config.get('partycrasher.elastic', 'similarity_b'))
+        self.index_number_of_shards = self.config.ElasticSearch.number_of_shards
+        self.index_number_of_replicas = self.config.ElasticSearch.number_of_replicas
+        self.index_translog_durability = self.config.ElasticSearch.translog_durability
+        self.index_throttle_type = self.config.ElasticSearch.throttle_type
+        self.similarity = self.config.ElasticSearch.similarity
+        self.similarity_k1 = self.config.ElasticSearch.similarity_k1
+        self.similarity_b = self.config.ElasticSearch.similarity_b
 
     def bucket(self, crash):
         assert isinstance(crash, Crash)
@@ -164,7 +159,7 @@ class Bucketer(object):
         assert 'buckets' not in crash
         if 'force_bucket' in crash:
             buckets = self.bucket(crash)
-            print("Warning: overriding buckets to %s with force_bucket!" % (crash['force_bucket']), file=sys.stderr)
+            error("Warning: overriding buckets to %s with force_bucket!" % (crash['force_bucket']))
             for key in buckets:
                 if key != 'top_match':
                     buckets[key] = crash['force_bucket']
@@ -190,34 +185,11 @@ class Bucketer(object):
 
 class MLT(Bucketer):
 
-    def __init__(self, thresholds=(4.0,), 
+    def __init__(self, thresholds, 
                  *args, **kwargs):
         super(MLT, self).__init__(*args, **kwargs)
         self.thresholds = tuple(Threshold(value) for value in sorted(thresholds))
-        self.enable_auto_max_query_terms = (
-          strtobool(
-            self.config.get('partycrasher.bucket', 
-                            'enable_auto_max_query_terms')))
-        self.initial_mlt_max_query_terms = (
-          int(
-            self.config.get('partycrasher.bucket', 
-                            'initial_mlt_max_query_terms')))
-        self.auto_max_query_term_maximum_documents = (
-          int(
-            self.config.get('partycrasher.bucket', 
-                          'auto_max_query_term_maximum_documents')))
-        self.auto_max_query_term_minimum_documents = (
-          int(
-            self.config.get('partycrasher.bucket', 
-                          'auto_max_query_term_minimum_documents')))
-        self.mlt_min_score = (
-          float(
-            self.config.get('partycrasher.bucket', 'mlt_min_score')))
-        self.strictly_increasing = (
-          strtobool(
-            self.config.get('partycrasher.bucket', 'strictly_increasing')))
-        if self.enable_auto_max_query_terms:
-            self.last_max_query_terms = self.initial_mlt_max_query_terms
+        self.searcher = MoreLikeThis(self.es, self.index, self.config.Bucketing.MLT)
         self.max_top_match_score = 0
         self.total_top_match_scores = 0
         self.total_matches = 0
@@ -229,221 +201,12 @@ class MLT(Bucketer):
     @property
     def min_threshold(self):
         return self.thresholds[0]
-      
-    def make_more_like_this_query(self, 
-                                  crash, 
-                                  max_query_terms,
-                                  terminate_after = None):
-        body =  {
-            # Only fetch database ID, buckets, and project.
-            '_source': ['buckets', 'database_id', 'project'],
-            'query': {
-                'more_like_this': {
-                    # NOTE: This style only works in ElasticSearch 1.x...
-                    'like': [
-                        {
-                            '_index': self.index,
-                            '_type': 'crash',
-                            'doc': crash,
-                        }
-                    ],
-                    # Avoid some ElasticSearch optimizations:
-                    #
-                    # Search for WAY more terms than ElasticSearch would
-                    # normally construct.
-                    'max_query_terms': max_query_terms,
-                    # Force ElasticSearch to query... like, all the things.
-                    'min_term_freq': 0,
-                    'min_doc_freq': 0,
-                },
-            },
-            'size': 100,
-            'min_score': self.mlt_min_score,
-        }
-                        
-        if terminate_after is not None:
-            body['terminate_after'] = terminate_after
-
-        return body
-
-    def make_mlt_query_explain(self,
-                                crash,
-                                index=None,
-                                use_existing=None,
-                                max_query_terms=None,
-                                terminate_after=None,
-                                dont_explain=False):
-        """
-        Builds the more_like_this query.
-        """
-
-        if index is None:
-            index = self.index
-
-        if isinstance(crash, basestring):
-            crash = Crash(ESCrash(crash, index=index))
-            del crash['buckets']
-            if use_existing is None:
-                use_existing = False # this should be true but ES seems to be broken?
-        else:
-            if use_existing is None:
-                use_existing = False
-
-        body = self.make_more_like_this_query(crash, 
-                                              max_query_terms,
-                                              terminate_after)
-        body["explain"] = (not dont_explain)
-        if use_existing:
-            # Prevent crash from being its own highest match when its already in ES
-            del body["query"]["more_like_this"]["like"][0]["doc"]
-            body["query"]["more_like_this"]["like"][0]["_id"] = crash["database_id"]
-        
-        skip_fields = Set([
-          'database_id',
-          'buckets',
-          'force_bucket',
-          'depth',
-          'date',
-        ])
-        
-        def all_but_skip_fields(c, prefix=""):
-          fields = Set()
-          if isinstance(c, dict):
-            for k, v in c.iteritems():
-              #print(prefix + k, file=sys.stderr)
-              if k not in skip_fields:
-                fields.add(prefix + k)
-                subfields = all_but_skip_fields(v, prefix + k + ".")
-                #print(len(fields))
-                fields.update(subfields)
-          elif isinstance(c, list):
-            for i in c:
-                subfields = all_but_skip_fields(i, prefix)
-                fields.update(subfields)
-          elif isinstance(c, basestring) or c is None:
-            pass
-          elif isinstance(c, datetime):
-            pass
-          else:
-            raise NotImplementedError("all_but_fields can't handle " + c.__class__.__name__)
-          return fields
-        
-        fields = list(all_but_skip_fields(crash))
-        # including the extra field seems to improve recall at the expense of precision
-        # overall F-score seems to go down so I'm not sure this is worthwhile
-        #if 'stacktrace.function' in fields:
-        #    fields.append('stacktrace.function.whole')
-        for field in fields:
-            assert "buckets" not in field
-        
-        body["query"]["more_like_this"]["fields"] = fields
-        
-        #self.ensure_field_mappings(fields)
-        
-        #print(json.dumps(fields, indent=2), file=sys.stderr)
-        
-        return body
-        
-        
-    def get_explanation_from_response(self, response):
-        try:
-          explanation = response['hits']['hits'][0]['_explanation']['details']
-        except:
-          print(json.dumps(body, indent=2, cls=ESCrashEncoder), file=sys.stderr)
-          print(json.dumps(response, indent=2), file=sys.stderr)
-          raise
-        
-        with open('explained', 'wb') as debug_file:
-            print(json.dumps(response['hits']['hits'][0]['_explanation'], indent=2), file=debug_file)
-
-        def flatten(explanation):
-          flattened = []
-          for subexplanation in explanation:
-            if subexplanation["description"].startswith("weight"):
-              flattened.append(subexplanation)
-            else:
-              #print(subexplanation["description"])
-              if "details" in subexplanation:
-                flattened.extend(flatten(subexplanation["details"]))
-          return flattened
-            
-        explanation = flatten(explanation)
-        explanation = sorted(explanation, key=itemgetter('value'), reverse=True)
-        #with open("explanation", 'w') as f:
-          #print(json.dumps(explanation, indent=2), file=f)
-          
-        summary = []
-        for i in explanation:
-          #print(i['description'])
-          match = re.match(r'^weight\(([^\s:]+):([^\s]+) in .*$', i['description'])
-          if match is not None:
-            summary.append({'field': match.group(1), 'term': match.group(2), 'value': i['value']})
-        #del summary[30:]
-        #print(json.dumps(summary, indent=2, cls=ESCrashEncoder), file=sys.stderr)
-        
-        return summary
-      
-    def bucket_auto_max_query_terms(self, crash, use_existing, dont_explain=False):
-        max_query_terms = self.last_max_query_terms
-        max_query_terms_lb = 1
-        max_query_terms_ub = self.initial_mlt_max_query_terms
-        response_at_least_one_hit = None
-        while True:
-            body = self.make_mlt_query_explain(crash,
-                      use_existing=use_existing,
-                      max_query_terms=max_query_terms,
-                      terminate_after=self.auto_max_query_term_maximum_documents,
-                      dont_explain=dont_explain)
-            response = self.es.search(index=self.index, body=body)
-            if response['hits']['total'] > 1:
-                response_at_least_one_hit = response
-            if (response['terminated_early'] 
-                or (response['hits']['total'] 
-                    >= self.auto_max_query_term_maximum_documents)):
-                if max_query_terms == max_query_terms_lb:
-                    #print("Hit LB", file=sys.stderr)
-                    break
-                max_query_terms_ub = max_query_terms - 1
-                max_query_terms = math.floor(
-                    float(max_query_terms+max_query_terms_lb)/2.0)
-            elif (response['hits']['total'] 
-                <= self.auto_max_query_term_minimum_documents):
-                if max_query_terms == max_query_terms_ub:
-                    #print("Hit UB", file=sys.stderr)
-                    break
-                max_query_terms_lb = max_query_terms + 1
-                max_query_terms = math.ceil(
-                    float(max_query_terms+max_query_terms_ub)/2.0)
-            else:
-                #print("In range.", file=sys.stderr)
-                sys.stderr.flush()
-                break
-        print("max_query_terms: %i hits: %i" % (
-                  max_query_terms,
-                  response['hits']['total']),
-                  file=sys.stderr)
-        sys.stderr.flush()
-        self.last_max_query_terms = max_query_terms
-        if response_at_least_one_hit is not None:
-            return response_at_least_one_hit
-        return response
     
     def bucket_explain(self, crash):
         """
         Queries ElasticSearch with MoreLikeThis.
         Returns the explanation of the top hit.
         """
-        if self.enable_auto_max_query_terms:
-            response = self.bucket_auto_max_query_terms(
-              crash,
-              use_existing=True)
-        else:
-            body = self.make_mlt_query_explain(
-                crash, 
-                use_existing=True, 
-                max_query_terms=self.initial_mlt_max_query_terms)
-            response = self.es.search(index=self.index, body=body)
-        
         return self.get_explanation_from_response(response)
       
     def bucket(self, crash):
@@ -452,18 +215,7 @@ class MLT(Bucketer):
         Returns the bucket assignment for each threshold.
         Returns an OrderedDict of {Threshold(...): 'id'}
         """
-        if self.enable_auto_max_query_terms:
-            response = self.bucket_auto_max_query_terms(
-                crash,
-                use_existing=False,
-                dont_explain=True)
-        else:
-            body = self.make_mlt_query_explain(
-                crash,
-                use_existing=False,
-                max_query_terms=self.initial_mlt_max_query_terms,
-                dont_explain=True)
-            response = self.es.search(index=self.index, body=body)
+        response = self.searcher.query(crash)
         
         try:
             matching_buckets = self.make_matching_buckets(
@@ -480,7 +232,7 @@ class MLT(Bucketer):
         #assert len(raw_matches) in (0, 1), 'Unexpected amount of matches...'
 
         top_match = { '_score': -1000000 }
-        for raw_match in raw_matches:
+        for raw_match in raw_matches[0:1]: # i left this code here, it used to scan the list of matches but i removed everything that needed that so i put the [0:1]
             assert '_source' in raw_match
             assert 'buckets' in raw_match['_source']
             assert 'top_match' in raw_match['_source']['buckets']
@@ -489,9 +241,7 @@ class MLT(Bucketer):
             else:
                 prec_score = 0
             score = raw_match['_score']
-            if (not self.strictly_increasing) or (score >= prec_score):
-                top_match = raw_match
-                break
+            top_match = raw_match
 
         # JSON structure:
         # matches['hit']['hits] ~> [
@@ -535,11 +285,11 @@ class MLT(Bucketer):
             self.total_top_match_scores += top_match['_score']
             self.total_matches += 1
             self.max_top_match_score = max(self.max_top_match_score, top_match['_score'])
-            print('score %f avg %f max %f' % (
+            debug('score %f avg %f max %f' % (
               top_match['_score'],
               self.total_top_match_scores / self.total_matches,
               self.max_top_match_score
-              ), file=sys.stderr)
+              ))
         else:
             matching_buckets['top_match'] = None
 

@@ -14,7 +14,7 @@
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
 #
-#  You should have received a copy of the GNU General Public License
+#  You should have received a copy the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
@@ -24,6 +24,8 @@ import os
 import sys
 import time
 import argparse
+import logging
+from logging import error, debug, warn, info
 
 from flask import current_app, json, jsonify, request, url_for, redirect
 from flask import render_template, send_file, send_from_directory
@@ -66,6 +68,24 @@ app.jinja_options = jinja_options
 
 crasher = None
 
+@app.before_first_request
+def before_first_request():
+    print("before first request", file=sys.stderr)
+    print(logging.getLogger("gunicorn.error").handlers, file=sys.stderr)
+    logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger("elasticsearch").setLevel(logging.INFO)
+    logging.getLogger("urllib3.util.retry").setLevel(logging.INFO)
+    logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
+    app.logger.setLevel(logging.DEBUG)
+    if len(logging.getLogger("gunicorn.error").handlers) > 0:
+        logging.getLogger("gunicorn.error").handlers[0].setFormatter(
+          logging.Formatter("%(asctime)s [%(process)d] [%(levelname)s] [%(name)s] %(message)s"))
+        logging.getLogger().handlers = logging.getLogger("gunicorn.error").handlers
+        #app.logger.handlers.extend(logging.getLogger("gunicorn.error").handlers)
+        app.logger.handlers = []
+        error("before first request error")
+        debug("before first request debug")
+        
 
 @app.errorhandler(BadRequest)
 def on_bad_request(error):
@@ -1049,19 +1069,19 @@ def main():
                         help='enable profiling')
     parser.add_argument('--config-file', type=str,
                         default=
-                          os.path.join(REPOSITORY_ROUTE, 'partycrasher.cfg'),
+                          os.path.join(REPOSITORY_ROUTE, 'config.py'),
                         help='specify location of PartyCrasher config file')
     parser.add_argument('--allow-delete-all', action='store_true',
                         help='allow users of the REST interface to delete all data')
 
     kwargs = vars(parser.parse_args())
 
-    with open(kwargs['config_file']) as config_file:
-        crasher = partycrasher.PartyCrasher(config_file)
+    
+    crasher = partycrasher.PartyCrasher(kwargs['config_file'])
     del kwargs['config_file']
 
     if kwargs['allow_delete_all']:
-        crasher.config.set('partycrasher.elastic', 'allow_delete_all', 'yes')
+        crasher.config.ElasticSearch.allow_delete_all = True
     del kwargs['allow_delete_all']
 
     crasher.ensure_index_created()
@@ -1090,8 +1110,7 @@ if __name__ == '__main__':
     main()
 else:
     try:
-        with open('partycrasher.cfg') as config_file:
-            crasher = partycrasher.PartyCrasher(config_file)
+        crasher = partycrasher.PartyCrasher('config.py')
     except IOError:
         print("Couldn't load config file, wont work in gunicorn",
               file=sys.stderr)

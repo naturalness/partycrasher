@@ -1,0 +1,268 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
+#  Copyright (C) 2016 Joshua Charles Campbell
+
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+from __future__ import print_function, division
+
+from crash_filter import CrashFilter
+
+class MoreLikeThisQuery(object):
+    def __init__(self,
+                 index,
+                 max_query_terms=20,
+                 terminate_after=None,
+                 filterer=None,
+                 min_score=1.0):
+        self.max_query_terms = max_query_terms
+        self.terminate_after = terminate_after
+        self.min_score = min_score
+        self.index = index
+        if filterer is None:
+            self.filterer = CrashFilter()
+        else:
+            self.filterer = filterer
+    
+    def make_mlt(self, 
+                 crash,
+                 filterer,
+                 all_terms=False):
+        doc = filterer.filter_crash(crash)
+        mlt = { 
+                'like': [
+                        {
+                            '_index': self.index,
+                            '_type': 'crash',
+                            'doc': doc,
+                        }
+                    ],
+                    # Avoid some ElasticSearch optimizations:
+                    #
+                    # Search for WAY more terms than ElasticSearch would
+                    # normally construct.
+                    # Force ElasticSearch to query... like, all the things.
+                    'min_term_freq': 0,
+                    'min_doc_freq': 0,
+              }
+        if self.max_query_terms is not None:
+            mlt['max_query_terms'] = self.max_query_terms
+        if all_terms is True:
+            mlt['max_query_terms'] = 10000
+        return mlt
+
+    def make_query(self,
+                   crash,
+                   filterer,
+                   all_terms=False):
+        query = {
+            'more_like_this': self.make_mlt(crash, filterer, all_terms)
+          }
+        return query
+
+    def make_body(self,
+                  crash,
+                  explain):
+        body = {
+            # Only fetch database ID, buckets, and project.
+            '_source': ['buckets', 'database_id', 'project'],
+            'query': self.make_query(crash, self.filterer),
+            'size': 1,
+            'min_score': self.min_score,
+        }
+        if self.terminate_after is not None:
+            body['terminate_after'] = self.terminate_after
+        if explain:
+            body['explain'] = True
+        return body
+
+class MoreLikeThisFiltered(MoreLikeThisQuery):
+    def __init__(self,
+                 search_filters = [],
+                 *args, **kwargs):
+        self.search_filters = search_filters
+        super(MoreLikeThisFiltered,self).__init__(*args, **kwargs)
+    
+    def make_id_filter(self,
+                       ids):
+          return {
+              'ids': {
+                  'values': ids
+                }
+            }
+
+    def make_query(self,
+                   crash,
+                   filterer,
+                   ids=None,
+                   all_terms=False):
+        query = {
+            'bool': {
+                'should': (super(MoreLikeThisFiltered,self)
+                    .make_query(crash, filterer, all_terms))
+              }
+          }
+        filters = self.search_filters
+        if ids is not None:
+            filters.appnd(self.make_id_filter(self.ids))
+        if len(filters) > 0:
+            query['bool']['filters'] = filters
+        return query
+    
+    def make_body(self,
+                  crash,
+                  explain=False,
+                  ids=None):
+        body = {
+            # Only fetch database ID, buckets, and project.
+            '_source': ['buckets', 'database_id', 'project'],
+            'query': self.make_query(crash, self.filterer, ids),
+            'size': 1,
+            'min_score': self.min_score,
+        }
+        if self.terminate_after is not None:
+            body['terminate_after'] = self.terminate_after
+        if explain:
+            body['explain'] = True
+        return body
+        
+    
+class MoreLikeThisRescored(object):
+    def __init__(self,
+                 query=None,
+                 rescore_filterer=None,
+                 rescore_window_size=500,
+                 search_weight=1.0,
+                 rescore_weight=1.0,
+                 *args, **kwargs):
+        if query is None:
+            self.query = MoreLikeThisFiltered(*args, **kwargs)
+        else:
+            self.query = query
+        self.rescore_filterer = rescore_filterer
+        self.window_size = rescore_window_size
+        self.search_weight = search_weight
+        self.rescore_weight = rescore_weight
+
+    def make_body(self,
+                  crash,
+                  explain=False,
+                  ids=None):
+        assert self.rescore_filterer is not None
+        body = self.query.make_body(crash, explain, ids)
+        body["rescore"] = {
+            "window_size": self.window_size,
+            "query": {
+                "rescore_query": self.query.make_query(crash,
+                                                       self.rescore_filterer,
+                                                       ids,
+                                                       all_terms=True),
+                "query_weight": self.search_weight,
+                "rescore_query_weight": self.rescore_weight
+              }
+          }
+        return body
+    
+class MoreLikeThisSearcher(object):
+    
+    def __init__(self, es, index, *args, **kwargs):
+        self.index = index
+        self.es = es
+        if 'rescore_filterer' in kwargs:
+            self.querybuilder = MoreLikeThisRescored(index=index, *args, **kwargs)
+        else:
+            self.querybuilder = MoreLikeThisFiltered(index=index, *args, **kwargs)
+        return self
+
+    def query(self,
+              crash):
+        body = self.querybuilder.make_body(crash, False, None)
+        response = self.es.search(index=self.index, body=body)
+        return response
+
+    def get_explanation_from_response(self, response):
+        try:
+          explanation = response['hits']['hits'][0]['_explanation']['details']
+        except:
+          print(json.dumps(body, indent=2, cls=ESCrashEncoder), file=sys.stderr)
+          print(json.dumps(response, indent=2), file=sys.stderr)
+          raise
+        
+        with open('explained', 'wb') as debug_file:
+            print(json.dumps(response['hits']['hits'][0]['_explanation'], indent=2), file=debug_file)
+
+        def flatten(explanation):
+          flattened = []
+          for subexplanation in explanation:
+            if subexplanation["description"].startswith("weight"):
+              flattened.append(subexplanation)
+            else:
+              #print(subexplanation["description"])
+              if "details" in subexplanation:
+                flattened.extend(flatten(subexplanation["details"]))
+          return flattened
+            
+        explanation = flatten(explanation)
+        explanation = sorted(explanation, key=itemgetter('value'), reverse=True)
+        #with open("explanation", 'w') as f:
+          #print(json.dumps(explanation, indent=2), file=f)
+          
+        summary = []
+        for i in explanation:
+          #print(i['description'])
+          match = re.match(r'^weight\(([^\s:]+):([^\s]+) in .*$', i['description'])
+          if match is not None:
+            summary.append({'field': match.group(1), 'term': match.group(2), 'value': i['value']})
+        #del summary[30:]
+        #print(json.dumps(summary, indent=2, cls=ESCrashEncoder), file=sys.stderr)
+        
+        return summary
+        
+    def explain(self,
+                crash):
+        body = self.query.make_body(crash, True, None)
+        response = self.es.search(index=self.index, body=body)
+        return get_explanation_from_response(response)
+    
+    def compare(self,
+                crash,
+                other_ids):
+        body = self.query.make_body(crash, False, other_ids)
+        response = self.es.search(index=self.index, body=body)
+        return response
+    
+class MoreLikeThis(MoreLikeThisSearcher):
+    
+    def __init__(self, es, index, config):
+        always_remove_fields = [r'^database_id',
+                         r'^buckets',
+                         r'force_bucket',
+                         r'stacktrace\.depth',
+                         r'^date']
+        filterer = CrashFilter(config.remove_fields+always_remove_fields,
+                               config.keep_fields)
+        rescore_filterer = CrashFilter(config.rescore_remove_fields+always_remove_fields,
+                               config.rescore_keep_fields)
+        super(MoreLikeThis,self).__init__(es, index,
+            max_query_terms=config.max_query_terms,
+            terminate_after=config.terminate_after,
+            min_score=config.min_score,
+            filterer=filterer,
+            rescore_filterer=rescore_filterer,
+            rescore_window_size=config.rescore_window_size,
+            rescore_weight=config.rescore_weight,
+            search_weight=config.search_weight
+            )

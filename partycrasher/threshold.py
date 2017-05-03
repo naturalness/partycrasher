@@ -16,7 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from decimal import Decimal
+from decimal import Decimal, Context
+from logging import debug, error, warning, info
+
 
 # Python 2/3 non-sense.
 try:
@@ -29,7 +31,7 @@ else:
 class Threshold(object):
     """
     A wrapper for a bucket threshold value. Ensures proper serialization
-    between ElasticSearch and the JSON API endpoints.
+    between ElasticSearch and the JSON API eloggingndpoints.
     """
     __slots__ = '_value'
 
@@ -42,7 +44,7 @@ class Threshold(object):
         elif isinstance(value, StringTypes):
             value = value.replace('_', '.')
 
-        self._value = Decimal(value)
+        self._value = Decimal(value).quantize(Decimal('0.1'))
 
     def __str__(self):
         result = str(self._value)
