@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+##!/usr/bin/env pythoFprettyn
 
 #  Copyright (C) 2015, 2016 Jshua Charles Campbell
 
@@ -29,27 +29,27 @@ import json
 import requests
 from rest_client import RestClient
 import copy
-from sets import Set
 import signal
 import subprocess
 import traceback
 
+from logging import error
+
 # TODO: argparse
 DONT_ACTUALLY_COMPUTE_STATS=False
 BLOCK_SIZE=1000
-PARALLEL=1
-BOOTSTRAP_CRASHES=0 # WARNING: Destroys temporal relationships!
+PARALLEL=8
+BOOTSTRAP_CRASHES=100000 # WARNING: Destroys temporal relationships!
 BOOTSTRAP_RESUME_AT=0 # This doesn't actually work properly yet, don't use it.
-RESET_STATS_AFTER_BLOCK=False
+RESET_STATS_AFTER_BLOCK=True
 TOTALLY_FAKE_DATA=False
 START_GUNICORN=True
-client=None
 interval = BLOCK_SIZE
 increasing_spacing = False
 
 beta = 1.0
 
-def get_comparisons():
+def get_comparisons(client):
     comparisons = {
     }
 
@@ -68,7 +68,7 @@ def get_comparisons():
     for comparison in comparisons:
         comparison_data = comparisons[comparison]
         if BOOTSTRAP_RESUME_AT == 0:
-            comparison_data['csvfileh'] = open(comparison + '.csv', 'wb')
+            comparison_data['csvfileh'] = open(comparison + '.csv', 'w')
             comparison_data['csvfile'] = csv.writer(comparison_data['csvfileh'])
             comparison_data['csvfile'].writerow([
                 'after',
@@ -102,7 +102,7 @@ def load_oracle_data(oracle_file_path):
     print(str(len(all_crashes)) + " crashes found in oracle")
 
     crashes = {}
-    skipped_ids = Set()
+    skipped_ids = set()
 
     for database_id, crash in all_crashes.items():
         assert crash['database_id'] == database_id
@@ -113,7 +113,7 @@ def load_oracle_data(oracle_file_path):
         crashes[database_id] = crash
             
             
-    for k, v in oracle_all.iteritems():
+    for k, v in oracle_all.items():
         assert k == v['database_id']
         database_id = v['database_id']
         if database_id in skipped_ids:
@@ -146,7 +146,7 @@ def argmax(d):
             mk = k
     return (mk, mv)
 
-def reset_index():
+def reset_index(client):
     # reset simulation index for each comparison type
     # for time-travel prevention
     response = None
@@ -161,19 +161,21 @@ def reset_index():
         raise
 
 
-def ingest_one(data):
+def ingest_one(mblock):
+    client, data = mblock
     if PARALLEL > 1:
         signal.signal(signal.SIGINT, signal.SIG_IGN)
     crashdata = data['crashdata']
+    assert 'buckets' not in crashdata
     retries = 3
     while retries > 0:
         response = None
         try:
             response = requests.post(client.path_to('reports'), json=crashdata)
-            assert (response.status_code == 201 or response.status_code == 303)
+            assert (response.status_code == 201 or response.status_code == 303), response.status_code
         except Exception as e:
             retries -= 1
-            print(response.content)
+            #print(response.content)
             traceback.print_exc()
             print("POST failed...", file=sys.stderr)
             sys.stderr.flush()
@@ -197,15 +199,16 @@ if PARALLEL > 1:
     import multiprocessing
     pool = multiprocessing.Pool(PARALLEL)
 
-def process_block(block, crashes_so_far, comparisons, totals):
+def process_block(client, block, crashes_so_far, comparisons, totals):
     global pool
     print("Processing %i crashes (%i to %i)..." % (len(block), 
                                           crashes_so_far - len(block) + 1,
                                           crashes_so_far))
     # ingest
     start = time.time()
+    mblock = [(client, data) for data in block]
     if PARALLEL > 1:
-        r = pool.map_async(ingest_one, block, 1)
+        r = pool.map_async(ingest_one, mblock, 1)
         #try:
         block_results = r.get(999999) # set a large but finite timeout for old version of python as a work around for http://bugs.python.org/issue8296
         #except KeyboardInterrupt:
@@ -219,7 +222,7 @@ def process_block(block, crashes_so_far, comparisons, totals):
         pool.join()
         pool = multiprocessing.Pool(PARALLEL)
     else:
-        block_results = map(ingest_one, block)
+        block_results = map(ingest_one, mblock)
     finish = time.time()
     ingest_time = finish-start
     print("%i crashes in %fs: %0.1fcrashes/s" % (
@@ -384,6 +387,7 @@ def process_block(block, crashes_so_far, comparisons, totals):
 
 
 def iterate_crash(
+    client,
     database_id, 
     oracledata, 
     crashdata, 
@@ -411,18 +415,20 @@ def iterate_crash(
             comparisons_block = {
                   k: copy.copy(v) for k, v in comparisons.items()
                   }
-            assert 'oracle_to_assigned' not in comparisons_block.values()[0]
+            for v in comparisons_block.values():
+                assert 'oracle_to_assigned' not in v
             totals['seen_buckets'] = {}
             totals['seen_crashes'] = []
         else:
             comparisons_block = comparisons
-        process_block(iterate_crash.ingest_block, 
+        process_block(client,
+                      iterate_crash.ingest_block, 
                       iterate_crash.crashes_so_far,
                       comparisons_block,
                       totals)
         iterate_crash.ingest_block = []
 
-def simulate(comparisons, oracle_data):
+def simulate(client, comparisons, oracle_data):
     (crashes, oracle_all, all_ids, total_ids, total_buckets) = oracle_data
     totals = {
         'total_ids': total_ids,
@@ -446,13 +452,15 @@ def simulate(comparisons, oracle_data):
         import random
         for fake_i in range(BOOTSTRAP_RESUME_AT, BOOTSTRAP_CRASHES):
             database_id = "fake:%010i" % fake_i
-            source_database_id = all_ids.keys()[
+            source_database_id = list(all_ids.keys())[
               random.randrange(0, len(all_ids.keys()))]
             oracledata = copy.copy(oracle_all[source_database_id])
             oracledata['database_id'] = database_id
             crashdata = copy.copy(crashes[source_database_id])
             crashdata['database_id'] = database_id
-            iterate_crash(database_id,
+            iterate_crash(
+                          client,
+                          database_id,
                           oracledata,
                           crashdata,
                           comparisons,
@@ -489,7 +497,6 @@ class GunicornStarter(object):
         self.stop_gunicorn()
         
 def buckettest(oracle_file_path, rest_service_url):
-    global client
     client = RestClient(rest_service_url)
 
     # static variables
@@ -503,12 +510,13 @@ def buckettest(oracle_file_path, rest_service_url):
 
     try:
         if not BOOTSTRAP_RESUME_AT:
-            reset_index()
+            reset_index(client)
         if TOTALLY_FAKE_DATA:
             synthesize(get_comparisons())
         else:
             simulate(
-                get_comparisons(),
+                client,
+                get_comparisons(client),
                 load_oracle_data(oracle_file_path)
             )
     except:

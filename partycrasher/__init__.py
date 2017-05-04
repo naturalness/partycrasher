@@ -2,4 +2,4 @@
 
 __version__ = u'0.1.0'
 
-from api import PartyCrasher
+from partycrasher.api import PartyCrasher

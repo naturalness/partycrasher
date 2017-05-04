@@ -23,198 +23,57 @@ import sys, json, datetime
 import dateparser
 from collections import OrderedDict
 
-from threshold import Threshold
+from partycrasher.threshold import Threshold
+from partycrasher.project import Project
+from partycrasher.bucket import Buckets
+from partycrasher.pc_dict import PCDict, PCList
 
-
-# This is the separator which is meant to be used when turning
-# stack traces into strings, between levels of the stack, going
-# DOWN from the TOP (most recent call FIRST)
-STACK_SEPARATOR = u' ≻ '
-
-class Buckets(object):
-    """Proxy for OrderedDict"""
-    def __init__(self, *args, **kwargs):
-        self._od = OrderedDict(*args, **kwargs)
-
-    def __getattr__(self, a):
-        return getattr(self._od, a)
-
-    def __setitem__(self, *args, **kwargs):
-        return self._od.__setitem__(*args, **kwargs)
-
-    def __getitem__(self, *args, **kwargs):
-        return self._od.__getitem__(*args, **kwargs)
-
-    def __delitem__(self, *args, **kwargs):
-        return self._od.__delitem__(*args, **kwargs)
-
-    def __eq__(self, other):
-        if isinstance(other, Buckets):
-            return self._od.__eq__(other._od)
-        else:
-            return self._od.__eq__(other)
-
-    def copy(self, *args, **kwargs):
-        new = Buckets()
-        new._od = self._od.copy()
-        return new
-    
-    def keys(self, *args, **kwargs):
-        return self._od.keys(*args, **kwargs)
-
-    def iterkeys(self, *args, **kwargs):
-        return self._od.iterkeys(*args, **kwargs)
-
-    def __iter__(self, *args, **kwargs):
-        return self._od.__iter__(*args, **kwargs)
-
-    # TODO: automatically convert keys of wrong type to Threshold
-
-def stringify_value(v):
-    """ Force ints/bools to strings for ES """
-    if isinstance(v, list) and not isinstance(v, StringifiedList):
-	return StringifiedList(v)
-    elif isinstance(v, dict) and not isinstance(v, StringifiedDict):
-	return StringifiedDict(v)
-    elif isinstance(v, int):
-	return str(v)
-    elif isinstance(v, bool):
-	return str(v)
-    elif isinstance(v, float):
-	return str(v)
-    elif isinstance(v, bytes):
-        # Force strings to be unicoded
-        return v.decode(encoding='utf-8', errors='replace')
-    else:
-	return v
-      
-def fix_key_for_es(key):
-    if isinstance(key, bytes):
-        key = key.decode(encoding='utf-8', errors='replace')
-    key = key.replace('.', '_')
-    key = key.replace(':', '_')
-    return key
-
-class StringifiedDict(dict):
-    def __setitem__(self, key, val):
-        # First force strings to be unicoded
-        key = fix_key_for_es(key)
-        
-        val = stringify_value(val)
-	#print("key: " + key + "val: " + repr(val), file=sys.stderr)
-	if key == 'address':
-	    assert isinstance(val, basestring)
-
-        return super(StringifiedDict, self).__setitem__(key, val)
-
-    def normalize(self):
-        """
-        Checks ALL of the existing keys and remaps them to normalized values.
-
-        Note that due to normalization, the keys may shift. That is, this
-        condition does NOT hold.
-
-            frame[key] = value
-            frame[key] == value
-        """
-        # Use self.keys() so that we can remove items (it is impossible to
-        # modify the dictionary during iteration).
-        for key in self.keys():
-            # __setitem__ WILL change the
-            value = self[key]
-            del self[key]
-            self.__setitem__(key, value)
-
-    def __init__(self, *args):
-        super(StringifiedDict, self).__init__(*args)
-        if not (len(args) == 1 and isinstance(args[0], self.__class__)):
-            self.normalize()
+from six import string_types
             
-class Stackframe(StringifiedDict):
-  pass
-
-class StringifiedList(list):
+class Stackframe(PCDict):
+    """
+    Represents a Stackframe in a crash object. Proxy object for a dictionary.
+    """
+    synonyms = {}
     
-    """A list which can only contain stackframes..."""
-    def __init__(self, value=[], **kwargs):
-        if isinstance(value, list):
-            if len(value) == 0:
-                return
-            else:
-                self.extend(value)
-        else:
-            raise AttributeError
+    canonical_fields = {
+        'depth': {
+            'type': int,
+            'converter': int,
+            },
+        'address': {
+            'type': str,
+            'converter': str,
+            },
+        'function': {
+            'type': str,
+            'converter': str,
+            },
+        'args': {
+            'type': str,
+            'converter': str,
+            },
+        'file': {
+            'type': str,
+            'converter': str,
+            },
+        'dylib': {
+            'type': str,
+            'converter': str,
+            },
+    }
 
-    def extend(self, arg):
-        return super(StringifiedList, self).extend(map(stringify_value, arg))
+class Stacktrace(PCList):
+    member_type = Stackframe
+    member_converter = Stackframe
 
-    def append(self, *args):
-        return self.extend(args)
-
-    def __setitem__(self, index, value):
-        return super(StringifiedList, self).__setitem__(index, stringify_value(value))
-
-    def __setslice__(self, i, j, seq):
-        return super(StringifiedList, self).__setitem__(i, j, map(stringify_value, seq))
-
-    def __eq__(self, other):
-        return (super(StringifiedList, self).__eq__(other)
-                and self.__class__ == other.__class__)
-
-
-class Stacktrace(StringifiedList):
-
-    stackframe_class = Stackframe
-
-    """A list which can only contain stackframes..."""
-    def __init__(self, value=[], **kwargs):
-        if isinstance(value, list):
-            if len(value) == 0:
-                return
-            else:
-                self.extend(map(self.stackframe_class, value))
-        else:
-            raise AttributeError
-
-    def extend(self, arg):
-        for a in arg:
-            assert isinstance(a, self.stackframe_class)
-        return super(Stacktrace, self).extend(arg)
-
-    def append(self, *args):
-        return self.extend(args)
-
-    def __setitem__(self, index, value):
-        for v in value:
-            assert isinstance(v, self.stackframe_class)
-        return super(Stacktrace, self).__setitem__(index, value)
-
-    def __setslice__(self, i, j, seq):
-        for v in seq:
-            assert isinstance(v, self.stackframe_class)
-        return super(Stacktrace, self).__setitem__(i, j, seq)
-
-    def __eq__(self, other):
-        return (super(Stacktrace, self).__eq__(other)
-                and self.__class__ == other.__class__)
-
-
-# TODO: MOVE DATE STUFF HERE.
-
-class Crash(StringifiedDict):
-
-    stacktrace_class = Stacktrace
+class Crash(PCDict):
 
     synonyms = {
         'crash_id': 'database_id', # Mozilla
         'os_ver' : 'os_version', # Mozilla
         'cpu_arch' : 'cpu', # Mozilla
         'frames' : 'stacktrace', # Mozilla
-    }
-    # Code review: can use a set()/frozenset() for this.
-    breakapart = {
-        'crash_info' : 1, # Mozilla
-        'system_info' : 1, # Mozilla
     }
 
     canonical_fields = {
@@ -227,27 +86,18 @@ class Crash(StringifiedDict):
             'converter': Stacktrace,
             },
         'database_id': {
-            'type': bytes,
-            'converter': bytes,
+            'type': str,
+            'converter': str,
             },
         'project': {
-            'type': bytes,
-            'converter': bytes,
+            'type': Project,
+            'converter': Project,
             },
         'buckets': {
             'type': Buckets,
             'converter': Buckets,
             },
     }
-
-    def __init__(self, *args):
-        super(Crash, self).__init__(*args)
-        if not (len(args) == 1 and isinstance(args[0], self.__class__)):
-            self.normalize()
-
-    def __eq__(self, other):
-        return (super(Crash, self).__eq__(other)
-                and self.__class__ == other.__class__)
 
     def get_bucket_id(self, threshold):
         key = Threshold(threshold).to_elasticsearch()
@@ -278,106 +128,17 @@ class Crash(StringifiedDict):
             raise NotImplementedError("I don't know how to load this!")
         return crash
 
-    def __getitem__(self, key):
-        if key in self.synonyms:
-            return super(Crash, self).__getitem__(self.synonyms[key])
-        else:
-            return super(Crash, self).__getitem__(key)
-
     @staticmethod
     def make_id(project, database_id):
         raise NotImplementedError("make_id removed")
-
-    def __setitem__(self, key, val):
-        # Translates key synonyms to their "canonical" key.
-        synonyms = self.synonyms
-
-        # First force strings to be unicoded
-        if isinstance(key, bytes):
-            key = key.decode(encoding='utf-8', errors='replace')
-            
-        # Force ints/bools to strings for ES
-        val = stringify_value(val)
-
-        # Now do conversions.
-        if key in synonyms:
-            return super(Crash, self).__setitem__(synonyms[key], val)
-        elif key in self.breakapart:
-            # Inline all keys from the assigned value to THIS dict.
-            if isinstance(val, dict):
-                # Code review: use self.update() instead;
-                # though... Not sure if dict.update() uses __setitem__
-                # internally.
-                for key2 in val:
-                    # It's okay to recurse on this function using indexing
-                    # syntax: self[key2] = val[key2]
-                    self.__setitem__(key2, val[key2])
-            else:
-                # Code review: Is TypeError more semantically related?
-                raise ValueError("Expected a dict!")
-
-        # XXX: Why is this hardcoded here?
-        elif key == 'crashing_thread': # Mozilla
-            if (isinstance(val, dict)):
-                for key2 in val:
-                    self.__setitem__(key2, val[key2])
-            else:
-                raise ValueError("Expected a dict!")
-        elif key in self.canonical_fields:
-
-            # Check if the value has the type we require.
-            if isinstance(val, self.canonical_fields[key]['type']):
-                # It's the right type. No need to convert, just set.
-                return super(Crash, self).__setitem__(key, val)
-            else:
-                # Coerce to the required type.
-                if self.canonical_fields[key]['converter'] is not None:
-                    return super(Crash, self).__setitem__(key,
-                        self.canonical_fields[key]['converter'](val))
-                else:
-                    raise ValueError(key + " must be of type " +
-                             self.canonical_fields[key]['type'].__name__)
-	
-        else:
-            return super(Crash, self).__setitem__(key, val)
-
-    @property
-    def stacktrace(self):
-        return self['stacktrace']
-
-    @property
-    def project(self):
-        return self['project']
 
     @property
     def id(self):
         return self['database_id']
 
     @property
-    def id_with_project(self):
-        raise NotImplementedError("id_with_project removed")
-
-    @property
     def id_without_project(self):
         return self['database_id']
-
-    def normalize(self):
-        """
-        Checks ALL of the existing keys and remaps them to normalized values.
-
-        Note that due to normalization, the keys may shift. That is, this
-        condition does NOT hold.
-
-            crash[key] = value
-            crash[key] == value
-        """
-        # Use self.keys() so that we can remove items (it is impossible to
-        # modify the dictionary during iteration).
-        for key in self.keys():
-            # __setitem__ WILL change the
-            value = self[key]
-            del self[key]
-            self.__setitem__(key, value)
 
     def json(self):
         return json.dumps(self, cls=CrashEncoder)
@@ -394,10 +155,19 @@ class CrashEncoder(json.JSONEncoder):
         if isinstance(o, datetime.datetime):
             serialized = o.isoformat()
             return serialized
-        if isinstance(o, Buckets):
-            return o._od
+        elif isinstance(o, Buckets):
+            d = {}
+            for k, v in o._od.items():
+                d[str(k)] = v
+            return d
+        elif isinstance(o, Crash):
+            return o.as_dict()
+        elif isinstance(o, Stacktrace):
+            return o._l
+        elif isinstance(o, Stackframe):
+            return o.as_dict()
         else:
-            return json.JSONEncoder.default(self, o)
+            return super(CrashEncoder, self).default(o)
 
 def pretty(thing):
     return json.dumps(thing, cls=CrashEncoder, indent=2)

@@ -35,7 +35,7 @@ class Bucketing:
     class MLT:
         max_query_terms = 20
         terminate_after = None
-        min_score = thresholds[0]
+        min_score = min(thresholds)
         remove_fields = []
         keep_fields = [r'stacktrace.function']
         rescore_remove_fields = []

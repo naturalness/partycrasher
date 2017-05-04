@@ -93,3 +93,5 @@ class Threshold(object):
         assert str_value.count('.') == 1, 'Invalid decimal number'
         return str_value.replace('.', '_')
 
+    def __lt__(self, other):
+        return self._value.__lt__(other._value)

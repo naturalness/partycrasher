@@ -21,13 +21,14 @@ import sys
 import datetime
 import time
 from weakref import WeakValueDictionary
+from abc import ABCMeta
 
 import elasticsearch
 from elasticsearch import Elasticsearch
 
-from pc_exceptions import IdenticalReportError
-from crash import Crash, Stacktrace, Stackframe, CrashEncoder, Buckets
-from threshold import Threshold
+from partycrasher.pc_exceptions import IdenticalReportError
+from partycrasher.crash import Crash, Stacktrace, Stackframe, CrashEncoder, Buckets
+from partycrasher.threshold import Threshold
 
 import json # For debugging
 
@@ -36,7 +37,7 @@ class ReportNotFoundError(KeyError):
     Raised when... the crash is not found!
     """
 
-class ESCrashMeta(type):
+class ESCrashMeta(ABCMeta):
     # The purpose of all of this shit is to ensure that we don't
     # end up with two copies of the same crash in elastic search
     # in memory because then they would fall out of sync, and

@@ -28,7 +28,6 @@ import traceback
 import math
 import copy
 from operator import itemgetter
-from sets import Set
 from datetime import datetime
 from elasticsearch import RequestError
 from distutils.util import strtobool
@@ -40,15 +39,15 @@ warn = logger.warn
 info = logger.info
 debug = logger.debug
 
-from crash import Crash, Buckets, pretty
-from es_crash import ESCrash, ESCrashEncoder
-from threshold import Threshold
-from more_like_this import MoreLikeThis
+from partycrasher.crash import Crash, Buckets, pretty
+from partycrasher.es_crash import ESCrash, ESCrashEncoder
+from partycrasher.threshold import Threshold
+from partycrasher.more_like_this import MoreLikeThis
 
 from base64 import b64encode
 def random_bucketid():
     """Generates a random string for a bucket ID"""
-    return b64encode(os.urandom(12), ":_")
+    return b64encode(os.urandom(12), b":_").decode("ascii")
 
 class IndexNotUpdatedError(Exception):
     """
@@ -177,8 +176,8 @@ class Bucketer(object):
 
         crash["buckets"] = buckets
 
-        saved_crash = ESCrash(crash, index=self.index)
-
+        saved_crash = ESCrash(crash=crash, index=self.index)
+        assert saved_crash is not None
 
         return saved_crash
 

@@ -30,9 +30,13 @@ import math
 import copy
 from datetime import datetime
 
-from crash import Crash, Buckets, pretty
-from es_crash import ESCrash, ESCrashEncoder
-from threshold import Threshold
+from partycrasher.crash import Crash, Buckets, pretty
+from partycrasher.es_crash import ESCrash, ESCrashEncoder
+from partycrasher.threshold import Threshold
+from partycrasher.pc_dict import PCDict, PCList
+from partycrasher.project import Project
+
+from six import string_types
 
 class CrashFilter(object):
     
@@ -69,16 +73,16 @@ class CrashFilter(object):
         newdict = {}
         for k, v in d.items():
             assert "." not in k
-            if isinstance(v, dict):
+            if isinstance(v, dict) or isinstance(v, PCDict):
                 fi = self.filter_dict(prefix + "." + k, v)
                 if len(fi) > 0:
                     newdict[k] = fi
-            elif isinstance(v, list):
+            elif isinstance(v, list) or isinstance(v, PCList):
                 fi = self.filter_list(prefix + "." + k, v)
                 if len(fi) > 0:
                     newdict[k] = fi
-            elif isinstance(v, basestring):
-                if self.keep(prefix + "." + v):
+            elif isinstance(v, string_types) or isinstance(v, int):
+                if self.keep(prefix + "." + k):
                     newdict[k] = v
             elif isinstance(v, datetime):
                 pass
@@ -92,15 +96,15 @@ class CrashFilter(object):
     def filter_list(self, prefix, l):
         newlist = []
         for i in l:
-            if isinstance(i, dict):
+            if isinstance(i, dict) or isinstance(i, PCDict):
                 fi = self.filter_dict(prefix, i)
                 if len(fi) > 0:
                     newlist.append(fi)
-            elif isinstance(i, list):
+            elif isinstance(i, list) or isinstance(i, PCList):
                 fi = self.filter_list(prefix, i)
                 if len(fi) > 0:
                     newlist.append(fi)
-            elif isinstance(i, basestring):
+            elif isinstance(i, string_types) or isinstance(i, int):
                 if self.keep(prefix):
                     newlist.append(i)
             elif isinstance(i, datetime):
@@ -117,19 +121,21 @@ class CrashFilter(object):
         
         for k, v in crash.items():
             assert "." not in k
-            if isinstance(v, dict):
+            if isinstance(v, dict) or isinstance(v, PCDict):
                 newdict = self.filter_dict(k, v)
                 if len(newdict) > 0:
                     newcrash[k] = newdict
-            elif isinstance(v, list):
+            elif isinstance(v, list) or isinstance(v, PCList):
                 newlist = self.filter_list(k, v)
                 if len(newlist) > 0:
                     newcrash[k] = newlist
-            elif isinstance(v, basestring):
+            elif isinstance(v, string_types) or isinstance(v, int):
                 if self.keep(k):
                     newcrash[k] = v
             elif isinstance(v, datetime):
                 pass # always filter dates
+            elif isinstance(v, Project):
+                newcrash[k] = v # always keep project
             elif v is None:
                 pass
             else:

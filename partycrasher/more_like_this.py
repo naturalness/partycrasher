@@ -19,7 +19,7 @@
 
 from __future__ import print_function, division
 
-from crash_filter import CrashFilter
+from partycrasher.crash_filter import CrashFilter
 
 class MoreLikeThisQuery(object):
     def __init__(self,

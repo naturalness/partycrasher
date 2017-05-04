@@ -22,7 +22,6 @@ Utilties used in rest_service; these are kept here to unclutter the API file.
 
 import weakref
 
-import httpheader
 from flask import json, jsonify, request, redirect, make_response, url_for
 
 
@@ -162,10 +161,19 @@ def host_from_legacy_headers(headers):
 
 
 def parse_forwarded_header(content):
-    parameters, _ = httpheader.parse_parameter_list(content)
-    return {name: httpheader.parse_token_or_quoted_string(value)[0]
-            for name, value in parameters}
-
+    """
+    Broken parser for RFC 7239 Section 5
+    """
+    proxies = content.split(',')
+    proxy = proxies[0]
+    pairs = proxy.split(';')
+    parameters = {}
+    for pair in pairs:
+        (left, right) = pair.split('=')
+        left = re.sub(r'[\s"]+', '', left).lower()
+        right = re.sub(r'[\s"]+', '', right).lower()
+        parameters[left] = right
+    return parameters
 
 def first_of(dictionary, *keys):
     for key in keys:

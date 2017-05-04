@@ -6,9 +6,11 @@ import sys
 import json
 import math
 from datetime import datetime
-from collections import namedtuple, defaultdict
+from collections import defaultdict
 from pydoc import locate
 from runpy import run_path
+
+from six import string_types
 
 from elasticsearch import Elasticsearch, NotFoundError, TransportError, RequestError
 
@@ -25,42 +27,10 @@ class BucketNotFoundError(KeyError):
     When a particular bucket cannot be found.
     """
 
-
-class Bucket(namedtuple('Bucket', 'id project threshold total top_reports first_seen')):
-    """
-    Data class for buckets. Contains two identifiers:
-     - id: The bucket's ID;
-     - total: how many reports are currently in the bucket.
-    """
-
-    def to_dict(self, *args, **kwargs):
-        """
-        Converts the current object into a dictionary;
-        Any arguments are treated as in the `dict` constructor.
-        """
-        kwargs.update(self._asdict())
-        for arg in args:
-            kwargs.update(arg)
-
-        # HACK: remove empty top_reports, first_seen.
-        if kwargs['top_reports'] is None:
-            del kwargs['top_reports']
-
-        if kwargs['first_seen'] is None:
-            del kwargs['first_seen']
-
-        return kwargs
-
-
-class Project(namedtuple('Project', 'name')):
-    """
-    Metadata about a project.
-    """
-
 class PartyCrasher(object):
     def __init__(self, config_file=None):
         self.config = Config(config_file)
-        self.thresholds = (
+        self.thresholds = list(
             map(Threshold, self.config.Bucketing.thresholds)
             )
         self._es = None
@@ -167,8 +137,9 @@ class PartyCrasher(object):
             assert isinstance(true_crash['stacktrace'], Stacktrace)
             assert isinstance(true_crash['stacktrace'][0], Stackframe)
             if 'address' in true_crash['stacktrace'][0]:
-                assert isinstance(true_crash['stacktrace'][0]['address'], basestring)
-
+                assert isinstance(true_crash['stacktrace'][0]['address'], string_types), (
+                  "address must be a string instead of %s" 
+                  % (true_crash['stacktrace'][0]['address'].__class__))
 
         if dryrun:
             true_crash['buckets'] = self.bucketer.assign_buckets(true_crash)
