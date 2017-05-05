@@ -134,6 +134,8 @@ class CrashFilter(object):
                     newcrash[k] = v
             elif isinstance(v, datetime):
                 pass # always filter dates
+            elif isinstance(v, Buckets):
+                pass # always filter dates
             elif isinstance(v, Project):
                 newcrash[k] = v # always keep project
             elif v is None:

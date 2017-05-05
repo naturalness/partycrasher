@@ -28,6 +28,19 @@ start: ## Starts the server locally (does not use Docker).
 		--debug \
 		--allow-delete-all
 
+.PHONY: gunicorn
+gunicorn: ## Starts the server locally (does not use Docker).
+	gunicorn \
+		--access-logfile gunicorn-access.log \
+		--error-logfile gunicorn-error.log \
+		--log-level debug \
+		--worker-class sync \
+		--bind localhost:$(EXTERNAL_PORT) \
+		--timeout 60 \
+		--pid gunicorn.pid \
+		--capture-output \
+		partycrasher.rest_service_validator
+
 .PHONY: build
 build: ## Builds the `partycrasher` Docker image
 	docker build --tag $(IMAGE_NAME) .

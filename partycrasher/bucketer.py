@@ -27,7 +27,6 @@ import re
 import traceback
 import math
 import copy
-from operator import itemgetter
 from datetime import datetime
 from elasticsearch import RequestError
 from distutils.util import strtobool
@@ -199,7 +198,8 @@ class MLT(Bucketer):
         Queries ElasticSearch with MoreLikeThis.
         Returns the explanation of the top hit.
         """
-        return self.get_explanation_from_response(response)
+        assert crash is not None
+        return self.searcher.explain(ESCrash(self.index, crash))
       
     def bucket(self, crash):
         """

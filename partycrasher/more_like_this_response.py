@@ -19,6 +19,9 @@
 
 from __future__ import print_function
 
+from operator import itemgetter
+import re
+
 import logging
 logger = logging.getLogger(__name__)
 error = logger.error
@@ -30,6 +33,7 @@ from partycrasher.bucket import Buckets, Bucket, TopMatch
 from partycrasher.threshold import Threshold
 from partycrasher.pc_exceptions import MissingBucketError
 from partycrasher.es_bucket import ESBuckets
+from partycrasher.crash import pretty
 
 class MoreLikeThisHit(object):
     def __init__(self, raw_hit):
@@ -72,8 +76,8 @@ class MoreLikeThisHit(object):
     @property
     def explanation_summary(self):
         explanation = self.explanation
-        with open('explained', 'wb') as debug_file:
-            print(json.dumps(self.raw_hit['_explanation'], indent=2), file=debug_file)
+        with open('explained', 'w') as debug_file:
+            print(pretty(self.raw_hit['_explanation']), file=debug_file)
         def flatten(explanation):
           flattened = []
           for subexplanation in explanation:

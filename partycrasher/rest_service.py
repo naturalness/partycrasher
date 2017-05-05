@@ -30,7 +30,7 @@ from logging import error, debug, warn, info
 from flask import current_app, json, jsonify, request, url_for, redirect
 from flask import render_template, send_file, send_from_directory, Flask
 from flask_cors import CORS
-from werkzeug.exceptions import default_exceptions
+from werkzeug.exceptions import default_exceptions, HTTPException
 
 import partycrasher
 
@@ -449,7 +449,7 @@ def report_summary(project, report_id):
 
     try:
         summary = crasher.get_summary(report_id, project)
-    except partycrasher.ReportNotFoundError:
+    except ReportNotFoundError:
         return jsonify(not_found=report_id), 404
     else:
         return jsonify_resource(summary)

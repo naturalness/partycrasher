@@ -917,6 +917,37 @@ class RestServiceTestCase(unittest.TestCase):
         assert len(r) == 1
         assert r[0].get('href', '') == database_urls[2]
         
+    def test_summary(self):
+        create_url = self.path_to('ubuntu', 'reports')
+
+        first_id = str(uuid.uuid4())
+        second_id = str(uuid.uuid4())
+        third_id = str(uuid.uuid4())
+
+        report = sample_crashes.CRASH_1.copy()
+        report['database_id'] = first_id
+        response = requests.post(create_url, json=report)
+
+        report = sample_crashes.CRASH_2.copy()
+        report['database_id'] = second_id
+        response = requests.post(create_url, json=report)
+        
+        report = sample_crashes.CRASH_2.copy()
+        report['database_id'] = third_id
+        response = requests.post(create_url, json=report)
+        
+        wait_for_elastic_search()
+        
+        summary_url = self.path_to('ubuntu', 'reports', third_id, 'summary')
+        response = requests.get(summary_url)
+        assert response.status_code == 200
+        stuff = response.json()
+        assert isinstance(stuff, list)
+        for i in stuff:
+            assert isinstance(i['field'], string_types)
+            assert isinstance(i['term'], string_types)
+            assert isinstance(i['value'], float)
+
     def tearDown(self):
         # Kill the ENTIRE process group of the REST server.
         # This should really be the subprocess.Popen.terminate() behavior by

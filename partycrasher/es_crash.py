@@ -190,9 +190,7 @@ class ESCrash(Crash):
         self.crashes[self.index][self['database_id']] = self._d
         self.hot = True
 
-    def __init__(self, index=None, crash=None, unsafe=False):
-        if index is None:
-            raise ValueError('No ElasticSearch index specified!')
+    def __init__(self, index, crash, unsafe=False):
         self.index = index
         self.hot = False
         self.unsafe = unsafe
@@ -204,7 +202,7 @@ class ESCrash(Crash):
         elif isinstance(crash, string_types):
             self.load_from_es(crash)
         else:
-            raise ValueError()
+            raise TypeError("Can't load/save a " + crash.__class__.__name__)
         assert self.hot
 
     def __setitem__(self, key, val):

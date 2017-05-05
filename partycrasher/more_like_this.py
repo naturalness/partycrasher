@@ -22,6 +22,7 @@ from __future__ import print_function, division
 from partycrasher.crash_filter import CrashFilter
 from partycrasher.more_like_this_response import MoreLikeThisResponse
 from partycrasher.es_crash import elastify
+from partycrasher.crash import Crash
 
 class MoreLikeThisQuery(object):
     def __init__(self,
@@ -199,15 +200,20 @@ class MoreLikeThisSearcher(object):
        
     def explain(self,
                 crash):
-        body = self.query.make_body(crash, True, None)
+        assert isinstance(crash, Crash)
+        body = self.querybuilder.make_body(crash, True, None)
         response = self.es.search(index=self.index, body=elastify(body))
         # TODO: sum all summaries
-        return MoreLikeThisResponse(response).hits[0].explanation_summary
+        hits = MoreLikeThisResponse(response).hits
+        if len(hits) > 0:
+            return MoreLikeThisResponse(response).hits[0].explanation_summary
+        else:
+            return []
     
     def compare(self,
                 crash,
                 other_ids):
-        body = self.query.make_body(crash, False, other_ids)
+        body = self.querybuilder.make_body(crash, False, other_ids)
         response = self.es.search(index=self.index, body=elastify(body))
         return MoreLikeThisResponse(response)
     

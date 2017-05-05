@@ -24,7 +24,7 @@ angular.module('PartyCrasherApp')
     }
 
     get project() {
-      return this._raw['project'];
+      return this._raw['project']['name'];
     }
 
     get href() {
