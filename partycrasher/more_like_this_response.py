@@ -28,35 +28,8 @@ debug = logger.debug
 
 from partycrasher.bucket import Buckets, Bucket, TopMatch
 from partycrasher.threshold import Threshold
-
-class MissingBucketError(Exception):
-    """
-    When ElasticSearch has not yet propegated a required update. The solution
-    to this is usually to just retry the query.
-    """
-
-
-class MoreLikeThisHitBuckets(Buckets):
-    def __init__(self, raw_buckets):
-        super(MoreLikeThisHitBuckets, self).__init__()
-        self.raw_buckets = raw_buckets
-        for k, v in raw_buckets.items():
-            threshold = Threshold(k)
-            bucket = Bucket({'id': v, 'threshold': threshold})
-            self[threshold] = bucket
-
-    def __getitem__(self, threshold):
-        """
-        Given a crash JSON, returns the bucket field associated with this
-        particular threshold.
-        """
-        try:
-          return super(MoreLikeThisHitBuckets, self).__getitem__(threshold)
-        except KeyError:
-            message = ('Crash does not have an assignment for '
-                      '{!s}'.format(threshold))
-            # TODO: Custom exception for this?
-            raise Exception(message)
+from partycrasher.pc_exceptions import MissingBucketError
+from partycrasher.es_bucket import ESBuckets
 
 class MoreLikeThisHit(object):
     def __init__(self, raw_hit):
@@ -84,7 +57,7 @@ class MoreLikeThisHit(object):
             message = ('Bucket field {!r} not found in crash: '
                       '{!r}'.format('buckets', crash))
             raise MissingBucketError(message)
-        buckets = MoreLikeThisHitBuckets(buckets)
+        buckets = ESBuckets(buckets)
         return buckets
 
     @property
@@ -129,7 +102,7 @@ class MoreLikeThisHit(object):
         return summary
       
     def as_top_match(self):
-        return TopMatch(database_id=self.database_id,
+        return TopMatch(report_id=self.database_id,
                         score=self.score,
                         project=self.project)
 

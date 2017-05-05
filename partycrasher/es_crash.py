@@ -22,17 +22,28 @@ import datetime
 import time
 from weakref import WeakValueDictionary
 from collections import OrderedDict
+import json
+
+from six import string_types
 
 import elasticsearch
 from elasticsearch import Elasticsearch
 
-from partycrasher.pc_exceptions import IdenticalReportError
-from partycrasher.crash import Crash, Stacktrace, Stackframe, CrashEncoder, pretty
+import dateparser
+
+from partycrasher.pc_exceptions import IdenticalReportError, ReportNotFoundError
+from partycrasher.crash import (
+  Crash, 
+  Stacktrace, 
+  Stackframe, 
+  CrashEncoder, 
+  pretty,
+  parse_utc_date,
+  )
 from partycrasher.threshold import Threshold
 from partycrasher.bucket import Buckets
 from partycrasher.pc_dict import Dict
-
-import json # For debugging
+from partycrasher.es_bucket import ESBuckets
 
 import logging
 logger = logging.getLogger(__name__)
@@ -41,10 +52,8 @@ warn = logger.warn
 info = logger.info
 debug = logger.debug
 
-class ReportNotFoundError(KeyError):
-    """
-    Raised when... the crash is not found!
-    """
+def parse_es_date(s):
+    return parse_utc_date(s)
 
 class ESCrash(Crash):
     """Class for a crash that's stored in Elastic"""
@@ -64,7 +73,9 @@ class ESCrash(Crash):
             (but not an ESCrash: to do that call ESCrash())
         """
         if 'buckets' in d:
-            d['buckets'] = Buckets.de_elastify(d['buckets'])
+            d['buckets'] = ESBuckets(d['buckets'])
+        if 'date' in d:
+            d['date'] = parse_es_date(d['date'])
         return Crash(d)
     
     def getrawbyid(self, database_id):
@@ -95,7 +106,7 @@ class ESCrash(Crash):
             # Found it in ElasticSearch!
             self.crashes[self.index][dbid] = existing._d
             self._d = existing._d
-            self.hot = Trueself
+            self.hot = True
         else:
             raise ReportNotFoundError(dbid)
     
@@ -104,7 +115,7 @@ class ESCrash(Crash):
             ElasticSearch.
         """
         #debug(json.dumps(self, cls=ESCrashEncoder, indent=2))
-        return json.dumps(self, cls=ESCrashEncoder)
+        return elastify(self)
     
     def add_to_es(self):
         #debug("adding")
@@ -114,6 +125,7 @@ class ESCrash(Crash):
                     raise ValueError("logdf should not be stored in ElasticSearch")
         try:
             assert "buckets" in self
+            assert "date" in self
             body = self.elastify()
             response = self.es.create(index=self.index,
                                       doc_type='crash',
@@ -259,6 +271,9 @@ class ESCrashEncoder(CrashEncoder):
             return self.hacky_serialize_thresholds(o)
         else:
             return CrashEncoder.default(self, o)
+
+def elastify(o, **kwargs):
+    return json.dumps(o, cls=ESCrashEncoder, **kwargs)
 
 import unittest
 class TestCrash(unittest.TestCase):

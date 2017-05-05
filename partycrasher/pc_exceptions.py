@@ -17,13 +17,27 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-class IdenticalReportError(ValueError):
+class IdenticalReportError(Exception):
     """
     Raised when a database ID is ingested more than once.
 
     The first argument must be the crash
     """
+    def __init__(self, report):
+        self.report = report
 
-    @property
-    def report(self):
-        return self.message
+class ReportNotFoundError(KeyError):
+    """
+    Raised when... the crash is not found!
+    """
+
+class MissingBucketError(KeyError):
+    """
+    If the matching crash is missing bucket fields. This usually happens
+    if the config is changed.
+    """
+
+class BucketNotFoundError(KeyError):
+    """
+    When a particular bucket cannot be found.
+    """

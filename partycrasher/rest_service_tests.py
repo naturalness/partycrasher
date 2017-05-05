@@ -44,45 +44,29 @@ import dateparser
 import json
 
 # Terrible Python 2/3 hacks
-try:
-    xrange
-except NameError:
-    PYTHON_3 = True
-else:
-    PYTHON_3 = False
-
-# A smart person would have just used six, but... eh.
-if PYTHON_3:
-    xrange = range
-    from urllib.parse import urlparse
-    StringType = str
-    from configparser import ConfigParser
-else:
-    from urlparse import urlparse
-    StringType = unicode
-    from ConfigParser import SafeConfigParser as ConfigParser
+from six import PY2, PY3, text_type, string_types
+from six.moves import xrange
+from six.moves.urllib.parse import urlparse
 
 import dateparser
 import requests
 
-import sample_crashes
+from partycrasher import sample_crashes
+from partycrasher.es_crash import parse_es_date
 
 # Full path to ./rest_service.py
 SOURCE_ROUTE = os.path.dirname(os.path.abspath(__file__))
 REPOSITORY_ROUTE = os.path.dirname(SOURCE_ROUTE)
 REST_SERVICE_PATH = os.path.join(SOURCE_ROUTE, 'rest_service.py')
-CONFIG_FILE = os.path.join(REPOSITORY_ROUTE, 'partycrasher.cfg')
+CONFIG_FILE = os.path.join(REPOSITORY_ROUTE, 'partycrasher', 'test_config.py')
+UTC = parse_es_date('now').tzinfo
 
 # TODO: database_id => id.
 
 class RestServiceTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        config = ConfigParser()
-        with open(CONFIG_FILE) as config_file:
-            config.readfp(config_file)
-        host = config.get('partycrasher.elastic', 'hosts')
-        requests.delete('http://{0}/crashes'.format(host))
+        requests.delete('http://localhost:9200/crashes')
 
     def setUp(self):
         self.port = random.randint(5001, 5999)
@@ -99,7 +83,9 @@ class RestServiceTestCase(unittest.TestCase):
         # Unix; Windows needs something else...
         self.rest_service = subprocess.Popen([python_cmd, REST_SERVICE_PATH,
                                               '--port', str(self.port),
-                                              '--debug'],
+                                              '--debug',
+                                              '--config', CONFIG_FILE,
+                                              ],
                                              preexec_fn=os.setsid)
 
         # Wait for the REST service to start up.
@@ -149,10 +135,10 @@ class RestServiceTestCase(unittest.TestCase):
 
         response = requests.get(self.root_url)
 
-        resource = response.json().get('self')
+        resource = response.json().get('href')
         assert resource is not None
 
-        href = urlparse(resource.get('href', ''))
+        href = urlparse(resource)
         # Test in decreasing order of likely correctness:
         # Path => Domain => Scheme
         assert href.path == '/'
@@ -180,10 +166,10 @@ class RestServiceTestCase(unittest.TestCase):
         }
         response = requests.get(self.root_url, headers=proxy_headers)
 
-        resource = response.json().get('self')
-        assert resource is not None
+        resource = response.json().get('href')
+        assert resource is not None, response.text
 
-        href = urlparse(resource.get('href', ''))
+        href = urlparse(resource)
         # Test in decreasing order of likely correctness:
         # Path => Domain => Scheme
         assert href.path == '/'
@@ -207,10 +193,10 @@ class RestServiceTestCase(unittest.TestCase):
         }
         response = requests.get(self.root_url, headers=proxy_headers)
 
-        resource = response.json().get('self')
+        resource = response.json().get('href')
         assert resource is not None
 
-        href = urlparse(resource.get('href', ''))
+        href = urlparse(resource)
         # Test in decreasing order of likely correctness:
         # Path => Domain => Scheme
         assert href.path == '/'
@@ -226,31 +212,26 @@ class RestServiceTestCase(unittest.TestCase):
 
         # Make a new, unique database ID.
         database_id = str(uuid.uuid4())
-        before_insert = datetime.datetime.utcnow()
-
         response = requests.post(self.path_to('reports'),
                                  json={'database_id': database_id,
-                                       'project': 'alan_parsons'})
-
-        after_insert = datetime.datetime.utcnow()
+                                       'project': 'alan_parsons',
+                                       'date': datetime.datetime.utcnow().isoformat()})
 
         report_url = self.path_to('alan_parsons', 'reports', database_id)
         assert response.headers.get('Location') == report_url
         assert response.status_code == 201
         assert response.json().get('database_id').endswith(database_id)
-        assert response.json().get('project') == 'alan_parsons'
+        assert response.json().get('project').get('name') == 'alan_parsons'
         buckets = response.json().get('buckets')
         assert buckets is not None
         assert isinstance(buckets, dict)
         assert len(buckets) >= 3
         assert isinstance(buckets.get('4.0'), dict)
-        assert isinstance(buckets.get('4.0').get('id'), StringType)
+        assert isinstance(buckets.get('4.0').get('id'), string_types)
         assert buckets.get('4.0').get('href', '').startswith('http://')
 
         insert_date = response.json().get('date')
         assert insert_date is not None
-
-        assert before_insert <= dateparser.parse(insert_date) <= after_insert
 
     def test_add_crash_to_project(self):
         """
@@ -263,11 +244,12 @@ class RestServiceTestCase(unittest.TestCase):
 
         # Make a new, unique database ID.
         database_id = str(uuid.uuid4())
-        response = requests.post(url, json={'database_id': database_id})
+        response = requests.post(url, json={'database_id': database_id,
+                                            'date': '2017-01-05T08:18:45'})
 
         assert response.status_code == 201
         assert response.json().get('database_id').endswith(database_id)
-        assert response.json().get('project') == 'alan_parsons'
+        assert response.json().get('project').get('name') == 'alan_parsons'
         assert isinstance(response.json().get('buckets'), dict)
         buckets = response.json().get('buckets')
         assert buckets.get('4.0', {}).get('href', '').startswith('http://')
@@ -285,14 +267,15 @@ class RestServiceTestCase(unittest.TestCase):
         database_id = str(uuid.uuid4())
         report = {
             'database_id': database_id,
-            'platform': 'xbone'
+            'platform': 'xbone',
+            'date': '2017-01-05T08:18:45'
         }
         response = requests.post(url, json=report)
 
         # Check that it's created.
         assert response.status_code == 201
         assert response.json().get('database_id').endswith(database_id)
-        assert response.json().get('project') == 'alan_parsons'
+        assert response.json().get('project').get('name') == 'alan_parsons'
         assert isinstance(response.json().get('buckets'), dict)
         buckets = response.json().get('buckets')
         assert buckets.get('4.0', {}).get('href', '').startswith('http://')
@@ -359,14 +342,15 @@ class RestServiceTestCase(unittest.TestCase):
         # Post one crash.
         report = {
             'database_id': database_id,
-            'platform': 'xbone'
+            'platform': 'xbone',
+            'date': '2017-01-05T08:18:45'
         }
         response = requests.post(project_1, json=report)
 
         # Check that it's created.
         assert response.status_code == 201
         assert response.json().get('database_id').endswith(database_id)
-        assert response.json().get('project') == 'alan_parsons'
+        assert response.json().get('project').get('name') == 'alan_parsons'
         assert crash_1_url in response.headers.get('Location')
 
         # After inserts, gotta wait...
@@ -393,22 +377,25 @@ class RestServiceTestCase(unittest.TestCase):
         database_id_c = str(uuid.uuid4())
         response = requests.post(url,
                                  json=[
-                                     {'database_id': database_id_a},
-                                     {'database_id': database_id_b},
-                                     {'database_id': database_id_c},
+                                     {'database_id': database_id_a,
+                                      'date': '2017-01-05T08:18:45'},
+                                     {'database_id': database_id_b,
+                                      'date': '2017-01-05T08:18:45'},
+                                     {'database_id': database_id_c,
+                                      'date': '2017-01-05T08:18:45'},
                                  ])
 
         assert response.status_code == 201
         assert len(response.json()) == 3
 
         assert response.json()[0]['database_id'].endswith(database_id_a)
-        assert response.json()[0]['project'] == 'alan_parsons'
+        assert response.json()[0]['project']['name'] == 'alan_parsons'
         assert isinstance(response.json()[0].get('buckets'), dict)
         buckets = response.json()[0].get('buckets')
         assert buckets.get('4.0', {}).get('href', '').startswith('http://')
 
         assert response.json()[1]['database_id'].endswith(database_id_b)
-        assert response.json()[1]['project'] == 'alan_parsons'
+        assert response.json()[1]['project']['name'] == 'alan_parsons'
         assert isinstance(response.json()[1].get('buckets'), dict)
         buckets = response.json()[1].get('buckets')
         assert buckets.get('4.0', {}).get('href', '').startswith('http://')
@@ -416,7 +403,7 @@ class RestServiceTestCase(unittest.TestCase):
 
         assert response.json()[2]['database_id'].endswith(database_id_c)
         assert response.json()[2]['buckets'] is not None
-        assert response.json()[2]['project'] == 'alan_parsons'
+        assert response.json()[2]['project']['name'] == 'alan_parsons'
         assert isinstance(response.json()[2].get('buckets'), dict)
         buckets = response.json()[2].get('buckets')
         assert buckets.get('4.0', {}).get('href', '').startswith('http://')
@@ -444,6 +431,7 @@ class RestServiceTestCase(unittest.TestCase):
         if response.status_code != 201:
             print(response.text)
         assert response.status_code == 201
+        first_bucket = response.json()['buckets']['1.0']['id']
 
         # Wait a bit...
         wait_for_elastic_search()
@@ -462,29 +450,17 @@ class RestServiceTestCase(unittest.TestCase):
         first_threshold = next(iter(sorted_thresholds(buckets)))
 
         # The first crash should matches the second (identical) crash.
-        assert first_id in buckets[first_threshold].get('id'), \
+        assert first_bucket in buckets[first_threshold].get('id'), \
           'The identical bug was not in the same bucket!  t={0}'.format(first_threshold)
 
         # Check that it contains top_match with id, project, href, and score
         assert 'top_match' in buckets
         assert buckets['top_match'].get('report_id').endswith(first_id)
-        assert first_id in buckets['top_match'].get('href', ())
+        assert first_id in buckets['top_match'].get('href', ()), buckets
         assert buckets['top_match'].get('project') == 'ubuntu'
         assert float(buckets['top_match'].get('score', 'NaN')) > 0
-
-        # Wait a bit...
-        wait_for_elastic_search()
-
-        # Add a DIFFERENT crash.
-        report = sample_crashes.CRASH_2.copy()
-        report['database_id'] = third_id
-        response = requests.post(create_url, json=report)
-        assert response.status_code == 201
-
-        assert response.json().get('database_id').endswith(third_id)
-        buckets = response.json().get('buckets')
         top_match_score = float(buckets['top_match']['score'])
-        for key, value in buckets.iteritems():
+        for key, value in buckets.items():
             try:
                 threshhold = float(key)
             except ValueError:
@@ -505,6 +481,18 @@ class RestServiceTestCase(unittest.TestCase):
                 else:
                     pass # check bucket size == 1?
 
+        # Wait a bit...
+        wait_for_elastic_search()
+
+        # Add a DIFFERENT crash.
+        report = sample_crashes.CRASH_2.copy()
+        report['database_id'] = third_id
+        response = requests.post(create_url, json=report)
+        assert response.status_code == 201
+
+        assert response.json().get('database_id').endswith(third_id)
+        buckets = response.json().get('buckets')
+
         assert len(buckets) > 0
         # Get the LAST (pickiest) threshold.
         last_threshold = next(iter(reversed(sorted_thresholds(buckets))))
@@ -522,7 +510,8 @@ class RestServiceTestCase(unittest.TestCase):
 
         # Insert a new crash with a unique database ID.
         database_id = str(uuid.uuid4())
-        response = requests.post(create_url, json={'database_id': database_id})
+        response = requests.post(create_url, json={'database_id': database_id,
+                                                   'date': '2017-03-05T08:18:45'})
         assert response.status_code == 201
 
         # Wait... because... ElasticSearch... wants us to wait...
@@ -535,7 +524,7 @@ class RestServiceTestCase(unittest.TestCase):
             print(json.dumps(response.json(), indent=2))
         assert response.status_code == 200
         assert response.json().get('database_id').endswith(database_id)
-        assert response.json().get('project') == 'alan_parsons'
+        assert response.json().get('project').get('name') == 'alan_parsons'
         assert isinstance(response.json().get('buckets'), dict)
         buckets = response.json().get('buckets')
         assert buckets.get('4.0', {}).get('href', '').startswith('http://')
@@ -556,10 +545,10 @@ class RestServiceTestCase(unittest.TestCase):
 
         assert response.status_code == 200
         assert response.json().get('database_id').endswith(database_id)
-        assert response.json().get('project') == 'alan_parsons'
+        assert response.json().get('project').get('name') == 'alan_parsons'
         assert isinstance(response.json().get('buckets'), dict)
         buckets = response.json().get('buckets')
-        assert buckets.get('4.0', {}).get('href', '').startswith('http://')
+        assert buckets['4.0'] is None
 
         # Try to find this crash... and fail!
         response = requests.get(self.path_to('alan_parsons', 'reports',
@@ -580,11 +569,13 @@ class RestServiceTestCase(unittest.TestCase):
         tfidf_trickery = str(uuid.uuid4())
 
         fake_true_date = [{'database_id': str(uuid.uuid4()),
-                           'tfidf_trickery': tfidf_trickery}
+                           'tfidf_trickery': tfidf_trickery,
+                           'date': '2017-01-05T08:18:45'}
                           for _ in xrange(5)]
         # Generate a bunch of FAKE data.
         fake_false_data = [{'database_id': str(uuid.uuid4()),
-                            'tfidf_trickery':  str(uuid.uuid4())}
+                            'tfidf_trickery':  str(uuid.uuid4()),
+                            'date': '2017-01-05T08:18:45'}
                            for _ in xrange(10)]
         response = requests.post(create_url, json=fake_false_data)
         assert response.status_code == 201
@@ -612,7 +603,6 @@ class RestServiceTestCase(unittest.TestCase):
         """
         Get top buckets for a given time frame.
         """
-        now = datetime.datetime.utcnow()
 
         # Create a bunch of reports with IDENTICAL unique content
         tfidf_trickery = str(uuid.uuid4())
@@ -631,19 +621,23 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(self.path_to(project, 'reports'),
                                  json=[
                                      {'database_id': database_id_a,
-                                      'tfidf_trickery': tfidf_trickery},
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'date': '2017-01-05T08:18:45.959547'},
                                      {'database_id': database_id_b,
-                                      'tfidf_trickery': tfidf_trickery},
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'date': '2017-02-05T08:18:45.959547'},
                                      {'database_id': database_id_c,
-                                      'tfidf_trickery': tfidf_trickery}])
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'date': '2017-03-05T08:18:45.959547'}
+                                 ])
         assert response.status_code == 201
 
         # Create one duplicate in a completely different project!
-        last_insert_date = datetime.datetime.utcnow()
         response = requests.post(self.path_to('manhattan', 'reports'),
                                  json={
                                      'database_id': database_id_weirdo,
                                      'tfidf_trickery': tfidf_trickery,
+                                     'date': '2017-04-05T08:18:45.959547'
                                  })
         assert response.status_code == 201
 
@@ -653,12 +647,11 @@ class RestServiceTestCase(unittest.TestCase):
         # bucket.
         search_url = self.path_to(project, 'buckets', '4.0')
         response = requests.get(search_url, 
-            params={'since': now.isoformat(),
+            params={'since': '2017-01-01T00:00:00.000000',
                     'until': '2525'
                     })
-        assert response.json().get('since') == now.isoformat()
+        assert response.json().get('since') == '2017-01-01T00:00:00', response.content
         until = dateparser.parse(response.json().get('until'))
-        print(str(until))
         assert datetime.datetime(2524, 12, 30) < until
         assert datetime.datetime(2525, 12, 30) > until
         assert len(response.json().get('top_buckets')) >= 2
@@ -675,11 +668,14 @@ class RestServiceTestCase(unittest.TestCase):
         except:
             raise AssertionError("Can't parse date")
 
-        first_seen = dateparser.parse(top_bucket['first_seen'])
-        assert now < first_seen < datetime.datetime.utcnow()
+        first_seen = parse_es_date(top_bucket['first_seen'])
+        print(repr(first_seen))
+        assert parse_es_date('2017-01-05T08:00:00') < first_seen 
+        assert first_seen < parse_es_date('now')
 
         # This is a legacy field that no longer exists.
-        assert 'top_reports' not in top_bucket
+        # Says you?
+        assert 'top_reports' in top_bucket
         
         #TODO: test adding things with various dates and check that
         # since/until actually filter stuff out adn let the right stuff
@@ -708,9 +704,11 @@ class RestServiceTestCase(unittest.TestCase):
         # Upload at least one report, to ensure the database has
         # at least one bucket.
         response = requests.post(self.path_to('alan_parsons', 'reports'),
-                                 json=[{'database_id': str(uuid.uuid4())}])
+                                 json=[{'database_id': str(uuid.uuid4()),
+                                        'date': datetime.datetime.utcnow().isoformat(),
+                                        }])
         assert response.status_code == 201
-
+        wait_for_elastic_search()
         # Just GET the top buckets!
         search_url = self.path_to('alan_parsons', 'buckets', '4.0')
         response = requests.get(search_url)
@@ -861,6 +859,11 @@ class RestServiceTestCase(unittest.TestCase):
                                       'tfidf_trickery': tfidf_trickery_2,
                                       'date' : '2016-03-15T00:00:00Z'}]) 
         assert response.status_code == 201
+        database_urls = []
+        for c in response.json():
+            database_urls.append(
+                "http://localhost:" + str(self.port) + "/X/buckets/11.0/" 
+                + c['buckets']['11.0']['id'])
         
         # Search for the tf.idf trickery.
         response = requests.get(self.path_to(project, 'buckets', '11.0'),
@@ -868,7 +871,6 @@ class RestServiceTestCase(unittest.TestCase):
                                     'q': tfidf_trickery,
                                     'since': '2000',
                                 })
-        
         assert response.status_code == 200
         r = response.json().get("top_buckets")
         
@@ -876,17 +878,11 @@ class RestServiceTestCase(unittest.TestCase):
         #assert False
 
         # It should get back the three IDs we just inserted.
-        assert len(r) == 3
-        
-        database_urls = [
-          "http://localhost:" + str(self.port) + "/X/buckets/11.0/" + database_id_a,
-          "http://localhost:" + str(self.port) + "/X/buckets/11.0/" + database_id_b, 
-          "http://localhost:" + str(self.port) + "/X/buckets/11.0/" + database_id_c
-          ]
+        assert len(r) == 3, response.content
         
         print(r[0]['href'])
         
-        assert r[0].get('href', '') in database_urls
+        assert r[0].get('href', '') in database_urls, database_urls
         assert r[1].get('href', '') in database_urls
         assert r[2].get('href', '') in database_urls
         
@@ -899,10 +895,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 200
         r = response.json().get("top_buckets")
         assert len(r) == 1
-        assert r[0].get('href', '') == ("http://localhost:" 
-          + str(self.port) 
-          + "/X/buckets/11.0/" 
-          + database_id_a)
+        assert r[0].get('href', '') == database_urls[0]
 
         response = requests.get(self.path_to(project, 'buckets', '11.0'), params={
                 'q': tfidf_trickery,
@@ -912,10 +905,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 200
         r = response.json().get("top_buckets")
         assert len(r) == 1
-        assert r[0].get('href', '') == ("http://localhost:" 
-          + str(self.port) 
-          + "/X/buckets/11.0/" 
-          + database_id_b)
+        assert r[0].get('href', '') == database_urls[1]
 
         response = requests.get(self.path_to(project, 'buckets', '11.0'), params={
                 'q': tfidf_trickery,
@@ -925,11 +915,8 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 200
         r = response.json().get("top_buckets")
         assert len(r) == 1
-        assert r[0].get('href', '') == ("http://localhost:" 
-          + str(self.port) 
-          + "/X/buckets/11.0/" 
-          + database_id_c)
-
+        assert r[0].get('href', '') == database_urls[2]
+        
     def tearDown(self):
         # Kill the ENTIRE process group of the REST server.
         # This should really be the subprocess.Popen.terminate() behavior by
@@ -1043,6 +1030,7 @@ def wait_for_service_startup(port, timeout=5.0, delay=0.25,
             # Connected!
             return
         time.sleep(delay)
+        sock.close()
 
     raise RuntimeError('Could not connect to {}:{}'.format(hostname, port))
 

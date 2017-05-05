@@ -21,6 +21,7 @@ Utilties used in rest_service; these are kept here to unclutter the API file.
 """
 
 import weakref
+import re
 
 from flask import json, jsonify, request, redirect, make_response, url_for
 
@@ -34,8 +35,11 @@ class BadRequest(RuntimeError):
         self.fields = kwargs
 
     def make_response(self):
-        message = self.message if self.message else 'Bad Request'
-        return jsonify(message=self.message, **self.fields)
+        if hasattr(self, 'message'):
+            message = self.message
+        else:
+            message = 'Bad Request'
+        return jsonify(message=message, **self.fields)
 
 
 class UnknownHostError(RuntimeError):
@@ -83,16 +87,6 @@ def full_url_for(route, **kwargs):
     # TODO: List allowed methods, so we don't have to do an OPTIONS request. 
     return host + path
   
-
-def href(route, **kwargs):
-    """
-    Like full_url_for(), but returns a dictionary, with a key ``href`` which is 
-    the external-facing URL for the service.
-    """
-
-    # TODO: List allowed methods, so we don't have to do an OPTIONS request. 
-    return {'href': full_url_for(route, **kwargs)}
-
 
 # So that `determine user agent facing host` only needs to figure out the host
 # once, even it gets called 1000s of times per request.

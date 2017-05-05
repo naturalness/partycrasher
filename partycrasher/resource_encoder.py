@@ -21,19 +21,52 @@ from collections import OrderedDict
 from partycrasher.crash import Crash, CrashEncoder
 from partycrasher.project import Project
 from partycrasher.threshold import Threshold
-from partycrasher.bucket import Bucket
-from partycrasher.rest_api_utils import href
+from partycrasher.bucket import Bucket, TopMatch
+from partycrasher.rest_api_utils import full_url_for
 
 from flask import json, request, redirect, make_response
-
-# Taken from Python source code.
-# Copyright Python Software Foundation, 2001-now
-# https://hg.python.org/cpython/file/7ec9255d4189/Lib/json/encoder.py
 
 class ResourceEncoder(CrashEncoder):
     def default(self, o):
         if isinstance(o, Threshold):
             return str(o)
+        if isinstance(o, Crash):
+            d = super(ResourceEncoder, self).default(o).copy()
+            d['href'] = full_url_for('view_report',
+                                     project=o.project,
+                                     report_id=o.id
+                                     )
+            return d
+        if isinstance(o, Bucket):
+            d = super(ResourceEncoder, self).default(o).copy()
+            if 'project' in d and d['project'] is not None:
+                d['href'] = full_url_for('view_bucket',
+                                     threshold=o.threshold,
+                                     bucket_id=o.id,
+                                     project=o.project
+                                     )
+            else:
+                d['href'] = full_url_for('view_bucket_no_project',
+                                     threshold=o.threshold,
+                                     bucket_id=o.id
+                                     )
+            return d
+        if isinstance(o, Project):
+            d = {
+              'name': super(ResourceEncoder, self).default(o),
+              'href': full_url_for('query_buckets',
+                                     threshold='4.0',
+                                     project=o.name
+                                     )
+            }
+            return d
+        if isinstance(o, TopMatch):
+            d = super(ResourceEncoder, self).default(o).copy()
+            d['href'] = full_url_for('view_report',
+                                     project=o.project,
+                                     report_id=o.report_id
+                                     )
+            return d
         else:
             return super(ResourceEncoder, self).default(o)
 

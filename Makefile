@@ -40,9 +40,12 @@ run: ## Runs the `partycrasher` Docker container.
 kill: ## Stops and removes the `partycrasher` container.
 	docker rm -f partycrasher
 
+# .PHONY: test
+# test: kill build ## Runs the unit tests within a **new** `partycrasher` container.
+# 	docker run -t -i --name partycrasher $(IMAGE_NAME) python setup.py test
 .PHONY: test
-test: kill build ## Runs the unit tests within a **new** `partycrasher` container.
-	docker run -t -i --name partycrasher $(IMAGE_NAME) python setup.py test
+test:
+	python setup.py test
 
 .PHONY: reset
 reset: build kill run ## Rebuilds the `partycrasher` container and runs it.

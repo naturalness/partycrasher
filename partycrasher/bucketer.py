@@ -165,7 +165,7 @@ class Bucketer(object):
 
         if buckets is None:
             buckets = self.assign_buckets(crash)
-
+        
         buckets.create()
         crash["buckets"] = buckets
 

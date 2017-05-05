@@ -1,4 +1,21 @@
-# -*- coding: UTF-8 -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+#  Copyright (C) 2015, 2016, 2017 Joshua Charles Campbell
+
+#  This program is free software; you can reditext_typeibute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is ditext_typeibuted in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from __future__ import print_function
 
@@ -15,17 +32,21 @@ from six import string_types
 from elasticsearch import Elasticsearch, NotFoundError, TransportError, RequestError
 
 # Some of these imports are part of the public API...
-from partycrasher.crash import Crash, Stacktrace, Stackframe
+from partycrasher.crash import Crash, Stacktrace, Stackframe, pretty
 from partycrasher.es_crash import ESCrash
-from partycrasher.es_crash import ReportNotFoundError
+from partycrasher.pc_exceptions import ReportNotFoundError, BucketNotFoundError
 from partycrasher.threshold import Threshold
 from partycrasher.bucketer import MLTCamelCase # this can be removed but it is here so proper syntax errors are printed
 from partycrasher.config_loader import Config
+from partycrasher.project import Project
+from partycrasher.bucket import Bucket
 
-class BucketNotFoundError(KeyError):
-    """
-    When a particular bucket cannot be found.
-    """
+import logging
+logger = logging.getLogger(__name__)
+error = logger.error
+warn = logger.warn
+info = logger.info
+debug = logger.debug
 
 class PartyCrasher(object):
     def __init__(self, config_file=None):
@@ -163,15 +184,6 @@ class PartyCrasher(object):
                 }
             }}},
             "sort": { "date": { "order": "desc" }},
-            #"aggregations": {
-                #"significant": {
-                    #"significant_terms": {
-                        #"field": "_all",
-                        #"mutual_information": {},
-                        #"size": 100
-                     #}
-                #}
-            #}
         }
                 
         if from_ is not None:
@@ -179,7 +191,7 @@ class PartyCrasher(object):
             query["size"] = size;
 
         response = self.es.search(body=query, index=self.es_index)
-        with open('bucket_response', 'wb') as debug_file:
+        with open('bucket_response', 'w') as debug_file:
             print(json.dumps(response, indent=2), file=debug_file)
         
         reports_found = response['hits']['total']
@@ -196,8 +208,7 @@ class PartyCrasher(object):
                       project=project,
                       threshold=threshold,
                       total=reports_found,
-                      top_reports=reports,
-                      first_seen=None)
+                      top_reports=reports)
 
     def top_buckets(self, 
                     lower_bound, 
@@ -225,6 +236,8 @@ class PartyCrasher(object):
         if not isinstance(threshold, Threshold):
             threshold = Threshold(threshold)
 
+        assert threshold in self.thresholds, pretty(self.thresholds)
+        
         # Filters by lower-bound by default;
         filters = [{
             "range": {
@@ -249,11 +262,9 @@ class PartyCrasher(object):
         if query_string is not None:
             print("Query string!", file=sys.stderr)
             filters.append({
-                "query": {
-                    "query_string": {
-                        "query": query_string,
-                        "default_operator": "AND",
-                    }
+                "query_string": {
+                    "query": query_string,
+                    "default_operator": "AND",
                 }
             })
 
@@ -304,7 +315,9 @@ class PartyCrasher(object):
                   ["top_buckets"]["terms"]["size"]) = actual_size
         
         try:
+            #debug(pretty(query))
             response = self.es.search(body=query, index=self.es_index)
+            #debug(pretty(response))
         except RequestError as e:
             print(e.error, file=sys.stderr)
             raise e
@@ -328,7 +341,7 @@ class PartyCrasher(object):
         self._connect_to_elasticsearch()
         crash = None
         try:
-            crash = ESCrash(database_id, index=self.es_index)
+            crash = ESCrash(crash=database_id, index=self.es_index)
         except NotFoundError as e:
             raise KeyError(database_id)
           

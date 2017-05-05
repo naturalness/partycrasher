@@ -25,10 +25,14 @@ from collections import OrderedDict
 
 from partycrasher.threshold import Threshold
 from partycrasher.project import Project
-from partycrasher.bucket import Buckets, Bucket
+from partycrasher.bucket import Buckets, Bucket, TopMatch
 from partycrasher.pc_dict import PCDict, PCList
 
 from six import string_types, text_type
+
+def parse_utc_date(s):
+    return dateparser.parse(s, settings={'TIMEZONE': 'UTC',
+                                         'RETURN_AS_TIMEZONE_AWARE': True})
             
 class Stackframe(PCDict):
     """
@@ -79,7 +83,7 @@ class Crash(PCDict):
     canonical_fields = {
         'date': {
             'type': datetime.datetime,
-            'converter': dateparser.parse,
+            'converter': parse_utc_date,
             },
         'stacktrace': {
             'type': Stacktrace,
@@ -165,8 +169,12 @@ class CrashEncoder(json.JSONEncoder):
             return o.as_dict()
         elif isinstance(o, Bucket):
             return o.as_dict()
+        elif isinstance(o, TopMatch):
+            return o.as_dict()
         elif isinstance(o, Threshold):
             return text_type(o)
+        elif isinstance(o, Project):
+            return o.name
         else:
             return super(CrashEncoder, self).default(o)
 

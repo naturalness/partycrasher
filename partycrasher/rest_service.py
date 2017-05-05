@@ -28,30 +28,37 @@ import logging
 from logging import error, debug, warn, info
 
 from flask import current_app, json, jsonify, request, url_for, redirect
-from flask import render_template, send_file, send_from_directory
+from flask import render_template, send_file, send_from_directory, Flask
 from flask_cors import CORS
+from werkzeug.exceptions import default_exceptions
+
+import partycrasher
 
 # Hacky things to add PartyCrasher to the path.
 REPOSITORY_ROUTE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(REPOSITORY_ROUTE)
-import partycrasher
+from partycrasher.api import PartyCrasher
 
-from partycrasher.make_json_app import make_json_app
 from partycrasher.rest_api_utils import (
     BadRequest,
     jsonify_list,
-    href,
     redirect_with_query_string,
     full_url_for
 )
 from partycrasher.resource_encoder import ResourceEncoder
-from partycrasher.pc_exceptions import IdenticalReportError
+from partycrasher.pc_exceptions import (
+  IdenticalReportError, 
+  ReportNotFoundError,
+  BucketNotFoundError
+  )
+from partycrasher.crash import pretty
 
 import dateparser
 
 # Create and customize the Flask app.
-app = make_json_app('partycrasher', template_folder='ngapp/app')
+app = Flask('partycrasher', template_folder='ngapp/app')
 CORS(app)
+
 app.json_encoder = ResourceEncoder
 # From http://stackoverflow.com/questions/30362950/is-it-possible-to-use-angular-with-the-jinja2-template-engine
 jinja_options = app.jinja_options.copy()
@@ -87,13 +94,23 @@ def before_first_request():
         debug("before first request debug")
         
 
+def make_json_error(ex):
+    response = jsonify(message=str(ex))
+    response.status_code = (ex.code
+                            if isinstance(ex, HTTPException)
+                            else 500)
+    return response
+
+for code in default_exceptions.keys():
+    app.register_error_handler(code, make_json_error)
+
 @app.errorhandler(BadRequest)
-def on_bad_request(error):
+def on_bad_request(e):
     """
     Handles BadRequest exceptions; sends status 400 back to the client,
     along with a message sent as JSON.
     """
-    return error.make_response(), 400
+    return e.make_response(), 400
 
 
 @app.route('/')
@@ -147,7 +164,7 @@ def root():
     projects = crasher.get_projects()
 
     # This should be a tree for all of the services available.
-    return jsonify(self=dict(href('root'), rel='canonical'),
+    return jsonify(href=full_url_for('root'),
                    partycrasher={
                        'version': partycrasher.__version__,
                        'elastic': crasher.es_servers,
@@ -403,7 +420,7 @@ def view_report(project, report_id):
 
     try:
         report = crasher.get_crash(report_id, project)
-    except partycrasher.ReportNotFoundError:
+    except ReportNotFoundError:
         return jsonify(not_found=report_id), 404
     else:
         return jsonify_resource(report)
@@ -610,7 +627,7 @@ def view_bucket(project=None, threshold=None, bucket_id=None):
 
     try:
         bucket = crasher.get_bucket(threshold, bucket_id, project, from_, size)
-    except partycrasher.BucketNotFoundError:
+    except BucketNotFoundError:
         return jsonify(error="not_found", bucket_id=bucket_id), 404
 
     return jsonify_resource(bucket)
@@ -752,7 +769,7 @@ def query_buckets(project=None, threshold=None):
                                   size=size,
                                   upper_bound=upper_bound,
                                   query_string=query_string)
-    
+
     if upper_bound is not None:
         upper_bound_ret = upper_bound.isoformat()
     else:
@@ -1077,7 +1094,7 @@ def main():
     kwargs = vars(parser.parse_args())
 
     
-    crasher = partycrasher.PartyCrasher(kwargs['config_file'])
+    crasher = PartyCrasher(kwargs['config_file'])
     del kwargs['config_file']
 
     if kwargs['allow_delete_all']:
@@ -1110,7 +1127,7 @@ if __name__ == '__main__':
     main()
 else:
     try:
-        crasher = partycrasher.PartyCrasher('config.py')
+        crasher = PartyCrasher('config.py')
     except IOError:
         print("Couldn't load config file, wont work in gunicorn",
               file=sys.stderr)

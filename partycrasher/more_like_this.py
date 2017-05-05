@@ -21,6 +21,7 @@ from __future__ import print_function, division
 
 from partycrasher.crash_filter import CrashFilter
 from partycrasher.more_like_this_response import MoreLikeThisResponse
+from partycrasher.es_crash import elastify
 
 class MoreLikeThisQuery(object):
     def __init__(self,
@@ -188,19 +189,18 @@ class MoreLikeThisSearcher(object):
         else:
             self.querybuilder = MoreLikeThisFiltered(index=index, *args, **kwargs)
         return self
-      
-
+    
     def query(self,
               crash):
         body = self.querybuilder.make_body(crash, False, None)
-        response = self.es.search(index=self.index, body=body)
+        response = self.es.search(index=self.index, body=elastify(body))
         return MoreLikeThisResponse(response)
 
        
     def explain(self,
                 crash):
         body = self.query.make_body(crash, True, None)
-        response = self.es.search(index=self.index, body=body)
+        response = self.es.search(index=self.index, body=elastify(body))
         # TODO: sum all summaries
         return MoreLikeThisResponse(response).hits[0].explanation_summary
     
@@ -208,7 +208,7 @@ class MoreLikeThisSearcher(object):
                 crash,
                 other_ids):
         body = self.query.make_body(crash, False, other_ids)
-        response = self.es.search(index=self.index, body=body)
+        response = self.es.search(index=self.index, body=elastify(body))
         return MoreLikeThisResponse(response)
     
 class MoreLikeThis(MoreLikeThisSearcher):

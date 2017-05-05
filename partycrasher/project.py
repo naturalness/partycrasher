@@ -17,9 +17,19 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from collections import namedtuple
+from six import string_types
 
-class Project(namedtuple('Project', 'name')):
+class Project(object):
     """
     Metadata about a project.
     """
+    name = None
+    
+    def __init__(self, project):
+       if isinstance(project, Project):
+          self.name == project.name
+       elif isinstance(project, string_types):
+          self.name = project
+    
+    def __str__(self):
+        return self.name

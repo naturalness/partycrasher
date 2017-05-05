@@ -21,16 +21,30 @@ from collections import namedtuple, OrderedDict
 import os
 from datetime import datetime
 
-from six import text_type
+from six import text_type, string_types
+import dateparser
 
 from partycrasher.pc_dict import PCDict, FixedPCDict
 
 from partycrasher.threshold import Threshold
 
+import logging
+logger = logging.getLogger(__name__)
+error = logger.error
+warn = logger.warn
+info = logger.info
+debug = logger.debug
+
 from base64 import b64encode
 def random_bucketid():
     """Generates a random text_typeing for a bucket ID"""
     return b64encode(os.urandom(12), b":_").decode("ascii")
+
+def first_seen(o):
+    
+    if isinstance(o, string_types):
+        return dateparser.parse(o)
+    return datetime(o)
 
 class Bucket(PCDict):
     """
@@ -50,7 +64,7 @@ class Bucket(PCDict):
         },
         'first_seen': {
             'type': datetime,
-            'converter': datetime,
+            'converter': first_seen,
         },
         'total': {
             'type': int,
@@ -72,7 +86,7 @@ class Bucket(PCDict):
 
 class TopMatch(FixedPCDict):
     canonical_fields = {
-        'database_id': {
+        'report_id': {
             'type': text_type,
             'converter': text_type,
         },
@@ -143,8 +157,6 @@ class Buckets(object):
         d = OrderedDict()
         for k, v in self._od.items():
             k = text_type(k)
-            if isinstance(v, Bucket) or isinstance(v, TopMatch):
-                v = v.as_dict()
             d[k] = v
         return d
 
