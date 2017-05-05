@@ -20,6 +20,7 @@
 from __future__ import print_function, division
 
 from partycrasher.crash_filter import CrashFilter
+from partycrasher.more_like_this_response import MoreLikeThisResponse
 
 class MoreLikeThisQuery(object):
     def __init__(self,
@@ -175,7 +176,8 @@ class MoreLikeThisRescored(object):
               }
           }
         return body
-    
+
+
 class MoreLikeThisSearcher(object):
     
     def __init__(self, es, index, *args, **kwargs):
@@ -186,63 +188,28 @@ class MoreLikeThisSearcher(object):
         else:
             self.querybuilder = MoreLikeThisFiltered(index=index, *args, **kwargs)
         return self
+      
 
     def query(self,
               crash):
         body = self.querybuilder.make_body(crash, False, None)
         response = self.es.search(index=self.index, body=body)
-        return response
+        return MoreLikeThisResponse(response)
 
-    def get_explanation_from_response(self, response):
-        try:
-          explanation = response['hits']['hits'][0]['_explanation']['details']
-        except:
-          print(json.dumps(body, indent=2, cls=ESCrashEncoder), file=sys.stderr)
-          print(json.dumps(response, indent=2), file=sys.stderr)
-          raise
-        
-        with open('explained', 'wb') as debug_file:
-            print(json.dumps(response['hits']['hits'][0]['_explanation'], indent=2), file=debug_file)
-
-        def flatten(explanation):
-          flattened = []
-          for subexplanation in explanation:
-            if subexplanation["description"].startswith("weight"):
-              flattened.append(subexplanation)
-            else:
-              #print(subexplanation["description"])
-              if "details" in subexplanation:
-                flattened.extend(flatten(subexplanation["details"]))
-          return flattened
-            
-        explanation = flatten(explanation)
-        explanation = sorted(explanation, key=itemgetter('value'), reverse=True)
-        #with open("explanation", 'w') as f:
-          #print(json.dumps(explanation, indent=2), file=f)
-          
-        summary = []
-        for i in explanation:
-          #print(i['description'])
-          match = re.match(r'^weight\(([^\s:]+):([^\s]+) in .*$', i['description'])
-          if match is not None:
-            summary.append({'field': match.group(1), 'term': match.group(2), 'value': i['value']})
-        #del summary[30:]
-        #print(json.dumps(summary, indent=2, cls=ESCrashEncoder), file=sys.stderr)
-        
-        return summary
-        
+       
     def explain(self,
                 crash):
         body = self.query.make_body(crash, True, None)
         response = self.es.search(index=self.index, body=body)
-        return get_explanation_from_response(response)
+        # TODO: sum all summaries
+        return MoreLikeThisResponse(response).hits[0].explanation_summary
     
     def compare(self,
                 crash,
                 other_ids):
         body = self.query.make_body(crash, False, other_ids)
         response = self.es.search(index=self.index, body=body)
-        return response
+        return MoreLikeThisResponse(response)
     
 class MoreLikeThis(MoreLikeThisSearcher):
     

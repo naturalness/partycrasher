@@ -33,7 +33,9 @@ import signal
 import subprocess
 import traceback
 
-from logging import error
+import logging
+from logging import error, warn, info, debug
+logging.getLogger().setLevel(logging.DEBUG)
 
 # TODO: argparse
 DONT_ACTUALLY_COMPUTE_STATS=False
@@ -140,7 +142,7 @@ def load_oracle_data(oracle_file_path):
 def argmax(d):
     mv = None
     mk = None
-    for k, v in d.iteritems():
+    for k, v in d.items():
         if mv is None or v > m:
             mv = v
             mk = k
@@ -171,11 +173,12 @@ def ingest_one(mblock):
     while retries > 0:
         response = None
         try:
+            #print("p", file=sys.stderr)
             response = requests.post(client.path_to('reports'), json=crashdata)
             assert (response.status_code == 201 or response.status_code == 303), response.status_code
         except Exception as e:
             retries -= 1
-            #print(response.content)
+            debug(response.content)
             traceback.print_exc()
             print("POST failed...", file=sys.stderr)
             sys.stderr.flush()
@@ -195,7 +198,7 @@ def ingest_one(mblock):
     return data
 
 # this must go after definition of functions which will be called in pool
-if PARALLEL > 1:
+if PARALLEL > 0:
     import multiprocessing
     pool = multiprocessing.Pool(PARALLEL)
 
@@ -207,7 +210,7 @@ def process_block(client, block, crashes_so_far, comparisons, totals):
     # ingest
     start = time.time()
     mblock = [(client, data) for data in block]
-    if PARALLEL > 1:
+    if PARALLEL > 0:
         r = pool.map_async(ingest_one, mblock, 1)
         #try:
         block_results = r.get(999999) # set a large but finite timeout for old version of python as a work around for http://bugs.python.org/issue8296
@@ -314,18 +317,18 @@ def process_block(client, block, crashes_so_far, comparisons, totals):
             assigned_totals = comparison_data['assigned_totals']
             bcubed = comparison_data['bcubed']
             purity = 0.0
-            for clustername, cluster in assigned_to_oracle.iteritems():
+            for clustername, cluster in assigned_to_oracle.items():
                 C = assigned_totals[clustername]
                 intersection = max(cluster.values())
                 purity += (C/N) * (intersection/C)
             ipurity = 0.0
             F = 0.0
-            for categoryname, category in oracle_to_assigned.iteritems():
+            for categoryname, category in oracle_to_assigned.items():
                 L = oracle_totals[categoryname]
                 intersection = max(category.values())
                 ipurity += (L/N) * (intersection/L)
                 Fmax = 0.0
-                for clustername, cluster in category.iteritems():
+                for clustername, cluster in category.items():
                     C = assigned_totals[clustername]
                     intersection = cluster
                     precision = intersection/C
@@ -472,21 +475,32 @@ class GunicornStarter(object):
         self.start_gunicorn()
     
     def start_gunicorn(self):
-        self.gunicorn = subprocess.Popen(['gunicorn',
-            '--access-logfile', 'gunicorn-access.log',
-            '--error-logfile',  'gunicorn-error.log',
-            '--log-level', 'debug',
-            '--workers', str(PARALLEL),
-            '--worker-class', 'sync',
-            '--bind', 'localhost:5000',
-            '--timeout', '60',
-            '--pid', 'gunicorn.pid',
-            '--capture-output',
-            'partycrasher.rest_service_validator',
-            ],
-            preexec_fn=os.setsid)
-        time.sleep(5)
-        print('gunicorn started on %i' % (self.gunicorn.pid))
+        if PARALLEL > 0:
+            self.gunicorn = subprocess.Popen(['gunicorn',
+                '--access-logfile', 'gunicorn-access.log',
+                '--error-logfile',  'gunicorn-error.log',
+                '--log-level', 'debug',
+                '--workers', str(PARALLEL),
+                '--worker-class', 'sync',
+                '--bind', 'localhost:5000',
+                '--timeout', '60',
+                '--pid', 'gunicorn.pid',
+                '--capture-output',
+                'partycrasher.rest_service_validator',
+                ],
+                preexec_fn=os.setsid)
+            time.sleep(5)
+            print('gunicorn started on %i' % (self.gunicorn.pid))
+        else:
+            self.gunicorn = subprocess.Popen(['python',
+                'partycrasher/rest_service.py',
+                '--port=5000',
+                '--debug',
+                '--allow-delete-all',
+                ],
+                preexec_fn=os.setsid)
+            time.sleep(5)
+            print('flask started on %i' % (self.gunicorn.pid))
         
     def stop_gunicorn(self):
         if self.gunicorn.poll() is None:

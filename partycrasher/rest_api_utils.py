@@ -163,6 +163,7 @@ def host_from_legacy_headers(headers):
 def parse_forwarded_header(content):
     """
     Broken parser for RFC 7239 Section 5
+    Won't work if the quotes contain commas semicolons or equals
     """
     proxies = content.split(',')
     proxy = proxies[0]

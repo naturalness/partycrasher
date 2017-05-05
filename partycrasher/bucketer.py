@@ -43,17 +43,9 @@ from partycrasher.crash import Crash, Buckets, pretty
 from partycrasher.es_crash import ESCrash, ESCrashEncoder
 from partycrasher.threshold import Threshold
 from partycrasher.more_like_this import MoreLikeThis
+from partycrasher.bucket import Bucket
+from partycrasher.more_like_this_response import MissingBucketError
 
-from base64 import b64encode
-def random_bucketid():
-    """Generates a random string for a bucket ID"""
-    return b64encode(os.urandom(12), b":_").decode("ascii")
-
-class IndexNotUpdatedError(Exception):
-    """
-    When ElasticSearch has not yet propegated a required update. The solution
-    to this is usually to just retry the query.
-    """
 
 class Bucketer(object):
     """
@@ -174,6 +166,7 @@ class Bucketer(object):
         if buckets is None:
             buckets = self.assign_buckets(crash)
 
+        buckets.create()
         crash["buckets"] = buckets
 
         saved_crash = ESCrash(crash=crash, index=self.index)
@@ -214,85 +207,13 @@ class MLT(Bucketer):
         Returns the bucket assignment for each threshold.
         Returns an OrderedDict of {Threshold(...): 'id'}
         """
-        response = self.searcher.query(crash)
+        result = self.searcher.query(crash)
         
-        try:
-            matching_buckets = self.make_matching_buckets(
-                response,
-                default=None)
-            return matching_buckets
-        except IndexNotUpdatedError:
-            time.sleep(1)
-            return self.bucket(crash)
-
-    def make_matching_buckets(self, matches, default=None):
-
-        raw_matches = matches['hits']['hits']
-        #assert len(raw_matches) in (0, 1), 'Unexpected amount of matches...'
-
-        top_match = { '_score': -1000000 }
-        for raw_match in raw_matches[0:1]: # i left this code here, it used to scan the list of matches but i removed everything that needed that so i put the [0:1]
-            assert '_source' in raw_match
-            assert 'buckets' in raw_match['_source']
-            assert 'top_match' in raw_match['_source']['buckets']
-            if raw_match['_source']['buckets']['top_match']:
-                prec_score = raw_match['_source']['buckets']['top_match']['score']
-            else:
-                prec_score = 0
-            score = raw_match['_score']
-            top_match = raw_match
-
-        # JSON structure:
-        # matches['hit']['hits] ~> [
-        #   {
-        #       "_score": 8.9,
-        #       "_source": {
-        #           "buckets": {
-        #               "1.0": "***bucket-id-1***",
-        #               "9.0": "***bucket-id-2***"
-        #           }
-        #       }
-        #   }
-
-        similarity = top_match['_score']
-        #print(similarity);
-        assert isinstance(similarity, (float, int))
-
-        # Add the buckets, by threshold.
-        matching_buckets = Buckets()
-        for threshold in sorted(self.thresholds, key=float):
-            if similarity >= float(threshold):
-                bucket_id = get_bucket_id(top_match, threshold)
-                #print(bucket_id)
-                # Assign this report to the existing bucket.
-                matching_buckets[threshold] = bucket_id
-            else:
-                #print("default: " + default)
-                # Create a new bucket.
-                if default is not None:
-                    matching_buckets[threshold] = default
-                else: # default is None
-                    matching_buckets[threshold] = random_bucketid()
-
-        # Add the top match.
-        if '_source' in top_match:
-            matching_buckets['top_match'] = {
-                'report_id': top_match['_source']['database_id'],
-                'project': top_match['_source']['project'],
-                'score': top_match['_score']
-            }
-            self.total_top_match_scores += top_match['_score']
-            self.total_matches += 1
-            self.max_top_match_score = max(self.max_top_match_score, top_match['_score'])
-            debug('score %f avg %f max %f' % (
-              top_match['_score'],
-              self.total_top_match_scores / self.total_matches,
-              self.max_top_match_score
-              ))
-        else:
-            matching_buckets['top_match'] = None
-
-        return Buckets(matching_buckets)
+        #try:
+        return result.matching_buckets(self.thresholds)
+        #except MissingBucketError:
+            #time.sleep(1)
+            #return self.bucket(crash)
 
     def assign_save_buckets(self, crash):
         buckets = self.assign_buckets(crash)
@@ -589,31 +510,6 @@ class MLTNGram(MLT):
         )
 
 
-def get_bucket_id(result, threshold):
-    """
-    Given a crash JSON, returns the bucket field associated with this
-    particular threshold.
-    """
-
-    crash = result['_source']
-
-    try:
-        buckets = crash['buckets']
-    except KeyError:
-        # We couldn't find the bucket field. ASSUME that this means that
-        # its bucket assignment has not yet propegated to whatever shard
-        # returned the results.
-        message = ('Bucket field {!r} not found in crash: '
-                   '{!r}'.format('buckets', crash))
-        raise IndexNotUpdatedError(message)
-
-    try:
-       return buckets[threshold.to_elasticsearch()]
-    except KeyError:
-        message = ('Crash does not have an assignment for '
-                   '{!s}: {!r}'.format(threshold, match))
-        # TODO: Custom exception for this?
-        raise Exception(message)
 
 
 def common_properties(thresholds):

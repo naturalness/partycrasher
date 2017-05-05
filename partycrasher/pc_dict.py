@@ -20,10 +20,15 @@
 from __future__ import print_function
 
 import sys
-if (sys.version_info > (3, 0)):
+
+from six import PY2, PY3
+if PY3:
     from collections.abc import MutableMapping, MutableSequence
-else:
+elif PY2:
     from collections import MutableMapping, MutableSequence
+    
+class Dict(dict):
+    pass
 
 class PCDict(MutableMapping):
     """
@@ -33,29 +38,23 @@ class PCDict(MutableMapping):
 
     synonyms = {}
     
-    cannonical_fields = {}
+    canonical_fields = {}
     
     def __init__(self, *args, **kwargs):
         d = dict(*args, **kwargs)
-        self._d = {}
+        self._d = Dict()
         for k, v in d.items():
             self[k] = v
     
     def __eq__(self, other):
         if not isinstance(other, PCDict):
             return False
-        if not other.__class__ == self.__class__:
-            return False
-        return (self._d == other._d)
-      
-    def _get(self, key):
-        return self._d[key]
-    
+
     def __getitem__(self, key):
         if key in self.synonyms:
-            return self._get(synonyms[key])
+            return self._d.__getitem__(synonyms[key])
         else:
-            return self._get(key)
+            return self._d.__getitem__(key)
 
     def __setitem__(self, key, val):
         # Translates key synonyms to their "canonical" key.
@@ -99,7 +98,24 @@ class PCDict(MutableMapping):
     
     def copy(self):
         return self.__class__(self._d)
-
+      
+    def __getattr__(self, k):
+        if k in self:
+            return self[k]
+        else:
+            self.__getattribute__(k)
+            
+    def set_d(self, d):
+        if not isinstance(d, Dict):
+            d = Dict(d)
+        self._d = d
+        
+    if True:
+        def __setattr__(self, k, v):
+            if k == '_d':
+                assert isinstance(v, Dict)
+            super(PCDict, self).__setattr__(k, v)
+    
 class PCList(MutableSequence):
   
       member_type = None
@@ -128,3 +144,20 @@ class PCList(MutableSequence):
        
       def insert(self, i, v):
           return self._l.insert(i, self.conv(v))
+
+
+class FixedPCDict(PCDict):
+    def __init__(self, *args, **kwargs):
+        super(FixedPCDict, self).__init__(*args, **kwargs)
+        for k in self.canonical_fields:
+            if not k in self:
+                raise ValueError("Missing keyword argument " + k)
+    
+    def __setitem__(self, k, v):
+        if k not in self.canonical_fields:
+            raise KeyError(k)
+        return super(FixedPCDict, self).__setitem__(k, v)
+
+    def __delitem__(self, k):
+        raise NotImplementedError
+

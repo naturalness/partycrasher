@@ -3,12 +3,12 @@
 
 #  Copyright (C) 2015, 2016 Joshua Charles Campbell
 
-#  This program is free software; you can redistribute it and/or
+#  This program is free software; you can reditext_typeibute it and/or
 #  modify it under the terms of the GNU General Public License
 #  as published by the Free Software Foundation; either version 2
 #  of the License, or (at your option) any later version.
 #
-#  This program is distributed in the hope that it will be useful,
+#  This program is ditext_typeibuted in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
@@ -25,10 +25,10 @@ from collections import OrderedDict
 
 from partycrasher.threshold import Threshold
 from partycrasher.project import Project
-from partycrasher.bucket import Buckets
+from partycrasher.bucket import Buckets, Bucket
 from partycrasher.pc_dict import PCDict, PCList
 
-from six import string_types
+from six import string_types, text_type
             
 class Stackframe(PCDict):
     """
@@ -42,24 +42,24 @@ class Stackframe(PCDict):
             'converter': int,
             },
         'address': {
-            'type': str,
-            'converter': str,
+            'type': text_type,
+            'converter': text_type,
             },
         'function': {
-            'type': str,
-            'converter': str,
+            'type': text_type,
+            'converter': text_type,
             },
         'args': {
-            'type': str,
-            'converter': str,
+            'type': text_type,
+            'converter': text_type,
             },
         'file': {
-            'type': str,
-            'converter': str,
+            'type': text_type,
+            'converter': text_type,
             },
         'dylib': {
-            'type': str,
-            'converter': str,
+            'type': text_type,
+            'converter': text_type,
             },
     }
 
@@ -86,8 +86,8 @@ class Crash(PCDict):
             'converter': Stacktrace,
             },
         'database_id': {
-            'type': str,
-            'converter': str,
+            'type': text_type,
+            'converter': text_type,
             },
         'project': {
             'type': Project,
@@ -156,16 +156,17 @@ class CrashEncoder(json.JSONEncoder):
             serialized = o.isoformat()
             return serialized
         elif isinstance(o, Buckets):
-            d = {}
-            for k, v in o._od.items():
-                d[str(k)] = v
-            return d
+            return o.json_serializable()
         elif isinstance(o, Crash):
             return o.as_dict()
         elif isinstance(o, Stacktrace):
             return o._l
         elif isinstance(o, Stackframe):
             return o.as_dict()
+        elif isinstance(o, Bucket):
+            return o.as_dict()
+        elif isinstance(o, Threshold):
+            return text_type(o)
         else:
             return super(CrashEncoder, self).default(o)
 

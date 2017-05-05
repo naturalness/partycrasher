@@ -21,160 +21,179 @@ import sys
 import datetime
 import time
 from weakref import WeakValueDictionary
-from abc import ABCMeta
+from collections import OrderedDict
 
 import elasticsearch
 from elasticsearch import Elasticsearch
 
 from partycrasher.pc_exceptions import IdenticalReportError
-from partycrasher.crash import Crash, Stacktrace, Stackframe, CrashEncoder, Buckets
+from partycrasher.crash import Crash, Stacktrace, Stackframe, CrashEncoder, pretty
 from partycrasher.threshold import Threshold
+from partycrasher.bucket import Buckets
+from partycrasher.pc_dict import Dict
 
 import json # For debugging
+
+import logging
+logger = logging.getLogger(__name__)
+error = logger.error
+warn = logger.warn
+info = logger.info
+debug = logger.debug
 
 class ReportNotFoundError(KeyError):
     """
     Raised when... the crash is not found!
     """
 
-class ESCrashMeta(ABCMeta):
-    # The purpose of all of this shit is to ensure that we don't
-    # end up with two copies of the same crash in elastic search
-    # in memory because then they would fall out of sync, and
-    # cause really annoying and hard to find bugs, etc.
-    # So, if a ESCrash with the same database_id is already
-    # retrieved/added to ES and is already in memory, then we
-    # just return that very same object
-    # It's not my fault, the only way to do this is with metaclasses.
-    # I seriously tried.
-    _cached = {}
-
-    def __call__(cls, crash=None, index=None, unsafe=False):
-        # This is the case that the constructor was called with a whole
-        # crash datastructure
-        if index is None:
-            raise ValueError('No ElasticSearch index specified!')
-        if index not in cls._cached:
-            cls._cached[index] = WeakValueDictionary()
-        if isinstance(crash, Crash):
-            if 'database_id' in crash:
-                # The case that we already have it in memory
-                if crash['database_id'] in cls._cached[index]:
-                    already = cls._cached[index][crash['database_id']]
-                    assert(Crash(already) == crash)
-                    return already
-                # We don't have it in memory so see if its already in ES
-                if not unsafe:
-                    existing = cls.getrawbyid(crash['database_id'], index=index)
-                else:
-                    existing = None
-
-                if not existing is None:
-
-                    if existing != crash:
-                        # We already know of it! Raise an identical report
-                        # error.
-                        # TODO: not resilient to multiple running instances of
-                        # PartyCrasher :c
-                        raise IdenticalReportError(existing)
-
-                    # It is already in elastic search
-                    # make sure its the same data
-                    newish = super(ESCrashMeta, cls).__call__(crash=existing, index=index)
-                    # cache it as a weak reference
-                    cls._cached[index][crash['database_id']] = newish
-                    return newish
-                # It's not in ES, so add it
-                else:
-                    # Ensure this is UTC ISO format
-                    now = datetime.datetime.utcnow()
-                    crash.setdefault('date', now.isoformat())
-                    if 'stacktrace' in crash and crash['stacktrace'] is not None:
-                        for frame in crash['stacktrace']:
-                            if 'logdf' in frame:
-                                raise ValueError("logdf should not be stored in ElasticSearch")
-                    crash_es_safe = crash.copy()
-                    try:
-                        response = cls.es.create(index=index,
-                                                 doc_type='crash',
-                                                 body=json.dumps(crash, cls=ESCrashEncoder),
-                                                 id=crash['database_id'],
-                                                 refresh=True)
-                        assert response['created']
-                    except elasticsearch.exceptions.ConflictError as e:
-                        if (('DocumentAlreadyExistsException' in e.error)
-                            or ('document_already_exists_exception' in e.error)):
-                            print("Got DocumentAlreadyExistsException on create!", file=sys.stderr)
-                            already = None
-                            while already is None:
-                                print("Waiting for ElasticSearch to catch up...", file=sys.stderr)
-                                time.sleep(1) # Let ES think about its life...
-                                already = cls.getrawbyid(crash['database_id'], index=index)
-                            if not already is None:
-                                # It got added...
-                                # I think what is happening here is that the
-                                # python client lib is retrying after the create
-                                # times out, but ES did recieve the create and
-                                # created the document but didn't return in time
-                                pass
-                            else:
-                                raise
-                        else:
-                            raise
-                    new = super(ESCrashMeta, cls).__call__(crash=crash, index=index)
-                    # Cache it as a weak reference
-                    cls._cached[index][crash['database_id']] = new
-                    return new
-            else:
-                raise Exception("Crash with no database_id!")
-        # The case where the constructor is called with a database id only
-        elif isinstance(crash, str) or isinstance(crash, unicode):
-            if crash in cls._cached[index]:
-                return cls._cached[index][crash]
-            existing = cls.getrawbyid(crash, index=index)
-            if existing is not None:
-                # Found it in ElasticSearch!
-                newish = super(ESCrashMeta, cls).__call__(crash=existing, index=index)
-                cls._cached[index][crash] = newish
-                return newish
-            else:
-                raise ReportNotFoundError(crash)
-        else:
-            raise ValueError()
-
-
 class ESCrash(Crash):
     """Class for a crash that's stored in Elastic"""
-    __metaclass__ = ESCrashMeta
 
     # Global ES connection
     es = None
+    
+    """ Dict of WeakValueDictionarys that caches the thing in ES.
+        Used to prevent multiple copies of the same ESCrash from existing
+        in memory.
+    """
     crashes = {}
-
-    @classmethod
-    def getrawbyid(cls, database_id, index=None):
+    
+    @staticmethod
+    def de_elastify(d):
+        """ Take a dict and de_elastifies it, turning it into a Crash
+            (but not an ESCrash: to do that call ESCrash())
+        """
+        if 'buckets' in d:
+            d['buckets'] = Buckets.de_elastify(d['buckets'])
+        return Crash(d)
+    
+    def getrawbyid(self, database_id):
+        index = self.index
         if index is None:
             raise ValueError('No ElasticSearch index specified!')
-        if cls.es is None:
+        if self.es is None:
             raise RuntimeError('Forgot to monkey-patch ES connection to ESCrash!')
 
-        if index in cls.crashes:
-            if database_id in cls.crashes[index]:
-                return cls.crashes[database_id]
+        if index in self.crashes:
+            assert database_id not in self.crashes[self.index]
+
         try:
-            response = cls.es.get(index=index, id=database_id)
+            response = self.es.get(index=self.index, id=database_id)
         except elasticsearch.exceptions.NotFoundError:
             return None
+        
+        return self.de_elastify(response['_source'])
+      
+    def load_from_es(self, dbid):
+        if dbid in self.crashes[self.index]:
+            self._d = self.crashes[self.index][dbid]
+            self.hot = True
+            return
+        
+        existing = self.getrawbyid(dbid)
+        if existing is not None:
+            # Found it in ElasticSearch!
+            self.crashes[self.index][dbid] = existing._d
+            self._d = existing._d
+            self.hot = Trueself
+        else:
+            raise ReportNotFoundError(dbid)
+    
+    def elastify(self):
+        """ Produce JSON representation of ESCrash object for use with
+            ElasticSearch.
+        """
+        #debug(json.dumps(self, cls=ESCrashEncoder, indent=2))
+        return json.dumps(self, cls=ESCrashEncoder)
+    
+    def add_to_es(self):
+        #debug("adding")
+        if 'stacktrace' in self and self['stacktrace'] is not None:
+            for frame in self['stacktrace']:
+                if 'logdf' in frame:
+                    raise ValueError("logdf should not be stored in ElasticSearch")
+        try:
+            assert "buckets" in self
+            body = self.elastify()
+            response = self.es.create(index=self.index,
+                                      doc_type='crash',
+                                      body=body,
+                                      id=self['database_id'],
+                                      refresh=True)
+            assert response['created']
+        except elasticsearch.exceptions.ConflictError as e:
+            if (('DocumentAlreadyExistsException' in e.error)
+                or ('document_already_exists_exception' in e.error)):
+                print("Got DocumentAlreadyExistsException on create!", file=sys.stderr)
+                already = None
+                while already is None:
+                    print("Waiting for ElasticSearch to catch up...", file=sys.stderr)
+                    time.sleep(1) # Let ES think about its life...self
+                    already = self.getrawbyid(crash['database_id'])
+                if not already is None:
+                    # It got added...
+                    # I think what is happening here is that the
+                    # python client lib is retrying after the create
+                    # times out, but ES did recieve the create and
+                    # created the document but didn't return in time
+                    pass
+                else:
+                    raise
+            else:
+                raise
 
-        return Crash(response['_source'])
+      
+    def check_sync(self):
+        if 'database_id' not in self:
+            raise Exception("Crash with no database_id!")
 
-    def __init__(self, index=None, crash=None):
+        # The case that we already have it in memory
+        if self['database_id'] in self.crashes[self.index]:
+            already = self.crashes[self.index][self['database_id']]
+            # already should be a cached _d
+            #debug(pretty(self._d))
+            #debug(pretty(already))
+            assert(already == self._d)
+            self._d = already
+            return
+
+        # We don't have it in memory so see if its already in ES
+        if not self.unsafe:
+            existing = self.getrawbyid(self['database_id'])
+        else:
+            existing = None
+
+        if existing is None:
+            # It's not in ES, so add it
+            self.add_to_es()
+        else:
+            # It is already in elastic search
+            # make sure its the same data
+            if existing._d != self._d:
+                # We already know of it! Raise an identical report
+                # error.
+                raise IdenticalReportError(existing)
+
+        # cache it as a weak reference
+        self.crashes[self.index][self['database_id']] = self._d
+        self.hot = True
+
+    def __init__(self, index=None, crash=None, unsafe=False):
         if index is None:
             raise ValueError('No ElasticSearch index specified!')
         self.index = index
         self.hot = False
-        super(ESCrash, self).__init__(crash)
-        self.hot = True
+        self.unsafe = unsafe
+        if index not in self.crashes:
+            self.crashes[index] = WeakValueDictionary()
+        if isinstance(crash, Crash):
+            self.set_d(crash._d.copy())
+            self.check_sync()
+        elif isinstance(crash, string_types):
+            self.load_from_es(crash)
+        else:
+            raise ValueError()
+        assert self.hot
 
     def __setitem__(self, key, val):
         """
@@ -213,25 +232,24 @@ class ESCrash(Crash):
         # TODO: code to delete from ES
         # TODO: clear self
 
-
-
 class ESCrashEncoder(CrashEncoder):
 
     @staticmethod
-    def hacky_serialize_thresholds(value):
+    def hacky_serialize_thresholds(buckets):
         """
         Must serialize thresholds, but ElasticSearch is all like... nah.
         Actually the problem is that python dumps doesn't allow non-string keys?
         """
-        assert isinstance(value, Buckets)
+        assert isinstance(buckets, Buckets)
 
-        new_dict = value._od.copy()
-        for key in value.keys():
+        new_dict = OrderedDict()
+        for key, value in buckets.items():
             if not isinstance(key, Threshold):
                 continue
             # Change threshold to saner value.
-            new_dict[key.to_elasticsearch()] = value[key]
-            del new_dict[key]
+            key = key.to_elasticsearch()
+            value = value['id']
+            new_dict[key] = value
         return new_dict
 
     def default(self, o):
