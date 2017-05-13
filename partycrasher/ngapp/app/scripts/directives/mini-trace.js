@@ -9,7 +9,7 @@ angular.module('PartyCrasherApp')
       if (value === undefined) {
         return;
       }
-      scope.stackhead = extractHead(value);
+      [scope.stackhead, scope.stackmore] = extractHead(value);
     });
   
     scope.$watch('databaseId', function (value) {

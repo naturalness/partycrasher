@@ -1,6 +1,6 @@
 <ol style="margin-bottom: 0;">
   <span ng-repeat="item in stackhead">
-      <li  value="{}">
+      <li  value="{{ item[0] }}">
       <a named-route="'view-search'"
          route-params="{project: '*'}"
          route-query-params="{q: item[1]}"
@@ -11,7 +11,7 @@
   <ol style="margin-top: -0.5em;">
     <li style="list-style: none;">...</li>
     <span ng-repeat="item in stackmore">
-      <li  value="{{ item[2] }}">
+      <li  value="{{ item[0] }}">
       <a named-route="'view-search'"
          route-params="{project: '*'}"
          route-query-params="{q: item[1]}"
