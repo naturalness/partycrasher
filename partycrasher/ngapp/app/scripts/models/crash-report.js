@@ -32,7 +32,7 @@ angular.module('PartyCrasherApp')
     }
 
     get date() {
-      var isoDate = this._raw['date'].replace(/z$/i, '') + 'Z';
+      var isoDate = this._raw['date'].replace(/z$/i, 'Z');
       return new Date(Date.parse(isoDate));
     }
 

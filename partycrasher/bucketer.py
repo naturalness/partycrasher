@@ -45,7 +45,6 @@ from partycrasher.more_like_this import MoreLikeThis
 from partycrasher.bucket import Bucket
 from partycrasher.more_like_this_response import MissingBucketError
 
-
 class Bucketer(object):
     """
     Superclass for bucketers which require pre-existing data to work.
@@ -218,6 +217,7 @@ class MLT(Bucketer):
     def assign_save_buckets(self, crash):
         buckets = self.assign_buckets(crash)
         assert isinstance(buckets, Buckets)
+        assert 'top_match' in buckets
         return super(MLT, self).assign_save_buckets(crash, buckets)
 
     def alt_bucket(self, crash):

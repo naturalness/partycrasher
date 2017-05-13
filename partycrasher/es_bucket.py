@@ -18,16 +18,22 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from partycrasher.threshold import Threshold
-from partycrasher.bucket import Bucket, Buckets
+from partycrasher.bucket import Bucket, Buckets, TopMatch
 
 class ESBuckets(Buckets):
     def __init__(self, raw_buckets):
         super(ESBuckets, self).__init__()
         self.raw_buckets = raw_buckets
         for k, v in raw_buckets.items():
-            threshold = Threshold(k)
-            bucket = Bucket({'id': v, 'threshold': threshold})
-            self[threshold] = bucket
+            if k == 'top_match':
+                if v is None:
+                    self[k] = None
+                else:
+                    self[k] = TopMatch(v)
+            else:
+                threshold = Threshold(k)
+                bucket = Bucket({'id': v, 'threshold': threshold})
+                self[threshold] = bucket
 
     def __getitem__(self, threshold):
         """

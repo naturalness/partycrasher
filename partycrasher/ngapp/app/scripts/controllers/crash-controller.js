@@ -31,7 +31,7 @@ angular.module('PartyCrasherApp')
       $scope.date = report.date;
       
       var precedentId1 = rawReport['buckets']['top_match']['report_id'];
-      var precedentProject1 = rawReport['buckets']['top_match']['project'];
+      var precedentProject1 = rawReport['buckets']['top_match']['project']['name'];
       var precedentScore1 = rawReport['buckets']['top_match']['score'];
       
       $scope.precedents = [];

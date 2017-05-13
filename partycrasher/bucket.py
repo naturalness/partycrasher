@@ -27,6 +27,7 @@ import dateparser
 from partycrasher.pc_dict import PCDict, FixedPCDict
 
 from partycrasher.threshold import Threshold
+from partycrasher.project import Project
 
 import logging
 logger = logging.getLogger(__name__)
@@ -95,8 +96,8 @@ class TopMatch(FixedPCDict):
             'converter': float,
         },
         'project': {
-            'type': text_type,
-            'converter': text_type,
+            'type': Project,
+            'converter': Project,
         },
     }
 

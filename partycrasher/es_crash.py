@@ -254,12 +254,16 @@ class ESCrashEncoder(CrashEncoder):
 
         new_dict = OrderedDict()
         for key, value in buckets.items():
-            if not isinstance(key, Threshold):
+            if isinstance(key, Threshold):
+                # Change threshold to saner value.
+                key = key.to_elasticsearch()
+                value = value['id']
+                new_dict[key] = value
+            elif isinstance(key, string_types):
+                new_dict[key] = value
                 continue
-            # Change threshold to saner value.
-            key = key.to_elasticsearch()
-            value = value['id']
-            new_dict[key] = value
+            else:
+                raise TypeError()
         return new_dict
 
     def default(self, o):
