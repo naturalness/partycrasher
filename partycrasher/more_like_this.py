@@ -224,7 +224,8 @@ class MoreLikeThis(MoreLikeThisSearcher):
                          r'^buckets',
                          r'force_bucket',
                          r'stacktrace\.depth',
-                         r'^date']
+                         r'^date',
+                         r'logdf']
         filterer = CrashFilter(config.remove_fields+always_remove_fields,
                                config.keep_fields)
         rescore_filterer = CrashFilter(config.rescore_remove_fields+always_remove_fields,

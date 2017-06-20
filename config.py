@@ -8,7 +8,7 @@ class HTTP:
 # Bucketing                                                                    #
 ################################################################################
 #thresholds = [int(10**(t/24.0)*10)/10.0 for t in range(0, 24*2+1)]
-thresholds = [1.0, 2.0, 3.0, 4.0]
+thresholds = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
 class Bucketing:
     # A list of selectable buckets thresholds. For every report uploaded,
     # PartyCrasher will provide bucket assignments for each threshold provided
@@ -34,12 +34,12 @@ class Bucketing:
     # Configuration options for MLTCamelCase
     class MLT:
         max_query_terms = 20
-        terminate_after = None
+        terminate_after = 10000
         min_score = min(thresholds)
         remove_fields = []
-        keep_fields = [r'stacktrace.function']
+        keep_fields = None
         rescore_remove_fields = []
-        rescore_keep_fields = None
+        rescore_keep_fields = [r'stacktrace.function']
         rescore_window_size = 500
         rescore_weight = 1.0
         search_weight = 1.0

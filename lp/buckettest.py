@@ -37,14 +37,18 @@ import logging
 from logging import error, warn, info, debug
 logging.getLogger().setLevel(logging.DEBUG)
 
+import fake_data_generator
+
+
 # TODO: argparse
 DONT_ACTUALLY_COMPUTE_STATS=False
 BLOCK_SIZE=1000
 PARALLEL=8
-BOOTSTRAP_CRASHES=100000 # WARNING: Destroys temporal relationships!
+BOOTSTRAP_CRASHES=1000000 # WARNING: Destroys temporal relationships!
 BOOTSTRAP_RESUME_AT=0 # This doesn't actually work properly yet, don't use it.
 RESET_STATS_AFTER_BLOCK=True
 TOTALLY_FAKE_DATA=False
+INJECT_FAKE_FIELDS=True
 START_GUNICORN=True
 interval = BLOCK_SIZE
 increasing_spacing = False
@@ -209,6 +213,7 @@ def process_block(client, block, crashes_so_far, comparisons, totals):
                                           crashes_so_far))
     # ingest
     start = time.time()
+
     mblock = [(client, data) for data in block]
     if PARALLEL > 0:
         r = pool.map_async(ingest_one, mblock, 1)
@@ -431,6 +436,28 @@ def iterate_crash(
                       totals)
         iterate_crash.ingest_block = []
 
+class FakeFieldInjector(object):
+    def __init__(self):
+        self.metadata_vocab_alpha = 1000
+        self.metadata_total_words = 100
+        self.metadata_total_fields = 50
+        self.metadata_field_word_alpha = 100
+        self.metadata_vocab = fake_data_generator.ChineseRestaurant(
+            self.metadata_vocab_alpha,
+            fake_data_generator.Strings('', 0))
+        self.metadata_fields = fake_data_generator.FakeMetadataFields(
+            self.metadata_vocab,
+            self.metadata_total_words,
+            self.metadata_total_fields,
+            self.metadata_field_word_alpha)
+    def inject(self, crashref):
+        for i in range(0, self.metadata_total_fields):
+            field = self.metadata_fields.get_field(i)
+            crashref[field.name] = " ".join(field.draw())
+        #debug(crash.pretty(crashref))
+
+        
+
 def simulate(client, comparisons, oracle_data):
     (crashes, oracle_all, all_ids, total_ids, total_buckets) = oracle_data
     totals = {
@@ -453,6 +480,9 @@ def simulate(client, comparisons, oracle_data):
               )
     else:
         import random
+        fake_field_injector = None
+        if INJECT_FAKE_FIELDS:
+            fake_field_injector = FakeFieldInjector()
         for fake_i in range(BOOTSTRAP_RESUME_AT, BOOTSTRAP_CRASHES):
             database_id = "fake:%010i" % fake_i
             source_database_id = list(all_ids.keys())[
@@ -461,6 +491,8 @@ def simulate(client, comparisons, oracle_data):
             oracledata['database_id'] = database_id
             crashdata = copy.copy(crashes[source_database_id])
             crashdata['database_id'] = database_id
+            if INJECT_FAKE_FIELDS:
+                fake_field_injector.inject(crashdata)
             iterate_crash(
                           client,
                           database_id,

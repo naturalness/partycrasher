@@ -180,7 +180,7 @@ class FakeMetadataField(object):
         content = []
         length = self.draw_length()
         for i in range(0, length):
-            content.append(word_source.draw())
+            content.append(self.word_source.draw())
         return content
       
 class FakeMetadataFields(object):

@@ -89,8 +89,9 @@ class CrashFilter(object):
             elif v is None:
                 pass
             else:
-                raise NotImplementedError("Crash filter can't handle "
-                  + v.__class__.__name__ + " in " + prefix + " . " + k)
+                if self.keep(prefix + "." + k):
+                    raise NotImplementedError("Crash filter can't handle "
+                        + v.__class__.__name__ + " in " + prefix + " . " + k)
         return newdict
       
     def filter_list(self, prefix, l):

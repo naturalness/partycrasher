@@ -5,6 +5,7 @@ angular.module('PartyCrasherApp')
 .directive('pcThresholdSelect', function ($log, DEFAULT_THRESHOLD, THRESHOLDS) {
   function link(scope, element, _attrs) {
     var initialThreshold = scope.threshold;
+    var initialThresholdSet = false;
 
     if (thresholdIndex(DEFAULT_THRESHOLD) < 0) {
       $log.error(`Default threshold (${DEFAULT_THRESHOLD}) is not
@@ -12,13 +13,22 @@ angular.module('PartyCrasherApp')
     }
 
     scope.thresholds = THRESHOLDS;
-    scope.thresholdIndex = thresholdIndex(initialThreshold);
+    var initialThresholdIndex = thresholdIndex(initialThreshold);
+    scope.thresholdIndex = initialThresholdIndex;
 
     /* Automatically set the threshold to the appropriate value based on the
      * index. */
     scope.$watch('thresholdIndex', (newValue, _oldValue) => {
       /** TODO: on-release callback. */
-      scope.threshold = THRESHOLDS[newValue];
+      if (!initialThresholdSet) {
+        initialThresholdSet = true;
+        scope.thresholdIndex = initialThresholdIndex;
+        scope.threshold = initialThreshold;
+        return;
+      }
+      if (newValue != _oldValue) {
+        scope.threshold = THRESHOLDS[newValue];
+      }
     });
   }
 
