@@ -32,6 +32,7 @@ import copy
 import signal
 import subprocess
 import traceback
+import datetime
 
 import logging
 from logging import error, warn, info, debug
@@ -182,7 +183,7 @@ def ingest_one(mblock):
             assert (response.status_code == 201 or response.status_code == 303), response.status_code
         except Exception as e:
             retries -= 1
-            debug(response.content)
+            #debug(response.content)
             traceback.print_exc()
             print("POST failed...", file=sys.stderr)
             sys.stderr.flush()
@@ -491,6 +492,8 @@ def simulate(client, comparisons, oracle_data):
             oracledata['database_id'] = database_id
             crashdata = copy.copy(crashes[source_database_id])
             crashdata['database_id'] = database_id
+            crashdata['date'] = datetime.datetime.fromtimestamp(
+                946684800 + fake_i).isoformat()
             if INJECT_FAKE_FIELDS:
                 fake_field_injector.inject(crashdata)
             iterate_crash(

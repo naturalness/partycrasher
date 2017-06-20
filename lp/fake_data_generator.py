@@ -8,6 +8,13 @@ import json
 import string
 import datetime
 
+import six
+
+if six.PY2:
+    maketrans = string.maketrans
+else:
+    maketrans = str.maketrans
+
 class ChineseRestaurant(object):
     def __init__(self, alpha, source):
         self.alpha = alpha
@@ -145,7 +152,7 @@ class Strings(object):
     def draw(self):
         n = self.numbers.draw()
         str_n = self.format_ % n
-        letters = str_n.translate(string.maketrans('0123456789', 'pqrstuvwxy'))
+        letters = str_n.translate(maketrans('0123456789', 'pqrstuvwxy'))
         return (self.prefix + letters)
         
 class PrefixedNumbers(object):        
@@ -312,7 +319,7 @@ def example_fake_crash_gen():
     crash_name_gen = PrefixedNumbers('fake', 8)
     bug_name_gen = PrefixedNumbers('bug', 6)
     
-    start_datetime = datetime.datetime(1980, 01, 01, 0, 0, 0)
+    start_datetime = datetime.datetime(1980, 1, 1, 0, 0, 0)
     mean_crashes_per_second = 60
     
     return FakeCrashGen(bug_alpha,
@@ -372,14 +379,14 @@ class PoissonChisq(object):
                 frequencies_of.append(i)
         results = stats.chisquare(observed_frequencies,
                                   expected_frequencies)
-        print "expected: mean %f variance %f" % (
+        print("expected: mean %f variance %f" % (
                       self.expected_mean(),
-                      self.expected_variance())
-        print "actual: mean %f variance %f" % (
+                      self.expected_variance()))
+        print("actual: mean %f variance %f" % (
                       self.mean(),
-                      self.variance())
-        print len(expected_frequencies)
-        print results
+                      self.variance()))
+        print(len(expected_frequencies))
+        print(results)
         from matplotlib import pyplot
         import matplotlib
         pyplot.switch_backend('Qt5Agg')
@@ -398,7 +405,7 @@ import unittest
 class TestFakeDataGenerator(unittest.TestCase):
     
     def test_chinese_restaurant_process(self):
-        print sys.path
+        print(sys.path)
         from matplotlib import pyplot
         import matplotlib
         from scipy import stats
@@ -416,7 +423,7 @@ class TestFakeDataGenerator(unittest.TestCase):
             assert cr.heap[1] == test_size
         pyplot.switch_backend('Qt5Agg')
         #data=sorted(data, reverse=True)
-        print len(data)
+        print(len(data))
         actual_plot, = pyplot.plot(range(1,len(data)), data[1:], label='actual avg')
         expected = [0]
         remain = test_size * tests
@@ -432,7 +439,6 @@ class TestFakeDataGenerator(unittest.TestCase):
         pyplot.title("Chinese Restaurant Process Unit Test")
         pyplot.legend()
         pyplot.show(block=True)
-    
         
     def test_indian_buffet_process(self):
         import scipy
@@ -466,9 +472,9 @@ class TestFakeDataGenerator(unittest.TestCase):
         # distribution isn't poisson even though it really should be and it looks
         # like it so I'm going to leave off any asserts and work on it more 
         # at a later date
-        print "Number of dishes for each individual:"
+        print("Number of dishes for each individual:")
         individuals_dishes.test()
-        print "Number of dishes for each restaurant:"
+        print("Number of dishes for each restaurant:")
         restaurant_dishes.test()
         restaurant_dishes_bogus.test()
    
@@ -477,7 +483,7 @@ class TestFakeDataGenerator(unittest.TestCase):
         for i in range(0, 15000):
             crash = crash_gen.generate_crash()
             if crash[1] == 'bug000001':
-                print json.dumps(crash, indent=2, sort_keys=True)
+                print(json.dumps(crash, indent=2, sort_keys=True))
 
         #for i in range(0, 20):
             #print json.dumps(crash_gen.generate_crash(), indent=2, sort_keys=True)

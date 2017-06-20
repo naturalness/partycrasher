@@ -33,8 +33,8 @@ class Bucketing:
 
     # Configuration options for MLTCamelCase
     class MLT:
-        max_query_terms = 20
-        terminate_after = 10000
+        max_query_terms = 10
+        terminate_after = 1000
         min_score = min(thresholds)
         remove_fields = []
         keep_fields = None
