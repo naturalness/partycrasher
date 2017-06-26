@@ -141,7 +141,7 @@ class ESCrash(Crash):
                 while already is None:
                     print("Waiting for ElasticSearch to catch up...", file=sys.stderr)
                     time.sleep(1) # Let ES think about its life...self
-                    already = self.getrawbyid(crash['database_id'])
+                    already = self.getrawbyid(self['database_id'])
                 if not already is None:
                     # It got added...
                     # I think what is happening here is that the
