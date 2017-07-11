@@ -189,6 +189,9 @@ class PartyCrasher(object):
         if from_ is not None:
             query["from"] = from_;
             query["size"] = size;
+            
+        if project is not None:
+            query['filter']['term']['project'] = project
 
         response = self.es.search(body=query, index=self.es_index)
         with open('bucket_response', 'w') as debug_file:

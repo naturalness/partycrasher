@@ -35,6 +35,7 @@ from partycrasher.es_crash import ESCrash, ESCrashEncoder
 from partycrasher.threshold import Threshold
 from partycrasher.pc_dict import PCDict, PCList
 from partycrasher.project import Project
+from partycrasher.pc_exceptions import BadKeyNameError
 
 from six import string_types
 
@@ -72,7 +73,8 @@ class CrashFilter(object):
     def filter_dict(self, prefix, d):
         newdict = {}
         for k, v in d.items():
-            assert "." not in k
+            if "." in k:
+                raise BadKeyNameError(key_name=k)
             if isinstance(v, dict) or isinstance(v, PCDict):
                 fi = self.filter_dict(prefix + "." + k, v)
                 if len(fi) > 0:
@@ -121,7 +123,8 @@ class CrashFilter(object):
         newcrash = {}
         
         for k, v in crash.items():
-            assert "." not in k
+            if "." in k:
+                raise BadKeyNameError(key_name=k)
             if isinstance(v, dict) or isinstance(v, PCDict):
                 newdict = self.filter_dict(k, v)
                 if len(newdict) > 0:

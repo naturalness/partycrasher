@@ -194,7 +194,7 @@ class MoreLikeThisSearcher(object):
     def query(self,
               crash):
         body = self.querybuilder.make_body(crash, False, None)
-        assert 'terminate_after' in body
+        #assert 'terminate_after' in body
         response = self.es.search(index=self.index, body=elastify(body))
         return MoreLikeThisResponse(response)
 

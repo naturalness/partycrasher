@@ -173,6 +173,8 @@ def ingest_one(mblock):
     if PARALLEL > 1:
         signal.signal(signal.SIGINT, signal.SIG_IGN)
     crashdata = data['crashdata']
+    for k, v in crashdata.items():
+        assert '.' not in k
     assert 'buckets' not in crashdata
     retries = 3
     while retries > 0:

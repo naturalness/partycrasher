@@ -321,6 +321,28 @@ class RestServiceTestCase(unittest.TestCase):
         assert 404 == requests.get(self.path_to('manhattan', 'reports',
                                                database_id)).status_code
 
+    def test_bad_key_name(self):
+        """
+        Add a single crash to the _wrong_ project.
+        It should fail without create a database entry.
+        """
+        create_url = self.path_to('alan_parsons', 'reports')
+        assert is_cross_origin_accessible(create_url)
+
+        # Make a new, unique database ID.
+        database_id = str(uuid.uuid4())
+        response = requests.post(create_url,
+                                 json={'database_id': database_id,
+                                       'dmi.decode': 'bogus'})
+
+        # The request should have failed.
+        assert response.status_code == 400
+        assert response.json().get('error') == 'BadKeyNameError'
+        assert 'period' in response.json().get('description'), response.text
+
+        # Now try to fetch it from either project
+        assert 404 == requests.get(self.path_to('alan_parsons', 'reports',
+                                               database_id)).status_code
     def test_add_identical_ids_to_different_project(self):
         """
         Adds an IDENTICAL ID to two different projects project.
@@ -362,7 +384,7 @@ class RestServiceTestCase(unittest.TestCase):
 
         # Check that this one's not created.
         assert response.status_code == 303
-
+    
     def test_add_multiple(self):
         """
         Add multiple crashes to a single project;
@@ -457,7 +479,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert 'top_match' in buckets
         assert buckets['top_match'].get('report_id').endswith(first_id)
         assert first_id in buckets['top_match'].get('href', ()), buckets
-        assert buckets['top_match'].get('project') == 'ubuntu'
+        assert buckets['top_match'].get('project').get('name') == 'ubuntu', buckets['top_match'].get('project') 
         assert float(buckets['top_match'].get('score', 'NaN')) > 0
         top_match_score = float(buckets['top_match']['score'])
         for key, value in buckets.items():
@@ -947,6 +969,45 @@ class RestServiceTestCase(unittest.TestCase):
             assert isinstance(i['field'], string_types)
             assert isinstance(i['term'], string_types)
             assert isinstance(i['value'], float)
+    
+    def testProjectBucket(self):
+        url = self.path_to('alan_parsons', 'reports')
+        assert is_cross_origin_accessible(url)
+        # Make a bunch of unique database IDs -- project 1 
+        database_id_a = str(uuid.uuid4())
+        database_id_b = str(uuid.uuid4())
+        database_id_c = str(uuid.uuid4())
+        response = requests.post(url,
+                                 json=[
+                                     {'database_id': database_id_a,
+                                      'date': '2017-01-05T08:18:45'},
+                                     {'database_id': database_id_b,
+                                      'date': '2017-01-05T08:18:45'},
+                                     {'database_id': database_id_c,
+                                      'date': '2017-01-05T08:18:45'},
+                                 ])
+        assert response.status_code == 201
+        assert len(response.json()) == 3
+
+
+        url = self.path_to('manhattan', 'reports')
+        assert is_cross_origin_accessible(url)
+        # Make a bunch of unique database IDs -- project 2
+        database_id_a = str(uuid.uuid4())
+        database_id_b = str(uuid.uuid4())
+        database_id_c = str(uuid.uuid4())
+        response = requests.post(url,
+                                 json=[
+                                     {'database_id': database_id_a,
+                                      'date': '2017-01-05T08:18:45'},
+                                     {'database_id': database_id_b,
+                                      'date': '2017-01-05T08:18:45'},
+                                     {'database_id': database_id_c,
+                                      'date': '2017-01-05T08:18:45'},
+                                 ])
+        assert response.status_code == 201
+        assert len(response.json()) == 3
+
 
     def tearDown(self):
         # Kill the ENTIRE process group of the REST server.

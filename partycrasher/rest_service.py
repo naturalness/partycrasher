@@ -24,6 +24,7 @@ import os
 import sys
 import time
 import argparse
+import traceback
 import logging
 from logging import error, debug, warn, info
 
@@ -47,9 +48,8 @@ from partycrasher.rest_api_utils import (
 )
 from partycrasher.resource_encoder import ResourceEncoder
 from partycrasher.pc_exceptions import (
-  IdenticalReportError, 
-  ReportNotFoundError,
-  BucketNotFoundError
+  PartyCrasherError, 
+  IdenticalReportError
   )
 from partycrasher.crash import pretty
 
@@ -111,6 +111,33 @@ def on_bad_request(e):
     along with a message sent as JSON.
     """
     return e.make_response(), 400
+
+@app.errorhandler(PartyCrasherError)
+def on_crasher_crash(ex):
+    assert isinstance(ex, PartyCrasherError)
+    (t, v, tb) = sys.exc_info()
+    tb = traceback.extract_tb(tb)
+    out_tb = []
+    i = 0
+    for frame in reversed(tb):
+        i = i + 1
+        out_tb.append({
+            'file': frame[0],
+            'fileline': frame[1],
+            'function': frame[2],
+            'extra': frame[3],
+            'depth': i
+            })
+    details = {
+        'message': ex.message,
+        'description': ex.description,
+        'error': ex.__class__.__name__,
+        'stacktrace': out_tb,
+        }
+    details.update(ex.get_extra())
+    response = jsonify(details)
+    response.status_code = ex.http_code
+    return response
 
 
 @app.route('/')
@@ -418,12 +445,8 @@ def view_report(project, report_id):
 
     """
 
-    try:
-        report = crasher.get_crash(report_id, project)
-    except ReportNotFoundError:
-        return jsonify(not_found=report_id), 404
-    else:
-        return jsonify_resource(report)
+    report = crasher.get_crash(report_id, project)
+    return jsonify_resource(report)
 
 @app.route('/<project>/reports/<report_id>/summary')
 def report_summary(project, report_id):
@@ -447,12 +470,8 @@ def report_summary(project, report_id):
 
     """
 
-    try:
-        summary = crasher.get_summary(report_id, project)
-    except ReportNotFoundError:
-        return jsonify(not_found=report_id), 404
-    else:
-        return jsonify_resource(summary)
+    summary = crasher.get_summary(report_id, project)
+    return jsonify_resource(summary)
 
 
 @app.route('/<project>/reports/<report_id>/compare')
@@ -478,14 +497,9 @@ def report_compare(report_id):
 
     """
 
-
     other_ids = request.get_json()
-    try:
-        summary = crasher.compare(report_id, other_ids)
-    except partycrasher.ReportNotFoundError:
-        return jsonify(not_found=report_id), 404
-    else:
-        return jsonify_resource(summary)
+    summary = crasher.compare(report_id, other_ids)
+    return jsonify_resource(summary)
 
 @app.route('/reports/dry-run', methods=['POST'])
 @app.route('/<project>/reports/dry-run', methods=['POST'])
@@ -530,13 +544,8 @@ def ask_about_report(project=None):
     """
 
     report = request.get_json()
-    try:
-        assigned_report, _url = ingest_one(report, project, dryrun=True)
-    except IdenticalReportError as error:
-        # Already ingested report; no need to dry-run.
-        return '', 303, { 'Location': url_for_report(error.report) }
-    else:
-        return jsonify_resource(assigned_report), 200
+    assigned_report, _url = ingest_one(report, project, dryrun=True)
+    return jsonify_resource(assigned_report), 200
 
 
 def not_available_in_this_release():
