@@ -174,7 +174,8 @@ def ingest_one(mblock):
         signal.signal(signal.SIGINT, signal.SIG_IGN)
     crashdata = data['crashdata']
     for k, v in crashdata.items():
-        assert '.' not in k
+        if '.' in k:
+            k.replace('.', '_')
     assert 'buckets' not in crashdata
     retries = 3
     while retries > 0:

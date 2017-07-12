@@ -20,6 +20,7 @@
 from __future__ import print_function
 
 import sys
+from copy import copy, deepcopy
 
 from six import PY2, PY3
 if PY3:
@@ -96,55 +97,63 @@ class PCDict(MutableMapping):
     def as_dict(self):
         return self._d
     
-    def copy(self):
+    def __copy__(self):
+        """Implements a shallow copy operation. Note that this will call __init__, so it will reconvert everything."""
         return self.__class__(self._d)
-      
+        
+    def __deepcopy__(self, memo):
+        return self.__class__(deepcopy(self._d, memo))
+    
     def __getattr__(self, k):
         if k in self:
             return self[k]
         else:
             self.__getattribute__(k)
-            
+    
+    def __setattr__(self, k, v):
+        if k == '_d':
+            assert isinstance(v, Dict)
+        super(PCDict, self).__setattr__(k, v)
+    
     def set_d(self, d):
         if not isinstance(d, Dict):
             d = Dict(d)
         self._d = d
-        
-    if True:
-        def __setattr__(self, k, v):
-            if k == '_d':
-                assert isinstance(v, Dict)
-            super(PCDict, self).__setattr__(k, v)
-    
+
 class PCList(MutableSequence):
   
-      member_type = None
-      member_converter = None
-      
-      def conv(self, item):
-          if isinstance(item, self.member_type):
-              return item
-          else:
-              return self.member_converter(item)
-      
-      def __init__(self, *args):
-          self._l = [self.conv(i) for i in list(*args)]
-          
-      def __getitem__(self, i):
-          return self._l.__getitem__(i)
-       
-      def __setitem__(self, i, v):
-          return self._l.__setitem__(i, self.conv(v))
+    member_type = None
+    member_converter = None
+    
+    def conv(self, item):
+        if isinstance(item, self.member_type):
+            return item
+        else:
+            return self.member_converter(item)
+    
+    def __init__(self, *args):
+        self._l = [self.conv(i) for i in list(*args)]
         
-      def __delitem__(self, i):
-          return self._l.__delitem__(i)
-      
-      def __len__(self):
-          return self._l.__len__()
-       
-      def insert(self, i, v):
-          return self._l.insert(i, self.conv(v))
-
+    def __getitem__(self, i):
+        return self._l.__getitem__(i)
+    
+    def __setitem__(self, i, v):
+        return self._l.__setitem__(i, self.conv(v))
+    
+    def __delitem__(self, i):
+        return self._l.__delitem__(i)
+    
+    def __len__(self):
+        return self._l.__len__()
+    
+    def insert(self, i, v):
+        return self._l.insert(i, self.conv(v))
+    
+    def __copy__(self):
+        return self.__class__(copy(self._l))
+        
+    def __deepcopy__(self, memo):
+        return self.__class__(deepcopy(self._l, memo))
 
 class FixedPCDict(PCDict):
     def __init__(self, *args, **kwargs):
@@ -160,4 +169,3 @@ class FixedPCDict(PCDict):
 
     def __delitem__(self, k):
         raise NotImplementedError
-

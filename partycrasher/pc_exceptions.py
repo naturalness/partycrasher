@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class PartyCrasherError(Exception):
+    """An error occured within PartyCrasher."""
     http_code = 500
-    description = "An error occured within PartyCrasher."
     
     def __init__(self, message):
         self.message = message
@@ -28,11 +28,8 @@ class PartyCrasherError(Exception):
         return {}
 
 class IdenticalReportError(PartyCrasherError):
+    """Attempted to ingest a database ID more than once."""
     http_code = 409
-    description = "Attempted to ingest a database ID more than once."
-    """
-    The second argument must be the crash
-    """
     def __init__(self, report, message=None):
         if message is None:
             message = "Attempted to add an identical report with id %s" % report['database_id']
@@ -43,8 +40,8 @@ class IdenticalReportError(PartyCrasherError):
         return {'report':  self.report}
 
 class ReportNotFoundError(PartyCrasherError):
+    """A crash could not be found."""
     http_code = 404
-    description = "A crash could not be found."
     
     def __init__(self, database_id, message=None):
         if message is None:
@@ -56,12 +53,12 @@ class ReportNotFoundError(PartyCrasherError):
         return {'database_id':  self.database_id}
 
 class MissingBucketError(PartyCrasherError):
+    """A matching crash is missing bucket information for a threshold. This usually happens if the config changed."""
     http_code = 500
-    description = "A matching crash is missing bucket information for a threshold. This usually happens if the config changed."
 
 class BucketNotFoundError(PartyCrasherError):
+    """A bucket could not be found."""
     http_code = 404
-    description = "A bucket could not be found."
     
     def __init__(self, bucket_id, threshold, message=None):
         if message is None:
@@ -77,8 +74,8 @@ class BucketNotFoundError(PartyCrasherError):
                 'threshold': self.threshold}
 
 class BadKeyNameError(PartyCrasherError):
+    """Invalid key-value pair in crash data. Keys cannot contain period '.' characters."""
     http_code = 400
-    description = "Invalid key-value pair in crash data. Keys cannot contain period '.' characters."
     
     def __init__(self, key_name, message=None):
         if message is None:

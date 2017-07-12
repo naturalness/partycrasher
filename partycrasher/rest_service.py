@@ -44,7 +44,8 @@ from partycrasher.rest_api_utils import (
     BadRequest,
     jsonify_list,
     redirect_with_query_string,
-    full_url_for
+    full_url_for,
+    str_to_bool
 )
 from partycrasher.resource_encoder import ResourceEncoder
 from partycrasher.pc_exceptions import (
@@ -80,7 +81,7 @@ def before_first_request():
     print("before first request", file=sys.stderr)
     print(logging.getLogger("gunicorn.error").handlers, file=sys.stderr)
     logging.getLogger().setLevel(logging.DEBUG)
-    logging.getLogger("elasticsearch").setLevel(logging.INFO)
+    #logging.getLogger("elasticsearch").setLevel(logging.INFO)
     logging.getLogger("urllib3.util.retry").setLevel(logging.INFO)
     logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
     app.logger.setLevel(logging.DEBUG)
@@ -101,8 +102,8 @@ def make_json_error(ex):
                             else 500)
     return response
 
-for code in default_exceptions.keys():
-    app.register_error_handler(code, make_json_error)
+#for code in default_exceptions.keys():
+    #app.register_error_handler(code, make_json_error)
 
 @app.errorhandler(BadRequest)
 def on_bad_request(e):
@@ -112,9 +113,8 @@ def on_bad_request(e):
     """
     return e.make_response(), 400
 
-@app.errorhandler(PartyCrasherError)
+@app.errorhandler(Exception)
 def on_crasher_crash(ex):
-    assert isinstance(ex, PartyCrasherError)
     (t, v, tb) = sys.exc_info()
     tb = traceback.extract_tb(tb)
     out_tb = []
@@ -129,14 +129,20 @@ def on_crasher_crash(ex):
             'depth': i
             })
     details = {
-        'message': ex.message,
-        'description': ex.description,
+        'message': str(ex),
+        'description': ex.__class__.__doc__,
         'error': ex.__class__.__name__,
         'stacktrace': out_tb,
         }
-    details.update(ex.get_extra())
+    if isinstance(ex, PartyCrasherError):
+        details.update(ex.get_extra())
     response = jsonify(details)
-    response.status_code = ex.http_code
+    if 'http_code' in ex.__dict__:
+        response.status_code = ex.http_code
+    elif 'code' in ex.__dict__:
+        reponse.status_code = ex.code
+    else:
+        response.status_code = 500
     return response
 
 
@@ -276,15 +282,16 @@ def add_report(project=None):
     .. code-block:: JSON
 
         {
-            "database_id": "<report-id>",
-            "project": "<project>",
-            "href": "https://domain.tld/<project>/reports/<report-id>",
-            "buckets": {
-                "4.0": {
-                    "bucket_id": "<bucket-id @ 4.0>",
-                    "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+            "report": {
+                "database_id": "<report-id>",
+                "project": "<project>",
+                "href": "https://domain.tld/<project>/reports/<report-id>",
+                "buckets": {
+                    "4.0": {
+                        "bucket_id": "<bucket-id @ 4.0>",
+                        "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                    }
                 }
-            }
         }
 
     Errors
@@ -326,24 +333,28 @@ def add_report(project=None):
 
         [
             {
-                "database_id": "<report-id 1>",
-                "project": "<project>",
-                "href": "https://domain.tld/<project>/reports/<report-id 1>",
-                "buckets": {
-                    "4.0": {
-                        "bucket_id": "<bucket-id @ 4.0>",
-                        "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                "report": {
+                    "database_id": "<report-id 1>",
+                    "project": "<project>",
+                    "href": "https://domain.tld/<project>/reports/<report-id 1>",
+                    "buckets": {
+                        "4.0": {
+                            "bucket_id": "<bucket-id @ 4.0>",
+                            "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                        }
                     }
                 }
             },
             {
-                "database_id": "<report-id 2>",
-                "project": "<project>",
-                "href": "https://domain.tld/<project>/reports/<report-id 2>",
-                "buckets": {
-                    "4.0": {
-                        "bucket_id": "<bucket-id @ 4.0>",
-                        "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                "report": {
+                    "database_id": "<report-id 2>",
+                    "project": "<project>",
+                    "href": "https://domain.tld/<project>/reports/<report-id 2>",
+                    "buckets": {
+                        "4.0": {
+                            "bucket_id": "<bucket-id @ 4.0>",
+                            "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                        }
                     }
                 }
             }
@@ -363,24 +374,32 @@ def add_report(project=None):
         HTTP/1.1 400 Bad Request
     """
 
-    report = request.get_json()
+    report_or_reports = request.get_json()
+    explain = str_to_bool(request.args.get('explain', 'false'))
 
     if not report:
         raise BadRequest('No usable report data provided.',
                          error='no_report_data_provided')
 
-    if isinstance(report, list):
-        return jsonify_list(ingest_multiple(report, project)), 201
-    else:
+    if isinstance(report_or_reports, list):
+        reports = [crasher.report(i) for i in reports]
+        map(lambda report: report.save(),reports)
+        return jsonify_list(reports), 201
+    elif isinstance(report_or_reports, dict):
+        report = crasher.report(report_or_reports, explain)
         try:
-            report, url = ingest_one(report, project)
+            report.save()
         except IdenticalReportError as error:
             # Ingested a duplicate report.
             return '', 303, { 'Location': url_for_report(error.report) }
         else:
-            return jsonify_resource(report), 201, {
-                'Location': url
-            }
+            return (
+                jsonify_resource(report), 
+                201, 
+                {'Location': url}
+                )
+    else:
+        raise BadRequest("Report must be a list or object.")
 
 
 @app.route('/<project>/reports/<report_id>')
@@ -1013,7 +1032,7 @@ def search(project):
 #############################################################################
 
 
-def ingest_one(report, project_name, dryrun=False):
+def ingest_one(report, project_name, explain, dryrun):
     """
     Returns a tuple of ingested report and its URL.
 
@@ -1025,18 +1044,18 @@ def ingest_one(report, project_name, dryrun=False):
     # Graft the project name onto the report.
     report.setdefault('project', project_name)
 
-    report = crasher.ingest(report, dryrun=dryrun)
+    report = crasher.report(report, dryrun=dryrun, explain=explain)
     url = url_for_report(report)
 
     return report, url
 
 
-def ingest_multiple(reports, project_name):
+def ingest_multiple(reports, project_name, explain):
     """
     Same as ingest_one, but takes a list of reports, and returns a list of
     reports.
     """
-    return [ingest_one(report, project_name)[0] for report in reports]
+    return [ingest_one(report, project_name, explain)[0] for report in reports]
 
 
 def url_for_report(report):

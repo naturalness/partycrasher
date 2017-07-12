@@ -33,13 +33,14 @@ from elasticsearch import Elasticsearch, NotFoundError, TransportError, RequestE
 
 # Some of these imports are part of the public API...
 from partycrasher.crash import Crash, Stacktrace, Stackframe, pretty
-from partycrasher.es_crash import ESCrash
+from partycrasher.es.crash import ESCrash
 from partycrasher.pc_exceptions import ReportNotFoundError, BucketNotFoundError
 from partycrasher.threshold import Threshold
-from partycrasher.bucketer import MLTCamelCase # this can be removed but it is here so proper syntax errors are printed
 from partycrasher.config_loader import Config
 from partycrasher.project import Project
 from partycrasher.bucket import Bucket
+from partycrasher.es.index import ESIndex
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -49,124 +50,35 @@ info = logger.info
 debug = logger.debug
 
 class PartyCrasher(object):
+    """Public API root and config file loader."""
     def __init__(self, config_file=None):
         self.config = Config(config_file)
         self.thresholds = list(
             map(Threshold, self.config.Bucketing.thresholds)
             )
-        self._es = None
-        self._bucketer = None
-        self._checked_index_exists = False
-
-    @property
-    def es_servers(self):
-        """
-        Configured ES server list
-        """
-        return self.config.ElasticSearch.hosts
-
-    @property
-    def es_index(self):
-        """
-        Configured ES index
-        """
-        return self.config.ElasticSearch.indexbase
-
-    @property
-    def allow_delete_all(self):
-        """
-        Whether or not the instance should allow all data to be deleted at once
-        """
-        return self.config.ElasticSearch.allow_delete_all
-
-    @property
-    def es(self):
-        """
-        ElasticSearch instance.
-
-        """
-        if not self._es:
-            self._connect_to_elasticsearch()
-        return self._es
-
-    @property
-    def bucketer(self):
-        """
-        Bucketer instance.
-        """
-        if not self._bucketer:
-            self._connect_to_elasticsearch()
-        return self._bucketer
-
+        self.esstore = ESStore(config.ElasticSearch)
+        self.strategy_class = locate(self.config.Bucketing.Strategy.strategy)
+        self.tokenization_class = locate(self.config.Bucketing.Tokenization.tokenization)
+        self.tokenization = self.tokenization_class(config.Bucketing.Strategy)
+        self.index = ESIndex(self.esstore,
+                             self.config,
+                             self.tokenization,
+                             self.thresholds)
+        self.index.ensure_index_exists()
+        self.strategy = self.strategy_class(config=config.Bucketing.Strategy,
+                                            index=self.index)
+        
+    
     @property
     def default_threshold(self):
         """
         Default threshould to use if none are provided.
         """
         # TODO: determine from static/dynamic configuration
-        return Threshold(self.config.get('partycrasher.bucket', 'default_threshold'))
+        return Threshold(self.config.Bucketing.default_threshold)
 
-    def delete_and_recreate_index(self):
-        """
-        Deletes the entire index and recreates it. This destroys all of the
-        reports.
-        """
-        assert self.allow_delete_all
-        self.es.indices.delete(index=self.es_index)
-        self.es.cluster.health(wait_for_status='yellow')
-        self._bucketer.create_index()
-        self.es.cluster.health(wait_for_status='yellow')
-
-
-    def _connect_to_elasticsearch(self):
-        """
-        Establishes a connection to ElasticSearch. given configuration.
-        """
-        self._es = Elasticsearch(self.es_servers,
-                                 retry_on_timeout=True,
-                                 )
-
-        # XXX: Monkey-patch our instance to the global.
-        ESCrash.es = self._es
-        tokenization_name = self.config.Bucketing.tokenization
-        print("Using bucketer: %s" % (tokenization_name), file=sys.stderr)
-        tokenization = locate(tokenization_name)
-        self._bucketer = tokenization(thresholds=self.thresholds,
-                                      lowercase=False,
-                                      index=self.es_index, 
-                                      elasticsearch=self.es,
-                                      config=self.config)
-        if not self._checked_index_exists:
-            if self._es.indices.exists(self.es_index):
-                self._checked_index_exists = True
-            else:
-                self._bucketer.create_index()
-        self.es.cluster.health(wait_for_status='yellow')
-        return self._es
-
-    def ingest(self, crash, dryrun=False):
-        """
-        Ingest a crash; the Crash may be a simple dictionary, or a
-        pre-existing Crash instance.
-
-        :return: the saved crash
-        :rtype Crash:
-        :raises IdenticalReportError:
-        """
-        true_crash = Crash(crash)
-        if 'stacktrace' in true_crash:
-            assert isinstance(true_crash['stacktrace'], Stacktrace)
-            assert isinstance(true_crash['stacktrace'][0], Stackframe)
-            if 'address' in true_crash['stacktrace'][0]:
-                assert isinstance(true_crash['stacktrace'][0]['address'], string_types), (
-                  "address must be a string instead of %s" 
-                  % (true_crash['stacktrace'][0]['address'].__class__))
-
-        if dryrun:
-            true_crash['buckets'] = self.bucketer.assign_buckets(true_crash)
-            return true_crash
-        else:
-            return self.bucketer.assign_save_buckets(true_crash)
+    def report(self, crash, project=None, dry_run=True):
+        return Report(crash, project, self.strategy, dry_run)
 
     def get_bucket(self, threshold, bucket_id, 
                    project=None, from_=None, size=None):
@@ -340,65 +252,6 @@ class PartyCrasher(object):
                        top_reports=None)
                 for bucket in top_buckets]
 
-    def get_crash(self, database_id, project):
-        self._connect_to_elasticsearch()
-        crash = None
-        try:
-            crash = ESCrash(crash=database_id, index=self.es_index)
-        except NotFoundError as e:
-            raise KeyError(database_id)
-          
-        response = self.es.termvectors(index=self.es_index, doc_type='crash',
-                                  id=database_id,
-                                  fields='stacktrace.function.whole',
-                                  term_statistics=True,
-                                  offsets=False,
-                                  positions=False)
-        
-        #with open('termvectors', 'wb') as termvectorsfile:
-            #print(json.dumps(response, indent=2), file=termvectorsfile)
-        
-        if 'stacktrace.function.whole' in response['term_vectors']:
-            vectors = response['term_vectors']['stacktrace.function.whole']
-            
-            all_doc_count = float(vectors['field_statistics']['doc_count'])
-            
-            crash = Crash(crash)
-            
-            # Sometimes there's extra functions on top of the stack for 
-            # logging/cleanup/handling/rethrowing/whatever that get called 
-            # after the fault but before the trace is generated, and are 
-            # present for multiple crash locations. So except on the 
-            # full detail page, we don't want to display them. 
-            # This is for that.
-            for frame in crash['stacktrace']:
-                if 'function' in frame and frame['function']:
-                    function = frame['function']
-                    term = vectors['terms'][function]
-                    relativedf = float(term['doc_freq'])/all_doc_count
-                    logdf = -1.0 * math.log(relativedf, 2)
-                    #print(logdf, file=sys.stderr)
-                    frame['logdf'] = logdf
-          
-        return crash
-
-    def get_summary(self, database_id, project):
-        self._connect_to_elasticsearch()
-
-        try:
-            return self.bucketer.bucket_explain(database_id)
-        except NotFoundError as e:
-            raise KeyError(database_id)
-    
-    def compare(self, database_id, other_ids):
-        self._connect_to_elasticsearch()
-
-        try:
-            return self.bucketer.compare(database_id, other_ids)
-        except NotFoundError as e:
-            raise KeyError(database_id)
-        
-
     def get_projects(self):
         """
         Returns the list of all projects found in Elasticsearch.
@@ -423,13 +276,6 @@ class PartyCrasher(object):
         raw_projects = results['aggregations']['projects']['buckets']
         return [Project(project['key']) for project in raw_projects]
 
-    def ensure_index_created(self):
-        """
-        Ensure that the index exists.
-        """
-        self._connect_to_elasticsearch()
-        return self
-      
     def search(self, query_string,
                since=None,
                until=None,

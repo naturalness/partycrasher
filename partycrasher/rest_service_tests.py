@@ -970,20 +970,29 @@ class RestServiceTestCase(unittest.TestCase):
             assert isinstance(i['term'], string_types)
             assert isinstance(i['value'], float)
     
-    def testProjectBucket(self):
+    def test_ingest_explain(self):
         url = self.path_to('alan_parsons', 'reports')
         assert is_cross_origin_accessible(url)
         # Make a bunch of unique database IDs -- project 1 
         database_id_a = str(uuid.uuid4())
         database_id_b = str(uuid.uuid4())
         database_id_c = str(uuid.uuid4())
+        tfidf_trickery = str(uuid.uuid4()) + " " + str(uuid.uuid4())
+        tfidf_trickery2 = str(uuid.uuid4()) + " " + str(uuid.uuid4())
+
         response = requests.post(url,
                                  json=[
                                      {'database_id': database_id_a,
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
                                      {'database_id': database_id_b,
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
                                      {'database_id': database_id_c,
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
                                  ])
         assert response.status_code == 201
@@ -999,14 +1008,85 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(url,
                                  json=[
                                      {'database_id': database_id_a,
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
                                      {'database_id': database_id_b,
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
                                      {'database_id': database_id_c,
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
                                  ])
         assert response.status_code == 201
+        assert False, response.text
+
+    def test_project_bucket_filter(self):
+        url = self.path_to('alan_parsons', 'reports')
+        assert is_cross_origin_accessible(url)
+        # Make a bunch of unique database IDs -- project 1 
+        database_id_a = str(uuid.uuid4())
+        database_id_b = str(uuid.uuid4())
+        database_id_c = str(uuid.uuid4())
+        tfidf_trickery = str(uuid.uuid4()) + " " + str(uuid.uuid4())
+        tfidf_trickery2 = str(uuid.uuid4()) + " " + str(uuid.uuid4())
+
+        response = requests.post(url,
+                                 json=[
+                                     {'database_id': database_id_a,
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'tfidf_trickery2': tfidf_trickery2,
+                                      'date': '2017-01-05T08:18:45'},
+                                     {'database_id': database_id_b,
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'tfidf_trickery2': tfidf_trickery2,
+                                      'date': '2017-01-05T08:18:45'},
+                                     {'database_id': database_id_c,
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'tfidf_trickery2': tfidf_trickery2,
+                                      'date': '2017-01-05T08:18:45'},
+                                 ])
+        assert response.status_code == 201, response.text
+        assert len(response.json()) == 3, response.text
+
+
+        url = self.path_to('manhattan', 'reports')
+        assert is_cross_origin_accessible(url)
+        # Make a bunch of unique database IDs -- project 2
+        database_id_a = str(uuid.uuid4())
+        database_id_b = str(uuid.uuid4())
+        database_id_c = str(uuid.uuid4())
+        response = requests.post(url,
+                                 json=[
+                                     {'database_id': database_id_a,
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'tfidf_trickery2': tfidf_trickery2,
+                                      'date': '2017-01-05T08:18:45'},
+                                     {'database_id': database_id_b,
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'tfidf_trickery2': tfidf_trickery2,
+                                      'date': '2017-01-05T08:18:45'},
+                                     {'database_id': database_id_c,
+                                      'tfidf_trickery': tfidf_trickery,
+                                      'tfidf_trickery2': tfidf_trickery2,
+                                      'date': '2017-01-05T08:18:45'},
+                                 ])
+        assert response.status_code == 201
+        assert False, response.text
         assert len(response.json()) == 3
+        
+        buckets_url = self.path_to('manhattan', 'buckets', '0.0')
+        response = requests.get(buckets_url,
+            params={'since': '2017-01-01T00:00:00.000000',
+                    'until': '2525'
+                    })
+
+        j = response.json()
+        assert 'top_buckets' in j
+        assert len(j['top_buckets']) == 1, response.text
+        assert False, response.text
 
 
     def tearDown(self):

@@ -67,6 +67,14 @@ class ResourceEncoder(CrashEncoder):
                                      report_id=o.report_id
                                      )
             return d
+        if isinstance(o, Report):
+            d = {
+                'report': o.crash,
+                'saved': o.saved,
+                }
+            if o.explain:
+                d['explanation'] = o.explanation
+            return d
         else:
             return super(ResourceEncoder, self).default(o)
 

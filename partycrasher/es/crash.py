@@ -208,11 +208,15 @@ class ESCrash(Crash):
     def __setitem__(self, key, val):
         """
         crash[key] = value
-
+        
+        Don't do this.
+        
         Updates the crash; propegates the update to ElasticSearch.
         Currently, there's no batching of requests, so try to avoid changing values.
         """
-
+        raise NotImplementedError("Modifying an ESCrash.")
+        # TODO: watch sub-structures
+        # TODO: type-translation for date/thresholds
         # Keep the old value of the key, if it exists,
         oldval = self.get(key, None)
 
@@ -241,6 +245,11 @@ class ESCrash(Crash):
         raise NotImplementedError
         # TODO: code to delete from ES
         # TODO: clear self
+    
+    def as_crash():
+        """Return a modifyable copy that won't save updates to ES."""
+        c = Crash(self._d)
+        return c.deepcopy()
 
 class ESCrashEncoder(CrashEncoder):
 

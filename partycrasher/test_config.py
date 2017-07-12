@@ -7,8 +7,9 @@ class HTTP:
 ################################################################################
 # Bucketing                                                                    #
 ################################################################################
-#thresholds = [int(10**(t/24.0)*10)/10.0 for t in range(0, 24*2+1)]
-thresholds = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0]
+test_thresholds = [int(10**(t/24.0)*10)/10.0 for t in range(0, 24*2+1)]
+test_thresholds.append(0.0)
+#thresholds = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0]
 class Bucketing:
     # A list of selectable buckets thresholds. For every report uploaded,
     # PartyCrasher will provide bucket assignments for each threshold provided
@@ -19,20 +20,24 @@ class Bucketing:
     #
     # Empirically, values between 3.5 and 4.5 seem to be the most useful.
     # <https://peerj.com/preprints/1705/>
-    thresholds = thresholds
+    thresholds = test_thresholds
     # The default threshold when simply querying for a report's bucket assignment.
     # Using [index_method=CamelCase], [index_stackframe=true], and
     # [index_context=true], 4.0 was empirically determined to be the most
     # reasonable default.
     # <https://peerj.com/preprints/1705/>
     default_threshold = 3.8
-
-
-    # The only option available is MLTCamelCase.
-    tokenization = "partycrasher.bucketer.MLTCamelCase"
-
-    # Configuration options for MLTCamelCase
-    class MLT:
+    
+    # Configuration for the tokenization.
+    class Tokenization:
+        # There are several tokenizations available.
+        tokenization = "partycrasher.tokenization.CamelCase"
+        lowercase = False
+    
+    # Configuration for the strategy.
+    class Strategy:
+        # The only strategy available is MLT.
+        strategy = "partycrasher.strategy.MLT"
         max_query_terms = 20
         terminate_after = None
         min_score = min(thresholds)

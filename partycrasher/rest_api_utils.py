@@ -22,6 +22,7 @@ Utilties used in rest_service; these are kept here to unclutter the API file.
 
 import weakref
 import re
+import distutils
 
 from flask import json, jsonify, request, redirect, make_response, url_for
 
@@ -55,8 +56,7 @@ def jsonify_list(seq):
     JSON is transferted as application/javascript.
     """
     # Coerce to list
-    if not isinstance(seq, list):
-        seq = list(seq)
+    assert isinstance(seq, list)
 
     should_indent = not (request.headers.get('X-Requested-With', '') ==
                          'XMLHttpRequest')
@@ -175,3 +175,6 @@ def first_of(dictionary, *keys):
         if key in dictionary:
             return dictionary[key]
     raise KeyError(keys)
+
+def str_to_bool(s):
+    bool(distutils.util.strtobool(s.lower()))

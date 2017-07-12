@@ -19,7 +19,7 @@
 
 from __future__ import print_function
 
-from crash import Crash, Stacktrace, Stackframe, fix_key_for_es
+from crash import Crash, Stacktrace, Stackframe
 
 import os, re, io, gzip, json, sys
 import dateparser

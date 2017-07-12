@@ -30,9 +30,10 @@ class MoreLikeThisQuery(object):
                  max_query_terms=20,
                  terminate_after=None,
                  filterer=None,
-                 min_score=1.0):
+                 min_score=None):
         self.max_query_terms = max_query_terms
         self.terminate_after = terminate_after
+        assert min_score is not None
         self.min_score = min_score
         self.index = index
         if filterer is None:
@@ -182,9 +183,8 @@ class MoreLikeThisRescored(object):
 
 class MoreLikeThisSearcher(object):
     
-    def __init__(self, es, index, *args, **kwargs):
+    def __init__(self, index, *args, **kwargs):
         self.index = index
-        self.es = es
         if 'rescore_filterer' in kwargs:
             self.querybuilder = MoreLikeThisRescored(index=index, *args, **kwargs)
         else:
@@ -192,18 +192,19 @@ class MoreLikeThisSearcher(object):
         return self
     
     def query(self,
-              crash):
-        body = self.querybuilder.make_body(crash, False, None)
+              crash,
+              explain):
+        body = self.querybuilder.make_body(crash, explain, None)
         #assert 'terminate_after' in body
-        response = self.es.search(index=self.index, body=elastify(body))
+        response = self.index.search(index=self.index, body=elastify(body))
         return MoreLikeThisResponse(response)
 
        
-    def explain(self,
+    def summary(self,
                 crash):
         assert isinstance(crash, Crash)
         body = self.querybuilder.make_body(crash, True, None)
-        response = self.es.search(index=self.index, body=elastify(body))
+        response = self.index.search(index=self.index, body=elastify(body))
         # TODO: sum all summaries
         hits = MoreLikeThisResponse(response).hits
         if len(hits) > 0:
@@ -215,12 +216,12 @@ class MoreLikeThisSearcher(object):
                 crash,
                 other_ids):
         body = self.querybuilder.make_body(crash, False, other_ids)
-        response = self.es.search(index=self.index, body=elastify(body))
+        response = self.index.search(index=self.index, body=elastify(body))
         return MoreLikeThisResponse(response)
     
 class MoreLikeThis(MoreLikeThisSearcher):
-    
-    def __init__(self, es, index, config):
+    """ Class to setup MLT search config. """
+    def __init__(self, index, config):
         always_remove_fields = [r'^database_id',
                          r'^buckets',
                          r'force_bucket',
@@ -231,7 +232,7 @@ class MoreLikeThis(MoreLikeThisSearcher):
                                config.keep_fields)
         rescore_filterer = CrashFilter(config.rescore_remove_fields+always_remove_fields,
                                config.rescore_keep_fields)
-        super(MoreLikeThis,self).__init__(es, index,
+        super(MoreLikeThis,self).__init__(index,
             max_query_terms=config.max_query_terms,
             terminate_after=config.terminate_after,
             min_score=config.min_score,
