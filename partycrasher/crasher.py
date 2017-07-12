@@ -41,7 +41,6 @@ from partycrasher.project import Project
 from partycrasher.bucket import Bucket
 from partycrasher.es.index import ESIndex
 
-
 import logging
 logger = logging.getLogger(__name__)
 error = logger.error
@@ -78,7 +77,12 @@ class PartyCrasher(object):
         return Threshold(self.config.Bucketing.default_threshold)
 
     def report(self, crash, project=None, dry_run=True):
+        """Factory for reports."""
         return Report(crash, project, self.strategy, dry_run)
+    
+    def report_bucket(self, threshold, bucket_id, project=None):
+        """Factory for report buckets."""
+        return ReportBucket(threshold, bucket_id, project)
 
     def get_bucket(self, threshold, bucket_id, 
                    project=None, from_=None, size=None):

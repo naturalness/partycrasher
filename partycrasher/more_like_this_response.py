@@ -132,23 +132,5 @@ class MoreLikeThisResponse(object):
         else:
             self.top_match = None
 
-    def matching_buckets(self, thresholds):
-        matching_buckets = Buckets()
-        if len(self.hits) > 0:
-            similarity = self.top_match.score
-            thresholds = sorted(thresholds)
-            
-            for threshold in thresholds:
-                if similarity >= float(threshold):
-                    bucket = self.top_match.buckets[threshold]
-                    matching_buckets[threshold] = bucket
-                else:
-                    matching_buckets[threshold] = None
-            matching_buckets['top_match'] = self.top_match.as_top_match()
-        else:
-            for threshold in thresholds:
-                matching_buckets[threshold] = None
-            matching_buckets['top_match'] = None
-        return matching_buckets
             
             

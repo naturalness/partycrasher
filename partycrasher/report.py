@@ -38,7 +38,7 @@ class Report(object):
     
     def __init__(self, 
                  crash, 
-                 searcher, 
+                 strategy, 
                  dry_run=True
                  ):
         if instance(crash, string_types):
@@ -53,7 +53,7 @@ class Report(object):
         elif ininstance(crash, Crash):
             self.crash = crash
             self.saved = False
-        self.searcher = searcher
+        self.strategy = strategy
         self.dry_run = dry_run
         self.ran = False
         self.validate()
@@ -76,7 +76,7 @@ class Report(object):
                 # No reason to search...
                 return None
             self.explain = explain
-            self.es_result = self.searcher.query(crash, explain)
+            self.es_result = self.strategy.query(crash, explain)
             self.ran = True
             return self.es_result
     
@@ -96,7 +96,8 @@ class Report(object):
         """Assigns buckets to this crash and returns the assigned buckets."""
         assert 'buckets' not in self.crash
         self.search()
-        buckets = self.es_result.matching_buckets(self.thresholds)
+        buckets = self.strategy.matching_buckets(self.thresholds,
+                                                 self.es_result)
         if 'force_bucket' in crash:
             warn("Warning: overriding buckets to %s with force_bucket!" % (crash['force_bucket']))
             for key in buckets:
