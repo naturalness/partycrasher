@@ -20,12 +20,22 @@
 Utilties used in rest_service; these are kept here to unclutter the API file.
 """
 
+from six import string_types
+
 import weakref
 import re
 import distutils
 
 from flask import json, jsonify, request, redirect, make_response, url_for
 
+from partycrasher.crash import pretty
+
+import logging
+logger = logging.getLogger(__name__)
+error = logger.error
+warn = logger.warn
+info = logger.info
+debug = logger.debug
 
 class BadRequest(RuntimeError):
     """
@@ -81,7 +91,12 @@ def full_url_for(route, **kwargs):
     Like url_for(), but returns a fully qualified external-facing URL for the
     service.
     """
-
+    error(route)
+    error(pretty(kwargs))
+    for k, v in kwargs.items():
+        assert v is not None
+        assert k is not None
+    assert route is not None
     host = determine_user_agent_facing_host()
     path = url_for(route, **kwargs)
     # TODO: List allowed methods, so we don't have to do an OPTIONS request. 
@@ -176,5 +191,8 @@ def first_of(dictionary, *keys):
             return dictionary[key]
     raise KeyError(keys)
 
-def str_to_bool(s):
-    bool(distutils.util.strtobool(s.lower()))
+def str_to_bool(s, default):
+    if s is None:
+        return default
+    assert isinstance(s, string_types)
+    return bool(distutils.util.strtobool(s.lower()))

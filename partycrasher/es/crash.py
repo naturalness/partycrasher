@@ -43,7 +43,7 @@ from partycrasher.crash import (
 from partycrasher.threshold import Threshold
 from partycrasher.bucket import Buckets
 from partycrasher.pc_dict import Dict
-from partycrasher.es_bucket import ESBuckets
+from partycrasher.es.bucket import ESBuckets
 
 import logging
 logger = logging.getLogger(__name__)
@@ -58,9 +58,6 @@ def parse_es_date(s):
 class ESCrash(Crash):
     """Class for a crash that's stored in Elastic"""
 
-    # Global ES connection
-    es = None
-    
     """ Dict of WeakValueDictionarys that caches the thing in ES.
         Used to prevent multiple copies of the same ESCrash from existing
         in memory.
@@ -82,29 +79,27 @@ class ESCrash(Crash):
         index = self.index
         if index is None:
             raise ValueError('No ElasticSearch index specified!')
-        if self.es is None:
-            raise RuntimeError('Forgot to monkey-patch ES connection to ESCrash!')
 
         if index in self.crashes:
-            assert database_id not in self.crashes[self.index]
+            assert database_id not in self.crashes[self.index.name]
 
         try:
-            response = self.es.get(index=self.index, id=database_id)
+            response = self.index.get(id=database_id)
         except elasticsearch.exceptions.NotFoundError:
             return None
         
         return self.de_elastify(response['_source'])
       
     def load_from_es(self, dbid):
-        if dbid in self.crashes[self.index]:
-            self._d = self.crashes[self.index][dbid]
+        if dbid in self.crashes[self.index.name]:
+            self._d = self.crashes[self.index.name][dbid]
             self.hot = True
             return
         
         existing = self.getrawbyid(dbid)
         if existing is not None:
             # Found it in ElasticSearch!
-            self.crashes[self.index][dbid] = existing._d
+            self.crashes[self.index.name][dbid] = existing._d
             self._d = existing._d
             self.hot = True
         else:
@@ -127,7 +122,7 @@ class ESCrash(Crash):
             assert "buckets" in self
             assert "date" in self
             body = self.elastify()
-            response = self.es.create(index=self.index,
+            response = self.index.create(
                                       doc_type='crash',
                                       body=body,
                                       id=self['database_id'],
@@ -160,8 +155,8 @@ class ESCrash(Crash):
             raise Exception("Crash with no database_id!")
 
         # The case that we already have it in memory
-        if self['database_id'] in self.crashes[self.index]:
-            already = self.crashes[self.index][self['database_id']]
+        if self['database_id'] in self.crashes[self.index.name]:
+            already = self.crashes[self.index.name][self['database_id']]
             # already should be a cached _d
             #debug(pretty(self._d))
             #debug(pretty(already))
@@ -187,7 +182,7 @@ class ESCrash(Crash):
                 raise IdenticalReportError(existing)
 
         # cache it as a weak reference
-        self.crashes[self.index][self['database_id']] = self._d
+        self.crashes[self.index.name][self['database_id']] = self._d
         self.hot = True
 
     def __init__(self, index, crash, unsafe=False):
@@ -195,7 +190,7 @@ class ESCrash(Crash):
         self.hot = False
         self.unsafe = unsafe
         if index not in self.crashes:
-            self.crashes[index] = WeakValueDictionary()
+            self.crashes[index.name] = WeakValueDictionary()
         if isinstance(crash, Crash):
             self.set_d(crash._d.copy())
             self.check_sync()
@@ -233,7 +228,7 @@ class ESCrash(Crash):
                         key: newval
                     }
                 }
-            r = self.es.update(index=self.index,
+            r = self.index.update(
                         doc_type='crash',
                         id=self['database_id'],
                         # use our own serializer instead of py-elasticsearch

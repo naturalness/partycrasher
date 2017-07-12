@@ -85,3 +85,19 @@ class BadKeyNameError(PartyCrasherError):
 
     def get_extra(self):
         return {'key_name': self.key_name}
+    
+class ProjectMismatchError(PartyCrasherError):
+    """Project specified in the API didn't match the project in the crash data. """
+    http_code = 400
+    
+    def __init__(self, project, crash, message=None):
+        if message is None:
+            message = "Project %s didn't match project %s in crash." % (project, crash['project'])
+        super(ProjectMismatchError, self).__init__(message)
+        self.project = project
+        self.crash = crash
+
+    def get_extra(self):
+        return {'project': self.project,
+                'crash': self.crash}
+

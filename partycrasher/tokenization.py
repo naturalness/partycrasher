@@ -18,12 +18,13 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class Tokenization(object):
-    def __init__(self, lowercase):
-        self.lowercase = lowercase
+    def __init__(self, config):
+        self.config = config
+        self.lowercase = config.lowercase
 
 class StandardUnicode(Tokenization):
     """MLT with an analyzer breaking on spaces and then lowercasing"""
-    def analysis(self):
+    def analyzer(self):
         if self.lowercase:
             filter_ = ['lowercase']
         else:
@@ -37,7 +38,7 @@ class StandardUnicode(Tokenization):
 
 class Letters(Tokenization):
     """MLT with a diffrent analyzer (capture letter strings then optionally make them lowercase)"""
-    def analysis(self):
+    def analyzer(self):
         if self.lowercase:
             tokenizer = 'lowercase'
         else:
@@ -52,7 +53,7 @@ class Letters(Tokenization):
 
 class Identifier(Tokenization):
     """MLT with an analyzer intended to capture programming words"""
-    def analysis(self):
+    def analyzer(self):
         return {
             'type': 'pattern',
             'pattern':
@@ -69,7 +70,7 @@ class Identifier(Tokenization):
     
 class CamelCase(Tokenization):
     """MLT intended to break up identifiers into sub-words"""
-    def create_index(self):
+    def analyzer(self):
         return {
             'type': 'pattern',
             # From ES Docs: https://github.com/elastic/elasticsearch/blob/1.6/docs/reference/analysis/analyzers/pattern-analyzer.asciidoc

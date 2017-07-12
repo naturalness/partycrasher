@@ -22,7 +22,8 @@ from partycrasher.crash import Crash, CrashEncoder
 from partycrasher.project import Project
 from partycrasher.threshold import Threshold
 from partycrasher.bucket import Bucket, TopMatch
-from partycrasher.rest_api_utils import full_url_for
+from partycrasher.rest.api_utils import full_url_for
+from partycrasher.report import Report
 
 from flask import json, request, redirect, make_response
 
@@ -68,6 +69,7 @@ class ResourceEncoder(CrashEncoder):
                                      )
             return d
         if isinstance(o, Report):
+            assert o.project is not None
             d = {
                 'report': o.crash,
                 'saved': o.saved,
@@ -77,44 +79,4 @@ class ResourceEncoder(CrashEncoder):
             return d
         else:
             return super(ResourceEncoder, self).default(o)
-
-def fix_buckets(crash_dict):
-    """
-    Fixes the keys from a crash dictionary.
-    """
-    if 'buckets' not in crash_dict:
-        return
-
-    project = crash_dict['project']
-
-    fixed_buckets = {}
-    for key, bucket_id in crash_dict['buckets'].items():
-        if key == 'top_match':
-            fixed_buckets['top_match'] = serialize_top_match(bucket_id)
-        else:
-            threshold = str(Threshold(key))
-            fixed_buckets[threshold] = Bucket(id=bucket_id,
-                                              project=project,
-                                              threshold=threshold,
-                                              total=None,
-                                              top_reports=None,
-                                              first_seen=None)
-
-    crash_dict['buckets' ] = fixed_buckets
-
-
-def serialize_top_match(info):
-    # See: bucketer.MLT.make_matching_buckets()
-    if info is not None:
-        match_url = href('view_report',
-                         project=info['project'],
-                         report_id=info['report_id'])
-        return OrderedDict([
-            ('report_id', info['report_id']),
-            ('href', match_url['href']),
-            ('project', info['project']),
-            ('score', info['score']),
-        ])
-    else:
-        return None
 

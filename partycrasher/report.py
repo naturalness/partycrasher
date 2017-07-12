@@ -19,6 +19,8 @@
 
 from __future__ import print_function
 
+from six import string_types
+
 import logging
 logger = logging.getLogger(__name__)
 error = logger.error
@@ -29,7 +31,9 @@ debug = logger.debug
 from copy import copy, deepcopy
 
 from partycrasher.crash import Crash
-from partycrasher.es_crash import ESCrash
+from partycrasher.es.crash import ESCrash
+from partycrasher.pc_exceptions import ProjectMismatchError
+from partycrasher.bucket import Buckets
 
 # python2 and six don't support enums
 
@@ -37,26 +41,43 @@ class Report(object):
     """Object representing the API functionality for an individual crash."""    
     
     def __init__(self, 
-                 crash, 
-                 strategy, 
+                 crash,
+                 project,
+                 strategy,
+                 thresholds,
+                 index,
                  dry_run=True
                  ):
-        if instance(crash, string_types):
+        if isinstance(crash, string_types):
             self.crash = ESCrash(crash)
             self.saved = True
         elif isinstance(crash, dict):
             self.crash = Crash(crash)
             self.saved = False
-        elif ininstance(crash, ESCrash):
+        elif isinstance(crash, ESCrash):
             self.crash = crash
             self.saved = True
-        elif ininstance(crash, Crash):
+        elif isinstance(crash, Crash):
             self.crash = crash
             self.saved = False
         self.strategy = strategy
         self.dry_run = dry_run
         self.ran = False
         self.validate()
+        self.explain = False
+        self.project = project
+        self.fix_project()
+        self.thresholds = thresholds
+        self.index = index
+        
+    def fix_project(self):
+        if 'project' in self.crash:
+            if self.crash['project'] != self.project:
+                raise ProjectMismatchError(self.project, self.crash)
+            else:
+                return self.project
+        else:
+            self.crash['project'] = self.project
     
     def validate(self):
         """Do some extra runtime checking that should be unnecessary if the Crash class is operating correctly."""
@@ -71,12 +92,13 @@ class Report(object):
     
     def search(self, explain=False):
         """Run the search."""
+        error("Searching with explain=" + str(explain))
         if not self.ran:
-            if (not self.explain) and self.saved:
+            if (not explain) and self.saved:
                 # No reason to search...
                 return None
             self.explain = explain
-            self.es_result = self.strategy.query(crash, explain)
+            self.es_result = self.strategy.query(self.crash, explain)
             self.ran = True
             return self.es_result
     
@@ -87,9 +109,10 @@ class Report(object):
         if 'buckets' not in self.crash:
             self.assign_buckets()
         self.crash['buckets'].create()
-        saved_crash = ESCrash(crash=crash, index=self.index)
+        saved_crash = ESCrash(crash=self.crash, index=self.index)
         assert saved_crash is not None
-        self.saved_crash = saved_crash
+        self.crash = saved_crash
+        self.saved = True
         return saved_crash
     
     def assign_buckets(self):
@@ -98,11 +121,11 @@ class Report(object):
         self.search()
         buckets = self.strategy.matching_buckets(self.thresholds,
                                                  self.es_result)
-        if 'force_bucket' in crash:
-            warn("Warning: overriding buckets to %s with force_bucket!" % (crash['force_bucket']))
+        if 'force_bucket' in self.crash:
+            warn("Warning: overriding buckets to %s with force_bucket!" % (self.crash['force_bucket']))
             for key in buckets:
                 if key != 'top_match':
-                    buckets[key] = crash['force_bucket']
+                    buckets[key] = self.crash['force_bucket']
         assert isinstance(buckets, Buckets)
         assert 'top_match' in buckets
         self.crash["buckets"] = buckets
@@ -125,7 +148,7 @@ class Report(object):
         """
         if self.explain:
             self.search()
-            return self.es_result.explanation()
+            return self.es_result.explanation
         else:
             return None
     

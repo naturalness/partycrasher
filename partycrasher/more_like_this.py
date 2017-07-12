@@ -21,8 +21,15 @@ from __future__ import print_function, division
 
 from partycrasher.crash_filter import CrashFilter
 from partycrasher.more_like_this_response import MoreLikeThisResponse
-from partycrasher.es_crash import elastify
+from partycrasher.es.crash import elastify
 from partycrasher.crash import Crash
+
+import logging
+logger = logging.getLogger(__name__)
+error = logger.error
+warn = logger.warn
+info = logger.info
+debug = logger.debug
 
 class MoreLikeThisQuery(object):
     def __init__(self,
@@ -49,7 +56,7 @@ class MoreLikeThisQuery(object):
         mlt = { 
                 'like': [
                         {
-                            '_index': self.index,
+                            '_index': self.index.name,
                             '_type': 'crash',
                             'doc': doc,
                         }
@@ -80,13 +87,15 @@ class MoreLikeThisQuery(object):
     def make_body(self,
                   crash,
                   explain):
+        info("Min score: %d" % self.min_score)
         body = {
             # Only fetch database ID, buckets, and project.
             '_source': ['buckets', 'database_id', 'project'],
             'query': self.make_query(crash, self.filterer),
             'size': 1,
-            'min_score': self.min_score,
         }
+        if self.min_score > 0:
+            body['min_score'] = self.min_score
         if self.terminate_after is not None:
             body['terminate_after'] = self.terminate_after
         if explain:
@@ -96,9 +105,9 @@ class MoreLikeThisQuery(object):
 class MoreLikeThisFiltered(MoreLikeThisQuery):
     def __init__(self,
                  search_filters = [],
-                 *args, **kwargs):
+                  **kwargs):
         self.search_filters = search_filters
-        super(MoreLikeThisFiltered,self).__init__(*args, **kwargs)
+        super(MoreLikeThisFiltered,self).__init__(**kwargs)
     
     def make_id_filter(self,
                        ids):
@@ -116,7 +125,7 @@ class MoreLikeThisFiltered(MoreLikeThisQuery):
         query = {
             'bool': {
                 'should': (super(MoreLikeThisFiltered,self)
-                    .make_query(crash, filterer, all_terms))
+                    .make_query(crash, filterer=filterer, all_terms=all_terms))
               }
           }
         filters = self.search_filters
@@ -130,13 +139,15 @@ class MoreLikeThisFiltered(MoreLikeThisQuery):
                   crash,
                   explain=False,
                   ids=None):
+        info("Min score: %d" % self.min_score)
         body = {
             # Only fetch database ID, buckets, and project.
             '_source': ['buckets', 'database_id', 'project'],
             'query': self.make_query(crash, self.filterer, ids),
             'size': 1,
-            'min_score': self.min_score,
         }
+        if self.min_score > 0:
+            body['min_score'] = self.min_score
         if self.terminate_after is not None:
             body['terminate_after'] = self.terminate_after
         if explain:
@@ -151,9 +162,9 @@ class MoreLikeThisRescored(object):
                  rescore_window_size=500,
                  search_weight=1.0,
                  rescore_weight=1.0,
-                 *args, **kwargs):
+                  **kwargs):
         if query is None:
-            self.query = MoreLikeThisFiltered(*args, **kwargs)
+            self.query = MoreLikeThisFiltered( **kwargs)
         else:
             self.query = query
         self.rescore_filterer = rescore_filterer
@@ -183,12 +194,12 @@ class MoreLikeThisRescored(object):
 
 class MoreLikeThisSearcher(object):
     
-    def __init__(self, index, *args, **kwargs):
+    def __init__(self, index, **kwargs):
         self.index = index
         if 'rescore_filterer' in kwargs:
-            self.querybuilder = MoreLikeThisRescored(index=index, *args, **kwargs)
+            self.querybuilder = MoreLikeThisRescored(index=index, **kwargs)
         else:
-            self.querybuilder = MoreLikeThisFiltered(index=index, *args, **kwargs)
+            self.querybuilder = MoreLikeThisFiltered(index=index, **kwargs)
         return self
     
     def query(self,
@@ -196,7 +207,7 @@ class MoreLikeThisSearcher(object):
               explain):
         body = self.querybuilder.make_body(crash, explain, None)
         #assert 'terminate_after' in body
-        response = self.index.search(index=self.index, body=elastify(body))
+        response = self.index.search(body=elastify(body))
         return MoreLikeThisResponse(response)
 
        
@@ -204,7 +215,7 @@ class MoreLikeThisSearcher(object):
                 crash):
         assert isinstance(crash, Crash)
         body = self.querybuilder.make_body(crash, True, None)
-        response = self.index.search(index=self.index, body=elastify(body))
+        response = self.index.search(body=elastify(body))
         # TODO: sum all summaries
         hits = MoreLikeThisResponse(response).hits
         if len(hits) > 0:
@@ -216,7 +227,7 @@ class MoreLikeThisSearcher(object):
                 crash,
                 other_ids):
         body = self.querybuilder.make_body(crash, False, other_ids)
-        response = self.index.search(index=self.index, body=elastify(body))
+        response = self.index.search(body=elastify(body))
         return MoreLikeThisResponse(response)
     
 class MoreLikeThis(MoreLikeThisSearcher):
@@ -232,7 +243,8 @@ class MoreLikeThis(MoreLikeThisSearcher):
                                config.keep_fields)
         rescore_filterer = CrashFilter(config.rescore_remove_fields+always_remove_fields,
                                config.rescore_keep_fields)
-        super(MoreLikeThis,self).__init__(index,
+        super(MoreLikeThis,self).__init__(
+            index=index,
             max_query_terms=config.max_query_terms,
             terminate_after=config.terminate_after,
             min_score=config.min_score,

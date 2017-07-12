@@ -17,7 +17,8 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from unnaturalcode.more_like_this import MoreLikeThis
+from partycrasher.more_like_this import MoreLikeThis
+from partycrasher.bucket import Buckets
 
 class Strategy(object):
     def __init__(self, config, index):
@@ -25,7 +26,7 @@ class Strategy(object):
         self.index = index
     
     def query(self, crash, explain):
-        self.searcher.query(crash, explain)
+        return self.searcher.query(crash, explain)
     
     def matching_buckets(self, *args, **kwargs):
         raise NotImplementedError() 

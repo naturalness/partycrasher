@@ -29,7 +29,6 @@ from runpy import run_path
 
 from six import string_types
 
-from elasticsearch import Elasticsearch, NotFoundError, TransportError, RequestError
 
 # Some of these imports are part of the public API...
 from partycrasher.crash import Crash, Stacktrace, Stackframe, pretty
@@ -39,7 +38,9 @@ from partycrasher.threshold import Threshold
 from partycrasher.config_loader import Config
 from partycrasher.project import Project
 from partycrasher.bucket import Bucket
+from partycrasher.es.store import ESStore
 from partycrasher.es.index import ESIndex
+from partycrasher.report import Report
 
 import logging
 logger = logging.getLogger(__name__)
@@ -55,19 +56,18 @@ class PartyCrasher(object):
         self.thresholds = list(
             map(Threshold, self.config.Bucketing.thresholds)
             )
-        self.esstore = ESStore(config.ElasticSearch)
+        self.esstore = ESStore(self.config.ElasticSearch)
         self.strategy_class = locate(self.config.Bucketing.Strategy.strategy)
         self.tokenization_class = locate(self.config.Bucketing.Tokenization.tokenization)
-        self.tokenization = self.tokenization_class(config.Bucketing.Strategy)
+        self.tokenization = self.tokenization_class(self.config.Bucketing.Tokenization)
         self.index = ESIndex(self.esstore,
                              self.config,
                              self.tokenization,
                              self.thresholds)
         self.index.ensure_index_exists()
-        self.strategy = self.strategy_class(config=config.Bucketing.Strategy,
+        self.strategy = self.strategy_class(config=self.config.Bucketing.Strategy,
                                             index=self.index)
         
-    
     @property
     def default_threshold(self):
         """
@@ -76,9 +76,9 @@ class PartyCrasher(object):
         # TODO: determine from static/dynamic configuration
         return Threshold(self.config.Bucketing.default_threshold)
 
-    def report(self, crash, project=None, dry_run=True):
+    def report(self, crash, project, dry_run=True):
         """Factory for reports."""
-        return Report(crash, project, self.strategy, dry_run)
+        return Report(crash, project, self.strategy, self.thresholds, self.index, dry_run)
     
     def report_bucket(self, threshold, bucket_id, project=None):
         """Factory for report buckets."""

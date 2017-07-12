@@ -75,7 +75,7 @@ class ESIndex(object):
         index_config={
             'mappings': {
                 'crash': {
-                    'properties': self.common_properties()
+                    'properties': self.common_properties(),
                     'dynamic_templates': [
                       {
                         'data': {
@@ -99,34 +99,33 @@ class ESIndex(object):
                             #'norms': {
                               #'enabled': False
                             #},
+                                }
                             }
                         }
-                    }
+                    ]
                 }
             },
             'settings': {
                 'analysis': {
                     'analyzer': {
-                        'default': {
-                            self.tokenization.analyzer(),
-                            }
+                        'default': self.tokenization.analyzer()
                         }
-                    }
+                    },
                 'index': self.index_settings(),
                 }
             }
         # allow tokenization to set up more things that its analyzer needs
-        if hasattr(tokenization, 'filter'):
+        if hasattr(self.tokenization, 'filter'):
             index_config['settings']['analysis']['filter'] = (
                 self.tokenization.filter())
-        if hasattr(tokenization, 'tokenizer'):
+        if hasattr(self.tokenization, 'tokenizer'):
             index_config['settings']['analysis']['tokenizer'] = (
                 self.tokenization.tokenizer())
         tokenization_name = self.tokenization.__class__.__name__
         warn("Creating index %s using tokenization %s" % (self.index_base,
                                                           tokenization_name
                                                           ))
-        self.es.indices.create(index=self.index_base, body=index_config)
+        self.esstore.indices.create(index=self.index_base, body=index_config)
                 
     def index_settings(self):
         similarity_config = {}
@@ -251,6 +250,19 @@ class ESIndex(object):
             }}}
         }
     
+    # SMURT Proxy to the ES API
     def search(self, **kwargs):
+        assert 'index' not in kwargs
         return self.esstore.es.search(index=self.index_base, **kwargs)
-        
+    
+    def get(self, **kwargs):
+        assert 'index' not in kwargs
+        return self.esstore.es.get(index=self.index_base, **kwargs)
+
+    def create(self, **kwargs):
+        assert 'index' not in kwargs
+        return self.esstore.es.create(index=self.index_base, **kwargs)
+
+    @property
+    def name(self):
+        return self.index_base

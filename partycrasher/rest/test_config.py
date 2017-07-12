@@ -40,9 +40,9 @@ class Bucketing:
         strategy = "partycrasher.strategy.MLT"
         max_query_terms = 20
         terminate_after = None
-        min_score = min(thresholds)
+        min_score = min(test_thresholds)
         remove_fields = []
-        keep_fields = [r'stacktrace.function']
+        keep_fields = None
         rescore_remove_fields = []
         rescore_keep_fields = None
         rescore_window_size = 500

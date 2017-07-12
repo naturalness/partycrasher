@@ -52,13 +52,13 @@ import dateparser
 import requests
 
 from partycrasher import sample_crashes
-from partycrasher.es_crash import parse_es_date
+from partycrasher.es.crash import parse_es_date
 
 # Full path to ./rest_service.py
-SOURCE_ROUTE = os.path.dirname(os.path.abspath(__file__))
+SOURCE_ROUTE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPOSITORY_ROUTE = os.path.dirname(SOURCE_ROUTE)
-REST_SERVICE_PATH = os.path.join(SOURCE_ROUTE, 'rest_service.py')
-CONFIG_FILE = os.path.join(REPOSITORY_ROUTE, 'partycrasher', 'test_config.py')
+REST_SERVICE_PATH = os.path.join(SOURCE_ROUTE, 'rest', 'service.py')
+CONFIG_FILE = os.path.join(REPOSITORY_ROUTE, 'partycrasher', 'rest', 'test_config.py')
 UTC = parse_es_date('now').tzinfo
 
 # TODO: database_id => id.
@@ -1051,7 +1051,6 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 201, response.text
         assert len(response.json()) == 3, response.text
 
-
         url = self.path_to('manhattan', 'reports')
         assert is_cross_origin_accessible(url)
         # Make a bunch of unique database IDs -- project 2
@@ -1072,10 +1071,11 @@ class RestServiceTestCase(unittest.TestCase):
                                       'tfidf_trickery': tfidf_trickery,
                                       'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
-                                 ])
-        assert response.status_code == 201
-        assert False, response.text
+                                 ],
+                                     params={'explain': True})
+        assert response.status_code == 201, response.text
         assert len(response.json()) == 3
+        assert response.json()[0]['report']['buckets']['top_match'] is not None
         
         buckets_url = self.path_to('manhattan', 'buckets', '0.0')
         response = requests.get(buckets_url,
@@ -1084,9 +1084,9 @@ class RestServiceTestCase(unittest.TestCase):
                     })
 
         j = response.json()
-        assert 'top_buckets' in j
+        assert 'top_buckets' in j, response.text
         assert len(j['top_buckets']) == 1, response.text
-        assert False, response.text
+        #assert False, response.text
 
 
     def tearDown(self):

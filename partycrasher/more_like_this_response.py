@@ -32,7 +32,7 @@ debug = logger.debug
 from partycrasher.bucket import Buckets, Bucket, TopMatch
 from partycrasher.threshold import Threshold
 from partycrasher.pc_exceptions import MissingBucketError
-from partycrasher.es_bucket import ESBuckets
+from partycrasher.es.bucket import ESBuckets
 from partycrasher.crash import pretty
 
 class MoreLikeThisHit(object):
@@ -131,6 +131,11 @@ class MoreLikeThisResponse(object):
             self.top_match = self.hits[0]
         else:
             self.top_match = None
-
-            
+    
+    @property
+    def explanation(self):
+        if len(self.hits) > 0:
+            return self.hits[0].explanation
+        else:
+            return None
             

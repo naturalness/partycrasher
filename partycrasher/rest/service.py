@@ -38,16 +38,16 @@ import partycrasher
 # Hacky things to add PartyCrasher to the path.
 REPOSITORY_ROUTE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(REPOSITORY_ROUTE)
-from partycrasher.api import PartyCrasher
+from partycrasher.crasher import PartyCrasher
 
-from partycrasher.rest_api_utils import (
+from partycrasher.rest.api_utils import (
     BadRequest,
     jsonify_list,
     redirect_with_query_string,
     full_url_for,
     str_to_bool
 )
-from partycrasher.resource_encoder import ResourceEncoder
+from partycrasher.rest.resource_encoder import ResourceEncoder
 from partycrasher.pc_exceptions import (
   PartyCrasherError, 
   IdenticalReportError
@@ -373,22 +373,31 @@ def add_report(project=None):
 
         HTTP/1.1 400 Bad Request
     """
-
+    from logging import error
     report_or_reports = request.get_json()
-    explain = str_to_bool(request.args.get('explain', 'false'))
-
-    if not report:
+    explain = str_to_bool(request.args.get('explain'), False)
+    assert isinstance(explain, bool)
+    dry_run = str_to_bool(request.args.get('dryrun'), False)
+    assert isinstance(dry_run, bool)
+    if not report_or_reports:
         raise BadRequest('No usable report data provided.',
                          error='no_report_data_provided')
 
     if isinstance(report_or_reports, list):
-        reports = [crasher.report(i) for i in reports]
-        map(lambda report: report.save(),reports)
+        reports = [crasher.report(i, project, dry_run)
+                   for i in report_or_reports]
+        for report in reports:
+            report.search(explain)
+            if not dry_run:
+                report.save()
+        assert reports[0].explain == explain
         return jsonify_list(reports), 201
     elif isinstance(report_or_reports, dict):
-        report = crasher.report(report_or_reports, explain)
+        report = crasher.report(report_or_reports, project, dry_run)
         try:
-            report.save()
+            report.search(explain)
+            if not dry_run:
+                report.save()
         except IdenticalReportError as error:
             # Ingested a duplicate report.
             return '', 303, { 'Location': url_for_report(error.report) }
@@ -1128,8 +1137,6 @@ def main():
     if kwargs['allow_delete_all']:
         crasher.config.ElasticSearch.allow_delete_all = True
     del kwargs['allow_delete_all']
-
-    crasher.ensure_index_created()
 
     # TODO:
     #  - add parameter: -C [config-setting]
