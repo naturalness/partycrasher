@@ -24,6 +24,7 @@ from partycrasher.threshold import Threshold
 from partycrasher.bucket import Bucket, TopMatch
 from partycrasher.rest.api_utils import full_url_for
 from partycrasher.report import Report
+from partycrasher.common_search import CommonPage
 
 from flask import json, request, redirect, make_response
 
@@ -69,14 +70,9 @@ class ResourceEncoder(CrashEncoder):
                                      )
             return d
         if isinstance(o, Report):
-            assert o.project is not None
-            d = {
-                'report': o.crash,
-                'saved': o.saved,
-                }
-            if o.explain:
-                d['explanation'] = o.explanation
-            return d
+            return o.restify()
+        if isinstance(o, CommonPage):
+            return o.restify()
         else:
             return super(ResourceEncoder, self).default(o)
 

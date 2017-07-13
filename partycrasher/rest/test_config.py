@@ -74,3 +74,13 @@ class ElasticSearch:
     similarity_k1 = 1.2 
     similarity_b = 0.75
     
+################################################################################
+# User Interface                                                               #
+################################################################################
+class UserInterface:
+    # A list of important fields for the fixed summary. 
+    # database_name => Display Name
+    fixed_summary_fields = {"uname": "UName",
+                            "signal": "Signal",
+                            "cpu": "CPU"}
+                      

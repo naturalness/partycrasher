@@ -87,7 +87,6 @@ class MoreLikeThisQuery(object):
     def make_body(self,
                   crash,
                   explain):
-        info("Min score: %d" % self.min_score)
         body = {
             # Only fetch database ID, buckets, and project.
             '_source': ['buckets', 'database_id', 'project'],
@@ -139,7 +138,6 @@ class MoreLikeThisFiltered(MoreLikeThisQuery):
                   crash,
                   explain=False,
                   ids=None):
-        info("Min score: %d" % self.min_score)
         body = {
             # Only fetch database ID, buckets, and project.
             '_source': ['buckets', 'database_id', 'project'],

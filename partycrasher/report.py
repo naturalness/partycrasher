@@ -30,7 +30,7 @@ debug = logger.debug
 
 from copy import copy, deepcopy
 
-from partycrasher.crash import Crash
+from partycrasher.crash import Crash, Stacktrace, Stackframe
 from partycrasher.es.crash import ESCrash
 from partycrasher.pc_exceptions import ProjectMismatchError
 from partycrasher.bucket import Buckets
@@ -92,7 +92,7 @@ class Report(object):
     
     def search(self, explain=False):
         """Run the search."""
-        error("Searching with explain=" + str(explain))
+        #error("Searching with explain=" + str(explain))
         if not self.ran:
             if (not explain) and self.saved:
                 # No reason to search...
@@ -215,3 +215,13 @@ class Report(object):
                     frame['logdf'] = logdf
           
         return crash
+
+    def restify(self):
+        assert self.project is not None
+        d = {
+            'report': self.crash,
+            'saved': self.saved,
+            }
+        if self.explain:
+            d['explanation'] = self.explanation
+        return d

@@ -29,6 +29,7 @@ import distutils
 from flask import json, jsonify, request, redirect, make_response, url_for
 
 from partycrasher.crash import pretty
+from partycrasher.pc_exceptions import PartyCrasherError
 
 import logging
 logger = logging.getLogger(__name__)
@@ -37,27 +38,23 @@ warn = logger.warn
 info = logger.info
 debug = logger.debug
 
-class BadRequest(RuntimeError):
+class BadRequest(PartyCrasherError):
     """
     Raised and handled when something funky happens.
     """
+    http_code = 400
+    
     def __init__(self, *args, **kwargs):
         super(BadRequest, self).__init__(*args)
         self.fields = kwargs
 
-    def make_response(self):
-        if hasattr(self, 'message'):
-            message = self.message
-        else:
-            message = 'Bad Request'
-        return jsonify(message=message, **self.fields)
+    def get_extra(self):
+        return self.fields
 
-
-class UnknownHostError(RuntimeError):
+class UnknownHostError(PartyCrasherError):
     """
     Raised when we could not determine the original host.
     """
-
 
 def jsonify_list(seq):
     """
@@ -73,7 +70,6 @@ def jsonify_list(seq):
     body = json.dumps(seq, indent=4 if should_indent else None)
 
     return make_response((body, None, {'Content-Type': 'application/json'}))
-
 
 def redirect_with_query_string(url, *args, **kwargs):
     """
@@ -91,8 +87,6 @@ def full_url_for(route, **kwargs):
     Like url_for(), but returns a fully qualified external-facing URL for the
     service.
     """
-    error(route)
-    error(pretty(kwargs))
     for k, v in kwargs.items():
         assert v is not None
         assert k is not None

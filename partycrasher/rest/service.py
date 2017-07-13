@@ -27,6 +27,10 @@ import argparse
 import traceback
 import logging
 from logging import error, debug, warn, info
+ERROR=error
+DEBUG=debug
+WARN=warn
+INFO=info
 
 from flask import current_app, json, jsonify, request, url_for, redirect
 from flask import render_template, send_file, send_from_directory, Flask
@@ -53,6 +57,7 @@ from partycrasher.pc_exceptions import (
   IdenticalReportError
   )
 from partycrasher.crash import pretty
+from partycrasher.report import Report
 
 import dateparser
 
@@ -105,17 +110,11 @@ def make_json_error(ex):
 #for code in default_exceptions.keys():
     #app.register_error_handler(code, make_json_error)
 
-@app.errorhandler(BadRequest)
-def on_bad_request(e):
-    """
-    Handles BadRequest exceptions; sends status 400 back to the client,
-    along with a message sent as JSON.
-    """
-    return e.make_response(), 400
-
 @app.errorhandler(Exception)
 def on_crasher_crash(ex):
     (t, v, tb) = sys.exc_info()
+    for line in traceback.format_exception(t, v, tb):
+        ERROR(line.rstrip())
     tb = traceback.extract_tb(tb)
     out_tb = []
     i = 0
@@ -137,7 +136,7 @@ def on_crasher_crash(ex):
     if isinstance(ex, PartyCrasherError):
         details.update(ex.get_extra())
     response = jsonify(details)
-    if 'http_code' in ex.__dict__:
+    if hasattr(ex, 'http_code'):
         response.status_code = ex.http_code
     elif 'code' in ex.__dict__:
         reponse.status_code = ex.code
@@ -405,7 +404,7 @@ def add_report(project=None):
             return (
                 jsonify_resource(report), 
                 201, 
-                {'Location': url}
+                {'Location': url_for_report(report)}
                 )
     else:
         raise BadRequest("Report must be a list or object.")
@@ -798,26 +797,17 @@ def query_buckets(project=None, threshold=None):
                             'more information: '
                             'http://partycrasher.rtfd.org/',
                             until=until)
-
-    buckets = crasher.top_buckets(lower_bound,
-                                  project=project,
-                                  threshold=threshold,
-                                  from_=from_,
-                                  size=size,
-                                  upper_bound=upper_bound,
-                                  query_string=query_string)
-
-    if upper_bound is not None:
-        upper_bound_ret = upper_bound.isoformat()
-    else:
-        upper_bound_ret = None
-
-    return jsonify(since=lower_bound.isoformat(),
-                   until=upper_bound_ret,
-                   threshold=threshold,
-                   top_buckets=list(buckets),
-                   q=query_string)
-
+    bs = crasher.bucket_search(
+        threshold=threshold,
+        since=lower_bound,
+        project=project,
+        until=upper_bound,
+        query_string=query_string
+        )
+    page = bs.page(from_=from_, size=size)
+    
+    
+    return jsonify(page)
 
 @app.route('/reports', methods=['DELETE'])
 def delete_reports_no_project():
@@ -1068,6 +1058,8 @@ def ingest_multiple(reports, project_name, explain):
 
 
 def url_for_report(report):
+    if isinstance(report, Report):
+        report = report.crash
     return url_for('view_report',
                    project=report['project'],
                    report_id=report.id)
