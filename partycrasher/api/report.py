@@ -34,22 +34,22 @@ from partycrasher.crash import Crash, Stacktrace, Stackframe
 from partycrasher.es.crash import ESCrash
 from partycrasher.pc_exceptions import ProjectMismatchError
 from partycrasher.bucket import Buckets
+from partycrasher.project import Project
 
 # python2 and six don't support enums
 
 class Report(object):
     """Object representing the API functionality for an individual crash."""    
     
-    def __init__(self, 
+    def __init__(self,
+                 search,
                  crash,
                  project,
-                 strategy,
-                 thresholds,
-                 index,
-                 dry_run=True
+                 dry_run=True,
+                 explain=False,
                  ):
         if isinstance(crash, string_types):
-            self.crash = ESCrash(crash)
+            self.crash = ESCrash(index, crash)
             self.saved = True
         elif isinstance(crash, dict):
             self.crash = Crash(crash)
@@ -60,24 +60,41 @@ class Report(object):
         elif isinstance(crash, Crash):
             self.crash = crash
             self.saved = False
-        self.strategy = strategy
+        context = search.context
+        self.context = context
+        self.strategy = context.strategy
         self.dry_run = dry_run
         self.ran = False
         self.validate()
-        self.explain = False
         self.project = project
         self.fix_project()
-        self.thresholds = thresholds
-        self.index = index
+        self.thresholds = context.thresholds
+        self.index = context.index
+        self.explain = explain
         
     def fix_project(self):
+        crash_project = None
         if 'project' in self.crash:
-            if self.crash['project'] != self.project:
-                raise ProjectMismatchError(self.project, self.crash)
+            if isinstance(self.crash['project'], Project):
+                crash_project = self.crash['project'].name
             else:
+                crash_project = self.crash['project']
+        if crash_project is None:
+            if self.project is None:
+                raise NoProjectSpecifiedError(self.project, self.crash)
+            else:
+                self.crash['project'] = self.project
                 return self.project
         else:
-            self.crash['project'] = self.project
+            if self.project is None:
+                self.project = crash_project
+                return crash_project
+            else: # both not none
+                if crash_project != self.project:
+                    raise ProjectMismatchError(self.project, self.crash)
+                else:
+                    return self.project
+            
     
     def validate(self):
         """Do some extra runtime checking that should be unnecessary if the Crash class is operating correctly."""
@@ -90,15 +107,16 @@ class Report(object):
                     "address must be a string instead of %s" 
                     % (true_crash['stacktrace'][0]['address'].__class__))
     
-    def search(self, explain=False):
+    def search(self, explain=None):
         """Run the search."""
         #error("Searching with explain=" + str(explain))
-        if not self.ran:
-            if (not explain) and self.saved:
-                # No reason to search...
-                return None
+        if explain is not None:
             self.explain = explain
-            self.es_result = self.strategy.query(self.crash, explain)
+        del explain
+        if not self.ran:
+            if (not self.explain) and self.saved:
+                raise RuntimeError("Requested search but there was no reason to search")
+            self.es_result = self.strategy.query(self.crash, self.explain)
             self.ran = True
             return self.es_result
     
@@ -153,14 +171,14 @@ class Report(object):
             return None
     
     @property
-    def summary(self):
+    def auto_summary(self):
         """
         Returns the summary of theexplanation of why it would be bucketed now the way it would.
         This is not necessarily the original bucketing.
         """
         if self.explain:
             self.search()
-            return self.es_result.explanation_summary()
+            return self.es_result.explanation_summary
         else:
             return None
     
@@ -224,4 +242,5 @@ class Report(object):
             }
         if self.explain:
             d['explanation'] = self.explanation
+            d['auto_summary'] = self.auto_summary
         return d

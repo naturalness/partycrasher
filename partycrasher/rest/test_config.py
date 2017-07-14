@@ -8,7 +8,7 @@ class HTTP:
 # Bucketing                                                                    #
 ################################################################################
 test_thresholds = [int(10**(t/24.0)*10)/10.0 for t in range(0, 24*2+1)]
-test_thresholds.append(0.0)
+#test_thresholds.append(0.0)
 #thresholds = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0]
 class Bucketing:
     # A list of selectable buckets thresholds. For every report uploaded,
@@ -80,6 +80,7 @@ class ElasticSearch:
 class UserInterface:
     # A list of important fields for the fixed summary. 
     # database_name => Display Name
+    # NOTE that this also disables tokenization for these fields!
     fixed_summary_fields = {"uname": "UName",
                             "signal": "Signal",
                             "cpu": "CPU"}

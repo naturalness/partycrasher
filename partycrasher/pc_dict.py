@@ -111,8 +111,7 @@ class PCDict(MutableMapping):
             self.__getattribute__(k)
     
     def __setattr__(self, k, v):
-        if k == '_d':
-            assert isinstance(v, Dict)
+        assert k != '_d'
         super(PCDict, self).__setattr__(k, v)
     
     def set_d(self, d):
@@ -169,3 +168,12 @@ class FixedPCDict(PCDict):
 
     def __delitem__(self, k):
         raise NotImplementedError
+
+class PCDefaultDict(PCDict):
+    def __init__(self, *args, **kwargs):
+        d = dict(*args, **kwargs)
+        self._d = {
+            k: v['default'] for k, v in self.canonical_fields.items()
+            }
+        for k, v in d.items():
+            self[k] = v

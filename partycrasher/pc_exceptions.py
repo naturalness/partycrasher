@@ -101,3 +101,5 @@ class ProjectMismatchError(PartyCrasherError):
         return {'project': self.project,
                 'crash': self.crash}
 
+class NoProjectSpecifiedError(ProjectMismatchError):
+    """No project specified in the API."""

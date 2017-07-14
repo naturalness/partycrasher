@@ -30,6 +30,7 @@ from flask import json, jsonify, request, redirect, make_response, url_for
 
 from partycrasher.crash import pretty
 from partycrasher.pc_exceptions import PartyCrasherError
+from partycrasher.api.util import parse_date
 
 import logging
 logger = logging.getLogger(__name__)
@@ -54,6 +55,11 @@ class BadRequest(PartyCrasherError):
 class UnknownHostError(PartyCrasherError):
     """
     Raised when we could not determine the original host.
+    """
+
+class KeyConflictError(BadRequest):
+    """
+    Raised when the user provides a search with conflicting parameters.
     """
 
 def jsonify_list(seq):
@@ -190,3 +196,46 @@ def str_to_bool(s, default):
         return default
     assert isinstance(s, string_types)
     return bool(distutils.util.strtobool(s.lower()))
+
+def maybe_set(d, k, v):
+    if k in d:
+        if d[k] != v:
+            raise KeyConflictError(key=k,
+                                   value_a=d[k],
+                                   value_b=v)
+    else:
+        d[k] = v
+    return d
+
+def maybe_int(v):
+    if v is not None:
+        return int(v)
+    else:
+        return v
+
+def maybe_date(v):
+    if v is not None:
+        d = parse_date(v)
+        if d is None:
+        raise BadRequest('Could not understand date format for '
+                         'parameter.'
+                         'Supported formats are: ISO 8601 timestamps '
+                         'and relative dates. Refer to the API docs for '
+                         'more information: '
+                         'http://partycrasher.rtfd.org/',
+                         date=since)
+    else:
+        return v
+
+def make_search(args, **kwargs):
+    s = kwargs
+    maybe_set(s, 'from_', maybe_int(args.get('from', None)))
+    maybe_set(s, 'size', maybe_int(args.get('size', None)))
+    maybe_set(s, 'query_string', args.get('q', None))
+    maybe_set(s, 'since', maybe_date(args.get('since', None)))
+    maybe_set(s, 'until', maybe_date(args.get('until', None)))
+    maybe_set(s, 'project', args.get('project', None))
+    maybe_set(s, 'threshold', args.get('threshold', None))
+    maybe_set(s, 'bucket', args.get('bucket', None))
+    return s
+    

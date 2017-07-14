@@ -138,4 +138,26 @@ class MoreLikeThisResponse(object):
             return self.hits[0].explanation
         else:
             return None
-            
+    
+    @property
+    def explanation_summary(self):
+        accumulator = {}
+        for hit in self.hits:
+            s = hit.explanation_summary
+            for t in s:
+                if t['field'] not in accumulator:
+                    accumulator[t['field']] = {}
+                if t['term'] not in accumulator[t['field']]:
+                    accumulator[t['field']][t['term']] = 0.0
+                accumulator[t['field']][t['term']] += t['value']
+        explanation = []
+        for field in accumulator:
+            for term in accumulator[field]:
+                explanation.append({
+                    'field': field,
+                    'term': term,
+                    'value': accumulator[field][term]
+                })
+        explanation = sorted(explanation, key=itemgetter('value'), reverse=True)
+        return explanation
+

@@ -26,6 +26,8 @@ warn = logger.warn
 info = logger.info
 debug = logger.debug
 
+from elasticsearch import TransportError
+
 from partycrasher.threshold import Threshold
 from partycrasher.more_like_this import MoreLikeThis
 
@@ -82,7 +84,7 @@ class ESIndex(object):
                           'match': '*',
                           'match_mapping_type': 'string',
                           'mapping': {
-                            'type': 'string',
+                            'type': 'text',
                             'analyzer': 'default',
                             # The ES documentation indicates this should improve
                             # speed but it doesn't seem to actually do so
@@ -90,7 +92,7 @@ class ESIndex(object):
                             # This can enable a second tokenizer for every field
                             #'fields': {
                                 #'ws': {
-                                    #'type': 'string',
+                                    #'type': 'text',
                                     #'analyzer': 'whitespace'
                                     #'term_vector': 'yes',
                                 #}
@@ -125,7 +127,11 @@ class ESIndex(object):
         warn("Creating index %s using tokenization %s" % (self.index_base,
                                                           tokenization_name
                                                           ))
-        self.esstore.indices.create(index=self.index_base, body=index_config)
+        try:
+            self.esstore.indices.create(index=self.index_base, body=index_config)
+        except TransportError as e:
+            error(e.info)
+            raise
                 
     def index_settings(self):
         similarity_config = {}
@@ -181,20 +187,12 @@ class ESIndex(object):
         thresholds = self.thresholds
 
         string_not_analyzed = {
-            'type': "string",
-            'index': 'not_analyzed',
-        }
-
-        string_no = {
-            'type': "string",
-            'index': 'no',
+            'type': 'keyword',
         }
 
         bucket_properties = {
-            threshold.to_elasticsearch(): {
-                'type': "string",
-                'index': 'not_analyzed',
-            } for threshold in thresholds
+            threshold.to_elasticsearch(): string_not_analyzed
+                for threshold in thresholds
         }
 
         bucket_properties['top_match'] = {
@@ -212,44 +210,45 @@ class ESIndex(object):
 
         # Database ID, the primary bucket, and the project,
         # and the version are all literals.
-        return {
+        properties = {
             # TODO: convert into _id
-            'database_id': {
-                'type': 'string',
-                'index': 'not_analyzed'
-            },
+            'database_id': string_not_analyzed,
             'buckets': {
                 # Do not allow arbitrary properties being added to buckets...
                 "dynamic" : "strict",
                 # Create all the subfield appropriate for buckets
                 "properties": bucket_properties
             },
-            'project': {
-                'type': 'string',
-                'index': 'not_analyzed',
-            },
+            'project': string_not_analyzed,
             'date': {
                 'type': 'date',
-                # Do not index, because our analysis has not studied this yet!
-                # Plus, Elastic won't index anyway...
-                'index': 'not_analyzed'
             },
-            'stacktrace': { 'properties': {
-            'function': {
-                'type': 'string',
-                'analyzer': 'default',
-                # Enable a second tokenizer
-                # This is used for chopping off the tops of stacks automatically
-                'fields': {
-                    'whole': {
-                        'type': 'string',
-                        'analyzer': 'keyword'
-                        #'term_vector': 'yes',
+            'stacktrace': { 
+                'properties': {
+                    'function': {
+                        'type': 'text',
+                        'analyzer': 'default',
+                        # Enable a second tokenizer
+                        # This is used for chopping off the tops of stacks
+                        # automatically
+                        'fields': {
+                            'whole': {
+                                'type': 'keyword',
+                                # Documentation suggests this would be helpful
+                                # for performance but doesn't seem to actually
+                                # improve performance
+                                #'term_vector': 'yes',
+                                }
+                            }
+                        }
                     }
                 }
-            }}}
-        }
+            }
+        for f in self.config.UserInterface.fixed_summary_fields.keys():
+            properties[f] = string_not_analyzed
+        return properties
     
+   
     # SMURT Proxy to the ES API
     def search(self, **kwargs):
         assert 'index' not in kwargs
