@@ -61,11 +61,13 @@ class ESStore(object):
         """
         Establishes a connection to ElasticSearch. given configuration.
         """
-        self._es = Elasticsearch(self.es_servers,
+        es = Elasticsearch(self.es_servers,
                                  retry_on_timeout=True,
                                  )
-
-        self.es.cluster.health(wait_for_status='yellow')
+        assert es.ping()
+        h = es.cluster.health(wait_for_status='yellow')
+        assert h['status'] in set(['yellow', 'green'])
+        self._es = es
         return self._es
     
     @property
@@ -76,3 +78,13 @@ class ESStore(object):
     def yellow(self):
         """Wait for status yellow/green on cluster."""
         self.es.cluster.health(wait_for_status='yellow')
+        
+    def restify(self):
+        d = {'es_servers': self.es_servers}
+        if self._es is None:
+            d['connected'] = False
+        else:
+            d['connected'] = True
+            d['up'] = self.es.ping()
+            d['health'] = self.es.cluster.health()
+        return d

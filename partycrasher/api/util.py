@@ -17,10 +17,59 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from datetime import datetime
-import dateparser
+from six import string_types
 
-def parse_date(s):
+from datetime import datetime
+from dateparser import parse as parse_date
+
+from partycrasher.pc_exceptions import BadDateError
+from partycrasher.threshold import Threshold
+from partycrasher.project import Project
+from partycrasher.bucket import Bucket
+
+def maybe_threshold(v):
+    if v is not None:
+        return Threshold(v)
+    else:
+        return v
+
+def maybe_bucket(v):
+    if v is not None:
+        return Bucket(v)
+    else:
+        return v
+
+def maybe_project(v):
+    if v is not None:
+        return Project(v)
+    else:
+        return v
+
+def maybe_int(v):
+    if v is not None:
+        return int(v)
+    else:
+        return v
+
+def maybe_text(v):
+    if v is not None:
+        return int(v)
+    else:
+        return v
+
+def maybe_date(v):
+    if v is None:
+        return v
+    elif isinstance(v, datetime):
+        return v
+    elif isinstance(v, string_types):
+        d = parse_date(v)
+        if d is None:
+            raise BadDateError(v)
+    else:
+        return v
+
+def maybe_parse_date(s):
     if isinstance(s, datetime):
         return s
     return dateparser.parse(s.replace('-', ' '))

@@ -21,7 +21,7 @@ from six import text_type, string_types
 
 from partycrasher.project import Project
 from partycrasher.api.thresholds import Thresholds
-from partycrasher.api.bucket_search import BucketSearch
+from partycrasher.api.report_threshold import BucketSearch
 from partycrasher.api.search import Search
 
 class ReportProject(Project):
@@ -37,10 +37,15 @@ class ReportProject(Project):
             from_=from_,
             size=size
             )
+        if search.threshold is None:
+            self.buckets = Thresholds(search)
+        else:
+            self.buckets = ReportThreshold(search, search.threshold)
+            
     
     def restify(self):
         d = dict()
-        d['reports'] = self.reports.page
-        d['search'] = self.reports.search
+        d['reports'] = self.reports
         d['project'] = super(ReportProject, self)
+        d['buckets'] = self.buckets
         return d

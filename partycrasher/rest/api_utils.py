@@ -30,7 +30,7 @@ from flask import json, jsonify, request, redirect, make_response, url_for
 
 from partycrasher.crash import pretty
 from partycrasher.pc_exceptions import PartyCrasherError
-from partycrasher.api.util import parse_date
+from partycrasher.api.util import maybe_date, maybe_int
 
 import logging
 logger = logging.getLogger(__name__)
@@ -199,33 +199,17 @@ def str_to_bool(s, default):
 
 def maybe_set(d, k, v):
     if k in d:
-        if d[k] != v:
+        if v is None:
+            pass
+        elif d[k] is None:
+            d[k] = v
+        elif d[k] != v:
             raise KeyConflictError(key=k,
                                    value_a=d[k],
                                    value_b=v)
     else:
         d[k] = v
     return d
-
-def maybe_int(v):
-    if v is not None:
-        return int(v)
-    else:
-        return v
-
-def maybe_date(v):
-    if v is not None:
-        d = parse_date(v)
-        if d is None:
-        raise BadRequest('Could not understand date format for '
-                         'parameter.'
-                         'Supported formats are: ISO 8601 timestamps '
-                         'and relative dates. Refer to the API docs for '
-                         'more information: '
-                         'http://partycrasher.rtfd.org/',
-                         date=since)
-    else:
-        return v
 
 def make_search(args, **kwargs):
     s = kwargs

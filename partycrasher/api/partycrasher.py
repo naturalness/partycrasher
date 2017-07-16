@@ -17,13 +17,17 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import partycrasher
 from partycrasher.context import Context
+from partycrasher.bucket import Bucket
 
 # These imports are all the public API
 from partycrasher.api.report import Report
-from partycrasher.api.report_search import ReportBucket, ReportSearch
-from partycrasher.api.bucket_search import BucketSearch
-from partycrasher.pc_dict import PCDict
+from partycrasher.api.search import Search, Results
+from partycrasher.api.report_bucket import ReportBucket
+from partycrasher.api.report_threshold import ReportThreshold
+from partycrasher.api.projects import Projects
+from partycrasher.api.thresholds import Thresholds
 
 import logging
 logger = logging.getLogger(__name__)
@@ -36,14 +40,15 @@ class PartyCrasher(object):
     """Public API root and config file loader."""
     def __init__(self, config_file=None):
         self.context = Context(config_file)
+        self.null_search = Search(context=self.context)
         
     @property
-    def config:
+    def config(self):
         return self.context.config
         
     def report(self, crash, project=None, dry_run=True, explain=False):
         """Factory for reports."""
-        return Report(context=context,
+        return Report(search=self.null_search,
                       crash=crash,
                       project=project, 
                       dry_run=dry_run,
@@ -53,8 +58,10 @@ class PartyCrasher(object):
     def report_bucket(self, 
                       threshold,
                       bucket_id,
-                      from_=None, size=None **kwargs):
+                      from_=None, size=None, **kwargs):
         """Factory for report buckets."""
+        assert threshold is not None
+        assert bucket_id is not None
         search = Search(context=self.context, **kwargs)
         bucket = Bucket(threshold=threshold, id=bucket_id)
         return ReportBucket(search, bucket, from_, size)
@@ -73,20 +80,20 @@ class PartyCrasher(object):
                             threshold=threshold, 
                             **kwargs)
     
-    def report_search(self, **kwargs, from_=None, size=None):
+    def report_search(self, from_=None, size=None, **kwargs):
         """Factory for report buckets."""
         search = Search(context=self.context, **kwargs)
-        return Results(search, from_, size)
+        return Results(search=search, from_=from_, size=size)
     
     @property
     def projects(self):
         """Get the projects."""
-        return Projects(Search(context=self.context))
+        return Projects(self.null_search)
     
     @property
     def thresholds(self):
         """Get the thresholds."""
-        return Thresholds(Search(context=self.context))
+        return Thresholds(self.null_search)
     
     @property
     def buckets(self):
@@ -95,7 +102,7 @@ class PartyCrasher(object):
     @property
     def reports(self):
         """Get the reports."""
-        return self.report_search()
+        return Results(self.null_search)
 
     @property
     def es_store(self):

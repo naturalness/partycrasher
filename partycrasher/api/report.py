@@ -48,8 +48,10 @@ class Report(object):
                  dry_run=True,
                  explain=False,
                  ):
+        context = search.context
+        self.context = context
         if isinstance(crash, string_types):
-            self.crash = ESCrash(index, crash)
+            self.crash = ESCrash(self.context.index, crash)
             self.saved = True
         elif isinstance(crash, dict):
             self.crash = Crash(crash)
@@ -60,8 +62,6 @@ class Report(object):
         elif isinstance(crash, Crash):
             self.crash = crash
             self.saved = False
-        context = search.context
-        self.context = context
         self.strategy = context.strategy
         self.dry_run = dry_run
         self.ran = False
@@ -244,3 +244,7 @@ class Report(object):
             d['explanation'] = self.explanation
             d['auto_summary'] = self.auto_summary
         return d
+
+    @property
+    def database_id(self):
+        return self.crash.database_id

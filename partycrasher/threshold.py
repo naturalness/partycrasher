@@ -19,7 +19,6 @@
 from decimal import Decimal, Context
 from logging import debug, error, warning, info
 
-
 # Python 2/3 non-sense.
 try:
     unicode

@@ -35,58 +35,72 @@ elif PY2:
 
 from datetime import datetime
 
-from partycrasher.pc_dict import PCDict
+from partycrasher.pc_dict import PCDict, PCDefaultDict
 from partycrasher.project import Project
 from partycrasher.threshold import Threshold
 from partycrasher.crash import Crash
-from partycrasher.api.search import Search
-from partycrasher.api.util import parse_date
+from partycrasher.api.util import (
+    maybe_date, 
+    maybe_threshold, 
+    maybe_project,
+    maybe_bucket,
+    maybe_text
+    )
+from partycrasher.bucket import Bucket
+from partycrasher.api.report import Report
+from partycrasher.context import Context
 
 class Search(PCDefaultDict):
-    context = None
-    _page = None
     
     canonical_fields = {
         'threshold': {
             'type': Threshold,
-            'converter': Threshold,
+            'converter': maybe_threshold,
             'default': None
             },
         'project': {
             'type': Project,
-            'converter': Project,
+            'converter': maybe_project,
             'default': None
             },
         'since': {
             'type': datetime,
-            'converter': parse_date,
+            'converter': maybe_date,
             'default': None
             },
         'until': {
             'type': datetime,
-            'converter': parse_date,
+            'converter': maybe_date,
             'default': None
             },
         'query_string': {
             'type': string_types,
-            'converter': text_type,
+            'converter': maybe_text,
             'default': None
             },
         'bucket_id': {
             'type': Bucket,
-            'converter': Bucket,
+            'converter': maybe_bucket,
             'default': None
             },
         }
         
-    
     def __init__(self,
-                 context,
+                 context=None,
+                 search=None,
                  **kwargs):
-        self.context = context
-        assert context not in self
-        assert self.context == context
-        super(Search, self).__init__(**kwargs)
+        if context is not None:
+            assert isinstance(context, Context), context.__class__.__name__
+            self.context = context
+        else:
+            assert search is not None
+            self.context = search.context
+        if search is None:
+            super(Search, self).__init__(**kwargs)
+        else:
+            super(Search, self).__init__(search)
+            self.update(kwargs)
+        self.thresholds = self.context.thresholds
 
     def build_query(self, 
                     from_=None, 
@@ -172,7 +186,7 @@ class Search(PCDefaultDict):
         raw_hits = raw['hits']['hits']
         
         counts = {}
-        for field in self.fixed_summary_fields.keys():
+        for field in self.context.fixed_summary_fields.keys():
             converter = lambda x: x
             if field == "project":
                 converter = Project
@@ -203,7 +217,7 @@ class Search(PCDefaultDict):
         page['size'] = len(raw['hits']['hits'])
         return page
 
-    def restify(self):
+    def as_dict(self):
         return self._d
     
 class Page(PCDict):
@@ -223,7 +237,7 @@ class Page(PCDict):
     def restify(self):
         return self._d
     
-    @property(self):
+    @property
     def results(self):
         return self.reports
     
@@ -237,11 +251,10 @@ class View(Sequence):
     item_class = Report
     
     def __init__(self,
-                 context,
                  from_=0, 
                  size=10,
                  **kwargs):
-        self.search = search_class(context=context, **kwargs)
+        self.search = self.search_class(**kwargs)
         self._from = from_
         self._size = size
         self._page = None
@@ -255,14 +268,14 @@ class View(Sequence):
     @property
     def page(self):
         if self._page is None:
-            self._page = self.search.page(_from, _size)
+            self._page = self.search.page(self._from, self._size)
         if self._length is None:
             self._length = self._page.total
         return self._page
     
     def in_page(self, i):
         return i >= self.page.from_ and (
-            i < self.page.from_ + len(self.page.results)
+            i < self.page.from_ + len(self.page.results))
         
     def __getitem__(self, i):
         if self._page is None or not self._pagein_page(i):
@@ -280,8 +293,7 @@ class View(Sequence):
 class Results(object):
     def __init__(self, search, from_=None, size=None):
         self.reports = View(
-            search.context,
-            search,
+            search=search,
             from_=from_,
             size=size
             )
@@ -291,5 +303,7 @@ class Results(object):
         d['reports'] = self.reports.page
         d['search'] = self.reports.search
         return d
-        
     
+    @property
+    def counts(self):
+        return self.reports.page.counts

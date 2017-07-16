@@ -17,10 +17,18 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import logging
+logger = logging.getLogger(__name__)
+error = logger.error
+warn = logger.warn
+info = logger.info
+debug = logger.debug
+
 from partycrasher.threshold import Threshold
 from partycrasher.bucket import Bucket
 from partycrasher.api.search import Page, Search, View
 from partycrasher.api.report_bucket import ReportBucket
+from partycrasher.crash import pretty
 
 class BucketPage(Page):
     """Class representing a page of buckets from search results."""
@@ -30,7 +38,7 @@ class BucketPage(Page):
         super(Page, self).__init__(**kwargs)
         self.buckets = buckets
         
-    @property(self):
+    @property
     def results(self):
         return self.buckets
     
@@ -43,7 +51,8 @@ class BucketSearch(Search):
     """Class representing the buckets available under a certain search."""
     def __init__(self, **kwargs):
         super(BucketSearch, self).__init__(**kwargs)
-        
+        assert self.threshold is not None
+    
     def page(self, 
              from_=None, 
              size=None):
@@ -99,7 +108,7 @@ class BucketSearch(Search):
                   ["top_buckets"]["terms"]["size"]) = actual_size
         
         #debug(pretty(query))
-        response = self.index.search(body=query)
+        response = self.context.search(body=query)
         debug(pretty(response))
 
         # Oh, ElasticSearch! You and your verbose responses!
@@ -134,19 +143,17 @@ class BucketView(View):
     
 class ReportThreshold(Threshold):
     def __init__(self, search, result, from_=None, size=None):
-        super(ReportBucket, self).__init__(result)
-        search = BucketSearch(search)
-        search.threshold = self.threshold
+        super(ReportThreshold, self).__init__(result)
+        search = BucketSearch(search=search, threshold=Threshold(self))
         self.buckets = BucketView(
-            search.context,
-            search,
+            search=search,
             from_=from_,
             size=size
             )
     
     def restify(self):
         d = {
-            'threshold': super(Threshold, self),
             'buckets': self.buckets.page,
             'search': self.buckets.search,
         }
+        return d

@@ -49,17 +49,16 @@ from partycrasher.rest.api_utils import (
     jsonify_list,
     redirect_with_query_string,
     full_url_for,
-    str_to_bool
+    str_to_bool,
+    make_search
 )
-from partycrasher.rest.resource_encoder import ResourceEncoder
+from partycrasher.rest.resource_encoder import (ResourceEncoder,
+                                                auto_url_for)
 from partycrasher.pc_exceptions import (
   PartyCrasherError, 
   IdenticalReportError
   )
 from partycrasher.crash import pretty
-from partycrasher.report import Report
-
-import dateparser
 
 # Create and customize the Flask app.
 app = Flask('partycrasher', template_folder='ngapp/app')
@@ -100,16 +99,6 @@ def before_first_request():
         DEBUG("before first request debug")
         
 
-def make_json_error(ex):
-    response = jsonify(message=str(ex))
-    response.status_code = (ex.code
-                            if isinstance(ex, HTTPException)
-                            else 500)
-    return response
-
-#for code in default_exceptions.keys():
-    #app.register_error_handler(code, make_json_error)
-
 @app.errorhandler(Exception)
 def on_crasher_crash(ex):
     (t, v, tb) = sys.exc_info()
@@ -129,7 +118,6 @@ def on_crasher_crash(ex):
             })
     details = {
         'message': str(ex),
-        'description': ex.__class__.__doc__,
         'error': ex.__class__.__name__,
         'stacktrace': out_tb,
         }
@@ -144,6 +132,8 @@ def on_crasher_crash(ex):
         response.status_code = 500
     return response
 
+for code in default_exceptions.keys():
+    app.register_error_handler(code, on_crasher_crash)
 
 @app.route('/')
 def root():
@@ -194,7 +184,9 @@ def root():
     """
 
     # This should be a tree for all of the services available.
-    return jsonify(crasher.restify())
+    root = crasher.restify()
+    root['href'] = full_url_for('root')
+    return jsonify(root)
 
 
 @app.route('/ui/bower_components/<path:filename>', methods=['GET'])
@@ -399,12 +391,12 @@ def add_report(project=None):
                 report.save()
         except IdenticalReportError as error:
             # Ingested a duplicate report.
-            return '', 303, { 'Location': url_for_report(error.report) }
+            return '', 303, { 'Location': auto_url_for(error.report) }
         else:
             return (
                 jsonify_resource(report), 
                 success_code, 
-                {'Location': url_for_report(report)}
+                {'Location': auto_url_for(report)}
                 )
     else:
         raise BadRequest("Report must be a list or object.")
@@ -553,16 +545,10 @@ def view_bucket(project=None, threshold=None, bucket_id=None):
     """
     assert bucket_id is not None
     assert threshold is not None
+    ERROR(request.args.getlist('threshold'))
+    s = make_search(request.args, bucket_id=bucket_id, threshold=threshold)
 
-    s = make_search(request.args,
-                    bucket_id=bucket_id,
-                    threshold=threshold)
-
-    try:
-        bucket = crasher.report_bucket(s)
-        return jsonify_resource(bucket)
-    except BucketNotFoundError:
-        return jsonify(error="not_found", bucket_id=bucket_id), 404
+    return jsonify_resource(crasher.report_bucket(**s))
 
 
 # Undoucmented endpoint:
@@ -856,15 +842,6 @@ def search(project):
 #############################################################################
 #                                 Utilities                                 #
 #############################################################################
-
-
-def url_for_report(report):
-    if isinstance(report, Report):
-        report = report.crash
-    return url_for('view_report',
-                   project=report['project'],
-                   report_id=report.id)
-
 
 def raise_bad_request_if_project_mismatch(report, project_name):
     """

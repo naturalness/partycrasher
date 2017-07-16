@@ -18,8 +18,10 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from copy import copy
+from pydoc import locate
 
 # Do not import anything from api
+from partycrasher.config_loader import Config
 from partycrasher.threshold import Threshold
 from partycrasher.es.store import ESStore
 from partycrasher.es.index import ESIndex
@@ -55,9 +57,10 @@ class Context(object):
             index=self.index,
             )
         # Pull configuration details needed for search and fix it up.
-        self.fixed_summary_fields = copy(
+        self.fixed_summary_fields = dict(
             self.config.UserInterface.fixed_summary_fields)
         self.fixed_summary_fields["project"] = "Project"
         self.default_threshold = Threshold(
             self.config.Bucketing.default_threshold)
+        self.search = self.index.search
     

@@ -23,23 +23,57 @@ from partycrasher.project import Project
 from partycrasher.threshold import Threshold
 from partycrasher.bucket import Bucket, TopMatch
 from partycrasher.rest.api_utils import full_url_for
-from partycrasher.report import Report
-from partycrasher.common_search import CommonPage
+from partycrasher.api.report import Report
+from partycrasher.api.search import Search
+from partycrasher.api.thresholds import Thresholds
+from partycrasher.api.report_bucket import ReportBucketSearch
+from partycrasher.api.report_threshold import BucketSearch
 
 from flask import json, request, redirect, make_response
 
+def url_for_search(search):
+    if isinstance(o, BucketSearch):
+        endpoint = 'query_buckets'
+    elif isinstance(o, Search):
+        endpoint = 'search'
+    else:
+        return search
+    params = {}
+    for k, v in stuff.items():
+        assert k is not None
+        if v is not None:
+            params[k] = v
+    if 'project' not in params:
+        endpoint = endpoint + '_no_project'
+    return full_url_for(endpoint, **params)
+    
+def auto_url_for(thing):
+    if isinstance(thing, Search):
+        return url_for_search(thing)
+    elif isinstance(thing, Report) or isinstance(thing, Crash):
+        return full_url_for('view_report',
+                            project=thing.project,
+                            report_id=thing.database_id
+                            )
+    else:
+        return thing
+
 class ResourceEncoder(CrashEncoder):
     def default(self, o):
-        if isinstance(o, Threshold):
+        if isinstance(o, Search):
+            return url_for_search('search', o.as_dict())
+        elif hasattr(o, 'restify'):
+            return o.restify()
+        elif isinstance(o, Threshold):
             return str(o)
-        if isinstance(o, Crash):
+        elif isinstance(o, Crash):
             d = super(ResourceEncoder, self).default(o).copy()
             d['href'] = full_url_for('view_report',
                                      project=o.project,
                                      report_id=o.id
                                      )
             return d
-        if isinstance(o, Bucket):
+        elif isinstance(o, Bucket):
             d = super(ResourceEncoder, self).default(o).copy()
             if 'project' in d and d['project'] is not None:
                 d['href'] = full_url_for('view_bucket',
@@ -53,7 +87,7 @@ class ResourceEncoder(CrashEncoder):
                                      bucket_id=o.id
                                      )
             return d
-        if isinstance(o, Project):
+        elif isinstance(o, Project):
             d = {
               'name': super(ResourceEncoder, self).default(o),
               'href': full_url_for('query_buckets',
@@ -62,17 +96,13 @@ class ResourceEncoder(CrashEncoder):
                                      )
             }
             return d
-        if isinstance(o, TopMatch):
+        elif isinstance(o, TopMatch):
             d = super(ResourceEncoder, self).default(o).copy()
             d['href'] = full_url_for('view_report',
                                      project=o.project,
                                      report_id=o.report_id
                                      )
             return d
-        if isinstance(o, Report):
-            return o.restify()
-        if isinstance(o, CommonPage):
-            return o.restify()
         else:
             return super(ResourceEncoder, self).default(o)
 

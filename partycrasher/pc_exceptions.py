@@ -16,42 +16,45 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from copy import copy
+from os import linesep
+
 class PartyCrasherError(Exception):
     """An error occured within PartyCrasher."""
     http_code = 500
     
-    def __init__(self, message):
-        self.message = message
-        super(PartyCrasherError, self).__init__(message)
-        
+    def __init__(self, message=None, **kwargs):
+        self.__dict__.update(kwargs)
+        if message is None:
+            super(PartyCrasherError, self).__init__()
+        else:
+            super(PartyCrasherError, self).__init__(message)
+    
     def get_extra(self):
-        return {}
+        extra = dict(self.__dict__)
+        #del extra['args']
+        extra['description'] = self.__class__.__doc__
+        return extra
 
 class IdenticalReportError(PartyCrasherError):
     """Attempted to ingest a database ID more than once."""
     http_code = 409
-    def __init__(self, report, message=None):
-        if message is None:
-            message = "Attempted to add an identical report with id %s" % report['database_id']
-        super(IdenticalReportError, self).__init__(message)
+    
+    def __init__(self, report, **kwargs):
+        message = ("Attempted to add an identical report with id %s" 
+                   % report['database_id'])
+        super(IdenticalReportError, self).__init__(message, **kwargs)
         self.report = report
-
-    def get_extra(self):
-        return {'report':  self.report}
 
 class ReportNotFoundError(PartyCrasherError):
     """A crash could not be found."""
     http_code = 404
     
-    def __init__(self, database_id, message=None):
-        if message is None:
-            message = "Couldn't find the report with ID: %s" % database_id
-        super(ReportNotFoundError, self).__init__(message)
+    def __init__(self, database_id, **kwargs):
+        message = "Couldn't find the report with ID: %s" % database_id
+        super(ReportNotFoundError, self).__init__(message, **kwargs)
         self.database_id = database_id
         
-    def get_extra(self):
-        return {'database_id':  self.database_id}
-
 class MissingBucketError(PartyCrasherError):
     """A matching crash is missing bucket information for a threshold. This usually happens if the config changed."""
     http_code = 500
@@ -60,46 +63,49 @@ class BucketNotFoundError(PartyCrasherError):
     """A bucket could not be found."""
     http_code = 404
     
-    def __init__(self, bucket_id, threshold, message=None):
-        if message is None:
-            message = "The bucket with threshold %s and id %s could not be found." % (
+    def __init__(self, bucket_id, threshold, **kwargs):
+        message = "The bucket with threshold %s and id %s could not be found." % (
                 threshold,
                 bucket_id)
         super(BucketNotFoundError, self).__init__(message)
         self.bucket_id = bucket_id
         self.threshold = threshold
 
-    def get_extra(self):
-        return {'bucket_id': self.bucket_id,
-                'threshold': self.threshold}
-
 class BadKeyNameError(PartyCrasherError):
     """Invalid key-value pair in crash data. Keys cannot contain period '.' characters."""
     http_code = 400
     
-    def __init__(self, key_name, message=None):
-        if message is None:
-            message = "Bad key name: %s" % key_name
+    def __init__(self, key_name, **kwargs):
+        message = "Bad key name: %s" % key_name
         super(BadKeyNameError, self).__init__(message)
         self.key_name = key_name
 
-    def get_extra(self):
-        return {'key_name': self.key_name}
-    
 class ProjectMismatchError(PartyCrasherError):
     """Project specified in the API didn't match the project in the crash data. """
     http_code = 400
     
-    def __init__(self, project, crash, message=None):
-        if message is None:
-            message = "Project %s didn't match project %s in crash." % (project, crash['project'])
+    def __init__(self, project, crash, **kwargs):
+        message = "Project %s didn't match project %s in crash." % (project, crash['project'])
         super(ProjectMismatchError, self).__init__(message)
         self.project = project
         self.crash = crash
 
-    def get_extra(self):
-        return {'project': self.project,
-                'crash': self.crash}
-
 class NoProjectSpecifiedError(ProjectMismatchError):
     """No project specified in the API."""
+    http_code = 400
+
+class BadDateError(PartyCrasherError):
+    """
+    Supported formats are: ISO 8601 timestamps and relative dates
+    accepted by the dateparser library. Refer to the documentation
+    for the dateparser library for more information.
+    https://dateparser.readthedocs.io/
+    """
+    http_code = 400
+    
+    def __init__(self, date, **kwargs):
+        if message is None:
+            message = ('Could not understand date format for '
+                       '%s.' % repr(date))
+        super(PartyCrasherError, self).__init__(message, **kwargs)
+        self.date=date

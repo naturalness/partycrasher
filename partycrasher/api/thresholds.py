@@ -26,7 +26,7 @@ if PY3:
 elif PY2:
     from collections import Mapping
 
-from partycrasher.project import Threshold
+from partycrasher.threshold import Threshold
 from partycrasher.api.report_threshold import ReportThreshold
 
 class Thresholds(Mapping):
@@ -36,11 +36,11 @@ class Thresholds(Mapping):
     def __init__(self, search):
         self.search = search
         # Lazy-load projects
-        self._d = get_thresholds()
+        self._d = self.get_thresholds()
     
     def get_thresholds(self):
         thresholds = {
-            t: ReportThreshold(search, t) for t in self.search.thresholds
+            t: ReportThreshold(self.search, t) for t in self.search.thresholds
             }
         return thresholds
     
@@ -57,4 +57,7 @@ class Thresholds(Mapping):
         return self._d.__len__()
     
     def restify(self):
-        return self._d
+        d = {}
+        for k, v in self._d.items():
+            d[str(k)] = v.buckets.search
+        return d

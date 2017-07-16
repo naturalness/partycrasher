@@ -47,8 +47,8 @@ class ReportBucketSearch(Search):
     to relevance ordering.
     """
     def __init__(self, **kwargs):
-        assert 'bucket_id' in kwargs
-        super(ReportBucket, self).__init__(**kwargs)
+        super(ReportBucketSearch, self).__init__(**kwargs)
+        assert self['bucket_id'] is not None
         
     def page(from_=None, size=None):
         """
@@ -80,9 +80,9 @@ class ReportBucketView(View):
 class ReportBucket(Bucket):
     def __init__(self, search, result, from_=None, size=None):
         super(ReportBucket, self).__init__(result)
-        search = ReportBucketSearch(search)
-        search.bucket_id = self.id
-        search.threshold = self.threshold
+        search['bucket_id'] = self.id
+        search['threshold'] = self.threshold
+        search = ReportBucketSearch(search=search)
         self.reports = ReportBucketView(
             search.context,
             search,

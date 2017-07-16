@@ -26,7 +26,7 @@ elif PY2:
     from collections import Mapping
 
 from partycrasher.project import Project
-from partycrasher.api.search import Search
+from partycrasher.api.search import Results
 from partycrasher.api.report_project import ReportProject
 
 class Projects(Mapping):
@@ -40,14 +40,14 @@ class Projects(Mapping):
     
     def get_projects(self):
         """Get project tree."""
-        rs = self.crasher.report_search(context)
-        page = rs.page(size=0)
-        projects = {p: ReportProject(search, p) for p in page.counts['project'].keys()}
+        r = Results(self.search, size=0)
+        projects = {p: ReportProject(search, p) 
+                    for p in r.counts['project'].keys()}
         return projects
     
     def load(self):
         if self._d is None:
-            self._d = get_projects()
+            self._d = self.get_projects()
         return self._d
         
     def __getitem__(self, key):
@@ -61,3 +61,13 @@ class Projects(Mapping):
     def __len__(self):
         self.load()
         return self._d.__len__()
+    
+    def restify(self):
+        self.load()
+        d = {}
+        for k, v in self._d.items():
+            d[str(k)] = {
+                'reports': v.reports.search,
+                'buckets': v.buckets.search
+            }
+        return d

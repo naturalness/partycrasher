@@ -18,7 +18,17 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from __future__ import print_function, division
+from six import string_types
 from runpy import run_path
+from inspect import isclass, getmembers, isroutine
+
+import logging
+logger = logging.getLogger(__name__)
+error = logger.error
+warn = logger.warn
+info = logger.info
+debug = logger.debug
+
 
 class Config(object):
     def __init__(self, file_path):
@@ -26,3 +36,27 @@ class Config(object):
         
     def __getattr__(self, attr):
         return self._config[attr]
+    
+    def restify_class(self, o):
+        if isclass(o):
+            d = {}
+            for k, v in getmembers(o):
+                if '__' not in k:
+                    d[k] = self.restify_class(v)
+            return d
+        else:
+            assert (isinstance(o, dict),
+                    isinstance(o, float),
+                    isinstance(o, list),
+                    isinstance(o, int),
+                    isinstance(o, string_types)
+                    ), o
+            return o
+    
+    def restify(self):
+        d = {}
+        for k, v in self._config.items():
+            if '__' not in k:
+                x = self.restify_class(v)
+                d[k] = x
+        return d
