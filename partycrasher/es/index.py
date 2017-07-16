@@ -19,6 +19,8 @@
 
 from __future__ import print_function, division
 
+from six import string_types
+
 import logging
 logger = logging.getLogger(__name__)
 error = logger.error
@@ -30,6 +32,7 @@ from elasticsearch import TransportError
 
 from partycrasher.threshold import Threshold
 from partycrasher.more_like_this import MoreLikeThis
+from partycrasher.es.elastify import elastify
 
 class ESIndex(object):
     """
@@ -250,9 +253,16 @@ class ESIndex(object):
     
    
     # SMURT Proxy to the ES API
-    def search(self, **kwargs):
+    def search(self, body, **kwargs):
         assert 'index' not in kwargs
-        return self.esstore.es.search(index=self.index_base, **kwargs)
+        if isinstance(body, string_types):
+            pass
+        else:
+            body=elastify(body)
+        return self.esstore.es.search(
+            index=self.index_base,
+            body=body,
+            **kwargs)
     
     def get(self, **kwargs):
         assert 'index' not in kwargs

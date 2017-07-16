@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-#  Copyright (C) 2015, 2016 Joshua Charles Campbell
+#  Copyright (C) 2015, 2016, 2017 Joshua Charles Campbell
 
 #  This program is free software; you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License
@@ -21,11 +21,7 @@ import sys
 import datetime
 import time
 from weakref import WeakValueDictionary
-from collections import OrderedDict
-import json
-
 from six import string_types
-
 import elasticsearch
 from elasticsearch import Elasticsearch
 
@@ -36,14 +32,12 @@ from partycrasher.crash import (
   Crash, 
   Stacktrace, 
   Stackframe, 
-  CrashEncoder, 
   pretty,
   parse_utc_date,
   )
-from partycrasher.threshold import Threshold
-from partycrasher.bucket import Buckets
 from partycrasher.pc_dict import Dict
 from partycrasher.es.bucket import ESBuckets
+from partycrasher.es.elastify import elastify, ESCrashEncoder
 
 import logging
 logger = logging.getLogger(__name__)
@@ -245,41 +239,6 @@ class ESCrash(Crash):
         """Return a modifyable copy that won't save updates to ES."""
         c = Crash(self._d)
         return c.deepcopy()
-
-class ESCrashEncoder(CrashEncoder):
-
-    @staticmethod
-    def hacky_serialize_thresholds(buckets):
-        """
-        Must serialize thresholds, but ElasticSearch is all like... nah.
-        Actually the problem is that python dumps doesn't allow non-string keys?
-        """
-        assert isinstance(buckets, Buckets)
-
-        new_dict = OrderedDict()
-        for key, value in buckets.items():
-            if isinstance(key, Threshold):
-                # Change threshold to saner value.
-                key = key.to_elasticsearch()
-                value = value['id']
-                new_dict[key] = value
-            elif isinstance(key, string_types):
-                new_dict[key] = value
-                continue
-            else:
-                raise TypeError()
-        return new_dict
-
-    def default(self, o):
-        #assert False
-        #print(type(o), file=sys.stderr)
-        if isinstance(o, Buckets):
-            return self.hacky_serialize_thresholds(o)
-        else:
-            return CrashEncoder.default(self, o)
-
-def elastify(o, **kwargs):
-    return json.dumps(o, cls=ESCrashEncoder, **kwargs)
 
 import unittest
 class TestCrash(unittest.TestCase):

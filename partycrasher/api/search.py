@@ -34,6 +34,7 @@ elif PY2:
     from collections import Sequence
 
 from datetime import datetime
+from copy import copy
 
 from partycrasher.pc_dict import PCDict, PCDefaultDict
 from partycrasher.project import Project
@@ -79,8 +80,8 @@ class Search(PCDefaultDict):
             'default': None
             },
         'bucket_id': {
-            'type': Bucket,
-            'converter': maybe_bucket,
+            'type': string_types,
+            'converter': maybe_text,
             'default': None
             },
         }
@@ -147,7 +148,7 @@ class Search(PCDefaultDict):
             must.append({
                 "term": {
                     "buckets." + 
-                        threshold.to_elasticsearch(): self.bucket_id
+                        self.threshold.to_elasticsearch(): self.bucket_id
                     }
                 })
         
@@ -193,7 +194,7 @@ class Search(PCDefaultDict):
             field_counts = {}
             raw_agg = raw['aggregations'][field]['buckets']
             for b in raw_agg:
-                field_counts = (b['key'], b['doc_count'])
+                field_counts[b['key']] = b['doc_count']
             counts[field] = field_counts
         
         reports = []
@@ -225,7 +226,7 @@ class Page(PCDict):
                  reports,
                  **kwargs):
         super(Page, self).__init__(**kwargs)
-        self.reports = reports
+        self['reports'] = reports
         
     def next_page(self):
         #TODO: implement ES scrolling
@@ -235,7 +236,12 @@ class Page(PCDict):
             )
     
     def restify(self):
-        return self._d
+        if 'search' in self:
+            d = copy(self['search'].as_dict())
+        else:
+            d = {}
+        d.update(self._d)
+        return d
     
     @property
     def results(self):
@@ -255,6 +261,7 @@ class View(Sequence):
                  size=10,
                  **kwargs):
         self.search = self.search_class(**kwargs)
+        assert isinstance(self.search, Search)
         self._from = from_
         self._size = size
         self._page = None
@@ -267,6 +274,7 @@ class View(Sequence):
         
     @property
     def page(self):
+        assert isinstance(self.search, Search)
         if self._page is None:
             self._page = self.search.page(self._from, self._size)
         if self._length is None:
@@ -299,9 +307,7 @@ class Results(object):
             )
     
     def restify(self):
-        d = dict()
-        d['reports'] = self.reports.page
-        d['search'] = self.reports.search
+        return self.reports.page
         return d
     
     @property

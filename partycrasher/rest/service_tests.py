@@ -635,16 +635,21 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 200, response.text
         # The bucket is named after the first crash... I guess?
         #assert database_id_a in response.json().get('id')
-        assert response.json().get('total') >= 1
+        assert 'total_reports' in response.json(), response.text
+        assert response.json().get('total_reports') >= 1, response.text
         assert response.json().get('threshold') == threshold
         # Look at the top report; it must contain tfidf_trickery.
-        assert (response.json().get('top_reports')[0].get('tfidf_trickery') ==
+        assert (response.json()['reports'][0]['tfidf_trickery'] ==
                 tfidf_trickery)
 
     def test_get_buckets(self):
         """
         Get top buckets for a given time frame.
         """
+        wait_for_elastic_search()
+        # test delete all
+        response = requests.delete(self.path_to('reports'))
+        assert response.status_code == 200, response.text
 
         # Create a bunch of reports with IDENTICAL unique content
         tfidf_trickery = str(uuid.uuid4())
@@ -692,11 +697,11 @@ class RestServiceTestCase(unittest.TestCase):
             params={'since': '2017-01-01T00:00:00.000000',
                     'until': '2525'
                     })
-        assert response.json().get('since') == '2017-01-01T00:00:00', response.content
+        assert response.json().get('since') == '2017-01-01T00:00:00', response.text
         until = dateparser.parse(response.json().get('until'))
         assert datetime.datetime(2524, 12, 30) < until
         assert datetime.datetime(2525, 12, 30) > until
-        assert len(response.json().get('buckets')) >= 2
+        assert len(response.json().get('buckets')) >= 2, response.text
 
         # Get the top bucket.
         top_bucket = response.json().get('buckets')[0]
@@ -754,24 +759,20 @@ class RestServiceTestCase(unittest.TestCase):
 
         # There should be at least one top bucket...
         assert len(response.json().get('buckets')) >= 1, response.text
-        # It should send back a proper since date.
-        assert len(response.json().get('since')) is not None
 
     def test_get_project_config(self):
         """
         Fetch per-project configuration.
         """
+        response = requests.post(self.path_to('alan_parsons', 'reports'),
+                                 json=[{'database_id': str(uuid.uuid4()),
+                                        'date': datetime.datetime.utcnow().isoformat(),
+                                        }])
         response = requests.get(self.path_to('alan_parsons', 'config'))
-        assert response.status_code == 200
-        assert 0.0 <= float(response.json().get('default_threshold')) <= 10.0
+        assert response.status_code == 200, response.text
+        dt = response.json().get('default_threshold')
+        assert 0.0 <= float(dt) <= 10.0
 
-    @unittest.skip('This feature is incomplete and under-specified')
-    def test_change_project_config(self):
-        """
-        Patch the project's default threshold.
-        """
-        raise NotImplementedError
-      
     def test_free_search(self):
         now = datetime.datetime.utcnow()
 
@@ -804,11 +805,11 @@ class RestServiceTestCase(unittest.TestCase):
                 'q': tfidf_trickery,
             })
         
-        assert response.status_code == 200
+        assert response.status_code == 200, response.text
         r = response.json().get('reports')
 
         # It should get back the three IDs we just inserted.
-        assert len(r) == 3
+        assert len(r) == 3, response.text
         
         database_urls = [
           "http://localhost:" + str(self.port) + "/hamburgerpalace/reports/" + database_id_a,
@@ -901,7 +902,7 @@ class RestServiceTestCase(unittest.TestCase):
         for c in response.json():
             database_urls.append(
                 "http://localhost:" + str(self.port) + "/X/buckets/11.0/" 
-                + c['buckets']['11.0']['id'])
+                + c['report']['buckets']['11.0']['id'])
         
         # Search for the tf.idf trickery.
         response = requests.get(self.path_to(project, 'buckets', '11.0'),
@@ -1108,7 +1109,7 @@ class RestServiceTestCase(unittest.TestCase):
         j = response.json()
         assert 'buckets' in j, response.text
         assert len(j['buckets']) == 1, response.text
-        assert j['buckets'][0]['total'] == 3
+        assert j['buckets'][0]['total'] == 3, response.text
 
     def tearDown(self):
         # Kill the ENTIRE process group of the REST server.

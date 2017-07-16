@@ -32,14 +32,14 @@ from partycrasher.api.report_threshold import BucketSearch
 from flask import json, request, redirect, make_response
 
 def url_for_search(search):
-    if isinstance(o, BucketSearch):
+    if isinstance(search, BucketSearch):
         endpoint = 'query_buckets'
-    elif isinstance(o, Search):
+    elif isinstance(search, Search):
         endpoint = 'search'
     else:
-        return search
+        raise RuntimeError("what")
     params = {}
-    for k, v in stuff.items():
+    for k, v in search.items():
         assert k is not None
         if v is not None:
             params[k] = v
@@ -61,7 +61,7 @@ def auto_url_for(thing):
 class ResourceEncoder(CrashEncoder):
     def default(self, o):
         if isinstance(o, Search):
-            return url_for_search('search', o.as_dict())
+            return url_for_search(o)
         elif hasattr(o, 'restify'):
             return o.restify()
         elif isinstance(o, Threshold):
@@ -90,8 +90,7 @@ class ResourceEncoder(CrashEncoder):
         elif isinstance(o, Project):
             d = {
               'name': super(ResourceEncoder, self).default(o),
-              'href': full_url_for('query_buckets',
-                                     threshold='4.0',
+              'href': full_url_for('view_project',
                                      project=o.name
                                      )
             }

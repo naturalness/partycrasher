@@ -24,10 +24,10 @@ import os, sys, pprint, random, time, operator, math, csv
 REPOSITORY_ROUTE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.join(REPOSITORY_ROUTE, 'partycrasher'))
 
-import crash
+from partycrasher import crash
 import json
 import requests
-from rest_client import RestClient
+from partycrasher.rest.client import RestClient
 import copy
 import signal
 import subprocess
@@ -61,7 +61,7 @@ def get_comparisons(client):
     }
 
     response = requests.get(client.root_url)
-    thresholds = response.json()['config']['thresholds']
+    thresholds = response.json()['buckets'].keys()
     #except:
         #raise
         #print response.status_code
@@ -196,7 +196,7 @@ def ingest_one(mblock):
         else:
             break # don't retry if it worked
     try:
-        simulationdata = response.json()
+        simulationdata = response.json()['report']
     except ValueError as e:
         print(response.content)
         traceback.print_exc()
@@ -513,6 +513,7 @@ class GunicornStarter(object):
         self.start_gunicorn()
     
     def start_gunicorn(self):
+        info("Starting gunicorn...")
         if PARALLEL > 0:
             self.gunicorn = subprocess.Popen(['gunicorn',
                 '--access-logfile', 'gunicorn-access.log',
@@ -524,11 +525,11 @@ class GunicornStarter(object):
                 '--timeout', '60',
                 '--pid', 'gunicorn.pid',
                 '--capture-output',
-                'partycrasher.rest_service_validator',
+                'partycrasher.rest.validator',
                 ],
                 preexec_fn=os.setsid)
-            time.sleep(5)
             print('gunicorn started on %i' % (self.gunicorn.pid))
+            time.sleep(5)
         else:
             self.gunicorn = subprocess.Popen(['python',
                 'partycrasher/rest_service.py',

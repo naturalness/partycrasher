@@ -18,9 +18,12 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from partycrasher import rest_service
+from partycrasher.rest import service
+from partycrasher.api.partycrasher import PartyCrasher
 
-rest_service.crasher.config.ElasticSearch.allow_delete_all = True
-application = rest_service.app
-app = rest_service.app
+application = service.app
+app = service.app
 app.debug = True
+
+service.crasher = (
+    PartyCrasher('lp/config_validator.py'))

@@ -643,11 +643,10 @@ def query_buckets(project=None, threshold=None):
 
     """
     assert threshold is not None
-    
     s = make_search(args=request.args,
-        threshold=threshold)
-    
-    threshold = crasher.report_threshold(s)
+        threshold=threshold,
+        project=project)
+    threshold = crasher.report_threshold(**s)
 
     return jsonify(threshold)
 
@@ -681,7 +680,6 @@ def delete_reports_no_project():
     else:
         return jsonify(error="Deleting all reports not enabled"), 403
 
-
 @app.route('/<project>/config')
 def get_project_config(project=None):
     """
@@ -708,42 +706,34 @@ def get_project_config(project=None):
 
     return jsonify(crasher)
 
+@app.route('/project/<project>')
+def view_project(project=None):
+    """
+    .. api-doc-order: 100
 
-# This route is not ready for release yet.
-if False:
-    @app.route('/<project>/config', methods=['PATCH'])
-    def update_project_config(project=None):
-        """
-        .. api-doc-order: 100.0
+    View project reports and buckets
+    ==============================
 
-        Set per-project configuration
-        =============================
+    ::
 
-        ::
+        GET /project/:project HTTP/1.1
 
-            PATCH /:project/config HTTP/1.1
+    ::
 
-        Data:
+        HTTP/1.1 200 OK
 
-        .. code-block:: json
+    .. code-block:: json
 
-            {
-                "default-threshold": 3.5
-            }
+        {
+        ...
+        }
 
-        ::
-
-            HTTP/1.1 200 OK
-
-        .. code-block:: json
-
-            {
-                "default-threshold": 3.5
-            }
-
-        """
-        raise NotImplementedError()
-
+    """
+    assert project is not None
+    s = make_search(args=request.args,
+        project=project)
+    project = crasher.report_project(**s)
+    return(jsonify(project))
 
 @app.route('/search',
            defaults={'project': None},
@@ -823,21 +813,18 @@ def search(project):
     if project == '*':
         project = None
     
-    if order is not None:
+    if request.args.get('order') is not None:
         raise NotImplementedError("sort order feature was deimpemented!")
         if not (order == "asc" or order == "desc"):
             raise BadRequest('Couldn\'t understand sort order. Should be'
                             'asc or desc.')
 
-    if sort is not None:
+    if request.args.get('sort') is not None:
         raise NotImplementedError("sort feature was deimpemented!")
     
     s = make_search(request.args, project=project)
 
-    r = crasher.report_search(s)
-
-    page = r.page(from_=from_, size=size)
-    return jsonify_resource(page)
+    return jsonify_resource(crasher.report_search(**s))
 
 #############################################################################
 #                                 Utilities                                 #
@@ -930,9 +917,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-else:
-    try:
-        crasher = PartyCrasher('config.py')
-    except IOError:
-        print("Couldn't load config file, wont work in gunicorn",
-              file=sys.stderr)

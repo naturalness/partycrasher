@@ -21,6 +21,14 @@ from elasticsearch import Elasticsearch, NotFoundError, TransportError, RequestE
 
 es_store_instance = None
 
+import logging
+logger = logging.getLogger(__name__)
+error = logger.error
+warn = logger.warn
+info = logger.info
+debug = logger.debug
+
+
 def es_store():
     if es_store_instance is None:
         return ESStore()
@@ -40,6 +48,8 @@ class ESStore(object):
             es_store_instance = self
         else:
             raise RuntimeError("Doesn't support multiple ESStore instances.")
+        eslogger = logging.getLogger('elasticsearch')
+        eslogger.setLevel(logging.INFO)
     
     @property
     def es_servers(self):

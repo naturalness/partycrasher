@@ -51,14 +51,14 @@ class PCDict(MutableMapping):
     def __init__(self, *args, **kwargs):
         if (len(args) == 1):
             assert len(kwargs) == 0
-            if isinstance(args[0], self.__class__):
+            if isinstance(args[0], PCDict):
                 self._d = copy(args[0]._d)
                 return self
             elif isinstance(args[0], dict):
                 d = dict(args[0])
             else:
                 raise TypeError("Expected %s but got %s" % 
-                                (self.__class__, repr(args[0])))
+                                (PCDict, repr(args[0])))
         d = dict(*args, **kwargs)
         self._d = Dict()
         for k, v in d.items():

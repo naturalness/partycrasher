@@ -22,18 +22,17 @@ from six import text_type, string_types
 from partycrasher.project import Project
 from partycrasher.api.thresholds import Thresholds
 from partycrasher.api.report_threshold import BucketSearch
-from partycrasher.api.search import Search
+from partycrasher.api.search import Search, View
 
 class ReportProject(Project):
     """
     API object representing a particular project inside a search context.
     """
     def __init__(self, search, project, from_=None, size=None):
-        super(ReportProject, self).__init__(result)
-        search.project = project
+        super(ReportProject, self).__init__(project)
+        search['project'] = project
         self.reports = View(
-            search.context,
-            search,
+            search=search,
             from_=from_,
             size=size
             )

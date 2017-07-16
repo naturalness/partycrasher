@@ -104,8 +104,7 @@ class BadDateError(PartyCrasherError):
     http_code = 400
     
     def __init__(self, date, **kwargs):
-        if message is None:
-            message = ('Could not understand date format for '
+        message = ('Could not understand date format for '
                        '%s.' % repr(date))
         super(PartyCrasherError, self).__init__(message, **kwargs)
         self.date=date

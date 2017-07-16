@@ -55,9 +55,9 @@ class Bucketing:
 class ElasticSearch:
     hosts = "localhost:9200"
 
-    allow_delete_all = False
+    allow_delete_all = True
 
-    indexbase = "crashes"
+    indexbase = "pc_validation"
     # This is passed directly to ElasticSearch on index creation,
     # see https://www.elastic.co/guide/en/elasticsearch/reference/5.1/indices-create-index.html
     number_of_shards = 1 

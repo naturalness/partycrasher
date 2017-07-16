@@ -63,4 +63,4 @@ class Context(object):
         self.default_threshold = Threshold(
             self.config.Bucketing.default_threshold)
         self.search = self.index.search
-    
+        self.allow_delete_all = self.config.ElasticSearch.allow_delete_all

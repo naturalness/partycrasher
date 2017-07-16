@@ -36,7 +36,7 @@ class BucketPage(Page):
                  buckets,
                  **kwargs):
         super(Page, self).__init__(**kwargs)
-        self.buckets = buckets
+        self['buckets'] = buckets
         
     @property
     def results(self):
@@ -109,7 +109,7 @@ class BucketSearch(Search):
         
         #debug(pretty(query))
         response = self.context.search(body=query)
-        debug(pretty(response))
+        #debug(pretty(response))
 
         # Oh, ElasticSearch! You and your verbose responses!
         top_buckets = (response['aggregations']
@@ -152,8 +152,4 @@ class ReportThreshold(Threshold):
             )
     
     def restify(self):
-        d = {
-            'buckets': self.buckets.page,
-            'search': self.buckets.search,
-        }
-        return d
+        return self.buckets.page

@@ -41,8 +41,9 @@ class Projects(Mapping):
     def get_projects(self):
         """Get project tree."""
         r = Results(self.search, size=0)
-        projects = {p: ReportProject(search, p) 
-                    for p in r.counts['project'].keys()}
+        projects = {p:
+            ReportProject(self.search, p) 
+            for p in r.counts['project'].keys()}
         return projects
     
     def load(self):

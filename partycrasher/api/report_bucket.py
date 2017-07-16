@@ -20,6 +20,7 @@
 from __future__ import print_function
 
 from six import string_types
+from copy import copy
 
 import logging
 logger = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ from partycrasher.bucket import Bucket
 from partycrasher.threshold import Threshold
 from partycrasher.api.search import Page, Search, View
 from partycrasher.pc_dict import PCDict
+from partycrasher.crash import pretty
 
 class ReportBucketPage(Page):
     """Class representing a page of reports from a bucket or search."""
@@ -50,7 +52,7 @@ class ReportBucketSearch(Search):
         super(ReportBucketSearch, self).__init__(**kwargs)
         assert self['bucket_id'] is not None
         
-    def page(from_=None, size=None):
+    def page(self, from_=None, size=None):
         """
         Returns a page of crashes for the given bucket.
         """
@@ -60,7 +62,7 @@ class ReportBucketSearch(Search):
         raw = self.run(query)
         
         with open('bucket_response', 'w') as debug_file:
-            print(json.dumps(raw, indent=2), file=debug_file)
+            print(pretty(raw), file=debug_file)
         
         reports_found = raw['hits']['total']
 
@@ -84,14 +86,10 @@ class ReportBucket(Bucket):
         search['threshold'] = self.threshold
         search = ReportBucketSearch(search=search)
         self.reports = ReportBucketView(
-            search.context,
-            search,
+            search=search,
             from_=from_,
             size=size
             )
     
     def restify(self):
-        d = dict(_d)
-        d['reports'] = self.reports.page
-        d['search'] = self.reports.page
-        return d
+        return self.reports.page

@@ -33,11 +33,11 @@ def maybe_threshold(v):
     else:
         return v
 
-def maybe_bucket(v):
-    if v is not None:
-        return Bucket(v)
+def maybe_bucket(v, t):
+    if (v is not None) and (t is not None):
+        return Bucket(id=v, threshold=t)
     else:
-        return v
+        return None
 
 def maybe_project(v):
     if v is not None:
@@ -63,9 +63,10 @@ def maybe_date(v):
     elif isinstance(v, datetime):
         return v
     elif isinstance(v, string_types):
-        d = parse_date(v)
+        d = parse_date(v.replace('-', ' '))
         if d is None:
             raise BadDateError(v)
+        return d
     else:
         return v
 

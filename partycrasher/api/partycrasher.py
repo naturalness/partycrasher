@@ -20,12 +20,14 @@
 import partycrasher
 from partycrasher.context import Context
 from partycrasher.bucket import Bucket
+from partycrasher.crash import pretty
 
 # These imports are all the public API
 from partycrasher.api.report import Report
 from partycrasher.api.search import Search, Results
 from partycrasher.api.report_bucket import ReportBucket
 from partycrasher.api.report_threshold import ReportThreshold
+from partycrasher.api.report_project import ReportProject
 from partycrasher.api.projects import Projects
 from partycrasher.api.thresholds import Thresholds
 
@@ -64,14 +66,33 @@ class PartyCrasher(object):
         assert bucket_id is not None
         search = Search(context=self.context, **kwargs)
         bucket = Bucket(threshold=threshold, id=bucket_id)
-        return ReportBucket(search, bucket, from_, size)
+        return ReportBucket(search=search, result=bucket, from_=from_, size=size)
     
     def report_threshold(self,
                          threshold,
-                         from_=None, size=None):
-        search = Search(context=self.context, **kwargs)
-        return ReportThreshold(search, threshold, from_, size)
+                         from_=None, size=None,
+                         **kwargs):
+        search = Search(context=self.context, 
+                        threshold=threshold,
+                        **kwargs)
+        return ReportThreshold(
+            search=search, 
+            result=threshold, 
+            from_=from_, size=size)
     
+    def report_project(self,
+                         project,
+                         from_=None, size=None,
+                         **kwargs):
+        search = Search(context=self.context, 
+                        project=project,
+                        **kwargs)
+        return ReportProject(
+            search=search, 
+            project=project, 
+            from_=from_, size=size)
+    
+
     def bucket_search(self, threshold, **kwargs):
         """Factory for groups of report buckets."""
         threshold = Threshold(threshold)
@@ -117,6 +138,15 @@ class PartyCrasher(object):
             'config': self.config,
             'reports': self.reports,
             'version': partycrasher.__version__,
-            'store': self.es_store
+            'store': self.es_store,
+            'default_threshold': self.context.default_threshold
             }
         return d
+
+    @property
+    def allow_delete_all(self):
+        return self.context.allow_delete_all
+    
+    def delete_and_recreate_index(self):
+        return self.context.index.delete_and_recreate_index()
+    

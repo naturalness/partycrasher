@@ -19,13 +19,7 @@
 from decimal import Decimal, Context
 from logging import debug, error, warning, info
 
-# Python 2/3 non-sense.
-try:
-    unicode
-except NameError:
-    StringTypes = (str,)
-else:
-    StringTypes = (str, unicode)
+from six import string_types, text_type
 
 class Threshold(object):
     """
@@ -40,8 +34,12 @@ class Threshold(object):
             # Clone the other Threshold.
             self._value = value._value
             return
-        elif isinstance(value, StringTypes):
+        elif isinstance(value, string_types):
             value = value.replace('_', '.')
+        elif isinstance(value, float):
+            pass
+        else:
+            raise TypeError("Expected type %s but got %s" % (text_type, repr(value)))
 
         self._value = Decimal(value).quantize(Decimal('0.1'))
 
