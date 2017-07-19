@@ -1,0 +1,160 @@
+@-ms-viewport     { width: device-width; }
+@-o-viewport      { width: device-width; }
+@viewport         { width: device-width; }
+
+.browsehappy {
+  margin: 0.2em 0;
+  background: #ccc;
+  color: #000;
+  padding: 0.2em 0;
+}
+
+/* Colors ------------------------------------------------------------------- */
+
+:root {
+    --light: #FFEBC2;
+    --mlight: #FFAB00;
+    --medium: #FFC349;
+    --mdark: #BC7F00;
+    --dark: #5C3E00;
+}
+
+/* General style ------------------------------------------------------------ */
+
+input, select, button {
+    border: 1px solid var(--mdark);
+    border-radius: 0.5em;
+    line-height: 1.5;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    background: white;
+    color: black;
+}
+
+input[type=range] {
+    margin: 0;
+}
+
+input.date {
+    width: 7em;
+}
+
+.labeled-input>* {
+    vertical-align: middle;
+}
+
+/* Page layout -------------------------------------------------------------- */
+
+body {
+  padding: 0;
+  margin: 0;
+  background: var(--light);
+  color: black;
+  font-family: DejaVu Sans,Helvetica Neue,Helvetica,sans-serif; 
+}
+
+body>header {
+  border: 1px solid var(--medium);
+  background: var(--medium);
+  width: 100%;
+  position: fixed;
+  top: 0;
+}
+
+.row {
+  display: block;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.row>* {
+  margin: 0.5em;
+}
+
+.row>*:first-child {
+  margin-left: 1em;
+}
+
+.row>*:last-child {
+  margin-right: 1em;
+}
+
+body>header .logo {
+}
+
+body>header a {
+  font-size: xx-large;
+  color: black;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+header input.q {
+  display: block;
+  flex-grow: 1;
+}
+
+body>main {
+  margin-top: 6em;
+  padding: 1em;
+}
+
+pc-threshold-select {
+    display: inline-block;
+    height: 100%;
+}
+
+/* Remove border top when colspan is explicitly provided. */
+.table > tbody > tr > td[colspan] {
+  border: 0;
+}
+
+/* Make the disclosure buttons for the JSON tree widget thing. */
+.disclosure:not(:checked) ~ .disclosure-contents {
+  display: none;
+}
+.disclosure:not(:checked) ~ .disclosure-button .disclosure-hide {
+  display: none;
+}
+.disclosure:checked ~ .disclosure-button .disclosure-show {
+  display: none;
+}
+
+input[type=checkbox].disclosure {
+  display: none;
+}
+
+.disclosure ~ .disclosure-button {
+  cursor: pointer;
+}
+
+.monospace {
+  font-family: monospace;
+}
+
+.dateparent {
+  display: inline-block;
+  position: relative;
+  height: 0;
+}
+
+.datetip {
+  display: none;
+  z-index: 10;
+  border: 2px solid black;
+  position: absolute;
+  padding: 0.5em;
+  left: 0px;
+  bottom: 0.5em;
+  background: white;
+  white-space: nowrap;
+}
+
+.filter-set {
+    max-height: 1.5em;
+    max-width: 1.5em;
+    width: auto;
+    height: auto;
+    overflow: hidden;
+}

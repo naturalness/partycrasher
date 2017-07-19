@@ -1,0 +1,14 @@
+{
+  "name": "partycrasher",
+  "version": "1.0.0",
+  "description": "Crash explorer",
+  "main": "index.html",
+  "license": "GPL-3.0+",
+  "dependencies": {
+    "angular": "^1.5.0",
+    "angular-route": "^1.5.0",
+    "genericons-neue": "^4.0.5",
+    "lodash": "^4.17.4",
+    "moment": "^2.18.1"
+  }
+}

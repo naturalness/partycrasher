@@ -47,6 +47,10 @@ class PartyCrasher(object):
     @property
     def config(self):
         return self.context.config
+    
+    @property
+    def default_threshold(self):
+        return self.context.default_threshold
         
     def report(self, crash, project=None, dry_run=True, explain=False):
         """Factory for reports."""

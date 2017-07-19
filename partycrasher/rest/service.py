@@ -61,7 +61,7 @@ from partycrasher.pc_exceptions import (
 from partycrasher.crash import pretty
 
 # Create and customize the Flask app.
-app = Flask('partycrasher', template_folder='ngapp/app')
+app = Flask('partycrasher', template_folder='../ui/app')
 CORS(app)
 
 app.json_encoder = ResourceEncoder
@@ -126,8 +126,8 @@ def on_crasher_crash(ex):
     response = jsonify(details)
     if hasattr(ex, 'http_code'):
         response.status_code = ex.http_code
-    elif 'code' in ex.__dict__:
-        reponse.status_code = ex.code
+    elif hasattr(ex, 'code'):
+        response.status_code = ex.code
     else:
         response.status_code = 500
     return response
@@ -191,28 +191,39 @@ def root():
 
 @app.route('/ui/bower_components/<path:filename>', methods=['GET'])
 def bower_components(filename):
-    return send_from_directory(relative('ngapp/bower_components/'), filename)
+    return send_from_directory(relative('ui/bower_components/'), filename)
+
+@app.route('/ui/node_modules/<path:filename>', methods=['GET'])
+def node_modules(filename):
+    return send_from_directory(relative('ui/node_modules/'), filename)
 
 
 @app.route('/ui/<path:filename>', methods=['GET'])
 @app.route('/ui/')
 def home(filename=None):
-    if filename and os.path.exists(relative('ngapp/app/', filename)):
-        # It's a static file.
-        return send_from_directory(relative('ngapp/app/'), filename)
+    context = dict(
+        bower=full_url_for('home') + 'bower_components',
+        node_modules=full_url_for('home') + 'node_modules',
+        project_names=[proj.name for proj in crasher.projects],
+        thresholds=[str(thresh) for thresh in crasher.thresholds],
+        basehref=full_url_for('home'),
+        restbase=full_url_for('root'),
+        default_threshold=str(crasher.default_threshold)
+    )
+    if filename and os.path.exists(relative('ui/app/', filename)):
+        if 'main.css' in filename:
+            css = current_app.response_class(
+                render_template(filename, **context),
+                mimetype="text/css")
+            return css
+        else:
+            # It's a static file.
+            return send_from_directory(relative('ui/app/'), filename)
     elif filename and 'views/' in filename and filename.endswith('.html'):
         # 404 on missing view...
         # If this is not here, Angular could try to load the index page in
         # an infinite loop. Which is bad.
         return '', 404
-
-    context = dict(
-        bower=full_url_for('home') + 'bower_components',
-        project_names=[proj.name for proj in crasher.get_projects()],
-        thresholds=[str(thresh) for thresh in crasher.thresholds],
-        basehref=full_url_for('home'),
-        restbase=full_url_for('root')
-    )
 
     # Otherwise, it's a route in the web app.
     return render_template('index.html', **context)
@@ -865,7 +876,11 @@ def relative(*args):
     """
     Return a path relative to the directory containing this very script!
     """
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), *args)
+    base = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+    DEBUG("Basedir is %s" % base)
+    return os.path.join(base, *args)
 
 def main():
     global crasher

@@ -1,0 +1,7 @@
+{
+  "name": "partycrasher",
+  "version": "1.0.0",
+  "dependencies": {
+    "angular-named-route": "^3.0.0"
+  }
+}

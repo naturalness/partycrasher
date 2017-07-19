@@ -1,0 +1,57 @@
+<!doctype html>
+<html ng-app="PartyCrasherApp">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible"  content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>🎉💥 PartyCrasher</title>
+
+    <base href="%%basehref%%">
+
+    <link rel="stylesheet" href="styles/main.css">
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <script src="%%node_modules%%/angular/angular.js"></script>
+    <script src="%%node_modules%%/angular-route/angular-route.js"></script>
+    <script src="%%bower%%/angular-named-route/dist/angular-named-route.js"></script>
+    <script src="%%node_modules%%/lodash/lodash.js"></script>
+    <script src="%%node_modules%%/moment/moment.js"></script>
+
+    <script src="scripts/app.js"></script>
+    <script src="scripts/controllers/party-crasher-controller.js"></script>
+    <script src="scripts/directives/nav-bar.js"></script>
+    <script src="scripts/directives/pc-tree.js"></script>
+    <script src="scripts/directives/pc-summary.js"></script>
+    <script src="scripts/directives/pc-threshold-select.js"></script>
+    <script src="scripts/directives/pc-bucket-summary.js"></script>
+    <script src="scripts/directives/mini-trace.js"></script>
+    <script src="scripts/directives/date-tip.js"></script>
+    <script src="scripts/filters/from-now.js"></script>
+    <script src="scripts/filters/ui-url.js"></script>
+    <script src="scripts/filters/unique.js"></script>
+    <script src="scripts/models/sample-bucket.js"></script>
+    <script src="scripts/models/stack-frame.js"></script>
+    <script src="scripts/models/crash-report.js"></script>
+    <script src="scripts/models/bucket.js"></script>
+    <script src="scripts/services/partycrasher.js"></script>
+    <script src="scripts/services/property-by-path.js"></script>
+    <script src="scripts/services/pc-search.js"></script>
+
+    <script type="text/javascript">
+      angular.module('PartyCrasherApp')
+        .constant('BASE_HREF', "%%basehref%%")
+        .constant('REST_BASE', "%%restbase%%")
+        .constant('DEFAULT_THRESHOLD', '%%default_threshold%%')
+        .constant('THRESHOLDS', %% thresholds|tojson|safe %%)
+        .constant('PROJECT_NAMES', %% project_names|tojson|safe %%)
+        .constant('COG_IMAGE', "%%node_modules%%/genericons-neue/svg-min/cog.svg")
+    </script>
+  </head>
+  <body ng-controller="PartyCrasherController">
+    <header pc-nav-bar>
+    </header>
+  </body>
+</html>

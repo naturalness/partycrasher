@@ -8,7 +8,7 @@
  *  'path'
  *
  */
-angular.module('propertyByPath', [])
+angular.module('PartyCrasherApp')
 .constant('propertyByPath', function (root, ...fullPath) {
   return propertyByPath(root, fullPath);
 

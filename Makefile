@@ -23,10 +23,10 @@ help: ## Prints this message and exits
 
 .PHONY: start
 start: ## Starts the server locally (does not use Docker).
-	python partycrasher/rest_service.py \
+	python partycrasher/rest/service.py \
 		--port=$(EXTERNAL_PORT) \
 		--debug \
-		--allow-delete-all
+		--config=config.py
 
 .PHONY: gunicorn
 gunicorn: ## Starts the server locally (does not use Docker).
@@ -39,7 +39,7 @@ gunicorn: ## Starts the server locally (does not use Docker).
 		--timeout 60 \
 		--pid gunicorn.pid \
 		--capture-output \
-		partycrasher.rest_service_validator
+		partycrasher.rest.validator
 
 .PHONY: build
 build: ## Builds the `partycrasher` Docker image

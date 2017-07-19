@@ -45,15 +45,12 @@ class Thresholds(Mapping):
         return thresholds
     
     def __getitem__(self, key):
-        self.load()
         return self._d.__getitem__(key)
     
     def __iter__(self):
-        self.load()
         return self._d.__iter__()
 
     def __len__(self):
-        self.load()
         return self._d.__len__()
     
     def restify(self):
