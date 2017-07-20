@@ -1,0 +1,37 @@
+<div 
+  class="labeled-input selectator"
+  id="{{field}}"
+  ng-class="{open: drop, closed: !drop}"
+  ng-click="forceFocus()"
+>
+  <input class="selectator-stator"
+       id="{{field}}_stator"
+       ng-focus="drop=true"
+       ng-blur="checkFocus()"
+       readonly=""
+       value="{{field}} ({{number_selected}})"
+
+  />
+</div>
+<fieldset
+  class="selectator-options dropdown"
+  ng-show="drop"
+  ng-click="forceFocus()"
+>
+    <div ng-repeat="optor in optors"
+      class="selectator-option" 
+    >
+      <input
+        type="checkbox"
+        id="{{optor.id}}"
+        name="{{optor.name}}"
+        ng-model="optor.selected"
+        ng-focus="drop=true"
+        ng-blur="checkFocus()"
+        ng-click="$event.stopPropagation()"
+        />
+      <label 
+        for="{{optor.id}}"
+      >{{optor.name}}</label>
+    </div>
+</fieldset>

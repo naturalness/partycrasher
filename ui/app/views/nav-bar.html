@@ -1,62 +1,50 @@
-      <form class="">
-        <div class="row">
-          <div class="logo">
-            <a href="%%basehref%%">🎉💥 PartyCrasher </a>
-          </div>
-          <input type="search" class="q" name="q" ng-model="q"/>
-        </div>
-        <div class="row">
-          <div class="labeled-input">
-            <label for="report_type">Type</label>
-            <select name="report_type" id="report_type" ng-model="report_type">
-                <option value="*">All types</option>
-                <option disabled="" value=" — "> — </option>
-            </select>
-          </div>
-          <div class="labeled-input">
-            <label for="project">Project</label>
-            <select name="project" id="project" ng-model="project">
-                <option value="*">All projects</option>
-                <option disabled="" value=" — "> — </option>
-            </select>
-          </div>
-          <div class="labeled-input">
-            <label for="since">Since</label>
-            <input name="since" class="date" id="since" ng-model="since"/>
-          </div>
-          <div class="labeled-input">
-            <label for="until">Until</label>
-            <input name="until" class="date" id="until" ng-model="until"/>
-          </div>
-          <div class="labeled-input">
-            <label for="">Bucket</label>
-            <input name="bucket" class="date" id="bucket"/>
-          </div>
-          <img class="filter-set" alt="Add or remove filters"
-           src="{{COG_IMAGE}}"/>
-        </div>
-        <div class="row">
-          <div class="labeled-input">
-            <label for="project">Group by</label>
-            <select name="grouping" id="grouping" ng-model="grouping">
-              <option value="">Report (no grouping)</option>
-              <option value="bucket">Automatic bucket</option>
-              <option disabled="" value=" — "> — </option>
-            </select>
-            <pc-threshold-select 
-              threshold="threshold" 
-              ng-show='grouping == "bucket"'
-              class="labeled-input"
-            >
-            </pc-threshold-select>
-          </div>
-          <img class="filter-set" alt="Add or remove grouping options"
-           src="{{COG_IMAGE}}"/>
-        </div>
-      </form>
-    
-    <main class="container-fluid">
-          <!--[if lte IE 8]>
-            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
-          <[endif]-->
-    </main>
+<form class="">
+  <div class="row">
+    <div class="logo">
+      <a href="%%basehref%%">🎉💥 PartyCrasher </a>
+    </div>
+    <div class="labeled-input q">
+      <input type="search" name="q" ng-model="q"/>
+    </div>
+  </div>
+  <div class="row filters">
+    <div class="row-label">
+      Filter by
+    </div>
+    <selectator 
+      field="type"
+      value="report_type"
+      options="example_types"
+    ></selectator>
+    <selectator 
+      field="project"
+      value="project"
+      options="example_projects"
+    ></selectator>
+    <datey field="since" value="since"></datey>
+    <datey field="until" value="until"></datey>
+    <div class="labeled-input">
+      <label for="">bucket</label>
+      <input name="bucket" id="bucket"/>
+    </div>
+    <a href="#" class="filter-config">Add/remove filters</a>
+  </div>
+  <div class="row">
+    <label for="grouping" class="row-label">Group by</label>
+    <div class="labeled-input">
+      <select name="grouping" id="grouping" ng-model="grouping">
+        <option value="">Report (no grouping)</option>
+        <option value="bucket">Automatic bucket</option>
+        <option disabled="" value=" — "> — </option>
+      </select>
+      <pc-threshold-select 
+        threshold="threshold" 
+        ng-show='grouping == "bucket"'
+        class="sub-labeled"
+      >
+      </pc-threshold-select>
+    </div>
+    <a href="#" class="filter-config">Add/remove groupings</a>
+  </div>
+</form>
+

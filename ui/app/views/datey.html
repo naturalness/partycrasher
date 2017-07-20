@@ -1,0 +1,23 @@
+<div 
+  class="labeled-input date"
+  ng-class="{open: drop, closed: !drop}"
+  id="{{field}}_datey_div"
+>
+  <label 
+    for="{{field}}"
+  >{{field}}</label>
+  <input
+    name="{{field}}"
+    id="{{field}}"
+    ng-model="value"
+    ng-focus="drop=true"
+    ng-blur="drop=false"
+  />
+</div>
+<div class="datey-tips dropdown" ng-show="drop">
+  Examples:<br/>
+  MM/DD/YY<br/>
+  2 hours ago<br/>
+  Fri, 12 Dec 2014 10:55:50<br/>
+  2016
+</div>

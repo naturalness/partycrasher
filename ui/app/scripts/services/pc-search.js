@@ -21,18 +21,18 @@ angular.module('PartyCrasherApp')
 
   function read_location() {
     // update shared state from current url
-    var pathReportType = null;
-    var pathProject = null;
+    var pathReportType = [];
+    var pathProject = [];
     var pathThreshold = null;
     var pathBucket = null;
     var pathGrouping = null;
     
     var path = $location.path().split('/');
     for (var i = 1; i < path.length; i++) {
-      if (path[i] == "") {
+      if (path[i] == "" | path[i] == "project") {
         null;
       } else if (path[i-1] == 'project') {
-        pathProject = path[i];
+        pathProject = path[i].split(',');
       } else if (!isNaN(parseFloat(path[i-1]))) {
         pathBucket = path[i];
       } else if (!isNaN(parseFloat(path[i]))) {
@@ -42,7 +42,7 @@ angular.module('PartyCrasherApp')
         // This must be the last else if
         pathReportType = path[i];
       } else {
-        throw "Unknown path information.";
+        throw `Unknown path information ${path[i-1]}/${path[i]}`;
       }
     }
     state.q = $location.search().q || null;
@@ -68,8 +68,13 @@ angular.module('PartyCrasherApp')
   function write_location() {
     // update current url from shared state
     // console.log('Changing location...');
-    var path = `/${state.report_type}/`;
-    if (state.project == "*") {
+    path = "/";
+    if (state.report_type.length == 0) {
+      path += `*/`;
+    } else {
+      path += `${state.report_type}/`;
+    }
+    if (state.project == "*" ||  state.project.length == 0) {
       null;
     } else {
       path += `project/${state.project}/`;
@@ -106,7 +111,7 @@ angular.module('PartyCrasherApp')
   $rootScope.$on('$locationChangeSuccess', came);
   
   function update_scope(scope) {
-    for (var k in state) {
+    for (let k of Object.keys(state)) {
       scope[k] = state[k];
 //       scope.$digest();
     }
@@ -130,7 +135,7 @@ angular.module('PartyCrasherApp')
       var deregister = $rootScope.$on('search-changed', function() {
         update_scope(scope);
         });
-      for (var k in state) {
+      for (let k of Object.keys(state)) {
         scope[k] = state[k];
         scope.$watch(k, make_watcher(k));
       }
