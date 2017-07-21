@@ -218,7 +218,9 @@ class RestServiceTestCase(unittest.TestCase):
         database_id = str(uuid.uuid4())
         response = requests.post(self.path_to('reports'),
                                  json={'database_id': database_id,
+                                       'type': 'crash',
                                        'project': 'alan_parsons',
+                                       'type': 'crash',
                                        'date': datetime.datetime.utcnow().isoformat()})
 
         report_url = self.path_to('alan_parsons', 'reports', database_id)
@@ -250,6 +252,7 @@ class RestServiceTestCase(unittest.TestCase):
         # Make a new, unique database ID.
         database_id = str(uuid.uuid4())
         response = requests.post(url, json={'database_id': database_id,
+                                            'type': 'crash',
                                             'date': '2017-01-05T08:18:45'})
 
         assert response.status_code == 201
@@ -273,6 +276,7 @@ class RestServiceTestCase(unittest.TestCase):
         database_id = str(uuid.uuid4())
         report = {
             'database_id': database_id,
+            'type': 'crash',
             'platform': 'xbone',
             'date': '2017-01-05T08:18:45'
         }
@@ -314,6 +318,7 @@ class RestServiceTestCase(unittest.TestCase):
         database_id = str(uuid.uuid4())
         response = requests.post(create_url,
                                  json={'database_id': database_id,
+                                       'type': 'crash',
                                        'project': 'manhattan'})
 
         # The request should have failed.
@@ -342,6 +347,7 @@ class RestServiceTestCase(unittest.TestCase):
         database_id = str(uuid.uuid4())
         response = requests.post(create_url,
                                  json={'database_id': database_id,
+                                       'type': 'crash',
                                        'dmi.decode': 'bogus'})
 
         # The request should have failed.
@@ -374,6 +380,7 @@ class RestServiceTestCase(unittest.TestCase):
         report = {
             'database_id': database_id,
             'platform': 'xbone',
+            'type': 'crash',
             'date': '2017-01-05T08:18:45'
         }
         response = requests.post(project_1, json=report)
@@ -410,10 +417,13 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(url,
                                  json=[
                                      {'database_id': database_id_a,
+                                      'type': 'crash',
                                       'date': '2017-01-05T08:18:45'},
                                      {'database_id': database_id_b,
+                                      'type': 'crash',
                                       'date': '2017-01-05T08:18:45'},
                                      {'database_id': database_id_c,
+                                      'type': 'crash',
                                       'date': '2017-01-05T08:18:45'},
                                  ])
 
@@ -550,6 +560,7 @@ class RestServiceTestCase(unittest.TestCase):
         # Insert a new crash with a unique database ID.
         database_id = str(uuid.uuid4())
         response = requests.post(create_url, json={'database_id': database_id,
+                                                   'type': 'crash',
                                                    'date': '2017-03-05T08:18:45'})
         assert response.status_code == 201
 
@@ -578,7 +589,9 @@ class RestServiceTestCase(unittest.TestCase):
         assert is_cross_origin_accessible(url)
 
         database_id = str(uuid.uuid4())
-        response = requests.post(url, json={'database_id': database_id},
+        response = requests.post(url, json={'database_id': database_id,
+                                                   'type': 'crash',
+                                            },
                                  params={'dryrun': True})
 
         # Things go dramatically wrong if you don't wait for a bit...
@@ -611,11 +624,13 @@ class RestServiceTestCase(unittest.TestCase):
         tfidf_trickery = str(uuid.uuid4())
 
         fake_true_date = [{'database_id': str(uuid.uuid4()),
+                            'type': 'crash',
                            'tfidf_trickery': tfidf_trickery,
                            'date': '2017-01-05T08:18:45'}
                           for _ in xrange(5)]
         # Generate a bunch of FAKE data.
         fake_false_data = [{'database_id': str(uuid.uuid4()),
+                            'type': 'crash',
                             'tfidf_trickery':  str(uuid.uuid4()),
                             'date': '2017-01-05T08:18:45'}
                            for _ in xrange(10)]
@@ -668,12 +683,15 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(self.path_to(project, 'reports'),
                                  json=[
                                      {'database_id': database_id_a,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'date': '2017-01-05T08:18:45.959547'},
                                      {'database_id': database_id_b,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'date': '2017-02-05T08:18:45.959547'},
                                      {'database_id': database_id_c,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'date': '2017-03-05T08:18:45.959547'}
                                  ])
@@ -683,6 +701,7 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(self.path_to('manhattan', 'reports'),
                                  json={
                                      'database_id': database_id_weirdo,
+                                     'type': 'crash',
                                      'tfidf_trickery': tfidf_trickery,
                                      'date': '2017-04-05T08:18:45.959547'
                                  })
@@ -748,6 +767,7 @@ class RestServiceTestCase(unittest.TestCase):
         # at least one bucket.
         response = requests.post(self.path_to('alan_parsons', 'reports'),
                                  json=[{'database_id': str(uuid.uuid4()),
+                                        'type': 'crash',
                                         'date': datetime.datetime.utcnow().isoformat(),
                                         }])
         assert response.status_code == 201
@@ -766,6 +786,7 @@ class RestServiceTestCase(unittest.TestCase):
         """
         response = requests.post(self.path_to('alan_parsons', 'reports'),
                                  json=[{'database_id': str(uuid.uuid4()),
+                                        'type': 'crash',
                                         'date': datetime.datetime.utcnow().isoformat(),
                                         }])
         response = requests.get(self.path_to('alan_parsons', 'config'))
@@ -790,12 +811,15 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(self.path_to(project, 'reports'),
                                  json=[
                                      {'database_id': database_id_a,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'date' : '2016-01-15T00:00:00Z'},
                                      {'database_id': database_id_b,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'date' : '2016-02-15T00:00:00Z'},
                                      {'database_id': database_id_c,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'date' : '2016-03-15T00:00:00Z'}])
         assert response.status_code == 201
@@ -886,15 +910,19 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(self.path_to(project, 'reports'),
                                  json=[
                                      {'database_id': database_id_a,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'date' : '2016-01-15T00:00:00Z'},
                                      {'database_id': database_id_b,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'date' : '2016-02-15T00:00:00Z'},
                                      {'database_id': database_id_c,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'date' : '2016-03-15T00:00:00Z'}, 
                                      {'database_id': database_id_d,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery_2,
                                       'date' : '2016-03-15T00:00:00Z'}]) 
         assert response.status_code == 201
@@ -1001,14 +1029,17 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(url,
                                  json=[
                                      {'database_id': database_id_a,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
                                      {'database_id': database_id_b,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
                                      {'database_id': database_id_c,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
@@ -1026,14 +1057,17 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(url,
                                  json=[
                                      {'database_id': database_id_a,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
                                      {'database_id': database_id_b,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
                                      {'database_id': database_id_c,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
@@ -1059,14 +1093,17 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(url,
                                  json=[
                                      {'database_id': database_id_a,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
                                      {'database_id': database_id_b,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
                                      {'database_id': database_id_c,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
@@ -1083,14 +1120,17 @@ class RestServiceTestCase(unittest.TestCase):
         response = requests.post(url,
                                  json=[
                                      {'database_id': database_id_a,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
                                      {'database_id': database_id_b,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},
                                      {'database_id': database_id_c,
+                                      'type': 'crash',
                                       'tfidf_trickery': tfidf_trickery,
                                       'tfidf_trickery2': tfidf_trickery2,
                                       'date': '2017-01-05T08:18:45'},

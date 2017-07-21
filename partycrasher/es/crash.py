@@ -115,6 +115,8 @@ class ESCrash(Crash):
         try:
             assert "buckets" in self
             assert "date" in self
+            assert "type" in self
+            assert "project" in self
             body = self.elastify()
             response = self.index.create(
                                       doc_type='crash',

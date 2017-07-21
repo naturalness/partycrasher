@@ -21,6 +21,7 @@ Some sample crashes from Launchpad.
 """
 
 CRASH_1 = {
+    u'type': u'crash',
     u'ApportVersion': u'2.12-0ubuntu3',
     u'ExecutablePath': u'/usr/bin/compiz',
     u'InstallationDate': u'Installed on 2013-02-05 (194 days ago)',
@@ -133,6 +134,7 @@ CRASH_1 = {
 }
 
 CRASH_2 = {
+    u'type': u'crash',
     u'ApportVersion': u'2.4-0ubuntu5',
     u'ExecutablePath': u'/usr/lib/i386-linux-gnu/colord/colord-sane',
     u'NonfreeKernelModules': u'nvidia',
