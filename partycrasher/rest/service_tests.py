@@ -337,7 +337,7 @@ class RestServiceTestCase(unittest.TestCase):
 
     def test_bad_key_name(self):
         """
-        Add a single crash to the _wrong_ project.
+        Add a single crash with bad key name.
         It should fail without create a database entry.
         """
         create_url = self.path_to('alan_parsons', 'reports')
@@ -353,11 +353,61 @@ class RestServiceTestCase(unittest.TestCase):
         # The request should have failed.
         assert response.status_code == 400
         assert response.json().get('error') == 'BadKeyNameError'
-        assert 'period' in response.json().get('description'), response.text
+        assert 'alpha' in response.json().get('description'), response.text
 
         # Now try to fetch it from either project
         assert 404 == requests.get(self.path_to('alan_parsons', 'reports',
                                                database_id)).status_code
+
+    def test_bad_type_name(self):
+        """
+        Add a single crash with bad key name.
+        It should fail without create a database entry.
+        """
+        create_url = self.path_to('alan_parsons', 'reports')
+        assert is_cross_origin_accessible(create_url)
+
+        # Make a new, unique database ID.
+        database_id = str(uuid.uuid4())
+        response = requests.post(create_url,
+                                 json={'database_id': database_id,
+                                       'type': 'bad,type,name',
+                                       'dmi_decode': 'bogus'})
+
+        # The request should have failed.
+        assert response.status_code == 400
+        assert response.json().get('error') == 'BadTypeNameError'
+        assert 'alpha' in response.json().get('description'), response.text
+
+        # Now try to fetch it from either project
+        assert 404 == requests.get(self.path_to('alan_parsons', 'reports',
+                                               database_id)).status_code
+
+    def test_bad_project_name(self):
+        """
+        Add a single crash with bad project name.
+        It should fail without create a database entry.
+        """
+        create_url = self.path_to('reports')
+        assert is_cross_origin_accessible(create_url)
+
+        # Make a new, unique database ID.
+        database_id = str(uuid.uuid4())
+        response = requests.post(create_url,
+                                 json={'database_id': database_id,
+                                       'project': 'bad,project,name',
+                                       'type': 'crash',
+                                       'dmi_decode': 'bogus'})
+
+        # The request should have failed.
+        assert response.status_code == 400
+        assert response.json().get('error') == 'BadProjectNameError'
+        assert 'alpha' in response.json().get('description'), response.text
+
+        # Now try to fetch it from either project
+        assert 404 == requests.get(self.path_to('bad,project,name', 'reports',
+                                               database_id)).status_code
+
     def test_add_identical_ids_to_different_project(self):
         """
         Adds an IDENTICAL ID to two different projects project.
@@ -394,6 +444,8 @@ class RestServiceTestCase(unittest.TestCase):
 
         # After inserts, gotta wait...
         wait_for_elastic_search()
+        
+        report['project'] = 'manhattan'
 
         # Post the same crash, but in a different project.
         response = requests.post(project_2, json=report,

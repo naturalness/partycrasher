@@ -28,12 +28,17 @@ debug = logger.debug
 
 import sys
 from copy import copy, deepcopy
+import re
 
 from six import PY2, PY3
 if PY3:
     from collections.abc import MutableMapping, MutableSequence
 elif PY2:
     from collections import MutableMapping, MutableSequence
+    
+from partycrasher.pc_exceptions import BadKeyNameError
+
+good = re.compile('(\w+)$')
     
 class Dict(dict):
     pass
@@ -101,7 +106,13 @@ class PCDict(MutableMapping):
                     raise ValueError(key + " must be of type " +
                              self.canonical_fields[key]['type'].__name__)
         else:
+            m = good.match(key)
+            if m is None:
+                raise BadKeyNameError(key)
+            if m.group(1) != key:
+                raise BadKeyNameError(key)
             return self._d.__setitem__(key, val)
+        assert False
 
     def __delitem__(self, key):
         return self._d.__delitem__(key)

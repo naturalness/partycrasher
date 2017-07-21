@@ -391,6 +391,7 @@ def add_report(project=None):
         assert reports[0].explain == explain
         return jsonify_list(reports), success_code
     elif isinstance(report_or_reports, dict):
+        ERROR("project in crash? " + str("project" in report_or_reports))
         report = crasher.report(crash=report_or_reports, 
                                 project=project, 
                                 dry_run=dry_run)
@@ -556,7 +557,6 @@ def view_bucket(project=None, threshold=None, bucket_id=None):
     """
     assert bucket_id is not None
     assert threshold is not None
-    ERROR(request.args.getlist('threshold'))
     s = make_search(request.args, bucket_id=bucket_id, threshold=threshold)
 
     return jsonify_resource(crasher.report_bucket(**s))

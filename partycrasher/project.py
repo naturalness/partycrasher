@@ -18,6 +18,10 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from six import string_types
+import re
+from partycrasher.pc_exceptions import BadProjectNameError
+
+good = re.compile('(\w+)$')
 
 class Project(object):
     """
@@ -26,10 +30,19 @@ class Project(object):
     name = None
     
     def __init__(self, project):
-       if isinstance(project, Project):
-          self.name == project.name
-       elif isinstance(project, string_types):
-          self.name = project
+        if isinstance(project, Project):
+            self.name == project.name
+        elif isinstance(project, string_types):
+            self.name = project
+        elif isinstance(project, dict) and 'name' in project:
+            self.name = project['name']
+        else:
+            raise BadProjectNameError(repr(self.name))
+        m = good.match(self.name)
+        if m is None:
+            raise BadProjectNameError(self.name)
+        if m.group(1) != self.name:
+            raise BadProjectNameError(self.name)
     
     def __str__(self):
         return self.name

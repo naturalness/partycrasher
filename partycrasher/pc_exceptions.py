@@ -72,13 +72,31 @@ class BucketNotFoundError(PartyCrasherError):
         self.threshold = threshold
 
 class BadKeyNameError(PartyCrasherError):
-    """Invalid key-value pair in crash data. Keys cannot contain period '.' characters."""
+    """Invalid key-value pair in crash data. Keys must be alphanumeric (including underscores)."""
     http_code = 400
     
     def __init__(self, key_name, **kwargs):
         message = "Bad key name: %s" % key_name
         super(BadKeyNameError, self).__init__(message)
         self.key_name = key_name
+
+class BadProjectNameError(PartyCrasherError):
+    """Invalid project name in crash data. Project names must be alphanumeric (including underscores)."""
+    http_code = 400
+    
+    def __init__(self, project_name, **kwargs):
+        message = "Bad project name: %s" % project_name
+        super(BadProjectNameError, self).__init__(message)
+        self.project_name = project_name
+
+class BadTypeNameError(PartyCrasherError):
+    """Invalid type in crash data. Types must be alphanumeric (including underscores)."""
+    http_code = 400
+    
+    def __init__(self, type_name, **kwargs):
+        message = "Bad type name: %s" % type_name
+        super(BadTypeNameError, self).__init__(message)
+        self.type_name = type_name
 
 class ProjectMismatchError(PartyCrasherError):
     """Project specified in the API didn't match the project in the crash data. """
