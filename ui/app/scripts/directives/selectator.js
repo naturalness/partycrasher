@@ -59,10 +59,18 @@ angular.module('PartyCrasherApp')
       scope.drop=focused;
     }
     scope.checkFocus=() => {
-      $timeout(checkFocus, 100);
+      $timeout(checkFocus, 10);
     };
     scope.forceFocus=($event) => {
       element.find("input")[0].focus();
+    };
+    scope.buttonClick=($event) => {
+      if (scope.drop) {
+        element.find("input")[0].focus();
+        element.find("input")[0].blur();
+      } else {
+        element.find("input")[0].focus();
+      }
     };
   }
 

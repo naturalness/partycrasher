@@ -45,6 +45,14 @@ angular.module('PartyCrasherApp')
     scope.click=($event) =>{
       $event.stopPropagation();
     };
+    scope.buttonClick=($event) => {
+      if (scope.drop) {
+        element.find("input")[0].focus();
+        element.find("input")[0].blur();
+      } else {
+        element.find("input")[0].focus();
+      }
+    };
   }
 
   return {

@@ -2,7 +2,7 @@
   class="labeled-input selectator"
   id="{{field}}"
   ng-class="{open: drop, closed: !drop}"
-  ng-click="forceFocus()"
+  ng-click="buttonClick()"
 >
   <input class="selectator-stator"
        id="{{field}}_stator"
@@ -10,7 +10,7 @@
        ng-blur="checkFocus()"
        readonly=""
        value="{{field}} ({{number_selected}})"
-
+      ng-click="$event.stopPropagation();"
   />
 </div>
 <fieldset

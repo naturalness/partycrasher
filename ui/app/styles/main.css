@@ -29,12 +29,16 @@ input, select, button {
 
 input:focus {
     border: none;
-    outline: none;
+    outline: 1px dotted black;
+}
+
+input:focus ~ label {
+    background-color: var(--light) !important;
 }
 
 input[type=range] {
     margin: 0;
-    border: none;
+/*     border: none; */
     padding: 0;
     max-height: 1em;
 }
@@ -48,7 +52,7 @@ input[type=range] {
     padding-right: 0.5em;
     background: white;
     color: black;
-    height: 1.5em;
+    height: 1.75em;
 }
 
 .labeled-input.open {
@@ -114,7 +118,7 @@ select {
 
 .selectator {
     display: inline-block;
-    padding-right: 2em;
+    padding-right: 2.25em;
     background-size: 1.5em;
     background-repeat: no-repeat;
     background-position: right 0.25em center;
@@ -154,10 +158,13 @@ select {
     color: black;
 }
 
+.labeled-input input {
+    margin-top:1px;
+}
+
 .selectator-options {
     flex-direction: column;
     align-items: center;
-    width: 11.25em;
 }
 
 .datey-tips {
@@ -169,7 +176,7 @@ select {
 }
 
 .date {
-    padding-right: 2em;
+    padding-right: 2.25em;
     background-size: 1.5em;
     background-repeat: no-repeat;
     background-position: right 0.25em center;
