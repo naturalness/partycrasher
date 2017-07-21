@@ -1,7 +1,7 @@
 <form class="">
   <div class="row">
     <div class="logo">
-      <a href="%%basehref%%">🎉💥 PartyCrasher </a>
+      <a href="{{basehref}}">🎉💥 PartyCrasher </a>
     </div>
     <div class="labeled-input q">
       <input type="search" name="q" ng-model="q"/>
@@ -30,13 +30,15 @@
     <a href="#" class="filter-config">Add/remove filters</a>
   </div>
   <div class="row">
-    <label for="grouping" class="row-label">Group by</label>
+    <div class="row-label">Group by</div>
     <div class="labeled-input">
-      <select name="grouping" id="grouping" ng-model="grouping">
-        <option value="">Report (no grouping)</option>
-        <option value="bucket">Automatic bucket</option>
-        <option disabled="" value=" — "> — </option>
-      </select>
+      <radiotator
+        field="grouping"
+        value="grouping"
+        options="groupings"
+        names="grouping_names"
+        single
+      ></radiotator>
       <pc-threshold-select 
         threshold="threshold" 
         ng-show='grouping == "bucket"'

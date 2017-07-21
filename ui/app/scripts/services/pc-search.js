@@ -53,7 +53,7 @@ angular.module('PartyCrasherApp')
     state.from = $location.search().from;
     state.size = $location.search().size;
     state.grouping = pathGrouping ||
-      $location.search().grouping || "";
+      $location.search().grouping || "report";
     state.bucket = pathBucket 
       $location.search().bucket || null;
     state.threshold = pathThreshold

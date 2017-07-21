@@ -17,6 +17,10 @@ angular.module('PartyCrasherApp')
       'ABRT',
       'other'
       ];
+    scope.groupings = [
+      { value: "report", name: "report (no grouping)" },
+      { value: "bucket", name: "automatic bucket" },
+    ];
   }
   
   return {

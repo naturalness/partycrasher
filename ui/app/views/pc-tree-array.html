@@ -1,10 +1,15 @@
-<input id="disclosure-{{ ::$id }}" type="checkbox" class="disclosure">
-<label class="disclosure-button btn btn-primary" for="disclosure-{{ ::$id }}">
-   <span class="disclosure-show">Show more</span>
-   <span class="disclosure-hide">Hide</span>
-</label>
-<ol class="disclosure-contents dl-horizontal">
-  <li ng-repeat="value in ::value">
-    <pc-tree value="value" />
-  </dt>
-</span>
+<div class="disclosure-containment">
+  <input id="disclosure-{{ ::$id }}" type="checkbox" class="disclosure">
+  <label class="disclosure-button" for="disclosure-{{ ::$id }}">
+    <span class="disclosure-show">Show more</span>
+    <span class="disclosure-hide">Hide</span>
+  </label>
+  <ol class="disclosure-contents dl-horizontal">
+    <li ng-repeat="value in ::value">
+      <pc-tree value="value" />
+    </li>
+  </ol>
+  <label class="disclosure-fader"
+    for="disclosure-{{ $id }}">
+  </label>
+</div>

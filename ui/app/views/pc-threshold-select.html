@@ -1,7 +1,7 @@
-<span ng-show="threshold != null">
+<div ng-show="threshold != null">
   <label for="threshold">with threshold</label>
   <input type="range" id="threshold" ng-model="thresholdIndex"
          min="0" max="{{ thresholds.length - 1}}"/>
   <span class="help-block"> <!-- TODO: write help text here!  --> </span>
   <output>{{ threshold }}</output>
-</span>
+</div>

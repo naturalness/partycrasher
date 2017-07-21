@@ -1,10 +1,10 @@
 <span ng-switch="type(value)">
-  <span ng-switch-when="object">
-    <ng-include src="'views/pc-tree-object.html'" />
+  <span ng-switch-when="object" class="">
+    <ng-include src="'views/pc-tree-object.html'"></ng-include>
   </span>
 
   <span ng-switch-when="array">
-    <ng-include src="'views/pc-tree-array.html'" />
+    <ng-include src="'views/pc-tree-array.html'"></ng-include>
   </span>
 
   <span ng-switch-when="null">

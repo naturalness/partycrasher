@@ -1,0 +1,38 @@
+<div 
+  class="selectator"
+  id="{{::field}}"
+  ng-class="{open: drop, closed: !drop}"
+  ng-click="forceFocus()"
+>
+  <input class="selectator-stator"
+       id="{{::field}}_stator"
+       ng-focus="drop=true"
+       ng-blur="checkFocus()"
+       readonly=""
+       value="{{display_name}}"
+
+  />
+</div>
+<radiogroup
+  class="selectator-options dropdown"
+  ng-show="drop"
+  ng-click="forceFocus()"
+>
+    <div ng-repeat="optor in optors"
+      class="selectator-option" 
+    >
+      <input
+        type="radio"
+        id="{{::optor.id}}"
+        name="{{::field}}"
+        value="{{::optor.value}}"
+        ng-model="$parent.value"
+        ng-focus="drop=true"
+        ng-blur="checkFocus()"
+        ng-click="click($event)"
+        />
+      <label 
+        for="{{optor.id}}"
+      >{{optor.name}}</label>
+    </div>
+</radiogroup>
