@@ -35,6 +35,7 @@ from partycrasher.es.crash import ESCrash, ESCrashEncoder
 from partycrasher.threshold import Threshold
 from partycrasher.pc_dict import PCDict, PCList
 from partycrasher.project import Project
+from partycrasher.crash_type import CrashType
 from partycrasher.pc_exceptions import BadKeyNameError
 
 from six import string_types
@@ -142,6 +143,8 @@ class CrashFilter(object):
                 pass # always filter dates
             elif isinstance(v, Project):
                 newcrash[k] = v # always keep project
+            elif isinstance(v, CrashType):
+                newcrash[k] = v # always keep crash type
             elif v is None:
                 pass
             else:

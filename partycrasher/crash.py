@@ -27,6 +27,7 @@ from partycrasher.threshold import Threshold
 from partycrasher.project import Project
 from partycrasher.bucket import Buckets, Bucket, TopMatch
 from partycrasher.pc_dict import PCDict, PCList
+from partycrasher.crash_type import CrashType
 
 from six import string_types, text_type
 
@@ -96,6 +97,10 @@ class Crash(PCDict):
         'project': {
             'type': Project,
             'converter': Project,
+            },
+        'type': {
+            'type': CrashType,
+            'converter': CrashType,
             },
         'buckets': {
             'type': Buckets,
@@ -174,6 +179,8 @@ class CrashEncoder(json.JSONEncoder):
         elif isinstance(o, Threshold):
             return text_type(o)
         elif isinstance(o, Project):
+            return o.name
+        elif isinstance(o, CrashType):
             return o.name
         else:
             return super(CrashEncoder, self).default(o)

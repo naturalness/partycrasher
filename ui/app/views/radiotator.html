@@ -2,7 +2,7 @@
   class="selectator"
   id="{{::field}}"
   ng-class="{open: drop, closed: !drop}"
-  ng-click="buttonClick()"
+  ng-mousedown="toggle()"
 >
   <input class="selectator-stator"
       id="{{::field}}_stator"

@@ -57,19 +57,22 @@ angular.module('PartyCrasherApp')
         }
       }
       scope.drop=focused;
+      return focused;
     }
     scope.checkFocus=() => {
-      $timeout(checkFocus, 10);
+      $timeout(checkFocus, 0);
     };
     scope.forceFocus=($event) => {
       element.find("input")[0].focus();
     };
-    scope.buttonClick=($event) => {
+    scope.toggle=($event) => {
+      console.log(scope.drop);
       if (scope.drop) {
-        element.find("input")[0].focus();
-        element.find("input")[0].blur();
+        null;
       } else {
-        element.find("input")[0].focus();
+        $timeout(() => {
+          element.find("input")[0].focus();
+        }, 0);
       }
     };
   }

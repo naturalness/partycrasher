@@ -47,4 +47,6 @@ class ReportProject(Project):
         d['reports'] = self.reports
         d['project'] = super(ReportProject, self)
         d['buckets'] = self.buckets
+        from partycrasher.api.types import Types
+        d['types'] = Types(self.reports.search)
         return d

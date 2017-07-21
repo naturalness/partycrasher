@@ -2,14 +2,14 @@
   class="labeled-input selectator"
   id="{{field}}"
   ng-class="{open: drop, closed: !drop}"
-  ng-click="buttonClick()"
+  ng-mousedown="toggle($event)"
 >
   <input class="selectator-stator"
-       id="{{field}}_stator"
-       ng-focus="drop=true"
-       ng-blur="checkFocus()"
-       readonly=""
-       value="{{field}} ({{number_selected}})"
+      id="{{field}}_stator"
+      ng-focus="drop=true"
+      ng-blur="checkFocus()"
+      readonly=""
+      value="{{field}} ({{number_selected}})"
       ng-click="$event.stopPropagation();"
   />
 </div>

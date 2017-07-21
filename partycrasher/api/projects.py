@@ -25,7 +25,6 @@ if PY3:
 elif PY2:
     from collections import Mapping
 
-from partycrasher.project import Project
 from partycrasher.api.search import Results
 from partycrasher.api.report_project import ReportProject
 

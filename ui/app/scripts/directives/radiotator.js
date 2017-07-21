@@ -53,6 +53,16 @@ angular.module('PartyCrasherApp')
         element.find("input")[0].focus();
       }
     };
+    scope.toggle=($event) => {
+      console.log(scope.drop);
+      if (scope.drop) {
+        null;
+      } else {
+        $timeout(() => {
+          element.find("input")[0].focus();
+        }, 0);
+      }
+    };
   }
 
   return {
