@@ -511,7 +511,7 @@ class RestServiceTestCase(unittest.TestCase):
         assignment.
         """
 
-        create_url = self.path_to('ubuntu', 'reports')
+        create_url = self.path_to('kubuntu', 'reports')
         assert is_cross_origin_accessible(create_url)
 
         first_id = str(uuid.uuid4())
@@ -555,7 +555,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert 'top_match' in buckets
         assert buckets['top_match'].get('report_id').endswith(first_id)
         assert first_id in buckets['top_match'].get('href', ()), buckets
-        assert buckets['top_match'].get('project').get('name') == 'ubuntu', buckets['top_match'].get('project') 
+        assert buckets['top_match'].get('project').get('name') == 'kubuntu', buckets['top_match'].get('project') 
         assert float(buckets['top_match'].get('score', 'NaN')) > 0
         top_match_score = float(buckets['top_match']['score'])
         for key, value in buckets.items():
@@ -669,7 +669,7 @@ class RestServiceTestCase(unittest.TestCase):
 
         # Make a bunch of reports with IDENTICAL content!
         database_id_a = str(uuid.uuid4())
-        create_url = self.path_to('alan_parsons', 'reports')
+        create_url = self.path_to('banana', 'reports')
 
         # This is the only content for each report, so there must only be
         # *one* bucket that contains reports A, B, and C!
@@ -715,8 +715,6 @@ class RestServiceTestCase(unittest.TestCase):
         """
         wait_for_elastic_search()
         # test delete all
-        response = requests.delete(self.path_to('reports'))
-        assert response.status_code == 200, response.text
 
         # Create a bunch of reports with IDENTICAL unique content
         tfidf_trickery = str(uuid.uuid4())
@@ -817,7 +815,7 @@ class RestServiceTestCase(unittest.TestCase):
 
         # Upload at least one report, to ensure the database has
         # at least one bucket.
-        response = requests.post(self.path_to('alan_parsons', 'reports'),
+        response = requests.post(self.path_to('grapple', 'reports'),
                                  json=[{'database_id': str(uuid.uuid4()),
                                         'type': 'crash',
                                         'date': datetime.datetime.utcnow().isoformat(),
@@ -825,7 +823,7 @@ class RestServiceTestCase(unittest.TestCase):
         assert response.status_code == 201
         wait_for_elastic_search()
         # Just GET the top buckets!
-        search_url = self.path_to('alan_parsons', 'buckets', '3.8')
+        search_url = self.path_to('grapple', 'buckets', '3.8')
         response = requests.get(search_url)
         assert response.status_code == 200, response.text
 
@@ -836,12 +834,12 @@ class RestServiceTestCase(unittest.TestCase):
         """
         Fetch per-project configuration.
         """
-        response = requests.post(self.path_to('alan_parsons', 'reports'),
+        response = requests.post(self.path_to('bananarama', 'reports'),
                                  json=[{'database_id': str(uuid.uuid4()),
                                         'type': 'crash',
                                         'date': datetime.datetime.utcnow().isoformat(),
                                         }])
-        response = requests.get(self.path_to('alan_parsons', 'config'))
+        response = requests.get(self.path_to('bananarama', 'config'))
         assert response.status_code == 200, response.text
         dt = response.json().get('default_threshold')
         assert 0.0 <= float(dt) <= 10.0

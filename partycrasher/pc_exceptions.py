@@ -18,6 +18,7 @@
 
 from copy import copy
 from os import linesep
+from elasticsearch import TransportError
 
 class PartyCrasherError(Exception):
     """An error occured within PartyCrasher."""
@@ -126,3 +127,22 @@ class BadDateError(PartyCrasherError):
                        '%s.' % repr(date))
         super(PartyCrasherError, self).__init__(message, **kwargs)
         self.date=date
+
+class ESError(PartyCrasherError):
+    """
+    ElasticSearch returned an unexpected/unhandled error.
+    """
+    def __init__(self, ex, **kwargs):
+        (t, v, tb) = sys.exc_info()
+        message = ('ElasticSearch Exception: '
+                       '%s.' % str(ex))
+        super(PartyCrasherError, self).__init__(message, **kwargs)
+        self.original_traceback = tb
+        self.original_type = repr(t)
+        self.original_value = repr(v)
+        if isinstance(ex, TransportError):
+            self.es_status_code = ex.status_code
+            self.es_error = ex.error
+            self.es_info = ex.info
+            self.es_description = str(ex)
+            

@@ -29,10 +29,12 @@ info = logger.info
 debug = logger.debug
 
 from elasticsearch import TransportError
+from elasticsearch import ElasticsearchException
 
 from partycrasher.threshold import Threshold
 from partycrasher.more_like_this import MoreLikeThis
 from partycrasher.es.elastify import elastify
+from partycrasher.pc_exceptions import ESError
 
 class ESIndex(object):
     """
@@ -131,7 +133,8 @@ class ESIndex(object):
                                                           tokenization_name
                                                           ))
         try:
-            self.esstore.indices.create(index=self.index_base, body=index_config)
+            return self.esstore.indices.create(index=self.index_base, 
+                                               body=index_config)
         except TransportError as e:
             error(e.info)
             raise
@@ -259,10 +262,20 @@ class ESIndex(object):
             pass
         else:
             body=elastify(body)
-        return self.esstore.es.search(
-            index=self.index_base,
-            body=body,
-            **kwargs)
+        tries = 0
+        while True:
+            tries += 1
+            try:
+                return self.esstore.es.search(
+                    index=self.index_base,
+                    body=body,
+                    **kwargs)
+            except ElasticsearchException as e:
+                if (tries <= 1):
+                    self.esstore.yellow()
+                else:
+                    raise ESError(e)
+            
     
     def get(self, **kwargs):
         assert 'index' not in kwargs
