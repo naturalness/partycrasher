@@ -48,7 +48,7 @@ import fake_data_generator
 # TODO: argparse
 DONT_ACTUALLY_COMPUTE_STATS=False
 BLOCK_SIZE=1000
-PARALLEL=8
+PARALLEL=0
 BOOTSTRAP_CRASHES=1000000 # WARNING: Destroys temporal relationships!
 BOOTSTRAP_RESUME_AT=0 # This doesn't actually work properly yet, don't use it.
 RESET_STATS_AFTER_BLOCK=True
@@ -123,10 +123,14 @@ def load_oracle_data(oracle_file_path):
             continue
         for k in list(crash.keys()):
             if '.' in k:
-                debug(k)
                 crash[k.replace('.', '_')] = crash[k]
                 del crash[k]
-        
+        if 'type' in crash and crash['type'] != 'Crash':
+            debug("Skipping type: " + k)
+            skipped_ids.add(database_id)
+            continue
+        if 'type' not in crash:
+            crash['type'] = 'Crash'
         crashes[database_id] = crash
             
             
@@ -542,10 +546,11 @@ class GunicornStarter(object):
             time.sleep(5)
         else:
             self.gunicorn = subprocess.Popen(['python',
-                'partycrasher/rest_service.py',
+                'partycrasher/rest/service.py',
                 '--port=5000',
                 '--debug',
                 '--allow-delete-all',
+                '--config', 'lp/config.py',
                 ],
                 preexec_fn=os.setsid)
             time.sleep(5)
