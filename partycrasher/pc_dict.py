@@ -38,7 +38,7 @@ elif PY2:
     
 from partycrasher.pc_exceptions import BadKeyNameError
 
-good = re.compile('(\w+)$')
+good = re.compile('([\w_-]+)$')
     
 class Dict(dict):
     pass
@@ -150,6 +150,9 @@ class PCDict(MutableMapping):
         if not isinstance(d, Dict):
             d = Dict(d)
         self._d = d
+    
+    def keys(self):
+        return self._d.keys()
 
 class PCList(MutableSequence):
   

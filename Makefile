@@ -35,7 +35,7 @@ gunicorn: ## Starts the server locally (does not use Docker).
 		--error-logfile gunicorn-error.log \
 		--log-level debug \
 		--worker-class sync \
-		--bind localhost:$(EXTERNAL_PORT) \
+		--bind 0.0.0.0:$(EXTERNAL_PORT) \
 		--timeout 60 \
 		--pid gunicorn.pid \
 		--capture-output \

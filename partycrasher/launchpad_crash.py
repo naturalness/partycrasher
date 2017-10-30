@@ -323,6 +323,10 @@ class LaunchpadCrash(Crash):
             except:
                 error("Couln't parse date: %s" % (val))
                 pass
+        elif key == 'ProblemType':
+            val = val.replace(" ", "_")
+            val = val.replace(".", "_")
+            return super(LaunchpadCrash, self).__setitem__(key, val)
         else:
             return super(LaunchpadCrash, self).__setitem__(key, val)
         

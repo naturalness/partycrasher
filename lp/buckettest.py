@@ -35,7 +35,11 @@ import traceback
 import datetime
 
 import logging
-from logging import error, warn, info, debug
+logger = logging.getLogger(__name__)
+error = logger.error
+warn = logger.warn
+info = logger.info
+debug = logger.debug
 logging.getLogger().setLevel(logging.DEBUG)
 
 import fake_data_generator
@@ -117,6 +121,12 @@ def load_oracle_data(oracle_file_path):
             print("Skipping: " + database_id)
             skipped_ids.add(database_id)
             continue
+        for k in list(crash.keys()):
+            if '.' in k:
+                debug(k)
+                crash[k.replace('.', '_')] = crash[k]
+                del crash[k]
+        
         crashes[database_id] = crash
             
             
