@@ -49,7 +49,7 @@ import fake_data_generator
 DONT_ACTUALLY_COMPUTE_STATS=False
 BLOCK_SIZE=1000
 PARALLEL=0
-BOOTSTRAP_CRASHES=1000000 # WARNING: Destroys temporal relationships!
+BOOTSTRAP_CRASHES=0 # WARNING: Destroys temporal relationships!
 BOOTSTRAP_RESUME_AT=0 # This doesn't actually work properly yet, don't use it.
 RESET_STATS_AFTER_BLOCK=True
 TOTALLY_FAKE_DATA=False
@@ -490,11 +490,12 @@ def simulate(client, comparisons, oracle_data):
             crashdata = crashes[database_id]
             #print json.dumps(crashdata, indent=2)
             iterate_crash(
-              database_id,
-              oracledata,
-              crashdata,
-              comparisons,
-              totals,
+                          client,
+                          database_id,
+                          oracledata,
+                          crashdata,
+                          comparisons,
+                          totals,
               )
     else:
         import random
