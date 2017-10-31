@@ -131,6 +131,10 @@ def load_oracle_data(oracle_file_path):
             continue
         if 'type' not in crash:
             crash['type'] = 'Crash'
+        if 'date' not in crash:
+            debug("Skipping (no date): " + k)
+            skipped_ids.add(database_id)
+            continue
         crashes[database_id] = crash
             
             
