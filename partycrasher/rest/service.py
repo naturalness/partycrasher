@@ -50,7 +50,8 @@ from partycrasher.rest.api_utils import (
     redirect_with_query_string,
     full_url_for,
     str_to_bool,
-    make_search
+    make_search,
+    json_exception
 )
 from partycrasher.rest.resource_encoder import (ResourceEncoder,
                                                 auto_url_for)
@@ -102,28 +103,8 @@ def before_first_request():
 @app.errorhandler(Exception)
 def on_crasher_crash(ex):
     (t, v, tb) = sys.exc_info()
-    for line in traceback.format_exception(t, v, tb):
-        ERROR(line.rstrip())
-    tb = traceback.extract_tb(tb)
-    out_tb = []
-    i = 0
-    for frame in reversed(tb):
-        i = i + 1
-        out_tb.append({
-            'file': frame[0],
-            'fileline': frame[1],
-            'function': frame[2],
-            'extra': frame[3],
-            'depth': i
-            })
-    details = {
-        'message': str(ex),
-        'error': ex.__class__.__name__,
-        'stacktrace': out_tb,
-        }
-    if isinstance(ex, PartyCrasherError):
-        details.update(ex.get_extra())
-    response = jsonify(details)
+    response = jsonify(json_exception(t, v, tb))
+    del tb
     if hasattr(ex, 'http_code'):
         response.status_code = ex.http_code
     elif hasattr(ex, 'code'):
@@ -205,6 +186,7 @@ def home(filename=None):
         bower=full_url_for('home') + 'bower_components',
         node_modules=full_url_for('home') + 'node_modules',
         project_names=[proj for proj in crasher.projects],
+        type_names=[t for t in crasher.types],
         thresholds=[str(thresh) for thresh in crasher.thresholds],
         basehref=full_url_for('home'),
         restbase=full_url_for('root'),
@@ -836,6 +818,17 @@ def search(project):
     s = make_search(request.args, project=project)
 
     return jsonify_resource(crasher.report_search(**s))
+
+@app.route('/<type_>/', methods=['GET'])
+def view_type(type_=None):
+    if type_ == '*':
+        type_ = None
+    s = make_search(args=request.args,
+        type_=type_)
+    results = crasher.report_search(**s)
+    return(jsonify(results))
+
+
 
 #############################################################################
 #                                 Utilities                                 #

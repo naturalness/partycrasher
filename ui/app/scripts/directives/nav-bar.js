@@ -2,7 +2,8 @@ angular.module('PartyCrasherApp')
 .directive('pcNavBar', function ($log, 
                                  DEFAULT_THRESHOLD, 
                                  THRESHOLDS,
-                                 COG_IMAGE
+                                 COG_IMAGE,
+                                 TYPE_NAMES
                                 ) {
   function link(scope, element, _attrs) {
     scope.COG_IMAGE=COG_IMAGE
@@ -12,11 +13,7 @@ angular.module('PartyCrasherApp')
       'fedora',
       'debian'
       ];
-    scope.example_types = [
-      'SEGV',
-      'ABRT',
-      'other'
-      ];
+    scope.report_types = TYPE_NAMES;
     scope.groupings = [
       { value: "report", name: "report (no grouping)" },
       { value: "bucket", name: "automatic bucket" },

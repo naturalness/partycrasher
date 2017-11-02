@@ -37,7 +37,7 @@ class CrashType(object):
         elif isinstance(crash_type, dict) and 'name' in crash_type:
             self.name = crash_type['name']
         else:
-            raise BadTypeNameError(repr(self.name))
+            raise BadTypeNameError(repr(crash_type))
         m = good.match(self.name)
         if m is None:
             raise BadTypeNameError(self.name)

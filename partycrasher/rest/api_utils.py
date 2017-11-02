@@ -25,19 +25,21 @@ from six import string_types
 import weakref
 import re
 import distutils
+import sys
+import traceback
 
 from flask import json, jsonify, request, redirect, make_response, url_for
 
 from partycrasher.crash import pretty
 from partycrasher.pc_exceptions import PartyCrasherError
-from partycrasher.api.util import maybe_date, maybe_int
+from partycrasher.api.util import maybe_date, maybe_int, maybe_type
 
 import logging
 logger = logging.getLogger(__name__)
-error = logger.error
-warn = logger.warn
-info = logger.info
-debug = logger.debug
+ERROR = logger.error
+WARN = logger.warn
+INFO = logger.info
+DEBUG = logger.debug
 
 class BadRequest(PartyCrasherError):
     """
@@ -219,7 +221,24 @@ def make_search(args, **kwargs):
     maybe_set(s, 'since', maybe_date(args.get('since', None)))
     maybe_set(s, 'until', maybe_date(args.get('until', None)))
     maybe_set(s, 'project', args.get('project', None))
+    maybe_set(s, 'type', maybe_type(args.get('type', args.get('type_', None))))
+    if 'type_' in s:
+        s['type'] = s['type_']
+        del s['type_']
     maybe_set(s, 'threshold', args.get('threshold', None))
     maybe_set(s, 'bucket', args.get('bucket', None))
     return s
+
+def json_exception(t, v, tb):
+    for line in traceback.format_exception(t, v, tb):
+        ERROR(line.rstrip())
+    details = {
+        'message': str(v),
+        'error': t.__name__,
+        'stacktrace': tb,
+        }
+    if hasattr(v, 'get_extra'):
+        details.update(v.get_extra())
+    return details
+
     

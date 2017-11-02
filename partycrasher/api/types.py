@@ -40,6 +40,7 @@ class Types(Mapping):
     def get_types(self):
         """Get type tree."""
         r = Results(self.search, size=0)
+        assert 'type' in r.counts
         types = {p:
             ReportType(self.search, p) 
             for p in r.counts['type'].keys()}

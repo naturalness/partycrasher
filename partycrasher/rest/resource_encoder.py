@@ -18,6 +18,9 @@
 
 from datetime import datetime
 from collections import OrderedDict
+import traceback
+import sys
+
 from partycrasher.crash import Crash, CrashEncoder
 from partycrasher.project import Project
 from partycrasher.threshold import Threshold
@@ -57,6 +60,33 @@ def auto_url_for(thing):
                             )
     else:
         return thing
+    
+def json_traceback(tb):
+    tb = traceback.extract_tb(tb)
+    out_tb = []
+    i = 0
+    for frame in reversed(tb):
+        i = i + 1
+        out_tb.append({
+            'file': frame[0],
+            'fileline': frame[1],
+            'function': frame[2],
+            'extra': frame[3],
+            'depth': i
+            })
+    return out_tb
+
+traceback_class = None
+
+try:
+    raise RuntimeError("Fake error!")
+except RuntimeError as ex:
+    (t, v, tb) = sys.exc_info()
+    traceback_class = tb.__class__
+    del t
+    del v
+    del tb
+    del ex
 
 class ResourceEncoder(CrashEncoder):
     def default(self, o):
@@ -102,6 +132,8 @@ class ResourceEncoder(CrashEncoder):
                                      report_id=o.report_id
                                      )
             return d
+        elif isinstance(o, traceback_class):
+            return json_traceback(o)
         else:
             return super(ResourceEncoder, self).default(o)
 

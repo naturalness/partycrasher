@@ -373,6 +373,11 @@ pc-error {
     overflow: hidden;
 }
 
+.result {
+    display: block;
+    overflow: hidden;
+}
+
 .monospace {
   font-family: monospace;
 }

@@ -60,6 +60,7 @@ class Context(object):
         self.fixed_summary_fields = dict(
             self.config.UserInterface.fixed_summary_fields)
         self.fixed_summary_fields["project"] = "Project"
+        self.fixed_summary_fields["type"] = "Type"
         self.default_threshold = Threshold(
             self.config.Bucketing.default_threshold)
         self.search = self.index.search

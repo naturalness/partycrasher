@@ -30,6 +30,7 @@ from partycrasher.api.report_threshold import ReportThreshold
 from partycrasher.api.report_project import ReportProject
 from partycrasher.api.projects import Projects
 from partycrasher.api.thresholds import Thresholds
+from partycrasher.api.types import Types
 
 import logging
 logger = logging.getLogger(__name__)
@@ -106,7 +107,7 @@ class PartyCrasher(object):
                             **kwargs)
     
     def report_search(self, from_=None, size=None, **kwargs):
-        """Factory for report buckets."""
+        """Swiss army knife search results."""
         search = Search(context=self.context, **kwargs)
         return Results(search=search, from_=from_, size=size)
     
@@ -115,6 +116,11 @@ class PartyCrasher(object):
         """Get the projects."""
         return Projects(self.null_search)
     
+    @property
+    def types(self):
+        """Get the projects."""
+        return Types(self.null_search)
+
     @property
     def thresholds(self):
         """Get the thresholds."""

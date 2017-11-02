@@ -10,6 +10,7 @@ angular.module('PartyCrasherApp')
     scope.result = null;
     function got(response) {
       scope.loading = false;
+      scope.result = response.data;
     }
     function gotError(response) {
       scope.loading = false;

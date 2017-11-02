@@ -45,11 +45,13 @@ from partycrasher.api.util import (
     maybe_threshold, 
     maybe_project,
     maybe_bucket,
-    maybe_text
+    maybe_text,
+    maybe_type
     )
 from partycrasher.bucket import Bucket
 from partycrasher.api.report import Report
 from partycrasher.context import Context
+from partycrasher.crash_type import CrashType
 
 class Search(PCDefaultDict):
     
@@ -57,32 +59,44 @@ class Search(PCDefaultDict):
         'threshold': {
             'type': Threshold,
             'converter': maybe_threshold,
-            'default': None
+            'default': None,
+            'multi': True
             },
         'project': {
             'type': Project,
             'converter': maybe_project,
-            'default': None
+            'default': None,
+            'multi': True
             },
         'since': {
             'type': datetime,
             'converter': maybe_date,
-            'default': None
+            'default': None,
+            'multi': False
             },
         'until': {
             'type': datetime,
             'converter': maybe_date,
-            'default': None
+            'default': None,
+            'multi': False
             },
         'query_string': {
             'type': string_types,
             'converter': maybe_text,
-            'default': None
+            'default': None,
+            'multi': False
             },
         'bucket_id': {
             'type': string_types,
             'converter': maybe_text,
-            'default': None
+            'default': None,
+            'multi': True
+            },
+        'type': {
+            'type': CrashType,
+            'converter': maybe_type,
+            'default': None,
+            'multi': True
             },
         }
         
@@ -102,6 +116,24 @@ class Search(PCDefaultDict):
             super(Search, self).__init__(search)
             self.update(kwargs)
         self.thresholds = self.context.thresholds
+        
+    def build_disjunction(self, field, things):
+        if isinstance(things, list):
+            return {
+                "bool": {
+                    "should": [
+                        self.build_disjunction(field, thing)
+                            for thing in things
+                        ],
+                    "minimum_should_match": 1
+                    }
+                }
+        else:
+            return {
+                "term": {
+                    field: things
+                    }
+                }
 
     def build_query(self, 
                     from_=None, 
@@ -130,6 +162,10 @@ class Search(PCDefaultDict):
                 }
             })
         
+        # May filter optionally by type name.
+        if self['type'] is not None:
+            must.append(self.build_disjunction("type", self['type']))
+
         if self.query_string is not None:
             must.append({
                 "query_string": {
@@ -191,6 +227,8 @@ class Search(PCDefaultDict):
             converter = lambda x: x
             if field == "project":
                 converter = Project
+            if field == "type":
+                converter = CrashType
             field_counts = {}
             raw_agg = raw['aggregations'][field]['buckets']
             for b in raw_agg:
