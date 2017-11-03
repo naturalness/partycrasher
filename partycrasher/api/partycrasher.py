@@ -133,7 +133,7 @@ class PartyCrasher(object):
     @property
     def reports(self):
         """Get the reports."""
-        return Results(self.null_search)
+        return self.null_search
 
     @property
     def es_store(self):

@@ -18,7 +18,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from __future__ import print_function
+from __future__ import print_function, division
 
 import os
 import sys
@@ -819,14 +819,31 @@ def search(project):
 
     return jsonify_resource(crasher.report_search(**s))
 
-@app.route('/<type_>/', methods=['GET'])
-def view_type(type_=None):
-    if type_ == '*':
-        type_ = None
-    s = make_search(args=request.args,
-        type_=type_)
-    results = crasher.report_search(**s)
-    return(jsonify(results))
+@app.route('/<path:path>/', methods=['GET'])
+def view(path=None):
+    params = {}
+    if path is not None:
+        path = path.split('/')
+        k = None
+        for i in range(0, len(path)):
+            if (i % 2) == 0:
+                k = path[i]
+            else:
+                params[k] = path[i]
+                k = None
+    if k is not None:
+        wanted = k
+    else:
+        wanted = None
+    #if type_ == '*':
+        #type_ = None
+    #if project == '*':
+        #project = None
+    #s = make_search(args=request.args,
+        #type_=type_,
+        #project=project)
+    #results = crasher.report_search(**s)
+    return(jsonify({'params': params, 'wanted': wanted}))
 
 
 

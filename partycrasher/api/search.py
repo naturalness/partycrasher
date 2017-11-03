@@ -255,6 +255,9 @@ class Search(PCDefaultDict):
         page['from'] = from_
         page['size'] = len(raw['hits']['hits'])
         return page
+    
+    def __call__(self):
+        return self.page()
 
     def as_dict(self):
         return self._d
