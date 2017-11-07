@@ -25,29 +25,46 @@ from partycrasher.crash import Crash, CrashEncoder
 from partycrasher.project import Project
 from partycrasher.threshold import Threshold
 from partycrasher.bucket import Bucket, TopMatch
-from partycrasher.rest.api_utils import full_url_for
+from partycrasher.rest.api_utils import full_url_for, merge
 from partycrasher.api.report import Report
-from partycrasher.api.search import Search
+from partycrasher.api.search import Search, View
 from partycrasher.api.thresholds import Thresholds
 from partycrasher.api.report_bucket import ReportBucketSearch
 from partycrasher.api.report_threshold import BucketSearch
 
 from flask import json, request, redirect, make_response
 
-def url_for_search(search):
-    if isinstance(search, BucketSearch):
-        endpoint = 'query_buckets'
-    elif isinstance(search, Search):
-        endpoint = 'search'
-    else:
-        raise RuntimeError("what")
+def search_url_append(path, params, key, conv=str):
+    if key in params:
+        if isinstance(params[key], list):
+            path += key + 's/' + ','.join([conv(p) for p in params[key]]) + '/'
+        else:
+            path += key + 's/' + conv(params[key]) + '/'
+        del params[key]
+    return path
+
+def url_for_search(search, direct_search=True):
+    endpoint = 'view'
+    path = '/'
     params = {}
     for k, v in search.items():
         assert k is not None
         if v is not None:
             params[k] = v
-    if 'project' not in params:
-        endpoint = endpoint + '_no_project'
+    path = search_url_append(path, params, 'type')
+    path = search_url_append(path, params, 'project')
+    path = search_url_append(path, params, 'threshold')
+    merge(params, 'bucket', 'bucket_id')
+    path = search_url_append(path, params, 'bucket')
+    if isinstance(search, BucketSearch):
+        path += 'buckets/'
+    elif isinstance(search, Search):
+        if direct_search:
+            path += 'reports/'
+    else:
+        raise RuntimeError("what")
+    path = path.rstrip('/') # it's already in the route 
+    params['path'] = path
     return full_url_for(endpoint, **params)
     
 def auto_url_for(thing):
@@ -92,39 +109,19 @@ class ResourceEncoder(CrashEncoder):
     def default(self, o):
         if isinstance(o, Search):
             return url_for_search(o)
+        elif isinstance(o, Report):
+            d = o.restify_()
+            d['href'] = full_url_for('view_report',
+                                     project=o.project,
+                                     report_id=o.database_id
+                                     )
+            return d
         elif hasattr(o, 'restify'):
             return o.restify()
         elif isinstance(o, Threshold):
             return str(o)
-        elif isinstance(o, Crash):
-            d = super(ResourceEncoder, self).default(o).copy()
-            d['href'] = full_url_for('view_report',
-                                     project=o.project,
-                                     report_id=o.id
-                                     )
-            return d
-        elif isinstance(o, Bucket):
-            d = super(ResourceEncoder, self).default(o).copy()
-            if 'project' in d and d['project'] is not None:
-                d['href'] = full_url_for('view_bucket',
-                                     threshold=o.threshold,
-                                     bucket_id=o.id,
-                                     project=o.project
-                                     )
-            else:
-                d['href'] = full_url_for('view_bucket_no_project',
-                                     threshold=o.threshold,
-                                     bucket_id=o.id
-                                     )
-            return d
-        elif isinstance(o, Project):
-            d = {
-              'name': super(ResourceEncoder, self).default(o),
-              'href': full_url_for('view_project',
-                                     project=o.name
-                                     )
-            }
-            return d
+        elif isinstance(o, View):
+            return "WHAT!"
         elif isinstance(o, TopMatch):
             d = super(ResourceEncoder, self).default(o).copy()
             d['href'] = full_url_for('view_report',

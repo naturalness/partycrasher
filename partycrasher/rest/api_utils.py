@@ -213,20 +213,39 @@ def maybe_set(d, k, v):
         d[k] = v
     return d
 
+def merge(d, dest, src):
+    if dest in d:
+        if src in d:
+            raise KeyConflictError(key=dest,
+                                   value_a=d[dest],
+                                   value_b=d[src])
+        else:
+            pass
+    else:
+        if src in d:
+            d[dest]=d[src]
+            del d[src]
+        else:
+            pass
+
 def make_search(args, **kwargs):
     s = kwargs
-    maybe_set(s, 'from_', maybe_int(args.get('from', None)))
+    merge(args, 'from', 'from_')
+    maybe_set(s, 'from', maybe_int(args.get('from', None)))
     maybe_set(s, 'size', maybe_int(args.get('size', None)))
     maybe_set(s, 'query_string', args.get('q', None))
     maybe_set(s, 'since', maybe_date(args.get('since', None)))
     maybe_set(s, 'until', maybe_date(args.get('until', None)))
+    merge(args, 'project', 'projects')
     maybe_set(s, 'project', args.get('project', None))
-    maybe_set(s, 'type', maybe_type(args.get('type', args.get('type_', None))))
-    if 'type_' in s:
-        s['type'] = s['type_']
-        del s['type_']
+    merge(args, 'type', 'type_')
+    merge(args, 'type', 'types')
+    maybe_set(s, 'type', maybe_type(args.get('type', None)))
+    merge(args, 'threshold', 'thresholds')
     maybe_set(s, 'threshold', args.get('threshold', None))
-    maybe_set(s, 'bucket', args.get('bucket', None))
+    merge(args, 'bucket_id', 'buckets')
+    merge(args, 'bucket_id', 'bucket')
+    maybe_set(s, 'bucket_id', args.get('bucket_id', None))
     return s
 
 def json_exception(t, v, tb):

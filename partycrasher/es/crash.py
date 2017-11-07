@@ -24,6 +24,7 @@ from weakref import WeakValueDictionary
 from six import string_types
 import elasticsearch
 from elasticsearch import Elasticsearch
+from copy import deepcopy
 
 import dateparser
 
@@ -237,10 +238,10 @@ class ESCrash(Crash):
         # TODO: code to delete from ES
         # TODO: clear self
     
-    def as_crash():
+    def as_crash(self):
         """Return a modifyable copy that won't save updates to ES."""
-        c = Crash(self._d)
-        return c.deepcopy()
+        c = Crash(deepcopy(self._d))
+        return c
 
 import unittest
 class TestCrash(unittest.TestCase):

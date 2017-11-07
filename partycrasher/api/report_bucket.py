@@ -80,16 +80,18 @@ class ReportBucketView(View):
     search_class = ReportBucketSearch
 
 class ReportBucket(Bucket):
-    def __init__(self, search, result, from_=None, size=None):
-        super(ReportBucket, self).__init__(result)
+    def __init__(self, search, from_=None, size=None, **kwargs):
+        super(ReportBucket, self).__init__(kwargs)
         search['bucket_id'] = self.id
         search['threshold'] = self.threshold
         search = ReportBucketSearch(search=search)
-        self.reports = ReportBucketView(
+        self.reports = ReportBucketSearch(
             search=search,
             from_=from_,
             size=size
             )
     
     def restify(self):
-        return self.reports.page
+        d = copy(self._d)
+        d['reports'] = self.reports
+        return d

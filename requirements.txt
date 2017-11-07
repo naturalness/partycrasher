@@ -6,3 +6,4 @@ dateparser >= 0.3.4
 gunicorn >= 19.6.0
 path.py >= 8.2.1
 six >= 1.1.0, < 2
+dateutil >= 2.6.1

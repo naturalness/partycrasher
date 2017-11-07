@@ -33,7 +33,7 @@ from six import string_types, text_type
 
 def parse_utc_date(s):
     return dateparser.parse(s, settings={'TIMEZONE': 'UTC',
-                                         'RETURN_AS_TIMEZONE_AWARE': True})
+                                         'RETURN_AS_TIMEZONE_AWARE': False})
             
 class Stackframe(PCDict):
     """
