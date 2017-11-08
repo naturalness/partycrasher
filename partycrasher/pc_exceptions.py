@@ -19,6 +19,7 @@
 from copy import copy
 from os import linesep
 from elasticsearch import TransportError
+import sys
 
 class PartyCrasherError(Exception):
     """An error occured within PartyCrasher."""

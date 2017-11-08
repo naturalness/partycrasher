@@ -39,17 +39,20 @@ from copy import copy
 from partycrasher.pc_dict import PCDict, PCDefaultDict
 from partycrasher.project import Project
 from partycrasher.threshold import Threshold
-from partycrasher.crash import Crash
+#from partycrasher.crash import Crash
 from partycrasher.api.util import (
     maybe_date, 
     maybe_threshold, 
     maybe_project,
     maybe_bucket,
-    maybe_text
+    maybe_text,
+    maybe_type
     )
 from partycrasher.bucket import Bucket
 from partycrasher.api.report import Report
 from partycrasher.context import Context
+from partycrasher.crash_type import CrashType
+from partycrasher.es.crash import ESCrash
 
 class Search(PCDefaultDict):
     
@@ -57,32 +60,44 @@ class Search(PCDefaultDict):
         'threshold': {
             'type': Threshold,
             'converter': maybe_threshold,
-            'default': None
+            'default': None,
+            'multi': True
             },
         'project': {
             'type': Project,
             'converter': maybe_project,
-            'default': None
+            'default': None,
+            'multi': True
             },
         'since': {
             'type': datetime,
             'converter': maybe_date,
-            'default': None
+            'default': None,
+            'multi': False
             },
         'until': {
             'type': datetime,
             'converter': maybe_date,
-            'default': None
+            'default': None,
+            'multi': False
             },
         'query_string': {
             'type': string_types,
             'converter': maybe_text,
-            'default': None
+            'default': None,
+            'multi': False
             },
         'bucket_id': {
             'type': string_types,
             'converter': maybe_text,
-            'default': None
+            'default': None,
+            'multi': True
+            },
+        'type': {
+            'type': CrashType,
+            'converter': maybe_type,
+            'default': None,
+            'multi': True
             },
         }
         
@@ -102,6 +117,27 @@ class Search(PCDefaultDict):
             super(Search, self).__init__(search)
             self.update(kwargs)
         self.thresholds = self.context.thresholds
+    
+    def __copy__(self):
+        return self.__class__(search=self)
+        
+    def build_disjunction(self, field, things):
+        if isinstance(things, list):
+            return {
+                "bool": {
+                    "should": [
+                        self.build_disjunction(field, thing)
+                            for thing in things
+                        ],
+                    "minimum_should_match": 1
+                    }
+                }
+        else:
+            return {
+                "term": {
+                    field: things
+                    }
+                }
 
     def build_query(self, 
                     from_=None, 
@@ -130,6 +166,10 @@ class Search(PCDefaultDict):
                 }
             })
         
+        # May filter optionally by type name.
+        if self['type'] is not None:
+            must.append(self.build_disjunction("type", self['type']))
+
         if self.query_string is not None:
             must.append({
                 "query_string": {
@@ -180,7 +220,12 @@ class Search(PCDefaultDict):
     def run(self, query):
         raw = self.context.search(body=query)
         return raw
-
+    
+    def raw_crash_to_report(self, crash):
+        return Report(
+                self,
+                ESCrash.de_elastify(crash), 
+                saved=True)
 
     def raw_results_to_page(self, raw, page_class):
         total_hits = raw['hits']['total']
@@ -191,6 +236,8 @@ class Search(PCDefaultDict):
             converter = lambda x: x
             if field == "project":
                 converter = Project
+            if field == "type":
+                converter = CrashType
             field_counts = {}
             raw_agg = raw['aggregations'][field]['buckets']
             for b in raw_agg:
@@ -199,27 +246,54 @@ class Search(PCDefaultDict):
         
         reports = []
         for hit in raw_hits:
-            report = hit['_source']
-            # TODO?: use Report class?
-            crash = Crash(report)
-            reports.append(crash)
+            crash = hit['_source']
+            report = self.raw_crash_to_report(crash)
+            reports.append(report)
         
         return page_class(reports=reports,
-                          total_reports=total_hits,
+                          total=total_hits,
                           counts=counts,
                           search=self)
     
-    def page(self, from_=None, size=None):
+    def page(self, from_, size):
         """Get search results for a particular page."""
+        if from_ is None:
+            from_ = self._d.get('from', None)
+        if from_ is None:
+            from_ = 0
+        if size is None:
+            size = self._d.get('size', None)
         query = self.build_query(from_=from_, size=size)
         raw = self.run(query)
         page = self.raw_results_to_page(raw, Page)
         page['from'] = from_
         page['size'] = len(raw['hits']['hits'])
         return page
+    
+    def __call__(self, from_=None, size=None):
+        return self.page(from_=from_, size=size)
 
     def as_dict(self):
         return self._d
+    
+    def new_blank(self):
+        return Search(context=self.context)
+    
+    @property
+    def project(self):
+        if 'project' in self._d and self._d['project'] is not None:
+            from partycrasher.api.report_project import ReportProject
+            return ReportProject(project=self._d['project'], 
+                                    search=self.new_blank())
+        return None
+    
+    @property
+    def type(self):
+        if 'type' in self._d and self._d['type'] is not None:
+            from partycrasher.api.report_type import ReportType
+            return ReportType(report_type=self._d['type'], 
+                                    search=self.new_blank())
+        return None
     
 class Page(PCDict):
     def __init__(self,
@@ -236,11 +310,28 @@ class Page(PCDict):
             )
     
     def restify(self):
+        d = {}
         if 'search' in self:
-            d = copy(self['search'].as_dict())
-        else:
-            d = {}
+            s = copy(self['search'])
+            d.update(s.as_dict())
+            s['from']=self['from']
+            s['size']=self['size']
+            d['search'] = s
+            if self['from']+self['size']<self['total']:
+                d['next_page'] = copy(s)
+                d['next_page']['from'] = self['from']+self['size']
+            else:
+                d['next_page'] = None
+            if self['from'] > 0:
+                d['prev_page'] = copy(s)
+                d['prev_page']['from'] = max(
+                    0,
+                    self['from']-self['size'])
+            else:
+                d['prev_page'] = None
         d.update(self._d)
+        d['project'] = self.search.project
+        d['type'] = self.search.type
         return d
     
     @property
@@ -298,18 +389,3 @@ class View(Sequence):
             self.page()
         return self._length
         
-class Results(object):
-    def __init__(self, search, from_=None, size=None):
-        self.reports = View(
-            search=search,
-            from_=from_,
-            size=size
-            )
-    
-    def restify(self):
-        return self.reports.page
-        return d
-    
-    @property
-    def counts(self):
-        return self.reports.page.counts

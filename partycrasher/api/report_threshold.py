@@ -24,6 +24,8 @@ warn = logger.warn
 info = logger.info
 debug = logger.debug
 
+from copy import copy
+
 from partycrasher.threshold import Threshold
 from partycrasher.bucket import Bucket
 from partycrasher.api.search import Page, Search, View
@@ -97,15 +99,15 @@ class BucketSearch(Search):
         if size is None:
           size = 10
         
-        actual_size = size
+        #actual_size = size
         
-        if from_ is not None:
-            assert from_ >= 0
-            actual_size = actual_size + from_
-        if size is not None:
-            assert size >= 0
-            (query["aggs"]["top_buckets_filtered"]["aggs"]
-                  ["top_buckets"]["terms"]["size"]) = actual_size
+        #if from_ is not None:
+            #assert from_ >= 0
+            #actual_size = actual_size + from_
+        #if size is not None:
+            #assert size >= 0
+            #(query["aggs"]["top_buckets_filtered"]["aggs"]
+                  #["top_buckets"]["terms"]["size"]) = actual_size
         
         #debug(pretty(query))
         response = self.context.search(body=query)
@@ -116,22 +118,30 @@ class BucketSearch(Search):
                        ['top_buckets_filtered']
                        ['top_buckets']
                        ['buckets'])
+        total = len(top_buckets)
         
         if from_ is not None:
             top_buckets = top_buckets[from_:]
+        else:
+            from_ = 0
+        if size is not None:
+            top_buckets = top_buckets[0:size]
+        else:
+            size = total
         
-        #TODO: change this to ReportBucket
-        buckets = [Bucket(id=bucket['key'], 
-                       project=self.project,
-                       threshold=self.threshold,
-                       total=bucket['doc_count'],
-                       first_seen=bucket['first_seen']['value_as_string'],
-                       )
+        buckets = [ReportBucket(
+                        search=copy(self), 
+                        id=bucket['key'], 
+                        project=self.project,
+                        type=self.type,
+                        threshold=self.threshold,
+                        total=bucket['doc_count'],
+                        first_seen=bucket['first_seen']['value_as_string'],
+                        )
                    for bucket in top_buckets]
         
         r = BucketPage(buckets=buckets,
-                       #TODO: return total number of buckets
-                       total_buckets=None,
+                       total=total,
                        search=self)
         r['from'] = from_
         r['size'] = size
@@ -145,11 +155,11 @@ class ReportThreshold(Threshold):
     def __init__(self, search, result, from_=None, size=None):
         super(ReportThreshold, self).__init__(result)
         search = BucketSearch(search=search, threshold=Threshold(self))
-        self.buckets = BucketView(
+        self.buckets = BucketSearch(
             search=search,
             from_=from_,
             size=size
             )
     
     def restify(self):
-        return self.buckets.page
+        return self.buckets

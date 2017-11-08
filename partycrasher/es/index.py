@@ -226,6 +226,7 @@ class ESIndex(object):
                 "properties": bucket_properties
             },
             'project': string_not_analyzed,
+            'type': string_not_analyzed,
             'date': {
                 'type': 'date',
             },

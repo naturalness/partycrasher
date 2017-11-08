@@ -17,6 +17,8 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from copy import deepcopy
+
 from partycrasher.threshold import Threshold
 from partycrasher.bucket import Bucket, Buckets, TopMatch
 
@@ -47,3 +49,9 @@ class ESBuckets(Buckets):
                       '{!s}'.format(threshold))
             # TODO: Custom exception for this?
             raise Exception(message)
+    
+    def __copy__(self):
+        return ESBuckets(self.raw_buckets)
+    
+    def __deepcopy__(self, memo):
+        return ESBuckets(deepcopy(self.raw_buckets, memo))

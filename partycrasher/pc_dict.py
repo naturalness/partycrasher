@@ -78,6 +78,14 @@ class PCDict(MutableMapping):
             return self._d.__getitem__(synonyms[key])
         else:
             return self._d.__getitem__(key)
+    
+    def maybe_coerce(self, key, val):
+        if self.canonical_fields[key]['converter'] is not None:
+            return (
+                self.canonical_fields[key]['converter'](val))
+        else:
+            raise ValueError(key + " must be of type " +
+                        self.canonical_fields[key]['type'].__name__)
 
     def __setitem__(self, key, val):
         assert key not in self.__dict__
@@ -97,14 +105,20 @@ class PCDict(MutableMapping):
             if isinstance(val, self.canonical_fields[key]['type']):
                 # It's the right type. No need to convert, just set.
                 return self._d.__setitem__(key, val)
+            elif (isinstance(val, list)
+                  and self.canonical_fields[key].get('multi', False)):
+                for i in range(0, len(val)):
+                    if isinstance(val[i], self.canonical_fields[key]['type']):
+                        continue
+                    else:
+                        val[i] = maybe_coerce(key, val[i])
+                return self._d.__setitem__(key, val)
             else:
                 # Coerce to the required type.
-                if self.canonical_fields[key]['converter'] is not None:
-                    return self._d.__setitem__(key,
-                        self.canonical_fields[key]['converter'](val))
-                else:
-                    raise ValueError(key + " must be of type " +
-                             self.canonical_fields[key]['type'].__name__)
+                return self._d.__setitem__(
+                    key,
+                    self.maybe_coerce(key, val)
+                    )
         else:
             m = good.match(key)
             if m is None:

@@ -25,7 +25,7 @@ if PY3:
 elif PY2:
     from collections import Mapping
 
-from partycrasher.api.search import Results
+from partycrasher.api.search import Search
 from partycrasher.api.report_type import ReportType
 
 class Types(Mapping):
@@ -39,7 +39,8 @@ class Types(Mapping):
     
     def get_types(self):
         """Get type tree."""
-        r = Results(self.search, size=0)
+        r = Search(self.search, size=0)()
+        assert 'type' in r.counts
         types = {p:
             ReportType(self.search, p) 
             for p in r.counts['type'].keys()}
@@ -64,10 +65,4 @@ class Types(Mapping):
     
     def restify(self):
         self.load()
-        d = {}
-        for k, v in self._d.items():
-            d[str(k)] = {
-                'reports': v.reports.search,
-                'buckets': v.buckets.search
-            }
-        return d
+        return self._d

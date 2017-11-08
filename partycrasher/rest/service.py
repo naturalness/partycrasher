@@ -18,7 +18,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from __future__ import print_function
+from __future__ import print_function, division
 
 import os
 import sys
@@ -50,7 +50,8 @@ from partycrasher.rest.api_utils import (
     redirect_with_query_string,
     full_url_for,
     str_to_bool,
-    make_search
+    make_search,
+    json_exception
 )
 from partycrasher.rest.resource_encoder import (ResourceEncoder,
                                                 auto_url_for)
@@ -102,28 +103,8 @@ def before_first_request():
 @app.errorhandler(Exception)
 def on_crasher_crash(ex):
     (t, v, tb) = sys.exc_info()
-    for line in traceback.format_exception(t, v, tb):
-        ERROR(line.rstrip())
-    tb = traceback.extract_tb(tb)
-    out_tb = []
-    i = 0
-    for frame in reversed(tb):
-        i = i + 1
-        out_tb.append({
-            'file': frame[0],
-            'fileline': frame[1],
-            'function': frame[2],
-            'extra': frame[3],
-            'depth': i
-            })
-    details = {
-        'message': str(ex),
-        'error': ex.__class__.__name__,
-        'stacktrace': out_tb,
-        }
-    if isinstance(ex, PartyCrasherError):
-        details.update(ex.get_extra())
-    response = jsonify(details)
+    response = jsonify(json_exception(t, v, tb))
+    del tb
     if hasattr(ex, 'http_code'):
         response.status_code = ex.http_code
     elif hasattr(ex, 'code'):
@@ -205,6 +186,7 @@ def home(filename=None):
         bower=full_url_for('home') + 'bower_components',
         node_modules=full_url_for('home') + 'node_modules',
         project_names=[proj for proj in crasher.projects],
+        type_names=[t for t in crasher.types],
         thresholds=[str(thresh) for thresh in crasher.thresholds],
         basehref=full_url_for('home'),
         restbase=full_url_for('root'),
@@ -480,187 +462,6 @@ def view_report(project, report_id):
     report = crasher.report(report_id, project, explain=auto_summary)
     return jsonify_resource(report)
 
-def not_available_in_this_release():
-    @app.route('/reports/<report_id>', methods=['DELETE'],
-               defaults={'project': None},
-               endpoint='delete_report_no_project')
-    @app.route('/<project>/reports/<report_id>', methods=['DELETE'])
-    def delete_report(project=None, report_id=None):
-        """
-        .. api-doc-order: 200
-
-        Delete an existing report
-        =========================
-        ::
-
-            DELETE /:project/reports/:report_id HTTP/1.1
-
-        or
-
-        ::
-
-            DELETE /reports/:report_id HTTP/1.1
-
-        Deletes an existing report from the database.
-
-        ::
-
-            HTTP/1.1 200 OK
-
-        """
-        # Ignore project.
-        assert report_id is not None
-        raise NotImplementedError
-
-
-@app.route('/buckets/<threshold>/<bucket_id>',
-           defaults={'project': None},
-           endpoint='view_bucket_no_project')
-@app.route('/<project>/buckets/<threshold>/<bucket_id>')
-def view_bucket(project=None, threshold=None, bucket_id=None):
-    """
-    .. api-doc-order: 15
-
-    View reports in a bucket
-    ========================
-    ::
-
-        GET /:project/buckets/:threshold/:bucket_id HTTP/1.1
-
-    Fetches the bucket in given project, for the given threshold.
-    Returns with a list of top reports (a semi-arbitrary list), and the amount
-    of reports ingested into this bucket.
-
-    Query parameters
-    ----------------
-
-    ``from``
-        Get page of crash reports starting from this number.
-    ``size``
-        Get this number of crash reports, starting from ``from``.
-
-    ::
-
-        HTTP/1.1 200 OK
-
-    .. code-block:: JSON
-
-        {
-            "id": "<bucket-id>",
-            "project": "<project>",
-            "href": "http://domain.tld/<project>/buckets/<threshold>/<bucket-id>",
-            "threshold": "4.0",
-            "top_reports": ["..."],
-            "total": 3279
-        }
-
-    """
-    assert bucket_id is not None
-    assert threshold is not None
-    s = make_search(request.args, bucket_id=bucket_id, threshold=threshold)
-
-    return jsonify_resource(crasher.report_bucket(**s))
-
-
-# Undoucmented endpoint:
-# Automatically redirects to the real endpoint.
-@app.route('/buckets',
-           defaults={'project': None},
-           endpoint='query_default_buckets_no_project')
-@app.route('/<project>/buckets')
-def query_default_buckets(project=None):
-    if project is None:
-        appropriate_url = url_for('query_buckets_no_project',
-                                  threshold=crasher.default_threshold)
-    else:
-        appropriate_url = url_for('query_buckets',
-                                  threshold=crasher.default_threshold,
-                                  project=project)
-    # Redirect with "Found" semantics.
-    return redirect_with_query_string(appropriate_url, 302)
-
-
-@app.route('/buckets/<threshold>',
-           defaults={'project': None},
-           endpoint='query_buckets_no_project')
-@app.route('/<project>/buckets/<threshold>')
-def query_buckets(project=None, threshold=None):
-    """
-    .. api-doc-order: 10
-
-    Get the top buckets in the recent past
-    ======================================
-
-    ::
-
-        GET /:project/buckets/:threshold HTTP/1.1
-
-    or
-
-    ::
-
-        GET /buckets/:threshold HTTP/1.1
-
-    Finds the top buckets for a given time-frame. If queried on a ``:project``
-    route, implicitly filters by project.
-
-    Query parameters
-    ----------------
-
-    ``q``
-        Only show buckets, with crashes matching this search query, 
-        in lucene search syntax. See
-        https://lucene.apache.org/core/2_9_4/queryparsersyntax.html
-        for details.
-    ``since``
-        **Required**. Grab buckets since this date, represented as an ISO 8601
-        date/time value (i.e, ``YYYY-MM-DD``), or a relative offset such as
-        ``5-hours-ago``, ``3-days-ago`` or ``1-week-ago``, etc.
-    ``until``
-        Grab buckets with crashes up to but not after this date as represented
-        as an ISO 8601 date/time value. Defaults to no limit.
-    ``from``
-        Get page of results starting from this number.
-    ``size``
-        Get this number of results, starting from ``from``.
-
-    Example
-    -------
-
-    ::
-
-        GET /alan_parsons/buckets/4.0?since=2016-02-29 HTTP/1.1
-        Host: domain.tld
-
-    ::
-
-        HTTP/1.0 200 OK
-        Content-Type: application/json
-
-    .. code-block:: JSON
-
-        {
-            "since": "2016-02-29T00:00:00",
-            "threshold": "4.0",
-            "top_buckets": [
-                {
-                    "id": "c29a81a0-5a53-4ba0-8123-5e96685a5895",
-                    "href": "http://domain.tld/alan_parsons/buckets/4.0/c29a81a0-5a53-4ba0-8123-5e96685a5895",
-                    "total": 253,
-                    "first_seen": "2016-02-27T14:32:08Z"
-                }
-            ]
-        }
-
-    """
-    assert threshold is not None
-    s = make_search(args=request.args,
-        threshold=threshold,
-        project=project)
-    threshold = crasher.report_threshold(**s)
-
-    return jsonify(threshold)
-
 @app.route('/reports', methods=['DELETE'])
 def delete_reports_no_project():
     """
@@ -691,151 +492,31 @@ def delete_reports_no_project():
     else:
         return jsonify(error="Deleting all reports not enabled"), 403
 
-@app.route('/<project>/config')
-def get_project_config(project=None):
-    """
-    .. api-doc-order: 100
-
-    View per-project configuration
-    ==============================
-
-    ::
-
-        GET /:project/config HTTP/1.1
-
-    ::
-
-        HTTP/1.1 200 OK
-
-    .. code-block:: json
-
-        {
-            "default_threshold": 4.0
-        }
-
-    """
-
-    return jsonify(crasher)
-
-@app.route('/project/<project>')
-def view_project(project=None):
-    """
-    .. api-doc-order: 100
-
-    View project reports and buckets
-    ==============================
-
-    ::
-
-        GET /project/:project HTTP/1.1
-
-    ::
-
-        HTTP/1.1 200 OK
-
-    .. code-block:: json
-
-        {
-        ...
-        }
-
-    """
-    assert project is not None
-    s = make_search(args=request.args,
-        project=project)
-    project = crasher.report_project(**s)
-    return(jsonify(project))
-
-@app.route('/search',
-           defaults={'project': None},
-           endpoint='search_no_project')
-@app.route('/<project>/search')
-def search(project):
-    """
-    .. api-doc-order: 20
-
-    Perform a free-text search
-    ======================
-    ::
-
-        GET /:project/search?q=:search HTTP/1.1
-
-    Performs a free-text search on all crashes in a project.
-    
-    Query parameters
-    ----------------
+@app.route('/<path:path>/', methods=['GET'])
+def view(path=None):
+    params = {}
+    if path is not None:
+        path = path.split('/')
+        k = None
+        for i in range(0, len(path)):
+            if (i % 2) == 0:
+                k = path[i]
+            else:
+                params[k] = path[i]
+                k = None
+    if k is not None:
+        wanted = k
+    else:
+        wanted = None
+    s = make_search(args=params)
+    s = make_search(args=request.args, **s)
+    #return jsonify({'params': params, 'wanted': wanted, 'search': dict(**s)})
+    if wanted == 'reports':
+        return jsonify(crasher.report_search(**s)())
+    elif wanted == 'buckets':
+        return jsonify(crasher.bucket_search(**s)())
 
 
-    ``q``
-        What to search for, in lucene search syntax. See
-        https://lucene.apache.org/core/2_9_4/queryparsersyntax.html
-        for details.
-    ``since``
-        Search crashes occuring after this date, represented as an ISO 8601
-        date/time value (i.e, ``YYYY-MM-DD``), or a relative offset such as
-        ``5-hours-ago``, ``3-days-ago`` or ``1-week-ago``, etc.
-    ``until``
-        Search crashes occuring before this date as represented
-        as an ISO 8601 date/time value. Defaults to no limit.
-    ``from``
-        Get page of results starting from this number.
-    ``size``
-        Get this number of results, starting from ``from``.
-    ``sort``
-        Change how the results are sorted. Specifies a field name such
-        as ``date``.
-    ``order``
-        Should be ``asc`` or ``desc``. Default is ``desc``.
-        Determines whether the results should be sorted in 
-        ascending or descending order.
-
-    ::
-    
-        HTTP/1.1 200 OK
-
-    .. code-block:: json
-
-        [
-            {
-                "database_id": "<report-id>",
-                "href": "https://domain.tld/<project>/reports/<report-id>"
-                "buckets": {
-                    "4.0": {
-                        "bucket_id": "<bucket-id @ 4.0>",
-                        "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
-                    }
-                }
-            },
-            {
-                "database_id": "<report-id>",
-                "href": "https://domain.tld/<project>/reports/<report-id>"
-                "buckets": {
-                    "4.0": {
-                        "bucket_id": "<bucket-id @ 4.0>",
-                        "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
-                    }
-                }
-            },
-            ...
-        ]
-
-    """
-    
-    if project == '*':
-        project = None
-    
-    if request.args.get('order') is not None:
-        raise NotImplementedError("sort order feature was deimpemented!")
-        if not (order == "asc" or order == "desc"):
-            raise BadRequest('Couldn\'t understand sort order. Should be'
-                            'asc or desc.')
-
-    if request.args.get('sort') is not None:
-        raise NotImplementedError("sort feature was deimpemented!")
-    
-    s = make_search(request.args, project=project)
-
-    return jsonify_resource(crasher.report_search(**s))
 
 #############################################################################
 #                                 Utilities                                 #

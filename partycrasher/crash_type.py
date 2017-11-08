@@ -31,13 +31,13 @@ class CrashType(object):
     
     def __init__(self, crash_type):
         if isinstance(crash_type, CrashType):
-            self.name == crash_type.name
+            self.name = crash_type.name
         elif isinstance(crash_type, string_types):
             self.name = crash_type
         elif isinstance(crash_type, dict) and 'name' in crash_type:
             self.name = crash_type['name']
         else:
-            raise BadTypeNameError(repr(self.name))
+            raise BadTypeNameError(repr(crash_type))
         m = good.match(self.name)
         if m is None:
             raise BadTypeNameError(self.name)
@@ -46,3 +46,6 @@ class CrashType(object):
     
     def __str__(self):
         return self.name
+    
+    def __copy__(self):
+        return CrashType(self)

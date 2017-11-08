@@ -56,5 +56,5 @@ class Thresholds(Mapping):
     def restify(self):
         d = {}
         for k, v in self._d.items():
-            d[str(k)] = v.buckets.search
+            d[str(k)] = v
         return d

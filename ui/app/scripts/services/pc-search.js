@@ -29,37 +29,49 @@ angular.module('PartyCrasherApp')
     
     var path = $location.path().split('/');
     for (var i = 1; i < path.length; i++) {
-      if (path[i] == "" | path[i] == "project") {
+      if (path[i] == "" 
+        | path[i] == "projects"
+        | path[i] == "types"
+        | path[i] == "thresholds"
+        | path[i] == "buckets"
+        | path[i] == "reports"
+      ) {
         null;
-      } else if (path[i-1] == 'project') {
+      } else if (path[i-1] == 'projects') {
         pathProject = path[i].split(',');
-      } else if (!isNaN(parseFloat(path[i-1]))) {
-        pathBucket = path[i];
-      } else if (!isNaN(parseFloat(path[i]))) {
-        pathThreshold = path[i];
-        pathGrouping = "bucket";
-      } else if (i == 1) {
-        // This must be the last else if
-        pathReportType = path[i];
+      } else if (path[i-1] == 'types') {
+        pathReportType = path[i].split(',');
+      } else if (path[i-1] == 'thresholds') {
+        pathReportThreshold = parseFloat(path[i]);
+        if (isNaN(pathReportThreshold)) {
+          throw `Bad threshold value ${path[i]}`;
+        }
+      } else if (path[i-1] == 'buckets') {
+        pathBucket = path[i].split(',');
       } else {
         throw `Unknown path information ${path[i-1]}/${path[i]}`;
+      }
+      if (path[path.length-2] == 'buckets') {
+        pathGrouping = 'bucket';
+      } else if (path[path.length-2] == 'reports') {
+        pathGrouping = 'report';
       }
     }
     state.q = $location.search().q || null;
     state.project = pathProject 
-      || $location.search().project || '*';
+      || $location.search().project || null;
     state.since = $location.search().since;
     state.until = $location.search().until;
     state.from = $location.search().from;
     state.size = $location.search().size;
     state.grouping = pathGrouping ||
-      $location.search().grouping || "report";
+      $location.search().grouping || null;
     state.bucket = pathBucket 
       $location.search().bucket || null;
     state.threshold = pathThreshold
       $location.search().threshold || null;
     state.report_type = pathReportType
-      || $location.search().type || '*';
+      || $location.search().type || null;
   }
   
   read_location(); /* ensure properties exist in state so I don't have to list
@@ -70,21 +82,27 @@ angular.module('PartyCrasherApp')
     // console.log('Changing location...');
     path = "/";
     if (state.report_type.length == 0) {
-      path += `*/`;
+      path += ``;
     } else {
-      path += `${state.report_type}/`;
+      path += `types/${state.report_type}/`;
     }
     if (state.project == "*" ||  state.project.length == 0) {
       null;
     } else {
-      path += `project/${state.project}/`;
+      path += `projects/${state.project}/`;
     }
     if (state.bucket) {
-      path += `${state.threshold}/${state.bucket}/`;
-    } else if (state.threshold != null && state.grouping == 'bucket') {
-      path += `${state.threshold}/`;
-    } else if (state.grouping == 'bucket') { // threshold must be null
-      path += `${DEFAULT_THRESHOLD}/`;
+      path += `buckets/${state.bucket}/`;
+    } 
+    if (state.grouping == 'bucket') {
+      if (state.threshold) {
+        path += `thresholds/${state.threshold}/`;
+      } else { // threshold must be null
+        path += `thresholds/${DEFAULT_THRESHOLD}/`;
+      }
+      path += `buckets/`;
+    } else if (state.grouping == 'report') {
+      path += `reports/`;
     }
     $location.search('q', state.q)
       .search('since', state.since)

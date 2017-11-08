@@ -17,6 +17,14 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import logging
+logger = logging.getLogger(__name__)
+ERROR = logger.error
+WARN = logger.warn
+INFO = logger.info
+DEBUG = logger.debug
+
+
 from six import string_types
 
 from datetime import datetime
@@ -26,6 +34,7 @@ from partycrasher.pc_exceptions import BadDateError
 from partycrasher.threshold import Threshold
 from partycrasher.project import Project
 from partycrasher.bucket import Bucket
+from partycrasher.crash_type import CrashType
 
 def maybe_threshold(v):
     if v is not None:
@@ -74,3 +83,12 @@ def maybe_parse_date(s):
     if isinstance(s, datetime):
         return s
     return dateparser.parse(s.replace('-', ' '))
+
+def maybe_type(v):
+    if v is not None:
+        if ',' in v:
+            return [CrashType(t) for t in v.split(',')]
+        else:
+            return CrashType(v)
+    else:
+        return v

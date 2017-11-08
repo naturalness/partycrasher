@@ -31,7 +31,7 @@ class Project(object):
     
     def __init__(self, project):
         if isinstance(project, Project):
-            self.name == project.name
+            self.name = project.name
         elif isinstance(project, string_types):
             self.name = project
         elif isinstance(project, dict) and 'name' in project:
@@ -46,3 +46,6 @@ class Project(object):
     
     def __str__(self):
         return self.name
+    
+    def __copy__(self):
+        return Project(self)

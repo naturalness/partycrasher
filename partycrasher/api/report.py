@@ -32,9 +32,11 @@ from copy import copy, deepcopy
 
 from partycrasher.crash import Crash, Stacktrace, Stackframe
 from partycrasher.es.crash import ESCrash
+from partycrasher.context import Context
 from partycrasher.pc_exceptions import ProjectMismatchError
-from partycrasher.bucket import Buckets
+from partycrasher.bucket import Buckets, Bucket
 from partycrasher.project import Project
+
 
 # python2 and six don't support enums
 
@@ -44,9 +46,10 @@ class Report(object):
     def __init__(self,
                  search,
                  crash,
-                 project,
+                 project=None,
                  dry_run=True,
                  explain=False,
+                 saved=False,
                  ):
         context = search.context
         self.context = context
@@ -55,13 +58,13 @@ class Report(object):
             self.saved = True
         elif isinstance(crash, dict):
             self.crash = Crash(crash)
-            self.saved = False
+            self.saved = saved
         elif isinstance(crash, ESCrash):
             self.crash = crash
             self.saved = True
         elif isinstance(crash, Crash):
             self.crash = crash
-            self.saved = False
+            self.saved = saved
         self.strategy = context.strategy
         self.dry_run = dry_run
         self.ran = False
@@ -71,6 +74,29 @@ class Report(object):
         self.thresholds = context.thresholds
         self.index = context.index
         self.explain = explain
+        self.fix_crash()
+            
+    def fix_crash(self):
+        if isinstance(self.crash, ESCrash):
+            self.crash = self.crash.as_crash()
+        from partycrasher.api.report_bucket import ReportBucket
+        from partycrasher.api.report_project import ReportProject
+        from partycrasher.api.report_type import ReportType
+        from partycrasher.api.search import Search
+        assert isinstance(self.context, Context), context.__class__.__name__
+
+        self.crash['project'] = ReportProject(
+            search=Search(context=self.context),
+            project=self.crash['project'])
+        self.crash['type'] = ReportType(
+            search=Search(context=self.context),
+            report_type=self.crash['type'])
+        for k, v in list(self.crash['buckets'].items()):
+            if isinstance(v, Bucket):
+                self.crash['buckets'][k] = ReportBucket(
+                    search=Search(context=self.context),
+                    id=v.id,
+                    threshold=v.threshold)
         
     def fix_project(self):
         crash_project = None
@@ -94,7 +120,6 @@ class Report(object):
                     raise ProjectMismatchError(self.project, self.crash)
                 else:
                     return self.project
-            
     
     def validate(self):
         """Do some extra runtime checking that should be unnecessary if the Crash class is operating correctly."""
@@ -234,7 +259,7 @@ class Report(object):
           
         return crash
 
-    def restify(self):
+    def restify_(self):
         assert self.project is not None
         d = {
             'report': self.crash,

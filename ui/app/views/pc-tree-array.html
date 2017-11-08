@@ -5,7 +5,7 @@
     <span class="disclosure-hide">Hide</span>
   </label>
   <ol class="disclosure-contents dl-horizontal">
-    <li ng-repeat="value in ::value">
+    <li ng-repeat="value in ::value track by $index">
       <pc-tree value="value" />
     </li>
   </ol>

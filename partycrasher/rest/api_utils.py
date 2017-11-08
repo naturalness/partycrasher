@@ -25,19 +25,21 @@ from six import string_types
 import weakref
 import re
 import distutils
+import sys
+import traceback
 
 from flask import json, jsonify, request, redirect, make_response, url_for
 
 from partycrasher.crash import pretty
 from partycrasher.pc_exceptions import PartyCrasherError
-from partycrasher.api.util import maybe_date, maybe_int
+from partycrasher.api.util import maybe_date, maybe_int, maybe_type
 
 import logging
 logger = logging.getLogger(__name__)
-error = logger.error
-warn = logger.warn
-info = logger.info
-debug = logger.debug
+ERROR = logger.error
+WARN = logger.warn
+INFO = logger.info
+DEBUG = logger.debug
 
 class BadRequest(PartyCrasherError):
     """
@@ -211,15 +213,51 @@ def maybe_set(d, k, v):
         d[k] = v
     return d
 
+def merge(d, dest, src):
+    if dest in d:
+        if src in d:
+            raise KeyConflictError(key=dest,
+                                   value_a=d[dest],
+                                   value_b=d[src])
+        else:
+            pass
+    else:
+        if src in d:
+            d[dest]=d[src]
+            del d[src]
+        else:
+            pass
+
 def make_search(args, **kwargs):
     s = kwargs
-    maybe_set(s, 'from_', maybe_int(args.get('from', None)))
+    merge(args, 'from', 'from_')
+    maybe_set(s, 'from', maybe_int(args.get('from', None)))
     maybe_set(s, 'size', maybe_int(args.get('size', None)))
     maybe_set(s, 'query_string', args.get('q', None))
     maybe_set(s, 'since', maybe_date(args.get('since', None)))
     maybe_set(s, 'until', maybe_date(args.get('until', None)))
+    merge(args, 'project', 'projects')
     maybe_set(s, 'project', args.get('project', None))
+    merge(args, 'type', 'type_')
+    merge(args, 'type', 'types')
+    maybe_set(s, 'type', maybe_type(args.get('type', None)))
+    merge(args, 'threshold', 'thresholds')
     maybe_set(s, 'threshold', args.get('threshold', None))
-    maybe_set(s, 'bucket', args.get('bucket', None))
+    merge(args, 'bucket_id', 'buckets')
+    merge(args, 'bucket_id', 'bucket')
+    maybe_set(s, 'bucket_id', args.get('bucket_id', None))
     return s
+
+def json_exception(t, v, tb):
+    for line in traceback.format_exception(t, v, tb):
+        ERROR(line.rstrip())
+    details = {
+        'message': str(v),
+        'error': t.__name__,
+        'stacktrace': tb,
+        }
+    if hasattr(v, 'get_extra'):
+        details.update(v.get_extra())
+    return details
+
     

@@ -139,9 +139,9 @@ class Buckets(object):
         else:
             return self._od.__eq__(other)
 
-    def copy(self, *args, **kwargs):
+    def __copy__(self):
         new = Buckets()
-        new._od = self._od.copy()
+        new._od = self._od.__copy__()
         return new
     
     def keys(self):
@@ -153,6 +153,10 @@ class Buckets(object):
     def __iter__(self):
         return self._od.__iter__()
     
+    def __deepcopy__(self, memo):
+        new = self.__class__()
+        new._od = deepcopy(self._od, memo)
+        return new
 
     def json_serializable(self):
         d = OrderedDict()
