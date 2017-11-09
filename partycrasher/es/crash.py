@@ -36,9 +36,9 @@ from partycrasher.crash import (
   pretty,
   parse_utc_date,
   )
-from partycrasher.pc_dict import Dict
 from partycrasher.es.bucket import ESBuckets
 from partycrasher.es.elastify import elastify, ESCrashEncoder
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -49,6 +49,9 @@ debug = logger.debug
 
 def parse_es_date(s):
     return parse_utc_date(s)
+
+class WeakRefableDict(dict):
+    slots = ('__weakref__',)
 
 class ESCrash(Crash):
     """Class for a crash that's stored in Elastic"""
@@ -94,7 +97,7 @@ class ESCrash(Crash):
         existing = self.getrawbyid(dbid)
         if existing is not None:
             # Found it in ElasticSearch!
-            self.crashes[self.index.name][dbid] = existing._d
+            self.crashes[self.index.name][dbid] = WeakRefableDict(existing._d)
             self._d = existing._d
             self.hot = True
         else:
@@ -179,7 +182,7 @@ class ESCrash(Crash):
                 raise IdenticalReportError(existing)
 
         # cache it as a weak reference
-        self.crashes[self.index.name][self['database_id']] = self._d
+        self.crashes[self.index.name][self['database_id']] = WeakRefableDict(self._d)
         self.hot = True
 
     def __init__(self, index, crash, unsafe=False):

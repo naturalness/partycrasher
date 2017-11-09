@@ -54,6 +54,8 @@ class Bucket(PCDict):
      - id: The bucket's ID;
      - total: how many reports are currently in the bucket.
     """
+    __slots__ = tuple()
+    
     canonical_fields = {
         'id': {
             'type': text_type,
@@ -73,10 +75,10 @@ class Bucket(PCDict):
          },
     }
         
-    def __init__(self, *args, **kwargs):
-        super(Bucket, self).__init__(*args, **kwargs)
-        assert 'id' in self
-        assert 'threshold' in self
+    #def __init__(self, *args, **kwargs):
+        #super(Bucket, self).__init__(*args, **kwargs)
+        #assert 'id' in self
+        #assert 'threshold' in self
     
     @classmethod
     def new(cls, threshold, **kwargs):
@@ -86,6 +88,8 @@ class Bucket(PCDict):
         return Bucket(**kwargs)
 
 class TopMatch(FixedPCDict):
+    __slots__ = tuple()
+
     canonical_fields = {
         'report_id': {
             'type': text_type,
@@ -102,7 +106,7 @@ class TopMatch(FixedPCDict):
     }
 
 class Buckets(object):
-    _od = None
+    __slots__ = ('_od',)
     
     """Proxy for OrderedDict"""
     def __init__(self, **kwargs):

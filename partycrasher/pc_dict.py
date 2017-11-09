@@ -42,14 +42,13 @@ from partycrasher.pc_exceptions import BadKeyNameError
 
 good = re.compile('([\w_-]+)$')
     
-class Dict(dict):
-    pass
-
 class PCDict(MutableMapping):
     """
     Proxy object for a dictionary adding some canonicalization features
     to ensure consistency.
     """
+    
+    __slots__ = ('_d',)
 
     synonyms = {}
     
@@ -59,15 +58,15 @@ class PCDict(MutableMapping):
         if (len(args) == 1):
             assert len(kwargs) == 0
             if isinstance(args[0], PCDict):
-                self._d = copy(args[0]._d)
-                return self
+                d = args[0]._d
             elif isinstance(args[0], dict):
-                d = dict(args[0])
+                d = args[0]
             else:
                 raise TypeError("Expected %s but got %s" % 
                                 (PCDict, repr(args[0])))
-        d = dict(*args, **kwargs)
-        self._d = Dict()
+        else:
+            d = dict(*args, **kwargs)
+        self._d = dict()
         for k, v in d.items():
             self[k] = v
     
@@ -91,8 +90,9 @@ class PCDict(MutableMapping):
                         self.canonical_fields[key]['type'].__name__)
 
     def __setitem__(self, key, val):
-        if key in self.__dict__:
-            raise BadKeyNameError(key)
+        # TODO: figure out how to fix this
+        #if (not key in self._d) and hasattr(self, key):
+            #raise BadKeyNameError(key)
 
         # Force strings to be unicoded
         if not isinstance(key, string_types):
@@ -150,21 +150,12 @@ class PCDict(MutableMapping):
         return self.__class__(deepcopy(self._d, memo))
     
     def __getattr__(self, k):
-        if k in self.__dict__:
-            return self.__dict__[k]
-        elif '_d' in self.__dict__ and k in self._d:
+        if k in self._d:
             return self._d[k]
         else:
             raise AttributeError(k)
     
-    def __setattr__(self, k, v):
-        if '_d' in self.__dict__:
-            assert k not in self.__dict__['_d']
-        return super(PCDict, self).__setattr__(k, v)
-    
     def set_d(self, d):
-        if not isinstance(d, Dict):
-            d = Dict(d)
         self._d = d
     
     def keys(self):
@@ -180,6 +171,8 @@ class PCDict(MutableMapping):
         return hash(self.as_hashable())
 
 class PCList(MutableSequence):
+    
+    __slots__ = ('_l',)
   
     member_type = None
     member_converter = None

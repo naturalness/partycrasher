@@ -39,6 +39,8 @@ class Stackframe(PCDict):
     """
     Represents a Stackframe in a crash object. Proxy object for a dictionary.
     """
+    __slots__ = tuple()
+    
     synonyms = {}
     
     canonical_fields = {
@@ -69,10 +71,13 @@ class Stackframe(PCDict):
     }
 
 class Stacktrace(PCList):
+    __slots__ = tuple()
     member_type = Stackframe
     member_converter = Stackframe
 
 class Crash(PCDict):
+    
+    __slots__ = tuple()
 
     synonyms = {
         'crash_id': 'database_id', # Mozilla

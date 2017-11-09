@@ -42,6 +42,8 @@ from six import string_types
 
 class CrashFilter(object):
     
+    slots = ('remove_fields', 'keep_fields')
+    
     def __init__(self,
                  remove_fields=[],
                  keep_fields=None):

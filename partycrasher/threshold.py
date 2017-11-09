@@ -32,8 +32,8 @@ class Threshold(object):
     A wrapper for a bucket threshold value. Ensures proper serialization
     between ElasticSearch and the JSON API eloggingndpoints.
     """
-    __slots__ = '_value'
-
+    __slots__ = ('_value',)
+    
     def __init__(self, value):
         if isinstance(value, Threshold):
             assert isinstance(value._value, Decimal)

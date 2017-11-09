@@ -27,7 +27,7 @@ class CrashType(object):
     """
     Metadata about a crash type.
     """
-    name = None
+    __slots__ = 'name'
     
     def __init__(self, crash_type):
         if isinstance(crash_type, CrashType):

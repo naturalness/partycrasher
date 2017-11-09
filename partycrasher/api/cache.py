@@ -29,7 +29,8 @@ import weakref
 from partycrasher.api.report_threshold import ReportThreshold
 from partycrasher.api.thresholds import Thresholds
 
-cached_thresholds = weakref.WeakValueDictionary()
+#cached_thresholds = weakref.WeakValueDictionary()
+cached_thresholds = {}
 
 def cached_threshold(search):
     global cached_thresholds
@@ -37,7 +38,7 @@ def cached_threshold(search):
         #DEBUG("HIT")
         return cached_thresholds[search]
     else:
-        #DEBUG("MISS " + repr(search))
+        #DEBUG("MISS " + repr(search._d))
         if search.threshold is None:
             buckets = Thresholds(search)
         else:
@@ -46,4 +47,4 @@ def cached_threshold(search):
         return buckets
 
 class WeakRefableDict(dict):
-    pass
+    slots = ('__weakref__',)

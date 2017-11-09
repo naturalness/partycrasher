@@ -27,7 +27,7 @@ class Project(object):
     """
     Metadata about a project.
     """
-    name = None
+    __slots__ = 'name'
     
     def __init__(self, project):
         if isinstance(project, Project):
