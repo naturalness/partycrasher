@@ -20,7 +20,7 @@
 Utilties used in rest_service; these are kept here to unclutter the API file.
 """
 
-from six import string_types
+from six import string_types, text_type
 
 import weakref
 import re
@@ -90,17 +90,27 @@ def redirect_with_query_string(url, *args, **kwargs):
     full_url = url + '?' + query_string if query_string else url
     return redirect(full_url, *args, **kwargs)
 
+cached_urls = {}
+
 def full_url_for(route, **kwargs):
     """
     Like url_for(), but returns a fully qualified external-facing URL for the
     service.
     """
+    global cached_urls
     for k, v in kwargs.items():
         assert v is not None
         assert k is not None
     assert route is not None
     host = determine_user_agent_facing_host()
-    path = url_for(route, **kwargs)
+    urlh = tuple([route] + list(kwargs.items()))
+    if urlh in cached_urls:
+        path = cached_urls[urlh]
+    else:
+        path = url_for(route, **kwargs)
+        if len(cached_urls) > 100000:
+            cached_urls = {}
+        cached_urls[urlh] = path
     # TODO: List allowed methods, so we don't have to do an OPTIONS request. 
     return host + path
   

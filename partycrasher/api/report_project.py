@@ -19,35 +19,26 @@
 
 from six import text_type, string_types
 
-from copy import copy
-
 from partycrasher.project import Project
-from partycrasher.api.thresholds import Thresholds
 from partycrasher.api.report_threshold import BucketSearch
-from partycrasher.api.search import Search, View
+from partycrasher.api.search import Search
+from partycrasher.api.cache import cached_threshold
 
 class ReportProject(Project):
     """
     API object representing a particular project inside a search context.
     """
-    def __init__(self, search, from_=None, size=None, **kwargs):
+    def __init__(self, search, **kwargs):
         super(ReportProject, self).__init__(**kwargs)
-        search['project'] = self
-        self.reports = Search(
-            search=search,
-            from_=from_,
-            size=size
-            )
-        if search.threshold is None:
-            self.buckets = Thresholds(copy(search))
-        else:
-            self.buckets = BucketSearch(copy(search), search.threshold)
-            
+        self.original_search = search
+        search=Search(search=search, project=self)
+        self.reports = search
+        self.buckets = cached_threshold(search)
     
     def restify(self):
         d = dict()
         d['reports'] = self.reports
-        d['project'] = Project(self)
+        d['name'] = self.name
         d['buckets'] = self.buckets
         #from partycrasher.api.types import Types
         #d['types'] = Types(copy(elf.reports))

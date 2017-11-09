@@ -28,7 +28,7 @@ from copy import copy
 
 from partycrasher.threshold import Threshold
 from partycrasher.bucket import Bucket
-from partycrasher.api.search import Page, Search, View
+from partycrasher.api.search import Page, Search
 from partycrasher.api.report_bucket import ReportBucket
 from partycrasher.crash import pretty
 
@@ -37,8 +37,7 @@ class BucketPage(Page):
     def __init__(self,
                  buckets,
                  **kwargs):
-        super(Page, self).__init__(**kwargs)
-        self['buckets'] = buckets
+        super(BucketPage, self).__init__(buckets=buckets, **kwargs)
         
     @property
     def results(self):
@@ -142,14 +141,10 @@ class BucketSearch(Search):
         
         r = BucketPage(buckets=buckets,
                        total=total,
-                       search=self)
-        r['from'] = from_
-        r['size'] = size
+                       search=self,
+                       from_=from_,
+                       size=size)
         return r
-    
-class BucketView(View):
-    search_class = BucketSearch
-    item_class = ReportBucket
     
 class ReportThreshold(Threshold):
     def __init__(self, search, result, from_=None, size=None):

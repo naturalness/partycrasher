@@ -92,3 +92,4 @@ def maybe_type(v):
             return CrashType(v)
     else:
         return v
+

@@ -105,11 +105,11 @@ class Buckets(object):
     _od = None
     
     """Proxy for OrderedDict"""
-    def __init__(self, *args, **kwargs):
-        self._od = OrderedDict()
-        d = OrderedDict(*args, **kwargs)
-        for k, v in d.items():
+    def __init__(self, **kwargs):
+        self._od = dict()
+        for k, v in kwargs.items():
             self._od[k] = v
+        #self._od = OrderedDict(sorted(self._od))
         
     def __getattr__(self, a):
         return getattr(self._od, a)

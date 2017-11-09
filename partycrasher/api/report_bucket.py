@@ -33,7 +33,7 @@ import datetime
 
 from partycrasher.bucket import Bucket
 from partycrasher.threshold import Threshold
-from partycrasher.api.search import Page, Search, View
+from partycrasher.api.search import Page, Search
 from partycrasher.pc_dict import PCDict
 from partycrasher.crash import pretty
 
@@ -76,20 +76,15 @@ class ReportBucketSearch(Search):
         page['size'] = len(raw['hits']['hits'])
         return page
 
-class ReportBucketView(View):
-    search_class = ReportBucketSearch
-
 class ReportBucket(Bucket):
     def __init__(self, search, from_=None, size=None, **kwargs):
         super(ReportBucket, self).__init__(kwargs)
-        search['bucket_id'] = self.id
-        search['threshold'] = self.threshold
-        search = ReportBucketSearch(search=search)
-        self.reports = ReportBucketSearch(
-            search=search,
-            from_=from_,
-            size=size
-            )
+        self.reports = ReportBucketSearch(search=search,
+                        bucket_id=self.id,
+                        threshold=self.threshold,
+                        from_=from_,
+                        size=size
+                        )
     
     def restify(self):
         d = copy(self._d)

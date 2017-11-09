@@ -51,6 +51,7 @@ class Report(object):
                  explain=False,
                  saved=False,
                  ):
+        self.came_from = search
         context = search.context
         self.context = context
         if isinstance(crash, string_types):
@@ -91,12 +92,13 @@ class Report(object):
         self.crash['type'] = ReportType(
             search=Search(context=self.context),
             report_type=self.crash['type'])
-        for k, v in list(self.crash['buckets'].items()):
-            if isinstance(v, Bucket):
-                self.crash['buckets'][k] = ReportBucket(
-                    search=Search(context=self.context),
-                    id=v.id,
-                    threshold=v.threshold)
+        if 'buckets' in self.crash:
+            for k, v in list(self.crash['buckets'].items()):
+                if isinstance(v, Bucket):
+                    self.crash['buckets'][k] = ReportBucket(
+                        search=Search(context=self.context),
+                        id=v.id,
+                        threshold=v.threshold)
         
     def fix_project(self):
         crash_project = None

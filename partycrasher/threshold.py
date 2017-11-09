@@ -16,8 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+logger = logging.getLogger(__name__)
+ERROR = logger.error
+WARN = logger.warn
+INFO = logger.info
+DEBUG = logger.debug
+
 from decimal import Decimal, Context
-from logging import debug, error, warning, info
 
 from six import string_types, text_type
 
@@ -89,6 +95,6 @@ class Threshold(object):
         assert isinstance(self._value, Decimal)
         assert str_value.count('.') == 1, 'Invalid decimal number'
         return str_value.replace('.', '_')
-
+    
     def __lt__(self, other):
-        return self._value.__lt__(other._value)
+        return float(self._value) < float(other._value)

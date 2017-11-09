@@ -27,7 +27,7 @@ from partycrasher.threshold import Threshold
 from partycrasher.bucket import Bucket, TopMatch
 from partycrasher.rest.api_utils import full_url_for, merge
 from partycrasher.api.report import Report
-from partycrasher.api.search import Search, View
+from partycrasher.api.search import Search
 from partycrasher.api.thresholds import Thresholds
 from partycrasher.api.report_bucket import ReportBucketSearch
 from partycrasher.api.report_threshold import BucketSearch
@@ -51,6 +51,8 @@ def url_for_search(search, direct_search=True):
         assert k is not None
         if v is not None:
             params[k] = v
+    #if 'from' in search._d:
+        #assert 'from' in params, search['from']
     path = search_url_append(path, params, 'type')
     path = search_url_append(path, params, 'project')
     path = search_url_append(path, params, 'threshold')
@@ -59,24 +61,36 @@ def url_for_search(search, direct_search=True):
     if isinstance(search, BucketSearch):
         path += 'buckets/'
     elif isinstance(search, Search):
-        if direct_search:
-            path += 'reports/'
+        #if direct_search:
+        path += 'reports/'
     else:
         raise RuntimeError("what")
     path = path.rstrip('/') # it's already in the route 
     params['path'] = path
-    return full_url_for(endpoint, **params)
+    url = full_url_for(endpoint, **params)
+    if 'from' in search and search['from'] is not None:
+        assert 'from' in url
+    return url
+
+def url_for_report(report):
+    urlp = url_for_search(report.came_from).split('?', 1)
+    url = urlp[0]
+    assert url.endswith('reports/')
+    url += report.database_id
+    return url
     
+def url_for_report_id(report_id):
+    return full_url_for('view',
+        path = 'reports/'+ report_id
+        )
+
 def auto_url_for(thing):
     if isinstance(thing, Search):
         return url_for_search(thing)
-    elif isinstance(thing, Report) or isinstance(thing, Crash):
-        return full_url_for('view_report',
-                            project=thing.project,
-                            report_id=thing.database_id
-                            )
+    elif isinstance(thing, Report):
+        return url_for_report(thing)
     else:
-        return thing
+        raise TypeError("Can't get url for %s" % str(type(thing)))
     
 def json_traceback(tb):
     tb = traceback.extract_tb(tb)
@@ -111,23 +125,15 @@ class ResourceEncoder(CrashEncoder):
             return url_for_search(o)
         elif isinstance(o, Report):
             d = o.restify_()
-            d['href'] = full_url_for('view_report',
-                                     project=o.project,
-                                     report_id=o.database_id
-                                     )
+            d['href'] = url_for_report(o)
             return d
         elif hasattr(o, 'restify'):
             return o.restify()
         elif isinstance(o, Threshold):
             return str(o)
-        elif isinstance(o, View):
-            return "WHAT!"
         elif isinstance(o, TopMatch):
             d = super(ResourceEncoder, self).default(o).copy()
-            d['href'] = full_url_for('view_report',
-                                     project=o.project,
-                                     report_id=o.report_id
-                                     )
+            d['href'] = url_for_report_id(o.report_id)
             return d
         elif isinstance(o, traceback_class):
             return json_traceback(o)

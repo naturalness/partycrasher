@@ -104,6 +104,7 @@ class Search(PCDefaultDict):
     def __init__(self,
                  context=None,
                  search=None,
+                 from_=None,
                  **kwargs):
         if context is not None:
             assert isinstance(context, Context), context.__class__.__name__
@@ -117,6 +118,9 @@ class Search(PCDefaultDict):
             super(Search, self).__init__(search)
             self.update(kwargs)
         self.thresholds = self.context.thresholds
+        if from_ is not None:
+            self['from'] = from_
+        self.freeze()
     
     def __copy__(self):
         return self.__class__(search=self)
@@ -227,7 +231,7 @@ class Search(PCDefaultDict):
                 ESCrash.de_elastify(crash), 
                 saved=True)
 
-    def raw_results_to_page(self, raw, page_class):
+    def raw_results_to_page(self, raw, page_class, **kwargs):
         total_hits = raw['hits']['total']
         raw_hits = raw['hits']['hits']
         
@@ -253,7 +257,9 @@ class Search(PCDefaultDict):
         return page_class(reports=reports,
                           total=total_hits,
                           counts=counts,
-                          search=self)
+                          search=self,
+                          **kwargs
+                          )
     
     def page(self, from_, size):
         """Get search results for a particular page."""
@@ -265,9 +271,11 @@ class Search(PCDefaultDict):
             size = self._d.get('size', None)
         query = self.build_query(from_=from_, size=size)
         raw = self.run(query)
-        page = self.raw_results_to_page(raw, Page)
-        page['from'] = from_
-        page['size'] = len(raw['hits']['hits'])
+        page = self.raw_results_to_page(
+            raw, ReportPage, 
+            from_=from_, 
+            size=len(raw['hits']['hits'])
+            )
         return page
     
     def __call__(self, from_=None, size=None):
@@ -295,45 +303,76 @@ class Search(PCDefaultDict):
                                     search=self.new_blank())
         return None
     
+    def __eq__(self, other):
+        return self._d.__eq__(other._d)
+    
+    def __hash__(self):
+        return hash(self.as_hashable())
+    
 class Page(PCDict):
     def __init__(self,
-                 reports,
+                 from_,
                  **kwargs):
+        kwargs['from'] = from_
         super(Page, self).__init__(**kwargs)
-        self['reports'] = reports
-        
-    def next_page(self):
-        #TODO: implement ES scrolling
-        return self.search.page(
-            from_=self['from']+self['size'],
-            size=self['size'],
+        assert self['search'] is not None
+        assert self['from'] is not None
+        assert self['size'] is not None
+        self['search'] = Search(
+            search=self['search'],
+            from_=self['from'],
+            size=self['size']
             )
-    
+        assert self['search']['from'] is not None
+        self._d.update(self['search'].as_dict())
+        assert self['from'] is not None
+        assert self['size'] is not None
+        
+        if self['from']+self['size']<self['total']:
+            next_from = self['from']+self['size']
+            self['next_page'] = Search(
+                search=self['search'],
+                from_=next_from,
+                size=self['size']
+                )
+        else:
+            self['next_page'] = None
+        
+        if self['from'] > 0:
+            prev_from = max(
+                0,
+                self['from']-self['size'])
+            self['prev_page'] = Search(
+                search=self['search'],
+                from_=prev_from,
+                size=self['size']
+                )
+        else:
+            self['prev_page'] = None
+            
+        if self['project'] is not None:
+            from partycrasher.api.report_project import ReportProject
+            self['project'] = ReportProject(
+                search=self['search'].new_blank(),
+                project=self['project']
+                )
+        if self['type'] is not None:
+            from partycrasher.api.report_type import ReportType
+            self['type'] = ReportType(
+                search=self['search'].new_blank(),
+                report_type=self['type']
+                )
+        self.freeze()
+            
     def restify(self):
-        d = {}
-        if 'search' in self:
-            s = copy(self['search'])
-            d.update(s.as_dict())
-            s['from']=self['from']
-            s['size']=self['size']
-            d['search'] = s
-            if self['from']+self['size']<self['total']:
-                d['next_page'] = copy(s)
-                d['next_page']['from'] = self['from']+self['size']
-            else:
-                d['next_page'] = None
-            if self['from'] > 0:
-                d['prev_page'] = copy(s)
-                d['prev_page']['from'] = max(
-                    0,
-                    self['from']-self['size'])
-            else:
-                d['prev_page'] = None
-        d.update(self._d)
-        d['project'] = self.search.project
-        d['type'] = self.search.type
-        return d
-    
+        return self.as_dict()
+
+class ReportPage(Page):
+    def __init__(self,
+                reports,
+                **kwargs):
+        super(ReportPage, self).__init__(reports=reports, **kwargs)
+
     @property
     def results(self):
         return self.reports
@@ -342,50 +381,3 @@ class Page(PCDict):
     def total(self):
         return self.total_reports
 
-class View(Sequence):
-    """Fluent interface"""
-    search_class = Search
-    item_class = Report
-    
-    def __init__(self,
-                 from_=0, 
-                 size=10,
-                 **kwargs):
-        self.search = self.search_class(**kwargs)
-        assert isinstance(self.search, Search)
-        self._from = from_
-        self._size = size
-        self._page = None
-        self._length = None
-    
-    def seek(self, from_, size):
-        self._from = from_
-        self._size = size
-        return self.page
-        
-    @property
-    def page(self):
-        assert isinstance(self.search, Search)
-        if self._page is None:
-            self._page = self.search.page(self._from, self._size)
-        if self._length is None:
-            self._length = self._page.total
-        return self._page
-    
-    def in_page(self, i):
-        return i >= self.page.from_ and (
-            i < self.page.from_ + len(self.page.results))
-        
-    def __getitem__(self, i):
-        if self._page is None or not self._pagein_page(i):
-            self._page = None
-            self._from = i
-            self.page()
-        return item_class(self.search, 
-                          self.page.results[i-self.page._from])
-    
-    def __len__(self):
-        if self._length is None:
-            self.page()
-        return self._length
-        

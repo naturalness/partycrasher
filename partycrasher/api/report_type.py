@@ -23,34 +23,26 @@ from copy import copy
 
 from partycrasher.crash_type import CrashType
 from partycrasher.api.thresholds import Thresholds
-from partycrasher.api.report_threshold import BucketSearch, ReportThreshold
-from partycrasher.api.search import Search, View
+from partycrasher.api.search import Search
 from partycrasher.api.projects import Projects
-
-
+from partycrasher.api.cache import cached_threshold
 
 class ReportType(CrashType):
     """
     API object representing a particular type inside a search context.
     """
-    def __init__(self, search, report_type, from_=None, size=None):
+    def __init__(self, search, report_type):
         super(ReportType, self).__init__(report_type)
-        search['type'] = report_type
-        self.reports = Search(
-            search=search,
-            from_=from_,
-            size=size
-            )
-        if search.threshold is None:
-            self.buckets = Thresholds(copy(search))
-        else:
-            self.buckets = ReportThreshold(copy(search), search.threshold)
-            
+        self.original_search = search
+        search=Search(search=search, type=report_type)
+        self.reports = search
+        self.buckets = cached_threshold(search)
     
     def restify(self):
         d = dict()
         d['reports'] = self.reports
-        d['type'] = CrashType(self)
+        d['name'] = self.name
         d['buckets'] = self.buckets
-        d['projects'] = Projects(copy(self.reports))
+        # Slows down too much
+        #d['projects'] = Projects(copy(self.reports))
         return d

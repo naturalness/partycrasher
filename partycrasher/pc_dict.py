@@ -30,11 +30,13 @@ import sys
 from copy import copy, deepcopy
 import re
 
-from six import PY2, PY3
+from six import PY2, PY3, string_types
 if PY3:
     from collections.abc import MutableMapping, MutableSequence
 elif PY2:
     from collections import MutableMapping, MutableSequence
+
+from frozendict import frozendict
     
 from partycrasher.pc_exceptions import BadKeyNameError
 
@@ -72,6 +74,7 @@ class PCDict(MutableMapping):
     def __eq__(self, other):
         if not isinstance(other, PCDict):
             return False
+        return self._d.__eq__(other._d)
 
     def __getitem__(self, key):
         if key in self.synonyms:
@@ -88,17 +91,16 @@ class PCDict(MutableMapping):
                         self.canonical_fields[key]['type'].__name__)
 
     def __setitem__(self, key, val):
-        assert key not in self.__dict__
-        # Translates key synonyms to their "canonical" key.
-        synonyms = self.synonyms
+        if key in self.__dict__:
+            raise BadKeyNameError(key)
 
-        # First force strings to be unicoded
-        if isinstance(key, bytes):
-            key = key.decode(encoding='utf-8', errors='replace')
+        # Force strings to be unicoded
+        if not isinstance(key, string_types):
+           raise BadKeyNameError(repr(key))
             
         # Now do conversions.
-        if key in synonyms:
-            key = synonyms[key]
+        if key in self.synonyms:
+            key = self.synonyms[key]
         
         if key in self.canonical_fields:
             # Check if the value has the type we require.
@@ -138,7 +140,7 @@ class PCDict(MutableMapping):
         return self._d.__len__()
       
     def as_dict(self):
-        return self._d
+        return dict(self._d)
     
     def __copy__(self):
         """Implements a shallow copy operation. Note that this will call __init__, so it will reconvert everything."""
@@ -167,6 +169,15 @@ class PCDict(MutableMapping):
     
     def keys(self):
         return self._d.keys()
+    
+    def freeze(self):
+        self._d = frozendict(self._d)
+    
+    def as_hashable(self):
+        return tuple(self._d.items())
+    
+    def __hash__(self):
+        return hash(self.as_hashable())
 
 class PCList(MutableSequence):
   

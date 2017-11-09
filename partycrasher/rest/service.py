@@ -63,6 +63,7 @@ from partycrasher.crash import pretty
 
 # Create and customize the Flask app.
 app = Flask('partycrasher', template_folder='../ui/app')
+
 CORS(app)
 
 app.json_encoder = ResourceEncoder
@@ -211,8 +212,7 @@ def home(filename=None):
     return render_template('index.html', **context)
 
 
-@app.route('/reports', methods=['POST'], endpoint='add_report_no_project')
-@app.route('/<project>/reports', methods=['POST'])
+@app.route('/reports', methods=['POST'], endpoint='add_report')
 def add_report(project=None):
     """
     .. api-doc-order: 1
@@ -223,18 +223,11 @@ def add_report(project=None):
 
     ::
 
-        POST /:project/reports HTTP/1.1
-
-    or
-
-    ::
-
         POST /reports HTTP/1.1
 
     Uploads a new report. The report should be sent as a JSON Object with at
-    least a unique ``database_id`` property. If uploaded to
-    ``/:project/reports``, the ``project`` property will automatically be set;
-    otherwise, the ``project`` property is also mandatory.
+    least a unique ``database_id`` property. 
+    The ``project`` and ``type`` properties are mandatory.
 
     The report may also have a ``date`` property, which will be used to group
     crashes by date. If not specified, this is set as the insertion date
@@ -250,7 +243,7 @@ def add_report(project=None):
     ::
 
         HTTP/1.1 201 Created
-        Location: https://your.host/<project>/report/<report-id>/
+        Location: https://your.host/report/<report-id>/
 
     .. code-block:: JSON
 
@@ -258,11 +251,11 @@ def add_report(project=None):
             "report": {
                 "database_id": "<report-id>",
                 "project": "<project>",
-                "href": "https://domain.tld/<project>/reports/<report-id>",
+                "href": "https://domain.tld/reports/<report-id>",
                 "buckets": {
                     "4.0": {
                         "bucket_id": "<bucket-id @ 4.0>",
-                        "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                        "href": "https://domain.tld/buckets/4.0/<bucket-id @ 4.0>"
                     }
                 }
         }
@@ -273,12 +266,7 @@ def add_report(project=None):
     When an *identical* (not just duplicate) report is posted::
 
         HTTP/1.1 303 See Other
-        Location: https://domain.tld/<project>/report/<report-id>/
-
-    When a report is posted to a ``:project/`` URL, but the report declares it
-    belongs to a different project::
-
-        HTTP/1.1 400 Bad Request
+        Location: https://domain.tld/report/<report-id>/
 
 
     Upload multiple new reports
@@ -286,13 +274,8 @@ def add_report(project=None):
 
     ::
 
-        POST /:project/reports HTTP/1.1
-
-    or
-
-    ::
-
         POST /reports HTTP/1.1
+
 
     Send multiple reports (formatted as in :ref:`upload-single`) bundled up
     in a JSON Array (list). The response is a JSON Array of report results.
@@ -309,11 +292,11 @@ def add_report(project=None):
                 "report": {
                     "database_id": "<report-id 1>",
                     "project": "<project>",
-                    "href": "https://domain.tld/<project>/reports/<report-id 1>",
+                    "href": "https://domain.tld/reports/<report-id 1>",
                     "buckets": {
                         "4.0": {
                             "bucket_id": "<bucket-id @ 4.0>",
-                            "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                            "href": "https://domain.tld/buckets/4.0/<bucket-id @ 4.0>"
                         }
                     }
                 }
@@ -322,11 +305,11 @@ def add_report(project=None):
                 "report": {
                     "database_id": "<report-id 2>",
                     "project": "<project>",
-                    "href": "https://domain.tld/<project>/reports/<report-id 2>",
+                    "href": "https://domain.tld/reports/<report-id 2>",
                     "buckets": {
                         "4.0": {
                             "bucket_id": "<bucket-id @ 4.0>",
-                            "href": "https://domain.tld/<project>/buckets/4.0/<bucket-id @ 4.0>"
+                            "href": "https://domain.tld/buckets/4.0/<bucket-id @ 4.0>"
                         }
                     }
                 }
@@ -339,12 +322,8 @@ def add_report(project=None):
     When an *identical* (not just duplicate) report is posted::
 
         HTTP/1.1 303 See Other
-        Location: https://domain.tld/<project>/report/<report-id>/
+        Location: https://domain.tld/report/<report-id>/
 
-    When a report is posted to a ``:project/`` URL, but the report declares it
-    belongs to a different project::
-
-        HTTP/1.1 400 Bad Request
     """
     report_or_reports = request.get_json()
     explain = str_to_bool(request.args.get('explain'), False)
@@ -360,8 +339,8 @@ def add_report(project=None):
         success_code = 201
 
     if isinstance(report_or_reports, list):
-        reports = [crasher.report(crash=i, 
-                                  project=project, 
+        reports = [crasher.report(crasher.null_search,
+                                  crash=i, 
                                   dry_run=dry_run)
                    for i in report_or_reports]
         for report in reports:
@@ -373,9 +352,8 @@ def add_report(project=None):
         assert reports[0].explain == explain
         return jsonify_list(reports), success_code
     elif isinstance(report_or_reports, dict):
-        ERROR("project in crash? " + str("project" in report_or_reports))
-        report = crasher.report(crash=report_or_reports, 
-                                project=project, 
+        report = crasher.report(crasher.null_search,
+                                crash=report_or_reports, 
                                 dry_run=dry_run)
         try:
             report.search(explain)
@@ -385,7 +363,7 @@ def add_report(project=None):
                 report.save()
         except IdenticalReportError as error:
             # Ingested a duplicate report.
-            return '', 303, { 'Location': auto_url_for(error.report) }
+            return '', 303, { 'Location': auto_url_for(report) }
         else:
             return (
                 jsonify_resource(report), 
@@ -395,72 +373,6 @@ def add_report(project=None):
     else:
         raise BadRequest("Report must be a list or object.")
 
-
-@app.route('/<project>/reports/<report_id>')
-def view_report(project, report_id):
-    """
-    .. api-doc-order: 2
-
-    Get an existing report
-    ======================
-    ::
-
-        GET /:project/reports/:report_id HTTP/1.1
-
-    Fetches a processed report from the database.  This includes all data
-    originally posted, plus bucket assignments, and the URLs for every
-    relevant resource (buckets and project).
-
-    .. warning::
-
-        Due to ElasticSearch's `Near Realtime`_ nature, when you ``GET`` a report
-        immediately after a ``POST`` or a ``DELETE`` may not result in what you'd
-        expect! Usually, it takes a few seconds for any changes to fully
-        propagate throughout the database.
-
-    .. _Near Realtime: https://www.elastic.co/guide/en/elasticsearch/reference/current/_basic_concepts.html#_near_realtime_nrt
-
-
-    ::
-
-        HTTP/1.1 200 OK
-        Link: <https://domain.tld/<project>/buckets/<T=[default]>/<bucket-id>; rel="related"
-
-    .. code-block:: json
-
-        {
-            "database_id": "<report-id>",
-            "project": "<project>",
-            "buckets": {
-                "3.5": {
-                    "id": "<bucket-id, T=3.5>",
-                    "url": "https://domain.tld/<project>/buckets/3.5/<bucket-id>"
-                },
-                "4.0": {
-                    "id": "<bucket-id, T=4.0>",
-                    "url": "https://domain.tld/<project>/buckets/4.0/<bucket-id>"
-                },
-                "4.5": {
-                    "id": "<bucket-id, T=3.5>",
-                    "url": "https://domain.tld/<project>/buckets/4.5/<bucket-id>"
-                }
-            },
-
-            "threads": [
-                {
-                    "stacktrace": ["..."]
-                }
-            ],
-            "comment": "<some flattering and not-at-all insulting comment about your software>",
-            "os": "<os>",
-            "platform": "<x86/arm, etc.>"
-        }
-
-    """
-    auto_summary = str_to_bool(request.args.get('auto_summary'), False)
-
-    report = crasher.report(report_id, project, explain=auto_summary)
-    return jsonify_resource(report)
 
 @app.route('/reports', methods=['DELETE'])
 def delete_reports_no_project():
@@ -504,44 +416,30 @@ def view(path=None):
             else:
                 params[k] = path[i]
                 k = None
-    if k is not None:
+    if k is not None: # last unpaired item in path
         wanted = k
     else:
         wanted = None
+    if 'reports' in params:
+        wanted = 'report'
+        report = params['reports']
+        del params['reports']
     s = make_search(args=params)
     s = make_search(args=request.args, **s)
-    #return jsonify({'params': params, 'wanted': wanted, 'search': dict(**s)})
+    #
     if wanted == 'reports':
         return jsonify(crasher.report_search(**s)())
     elif wanted == 'buckets':
         return jsonify(crasher.bucket_search(**s)())
-
+    elif wanted == 'report':
+        return jsonify(crasher.report(s, report, explain=True))
+    else:
+        return jsonify({'params': params, 'wanted': wanted, 'search': dict(**s)})
 
 
 #############################################################################
 #                                 Utilities                                 #
 #############################################################################
-
-def raise_bad_request_if_project_mismatch(report, project_name):
-    """
-    Checks if the project in the report and the given project name are the
-    same.
-    """
-    if 'project' not in report:
-        if project_name is None:
-            # No project name anywhere. This is not good...
-            raise BadRequest('Missing project name',
-                             error="missing_project")
-    elif project_name and project_name != report['project']:
-        message = ("Project name mismatch: "
-                   "Posted a report to '{0!s}' "
-                   "but the report claims it's from '{1!s}'"
-                   .format(project_name, report['project']))
-        raise BadRequest(message,
-                         error="name_mismatch",
-                         expected=project_name,
-                         actual=report['project'])
-
 
 # Copied from: flask/json.py
 def jsonify_resource(resource):
@@ -593,15 +491,17 @@ def main():
 
     # TODO:
     #  - add parameter: -C [config-setting]
-
-    profile = kwargs['profile']
-
+    
     #global app
-    #if kwargs['profile']:
-        #from werkzeug.contrib.profiler import ProfilerMiddleware
-        #app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30])
+    if kwargs['profile']:
+        profile = True
+        from werkzeug.contrib.profiler import ProfilerMiddleware
+        app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30],
+                                          profile_dir="profile")
+    else:
+        profile = False
     del kwargs['profile']
-
+    return app.run(**kwargs)
     if profile:
         import cProfile
         global run_kwargs

@@ -49,3 +49,13 @@ class Project(object):
     
     def __copy__(self):
         return Project(self)
+    
+    def __hash__(self):
+        return hash((Project, self.name))
+    
+    def __eq__(self, other):
+        return isinstance(other, Project) and self.name == other.name
+    
+    def __repr__(self):
+        return self.__class__.__name__ + "(" + repr(self.name) + ")"
+
