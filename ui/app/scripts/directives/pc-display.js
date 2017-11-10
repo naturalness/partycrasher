@@ -8,9 +8,14 @@ angular.module('PartyCrasherApp')
     scope.loading = false;
     scope.error = null;
     scope.result = null;
+    scope.reports = null;
     function got(response) {
       scope.loading = false;
       scope.result = response.data;
+      if ("reports" in scope.result) {
+        scope.reports = response.data.reports;
+        delete response.data.reports;
+      }
     }
     function gotError(response) {
       scope.loading = false;

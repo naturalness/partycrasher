@@ -6,6 +6,10 @@
 </h1>
 <pc-error class="pc-error" id="pc-error" error="error" ng-if="error!=null">
 </pc-error>
+<div class="result" ng-if="reports!=null">
+  <h1 class="result" > Reports</h1>
+  <reports-table value="reports">
+</div>
 <div class="result" ng-if="result!=null">
   <h1 class="result" >Unknown Result  </h1>
   <p>Unknown result: showing raw.</p>
