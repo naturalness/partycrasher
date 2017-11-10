@@ -1,11 +1,11 @@
 angular.module('PartyCrasherApp')
-.directive('reports-table', function ($log) {
+.directive('reportsTable', function ($log) {
   return {
     templateUrl: 'views/reports-table.html',
 //     link: link,
-//     restrict: 'E',
+    restrict: 'E',
     scope: {
-      value: '=',
+      reports: '=',
     }
   };
 });

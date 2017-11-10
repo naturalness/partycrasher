@@ -1,5 +1,5 @@
 <div class="result-table">
-  <table class="table table-striped">
+  <table class="striped">
     <thead>
       <tr>
         <th> ID </th>
@@ -14,12 +14,14 @@
     <tbody>
       <tr ng-repeat="crash in reports">
         <td>
-          <a href="{{ ::crash | uiUrl: 'report' }}">{{ ::crash.id }}</a>
+          <a href="{{ ::crash.href | uiUrl: 'report' }}">
+            {{ ::crash.report.database_id }}
+          </a>
         </td>
-        <td>{{ ::crash.type }}</td>
-        <td>{{ ::crash.project }}</td>
+        <td>{{ ::crash.report.type.name }}</td>
+        <td>{{ ::crash.report.project.name }}</td>
 
-        <td>{{ ::crash.date | fromNow }}</td>
+        <td>{{ ::crash.report.date | fromNow }}</td>
         <td>
           <span mini-trace database-id="crash.id" project="crash.project"></span>
         </td>

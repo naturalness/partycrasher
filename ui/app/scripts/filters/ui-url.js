@@ -3,28 +3,17 @@
  * in whatever context.
  *
  * Examples:
- * Where bucket = {
- *    id: "06080d73-1d33-4969-9d5e-69263cc01752",
- *    project: "alan_parsons",
- *    threshold: "4.0",
- * }
+ * 
+ *   {{ report.href | uiUrl }}
  *
- *   {{ bucket | uiUrl:"bucket" }}
- *
- *   => 'ui/alan_parsons/buckets/4.0/06080d73-1d33-4969-9d5e-69263cc01752'
- *
- * Requires moment().
  */
 angular.module('PartyCrasherApp')
-  .filter('uiUrl', function () {
-    return function (obj, category) {
-      switch (category) {
-        case 'bucket':
-          return `${obj.project}/buckets/${obj.threshold}/${obj.id}`;
-        case 'report':
-          return `${obj.project}/reports/${obj.id}`;
-        default:
-          throw new Error(`Unknown category: ${category}`);
+  .filter('uiUrl', function (REST_BASE, BASE_HREF) {
+    return function (href) {
+      if (href.startsWith(REST_BASE)) {
+        return href.replace(REST_BASE, BASE_HREF);
+      } else {
+        throw new Error("Bad HREF");
       }
     };
   });
