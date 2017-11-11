@@ -334,7 +334,7 @@ ol.disclosure-contents {
 
 dl.disclosure-contents>dt {
     display: block;
-    font-weight: normal;
+    font-weight: bold;
 }
 
 ol.disclosure-contents>li {

@@ -2,7 +2,7 @@
  * Displays a mini stacktrace for a crash.
  */
 angular.module('PartyCrasherApp')
-.directive('miniTrace', function(PartyCrasher, CrashReport) {
+.directive('miniTrace', function($http) {
   function link(scope, element, _attrs) {
     /* When database-id has stabilized, do a request. */
     scope.$watch('crash', function (value) {
@@ -11,20 +11,9 @@ angular.module('PartyCrasherApp')
       }
       [scope.stackhead, scope.stackmore] = extractHead(value);
     });
-  
-    scope.$watch('databaseId', function (value) {
-      if (value === undefined) {
-        return;
-      }
-      /* Value has stabilized, so we can fetch the summary! */
-      PartyCrasher.fetchReport({ project: scope.project, id: value })
-        .then(rawReport => { 
-          [scope.stackhead, scope.stackmore] = extractHead(new CrashReport(rawReport));
-        });
-    });
   }
   function extractHead(crash) {
-      var stack = crash.stackTrace;
+      var stack = crash.stacktrace;
       var head = [];
       var more = [];
       
@@ -34,9 +23,9 @@ angular.module('PartyCrasherApp')
       var maxmore = 3;
       
       stack.forEach((frame) => {
-        if (frame.func) {
-          if (parseFloat(frame._raw['logdf']) > maxlogdf) {
-            maxlogdf = frame._raw['logdf'];
+        if (frame.function) {
+          if (parseFloat(frame['logdf']) > maxlogdf) {
+            maxlogdf = frame['logdf'];
           }
         }
       });
@@ -47,18 +36,18 @@ angular.module('PartyCrasherApp')
       
       stack.forEach((frame) => {
           i = i + 1;
-          if (frame.func) {
+          if (frame.function) {
               var depth = i;
-              if (frame._raw['depth']) {
-                depth = frame._raw['depth'];
+              if (frame['depth']) {
+                depth = frame['depth'];
               }
-              var prepared = [frame.func, 'stacktrace.function:"'+frame.func+'"', depth];
+              var prepared = [frame.function, 'stacktrace.function:"'+frame.function+'"', depth];
               var inhead = false;
               if (head.length < maxhead) {
                 head.push(prepared);
                 inhead = true;
               }
-              if (parseFloat(frame._raw['logdf']) > 0.9 * maxlogdf || started) {
+              if (parseFloat(frame['logdf']) > 0.9 * maxlogdf || started) {
                   started = true;
                   if (more.length < maxmore && (! inhead)) {
                       more.push(prepared);
@@ -66,6 +55,7 @@ angular.module('PartyCrasherApp')
               }
           }
       });
+//       debugger;
       if ((more.length > 0) && ((head[head.length-1][2] + 1) >= more[0][2])) {
         head = head.concat(more);
         more = []
@@ -78,8 +68,6 @@ angular.module('PartyCrasherApp')
     link: link,
     scope: {
       crash: '<',
-      databaseId: '<',
-      project: '<',
     }
   };
 });

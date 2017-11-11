@@ -29,6 +29,7 @@ info = logger.info
 debug = logger.debug
 
 from copy import copy, deepcopy
+import math
 
 from partycrasher.crash import Crash, Stacktrace, Stackframe
 from partycrasher.es.crash import ESCrash
@@ -225,14 +226,15 @@ class Report(object):
     def crash_with_termvectors(self):
         """Returns the crash with logdf information included."""
         assert self.saved
-        assert isintance(self.crash, ESCrash)
         database_id = self.crash['database_id']
-        response = self.es.termvectors(index=self.es_index, doc_type='crash',
-                                  id=database_id,
-                                  fields='stacktrace.function.whole',
-                                  term_statistics=True,
-                                  offsets=False,
-                                  positions=False)
+        response = self.context.index.termvectors(
+            doc_type='crash',
+            id=database_id,
+            fields='stacktrace.function.whole',
+            term_statistics=True,
+            offsets=False,
+            positions=False
+            )
         
         #with open('termvectors', 'wb') as termvectorsfile:
             #print(json.dumps(response, indent=2), file=termvectorsfile)
@@ -242,7 +244,10 @@ class Report(object):
             
             all_doc_count = float(vectors['field_statistics']['doc_count'])
             
-            crash = self.crash.as_crash()
+            if isinstance(self.crash, ESCrash):
+                crash = self.crash.as_crash()
+            else:
+                crash = self.crash
             
             # Sometimes there's extra functions on top of the stack for 
             # logging/cleanup/handling/rethrowing/whatever that get called 
@@ -264,7 +269,7 @@ class Report(object):
     def restify_(self):
         assert self.project is not None
         d = {
-            'report': self.crash,
+            'report': self.crash_with_termvectors,
             'saved': self.saved,
             }
         if self.explain:
