@@ -21,10 +21,10 @@ from __future__ import print_function
 
 import logging
 logger = logging.getLogger(__name__)
-error = logger.error
-warn = logger.warn
-info = logger.info
-debug = logger.debug
+ERROR = logger.error
+WARN = logger.warn
+INFO = logger.info
+DEBUG = logger.debug
 
 import sys
 from copy import copy, deepcopy
@@ -83,6 +83,7 @@ class PCDict(MutableMapping):
     
     def maybe_coerce(self, key, val):
         if self.canonical_fields[key]['converter'] is not None:
+            #DEBUG(self.canonical_fields[key]['converter'])
             return (
                 self.canonical_fields[key]['converter'](val))
         else:

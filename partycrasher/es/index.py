@@ -254,7 +254,13 @@ class ESIndex(object):
         for f in self.config.UserInterface.fixed_summary_fields.keys():
             properties[f] = string_not_analyzed
         return properties
-    
+
+    def termvectors(self, **kwargs):
+        assert 'index' not in kwargs
+        return self.esstore.es.termvectors(
+            index=self.index_base,
+            **kwargs
+            )
    
     # SMURT Proxy to the ES API
     def search(self, body, **kwargs):

@@ -1,0 +1,34 @@
+<div class="result-table">
+  <table class="striped">
+    <thead>
+      <tr>
+        <th> ID </th>
+        <th> Type </th>
+        <th> Project </th>
+        <th> Date </th>
+        <th> Stacktrace </th>
+        <th> Keywords </th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr ng-repeat="crash in reports track by $index">
+        <td>
+          <a href="{{ ::crash.href | uiUrl: 'report' }}">
+            {{ ::crash.report.database_id }}
+          </a>
+        </td>
+        <td>{{ ::crash.report.type.name }}</td>
+        <td>{{ ::crash.report.project.name }}</td>
+
+        <td>{{ ::crash.report.date | fromNow }}</td>
+        <td>
+          <span mini-trace crash="crash.report"></span>
+        </td>
+        <td>
+          <span pc-summary database-id="crash.id" project="crash.project"></span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

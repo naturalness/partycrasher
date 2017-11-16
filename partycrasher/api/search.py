@@ -212,7 +212,8 @@ class Search(PCDefaultDict):
                     "must": must
                     }
                 },
-            "aggs": aggs
+            "aggs": aggs,
+            #"_source": False
             }
         
         if from_ is not None:
@@ -225,12 +226,6 @@ class Search(PCDefaultDict):
         raw = self.context.search(body=query)
         return raw
     
-    def raw_crash_to_report(self, crash):
-        return Report(
-                self,
-                ESCrash.de_elastify(crash), 
-                saved=True)
-
     def raw_results_to_page(self, raw, page_class, **kwargs):
         total_hits = raw['hits']['total']
         raw_hits = raw['hits']['hits']
@@ -250,8 +245,11 @@ class Search(PCDefaultDict):
         
         reports = []
         for hit in raw_hits:
-            crash = hit['_source']
-            report = self.raw_crash_to_report(crash)
+            if '_source' in hit:
+                crash = hit['_source']
+            else:
+                crash = hit['_id']
+            report = Report(search=self, crash=crash, saved=True)
             reports.append(report)
         
         return page_class(reports=reports,

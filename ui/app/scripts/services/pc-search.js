@@ -13,7 +13,7 @@
 angular.module('PartyCrasherApp')
 .factory('pcSearch', function (
     $rootScope, 
-    $location, 
+    $location,
     BASE_HREF,
     DEFAULT_THRESHOLD
   ) {
@@ -26,6 +26,7 @@ angular.module('PartyCrasherApp')
     var pathThreshold = null;
     var pathBucket = null;
     var pathGrouping = null;
+    var pathReport = null;
     
     var path = $location.path().split('/');
     for (var i = 1; i < path.length; i++) {
@@ -42,19 +43,23 @@ angular.module('PartyCrasherApp')
       } else if (path[i-1] == 'types') {
         pathReportType = path[i].split(',');
       } else if (path[i-1] == 'thresholds') {
-        pathReportThreshold = parseFloat(path[i]);
-        if (isNaN(pathReportThreshold)) {
+        pathThreshold = parseFloat(path[i]);
+        if (isNaN(pathThreshold)) {
           throw `Bad threshold value ${path[i]}`;
         }
       } else if (path[i-1] == 'buckets') {
         pathBucket = path[i].split(',');
+        pathGrouping = 'buckets';
+      } else if (path[i-1] == 'reports') {
+        pathGrouping = 'reports';
+        pathReport = path[i];
       } else {
         throw `Unknown path information ${path[i-1]}/${path[i]}`;
       }
       if (path[path.length-2] == 'buckets') {
-        pathGrouping = 'bucket';
+        pathGrouping = 'buckets';
       } else if (path[path.length-2] == 'reports') {
-        pathGrouping = 'report';
+        pathGrouping = 'reports';
       }
     }
     state.q = $location.search().q || null;
@@ -72,6 +77,7 @@ angular.module('PartyCrasherApp')
       $location.search().threshold || null;
     state.report_type = pathReportType
       || $location.search().type || null;
+    state.report = pathReport || null;
   }
   
   read_location(); /* ensure properties exist in state so I don't have to list
@@ -79,7 +85,6 @@ angular.module('PartyCrasherApp')
   
   function write_location() {
     // update current url from shared state
-    // console.log('Changing location...');
     path = "/";
     if (state.report_type.length == 0) {
       path += ``;
@@ -91,18 +96,20 @@ angular.module('PartyCrasherApp')
     } else {
       path += `projects/${state.project}/`;
     }
+    if (state.grouping == 'buckets' || state.bucket) {
+      path += `thresholds/${state.threshold}/`;
+    } 
     if (state.bucket) {
       path += `buckets/${state.bucket}/`;
     } 
-    if (state.grouping == 'bucket') {
-      if (state.threshold) {
-        path += `thresholds/${state.threshold}/`;
-      } else { // threshold must be null
-        path += `thresholds/${DEFAULT_THRESHOLD}/`;
-      }
+    if (state.grouping == 'buckets') {
       path += `buckets/`;
-    } else if (state.grouping == 'report') {
-      path += `reports/`;
+    } else if (state.grouping == 'reports') {
+      if (state.report) {
+        path += `reports/` + state.report + `/`;
+      } else {
+        path += `reports/`;
+      }
     }
     $location.search('q', state.q)
       .search('since', state.since)
@@ -131,15 +138,20 @@ angular.module('PartyCrasherApp')
   function update_scope(scope) {
     for (let k of Object.keys(state)) {
       scope[k] = state[k];
-//       scope.$digest();
     }
   }
   
   function make_watcher(k) {
     var p = k;
     return function(newValue, oldValue, scope) {
-      if (newValue !== oldValue) { // Don't trigger on init
+      if (
+        (newValue != oldValue) 
+        && (!Array.isArray(newValue))
+      ) { // Don't trigger on init
         if (scope[p] != state[p]) {
+          console.log('Changing location... ' 
+            + p + " " + scope[p] + " " + state[p]
+          );
           state[p] = newValue;
           go();
         }

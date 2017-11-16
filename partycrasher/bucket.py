@@ -20,6 +20,7 @@
 from collections import namedtuple, OrderedDict
 import os
 from datetime import datetime
+from copy import deepcopy
 
 from six import text_type, string_types
 import dateparser
@@ -109,10 +110,13 @@ class Buckets(object):
     __slots__ = ('_od',)
     
     """Proxy for OrderedDict"""
-    def __init__(self, **kwargs):
+    def __init__(self, _initial_d=None, **kwargs):
         self._od = dict()
         for k, v in kwargs.items():
             self._od[k] = v
+        if _initial_d is not None:
+            for k, v in _initial_d.items():
+                self._od[k] = v
         #self._od = OrderedDict(sorted(self._od))
         
     def __getattr__(self, a):

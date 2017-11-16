@@ -24,7 +24,7 @@
     <datey field="since" value="since"></datey>
     <datey field="until" value="until"></datey>
     <div class="labeled-input">
-      <label for="">bucket</label>
+      <label for="bucket">bucket</label>
       <input name="bucket" id="bucket" ng-model="bucket"/>
     </div>
     <a href="#" class="filter-config">Add/remove filters</a>
@@ -41,10 +41,14 @@
       ></radiotator>
       <pc-threshold-select 
         threshold="threshold" 
-        ng-show='grouping == "bucket"'
+        ng-show='grouping == "buckets"'
         class="sub-labeled"
       >
       </pc-threshold-select>
+    </div>
+    <div class="labeled-input" ng-show='grouping == "reports"'>
+      <label for="report">Report</label>
+      <input name="report" id="report" ng-model="report"/>
     </div>
     <a href="#" class="filter-config">Add/remove groupings</a>
   </div>

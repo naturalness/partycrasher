@@ -15,8 +15,8 @@ angular.module('PartyCrasherApp')
       ];
     scope.report_types = TYPE_NAMES;
     scope.groupings = [
-      { value: "report", name: "report (no grouping)" },
-      { value: "bucket", name: "automatic bucket" },
+      { value: "reports", name: "report (no grouping)" },
+      { value: "buckets", name: "automatic bucket" },
     ];
   }
   
