@@ -28,6 +28,7 @@ from partycrasher.project import Project
 from partycrasher.bucket import Buckets, Bucket, TopMatch
 from partycrasher.pc_dict import PCDict, PCList
 from partycrasher.crash_type import CrashType
+from partycrasher.util import maybe
 
 from six import string_types, text_type
 
@@ -48,23 +49,23 @@ class Stackframe(PCDict):
             },
         'address': {
             'type': text_type,
-            'converter': text_type,
+            'converter': maybe(text_type),
             },
         'function': {
             'type': text_type,
-            'converter': text_type,
+            'converter': maybe(text_type),
             },
         'args': {
             'type': text_type,
-            'converter': text_type,
+            'converter': maybe(text_type),
             },
         'file': {
             'type': text_type,
-            'converter': text_type,
+            'converter': maybe(text_type),
             },
         'dylib': {
             'type': text_type,
-            'converter': text_type,
+            'converter': maybe(text_type),
             },
     }
 

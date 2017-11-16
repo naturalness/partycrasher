@@ -20,6 +20,7 @@
 from collections import namedtuple, OrderedDict
 import os
 from datetime import datetime
+from copy import deepcopy
 
 from six import text_type, string_types
 import dateparser
