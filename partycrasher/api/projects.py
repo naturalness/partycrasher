@@ -49,7 +49,7 @@ def get_cached_projects(search):
         r = search(size=0)
         projects = {
             p: ReportProject(search=search, project=p) 
-            for p in r.counts['project'].keys()
+            for p in r['counts']['project'].keys()
             }
         cached_projects[search] = projects
         return projects

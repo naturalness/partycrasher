@@ -24,6 +24,7 @@ INFO = logger.info
 DEBUG = logger.debug
 
 from decimal import Decimal, Context
+from copy import copy, deepcopy
 
 from six import string_types, text_type
 
@@ -39,6 +40,9 @@ class Threshold(object):
             assert isinstance(value._value, Decimal)
             # Clone the other Threshold.
             self._value = value._value
+            return
+        elif isinstance(value, Decimal):
+            self._value = value
             return
         elif isinstance(value, string_types):
             value = value.replace('_', '.')
@@ -78,7 +82,7 @@ class Threshold(object):
         return getattr(self._value, attr)
 
     def __hash__(self):
-        return self._value.__hash__()
+        return self._value.__hash__()+1
 
     def __eq__(self, otter):
         if not isinstance(otter, Threshold):
@@ -98,3 +102,6 @@ class Threshold(object):
     
     def __lt__(self, other):
         return float(self._value) < float(other._value)
+    
+    def __deepcopy__(self, memo):
+        return Threshold(copy(self._value))

@@ -39,10 +39,10 @@ def cached_threshold(search):
         return cached_thresholds[search]
     else:
         #DEBUG("MISS " + repr(search._d))
-        if search.threshold is None:
+        if search['threshold'] is None:
             buckets = Thresholds(search)
         else:
-            buckets = ReportThreshold(search, search.threshold)
+            buckets = ReportThreshold(search, search['threshold'])
         cached_thresholds[search] = buckets
         return buckets
 

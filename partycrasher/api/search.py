@@ -34,7 +34,7 @@ elif PY2:
     from collections import Sequence
 
 from datetime import datetime
-from copy import copy
+from copy import copy, deepcopy
 
 from partycrasher.pc_dict import PCDict, PCDefaultDict
 from partycrasher.project import Project
@@ -55,6 +55,7 @@ from partycrasher.crash_type import CrashType
 from partycrasher.es.crash import ESCrash
 
 class Search(PCDefaultDict):
+    __slots__ = ('context',)
     
     canonical_fields = {
         'threshold': {
@@ -125,6 +126,10 @@ class Search(PCDefaultDict):
     def __copy__(self):
         return self.__class__(search=self)
         
+    def __deepcopy__(self, memo):
+        return self.__class__(search=deepcopy(self._d._dict, memo),
+                              context=self.context)
+
     def build_disjunction(self, field, things):
         if isinstance(things, list):
             return {
@@ -149,12 +154,12 @@ class Search(PCDefaultDict):
         # Build up a boolean-must query
         must = []
         
-        if ((self.since is not None) 
-                or (self.until is not None)):
+        if ((self['since'] is not None) 
+                or (self['until'] is not None)):
             date = {}
-            if self.since is not None:
+            if self['since'] is not None:
                 date['gt'] = self.since.isoformat()
-            if self.until is not None:
+            if self['until'] is not None:
                 date['lt'] = self.until.isoformat()
             must.append({
                 "range": {
@@ -163,7 +168,7 @@ class Search(PCDefaultDict):
                 })
         
         # May filter optionally by project name.
-        if self.project is not None:
+        if self['project'] is not None:
             must.append({
                 "term": {
                     "project": self.project
@@ -174,7 +179,7 @@ class Search(PCDefaultDict):
         if self['type'] is not None:
             must.append(self.build_disjunction("type", self['type']))
 
-        if self.query_string is not None:
+        if self['query_string'] is not None:
             must.append({
                 "query_string": {
                     "query": self.query_string,
@@ -187,12 +192,12 @@ class Search(PCDefaultDict):
                 }
             })
         
-        if self.bucket_id is not None:
-            assert self.threshold is not None
+        if self['bucket_id'] is not None:
+            assert self['threshold'] is not None
             must.append({
                 "term": {
                     "buckets." + 
-                        self.threshold.to_elasticsearch(): self.bucket_id
+                        self['threshold'].to_elasticsearch(): self['bucket_id']
                     }
                 })
         
@@ -249,7 +254,7 @@ class Search(PCDefaultDict):
                 crash = hit['_source']
             else:
                 crash = hit['_id']
-            report = Report(search=self, crash=crash, saved=True)
+            report = crash
             reports.append(report)
         
         return page_class(reports=reports,
@@ -259,7 +264,7 @@ class Search(PCDefaultDict):
                           **kwargs
                           )
     
-    def page(self, from_, size):
+    def page(self, from_=None, size=None, **kwargs):
         """Get search results for a particular page."""
         if from_ is None:
             from_ = self._d.get('from', None)
@@ -272,12 +277,13 @@ class Search(PCDefaultDict):
         page = self.raw_results_to_page(
             raw, ReportPage, 
             from_=from_, 
-            size=len(raw['hits']['hits'])
+            size=len(raw['hits']['hits']),
+            **kwargs
             )
         return page
     
-    def __call__(self, from_=None, size=None):
-        return self.page(from_=from_, size=size)
+    def __call__(self, **kwargs):
+        return self.page(**kwargs)
 
     def as_dict(self):
         return self._d
@@ -367,9 +373,20 @@ class Page(PCDict):
 
 class ReportPage(Page):
     def __init__(self,
-                reports,
-                **kwargs):
-        super(ReportPage, self).__init__(reports=reports, **kwargs)
+                 search,
+                 reports,
+                 logdf=False,
+                 **kwargs
+                 ):
+        reports = [
+            Report(search=search, crash=r, saved=True, logdf=logdf)
+            for r in reports
+            ]
+        super(ReportPage, self).__init__(
+            search=search,
+            reports=reports,
+            **kwargs
+            )
 
     @property
     def results(self):

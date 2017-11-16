@@ -21,6 +21,8 @@ from collections import OrderedDict
 import traceback
 import sys
 
+from decimal import Decimal
+
 from partycrasher.crash import Crash, CrashEncoder
 from partycrasher.project import Project
 from partycrasher.threshold import Threshold
@@ -133,10 +135,12 @@ class ResourceEncoder(CrashEncoder):
             return str(o)
         elif isinstance(o, TopMatch):
             d = super(ResourceEncoder, self).default(o).copy()
-            d['href'] = url_for_report_id(o.report_id)
+            d['href'] = url_for_report_id(o['report_id'])
             return d
         elif isinstance(o, traceback_class):
             return json_traceback(o)
+        #elif isinstance(o, Decimal):
+            #return "WHATTTTTT!!!!"
         else:
             return super(ResourceEncoder, self).default(o)
 

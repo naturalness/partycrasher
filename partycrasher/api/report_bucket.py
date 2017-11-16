@@ -77,11 +77,13 @@ class ReportBucketSearch(Search):
         return page
 
 class ReportBucket(Bucket):
+    __slots__ = ('reports',)
+    
     def __init__(self, search, from_=None, size=None, **kwargs):
         super(ReportBucket, self).__init__(kwargs)
         self.reports = ReportBucketSearch(search=search,
-                        bucket_id=self.id,
-                        threshold=self.threshold,
+                        bucket_id=self['id'],
+                        threshold=self['threshold'],
                         from_=from_,
                         size=size
                         )

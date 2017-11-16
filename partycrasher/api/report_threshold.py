@@ -52,11 +52,12 @@ class BucketSearch(Search):
     """Class representing the buckets available under a certain search."""
     def __init__(self, **kwargs):
         super(BucketSearch, self).__init__(**kwargs)
-        assert self.threshold is not None
+        assert self['threshold'] is not None
     
     def page(self, 
              from_=None, 
-             size=None):
+             size=None
+             ):
         """
         Given a datetime lower_bound (from date), calculates the top buckets
         in the given timeframe for the given threshold (automatically
@@ -80,7 +81,7 @@ class BucketSearch(Search):
                 "top_buckets": {
                     "terms": {
                         "field": "buckets." 
-                            + self.threshold.to_elasticsearch(),
+                            + self['threshold'].to_elasticsearch(),
                         "order": { "_count": "desc" },
                     },
                     # Get the date of the latest crash per bucket.
@@ -131,9 +132,9 @@ class BucketSearch(Search):
         buckets = [ReportBucket(
                         search=copy(self), 
                         id=bucket['key'], 
-                        project=self.project,
-                        type=self.type,
-                        threshold=self.threshold,
+                        project=self['project'],
+                        type=self['type'],
+                        threshold=self['threshold'],
                         total=bucket['doc_count'],
                         first_seen=bucket['first_seen']['value_as_string'],
                         )

@@ -150,12 +150,6 @@ class PCDict(MutableMapping):
     def __deepcopy__(self, memo):
         return self.__class__(deepcopy(self._d, memo))
     
-    def __getattr__(self, k):
-        if k in self._d:
-            return self._d[k]
-        else:
-            raise AttributeError(k)
-    
     def set_d(self, d):
         self._d = d
     
@@ -170,6 +164,11 @@ class PCDict(MutableMapping):
     
     def __hash__(self):
         return hash(self.as_hashable())
+    
+    def check(self):
+        for k, v in self._d.items():
+            if k in self.canonical_fields:
+                assert isinstance(v, self.canonical_fields[k]['type'])
 
 class PCList(MutableSequence):
     

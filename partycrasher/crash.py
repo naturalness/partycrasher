@@ -173,12 +173,14 @@ class CrashEncoder(json.JSONEncoder):
         elif isinstance(o, Buckets):
             return o.json_serializable()
         elif isinstance(o, Crash):
+            o.check()
             return o.as_dict()
         elif isinstance(o, Stacktrace):
             return o._l
         elif isinstance(o, Stackframe):
             return o.as_dict()
         elif isinstance(o, Bucket):
+            o.check()
             return o.as_dict()
         elif isinstance(o, TopMatch):
             return o.as_dict()

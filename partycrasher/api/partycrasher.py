@@ -56,12 +56,10 @@ class PartyCrasher(object):
     def default_threshold(self):
         return self.context.default_threshold
         
-    def report(self, search, crash, dry_run=True, explain=False):
+    def report(self, search, **kwargs):
         """Factory for reports."""
         return Report(search=Search(context=self.context, **search),
-                      crash=crash,
-                      dry_run=dry_run,
-                      explain=explain
+                      **kwargs
                       )
     
     #def report_bucket(self, 

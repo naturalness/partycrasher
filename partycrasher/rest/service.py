@@ -43,6 +43,7 @@ import partycrasher
 REPOSITORY_ROUTE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(REPOSITORY_ROUTE)
 from partycrasher.api.partycrasher import PartyCrasher
+from partycrasher.api.report import Report
 
 from partycrasher.rest.api_utils import (
     BadRequest,
@@ -365,6 +366,7 @@ def add_report(project=None):
             # Ingested a duplicate report.
             return '', 303, { 'Location': auto_url_for(report) }
         else:
+            assert isinstance(report, Report)
             return (
                 jsonify_resource(report), 
                 success_code, 
@@ -428,11 +430,16 @@ def view(path=None):
     s = make_search(args=request.args, **s)
     #
     if wanted == 'reports':
-        return jsonify(crasher.report_search(**s)())
+        return jsonify(crasher.report_search(**s)(logdf=True))
     elif wanted == 'buckets':
         return jsonify(crasher.bucket_search(**s)())
     elif wanted == 'report':
-        return jsonify(crasher.report(s, report, explain=True))
+        return jsonify(crasher.report(
+            search=s, 
+            crash=report, 
+            explain=True, 
+            logdf=True
+            ))
     else:
         return jsonify({'params': params, 'wanted': wanted, 'search': dict(**s)})
 

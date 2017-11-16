@@ -49,7 +49,7 @@ def get_cached_types(search):
         r = search(size=0)
         types = {
             t: ReportType(search=search, report_type=t) 
-            for t in r.counts['type'].keys()
+            for t in r['counts']['type'].keys()
             }
         cached_types[search] = types
         return types

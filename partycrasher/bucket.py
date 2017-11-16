@@ -20,10 +20,11 @@
 from collections import namedtuple, OrderedDict
 import os
 from datetime import datetime
-from copy import deepcopy
+from copy import copy, deepcopy
 
 from six import text_type, string_types
 import dateparser
+from decimal import Decimal
 
 from partycrasher.pc_dict import PCDict, FixedPCDict
 
@@ -87,7 +88,7 @@ class Bucket(PCDict):
         assert 'id' not in kwargs
         kwargs['id'] = random_bucketid()
         return Bucket(**kwargs)
-
+    
 class TopMatch(FixedPCDict):
     __slots__ = tuple()
 
@@ -132,7 +133,7 @@ class Buckets(object):
             if not (isinstance(v, Bucket) or v is None):
                 v = Bucket(v)
             if v is not None:
-                assert v.threshold == k
+                assert v['threshold'] == k
         return self._od.__setitem__(k, v)
 
     def __getitem__(self, k):
@@ -162,8 +163,14 @@ class Buckets(object):
         return self._od.__iter__()
     
     def __deepcopy__(self, memo):
+        for k, v in self._od.items():
+            assert not isinstance(k, Decimal)
+            assert not isinstance(v, Decimal)
         new = self.__class__()
         new._od = deepcopy(self._od, memo)
+        for k, v in new._od.items():
+            assert not isinstance(k, Decimal)
+            assert not isinstance(v, Decimal)
         return new
 
     def json_serializable(self):

@@ -51,6 +51,7 @@ class Report(object):
                  dry_run=True,
                  explain=False,
                  saved=False,
+                 logdf=False,
                  ):
         self.came_from = search
         context = search.context
@@ -77,6 +78,7 @@ class Report(object):
         self.index = context.index
         self.explain = explain
         self.fix_crash()
+        self.logdf = logdf
             
     def fix_crash(self):
         if isinstance(self.crash, ESCrash):
@@ -98,8 +100,8 @@ class Report(object):
                 if isinstance(v, Bucket):
                     self.crash['buckets'][k] = ReportBucket(
                         search=Search(context=self.context),
-                        id=v.id,
-                        threshold=v.threshold)
+                        id=v['id'],
+                        threshold=v['threshold'])
         
     def fix_project(self):
         crash_project = None
@@ -222,7 +224,6 @@ class Report(object):
         else:
             return None
     
-    @property
     def crash_with_termvectors(self):
         """Returns the crash with logdf information included."""
         assert self.saved
@@ -239,15 +240,16 @@ class Report(object):
         #with open('termvectors', 'wb') as termvectorsfile:
             #print(json.dumps(response, indent=2), file=termvectorsfile)
         
+        if isinstance(self.crash, ESCrash):
+            crash = self.crash.as_crash()
+        else:
+            crash = self.crash
+
         if 'stacktrace.function.whole' in response['term_vectors']:
             vectors = response['term_vectors']['stacktrace.function.whole']
             
             all_doc_count = float(vectors['field_statistics']['doc_count'])
             
-            if isinstance(self.crash, ESCrash):
-                crash = self.crash.as_crash()
-            else:
-                crash = self.crash
             
             # Sometimes there's extra functions on top of the stack for 
             # logging/cleanup/handling/rethrowing/whatever that get called 
@@ -268,8 +270,12 @@ class Report(object):
 
     def restify_(self):
         assert self.project is not None
+        if self.logdf:
+            crash = self.crash_with_termvectors()
+        else:
+            crash = self.crash
         d = {
-            'report': self.crash_with_termvectors,
+            'report': crash,
             'saved': self.saved,
             }
         if self.explain:
@@ -279,4 +285,4 @@ class Report(object):
 
     @property
     def database_id(self):
-        return self.crash.database_id
+        return self.crash['database_id']
