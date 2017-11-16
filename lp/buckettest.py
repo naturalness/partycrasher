@@ -556,7 +556,7 @@ class GunicornStarter(object):
                 '--debug',
                 '--allow-delete-all',
                 '--config', 'lp/config.py',
-                '--profile',
+                #'--profile',
                 ],
                 preexec_fn=os.setsid)
             time.sleep(5)
