@@ -90,12 +90,17 @@ class BucketSearch(Search):
                             "min": {
                                 "field": "date"
                                 }
+                            },
+                        "last_seen": {
+                            "max": {
+                                "field": "date"
+                                }
                             }
                         }
                     }
                 }
             }
-                                    
+        
         if size is None:
           size = 10
         
@@ -137,6 +142,7 @@ class BucketSearch(Search):
                         threshold=self['threshold'],
                         total=bucket['doc_count'],
                         first_seen=bucket['first_seen']['value_as_string'],
+                        last_seen=bucket['last_seen']['value_as_string'],
                         )
                    for bucket in top_buckets]
         
