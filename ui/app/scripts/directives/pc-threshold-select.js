@@ -3,6 +3,10 @@
  */
 angular.module('PartyCrasherApp')
 .directive('pcThresholdSelect', function ($log, DEFAULT_THRESHOLD, THRESHOLDS) {
+  function sortFloat(a, b) {
+    return parseFloat(a) - parseFloat(b);
+  }
+  THRESHOLDS.sort(sortFloat);
   function link(scope, element, _attrs) {
     var initialThreshold = scope.threshold;
 

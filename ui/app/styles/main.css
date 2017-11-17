@@ -551,3 +551,21 @@ input#bucket {
     background: var(--light);
 }
 
+.result-table td td:nth-child(1) {
+    width: 10em;
+    max-width: 10em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.result-table td td:nth-child(2) {
+    width: 10em;
+    max-width: 10em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.result-table table {
+    width: 100%;
+}
