@@ -13,8 +13,9 @@
 
 :root {
     --light: #FFEBC2;
-    --mlight: #FFAB00;
-    --medium: #FFC349;
+    --lmlight: #ffd785;
+    --mlight: #FFC349;
+    --medium: #FFAB00;
     --mdark: #BC7F00;
     --dark: #5C3E00;
 }
@@ -374,7 +375,7 @@ pc-error {
 }
 
 .result {
-    display: block;
+    display: inline;
     overflow: hidden;
 }
 
@@ -429,9 +430,7 @@ input#bucket {
 }
 
 @keyframes l {
-    0% { color: aqua; 
-        
-    }
+    0% { color: aqua;}
     10% { color: blue;}
     20% { color: chartreuse;}
     30% { color: cyan;}
@@ -446,87 +445,96 @@ input#bucket {
 
 .loading {
     text-align: center;
-    font-size: 600%;
+    font-size: 200%;
     font-weight: bold;
-    font-family: "Comic Sans MS", cursive, sans-serif;
+/*     font-family: "Comic Sans MS", cursive, sans-serif; */
+    float: right;
 }
 
-.loading :nth-child(11n+1) {
-    animation-delay: 0.4s;
-    animation-name: l;
-    animation-duration: 4.4s;
-    animation-iteration-count: infinite;
-    animation-timing-function: step-end;
+.not-loading {
+    float: right;
+    font-size: 200%;
+    font-weight: bold;
+/*     font-family: "Comic Sans MS", cursive, sans-serif; */
+    visibility: hidden;
 }
 
-.loading :nth-child(11n+2) {
-    animation-delay: 0.8s;
+.loading :nth-child(10n+1) {
+    animation-delay: -4.0s;
     animation-name: l;
     animation-duration: 4s;
     animation-iteration-count: infinite;
     animation-timing-function: step-end;
 }
 
-.loading :nth-child(11n+3) {
-    animation-delay: 1.2s;
+.loading :nth-child(10n+2) {
+    animation-delay: -3.6s;
     animation-name: l;
-    animation-duration: 4.8s;
+    animation-duration: 4s;
     animation-iteration-count: infinite;
     animation-timing-function: step-end;
 }
 
-.loading :nth-child(11n+4) {
-    animation-delay: 1.6s;
+.loading :nth-child(10n+3) {
+    animation-delay: -3.2s;
     animation-name: l;
-    animation-duration: 4.2s;
+    animation-duration: 4s;
     animation-iteration-count: infinite;
     animation-timing-function: step-end;
 }
 
-.loading :nth-child(11n+5) {
-    animation-delay: 2.0s;
+.loading :nth-child(10n+4) {
+    animation-delay: -2.8s;
     animation-name: l;
-    animation-duration: 4.6s;
+    animation-duration: 4s;
     animation-iteration-count: infinite;
     animation-timing-function: step-end;
 }
 
-.loading :nth-child(11n+6) {
-    animation-delay: 2.4s;
+.loading :nth-child(10n+5) {
+    animation-delay: -2.4s;
     animation-name: l;
-    animation-duration: 4.1s;
+    animation-duration: 4s;
     animation-iteration-count: infinite;
     animation-timing-function: step-end;
 }
 
-.loading :nth-child(11n+7) {
-    animation-delay: 2.8s;
+.loading :nth-child(10n+6) {
+    animation-delay: -2.0s;
     animation-name: l;
-    animation-duration: 4.3s;
+    animation-duration: 4s;
     animation-iteration-count: infinite;
     animation-timing-function: step-end;
 }
 
-.loading :nth-child(11n+8) {
-    animation-delay: 3.2s;
+.loading :nth-child(10n+7) {
+    animation-delay: -1.6s;
     animation-name: l;
-    animation-duration: 4.7s;
+    animation-duration: 4s;
     animation-iteration-count: infinite;
     animation-timing-function: step-end;
 }
 
-.loading :nth-child(11n+9) {
-    animation-delay: 3.6s;
+.loading :nth-child(10n+8) {
+    animation-delay: -1.2s;
     animation-name: l;
-    animation-duration: 4.9s;
+    animation-duration: 4s;
     animation-iteration-count: infinite;
     animation-timing-function: step-end;
 }
 
-.loading :nth-child(11n+10) {
-    animation-delay: 4.0s;
+.loading :nth-child(10n+9) {
+    animation-delay: -0.8s;
     animation-name: l;
-    animation-duration: 3.9s;
+    animation-duration: 4s;
+    animation-iteration-count: infinite;
+    animation-timing-function: step-end;
+}
+
+.loading :nth-child(10n+10) {
+    animation-delay: -0.4s;
+    animation-name: l;
+    animation-duration: 4s;
     animation-iteration-count: infinite;
     animation-timing-function: step-end;
 }
@@ -540,11 +548,11 @@ input#bucket {
 }
 
 .result-table tr:nth-child(even) tr {
-    background: white;
+    background: var(--lmlight);
 }
 
 .result-table tr:nth-child(odd) {
-    background: white;
+    background: var(--lmlight);
 }
 
 .result-table tr:nth-child(odd) tr {
@@ -568,4 +576,39 @@ input#bucket {
 
 .result-table table {
     width: 100%;
+    clear: right;
+}
+
+.result-table td {
+    padding: 0.5em;
+}
+
+.result-table th {
+    padding: 0.5em;
+}
+
+.result-table td td {
+    padding: 0;
+}
+
+.result-head {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: baseline;
+    padding-bottom: 0.5em;
+}
+
+.result-head h1 {
+    order: 0;
+    display: inline;
+    vertical-align: baseline;
+    margin: 0;
+    padding-right: 0.5em;
+}
+
+.result-head>span {
+    order: 1;
+    display: inline;
+    vertical-align: baseline;
 }

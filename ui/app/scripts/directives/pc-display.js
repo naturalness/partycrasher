@@ -17,6 +17,8 @@ angular.module('PartyCrasherApp')
         if (thing in response.data) {
           scope[thing] = response.data[thing];
           delete response.data[thing];
+        } else {
+          scope[thing] = null;
         }
       }
       function getOutName(thing) {
@@ -24,6 +26,8 @@ angular.module('PartyCrasherApp')
           && response.data[thing]
         ) {
           scope[thing] = response.data[thing]["name"];
+        } else {
+          scope[thing] = null;
         }
         if (thing in response.data) {
           delete response.data[thing];
@@ -35,6 +39,8 @@ angular.module('PartyCrasherApp')
         ) {
           scope[thing] = response.data[thing];
           delete response.data[thing];
+        } else {
+          scope[thing] = null;
         }
       }
       getOutArray("reports");
@@ -54,7 +60,11 @@ angular.module('PartyCrasherApp')
       getOut("threshold");
       getOut("query_string");
       getOut("search");
-      scope.result = response.data;
+      if (Object.keys(response.data).length) {
+        scope.result = response.data;
+      } else {
+        scope.result = null;
+      }
       var doneLoading = function() {
         if ($http.pendingRequests.length > 0) {
           $timeout(function() {

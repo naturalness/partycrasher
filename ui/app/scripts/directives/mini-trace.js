@@ -38,7 +38,7 @@ angular.module('PartyCrasherApp')
           i = i + 1;
           if (frame.function) {
               var depth = i;
-              if (frame['depth']) {
+              if ('depth' in frame) {
                 depth = frame['depth'];
               }
               var prepared = [frame.function, 'stacktrace.function:"'+frame.function+'"', depth];

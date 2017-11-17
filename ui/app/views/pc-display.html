@@ -1,44 +1,73 @@
 <!--[if lte IE 8]>
   <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
 <[endif]-->
-<h1 class="loading" id="loading" ng-if="loading">
+<div class="loading" id="loading" ng-if="loading">
   <span>L</span><span>o</span><span>a</span><span>d</span><span>i</span><span>n</span><span>g</span><span>.</span><span>.</span><span>.</span>
-</h1>
+</div>
+<div class="not-loading" ng-if="!loading">
+  Loading...
+</div>
 <pc-error class="pc-error" id="pc-error" error="error" ng-if="error">
 </pc-error>
 <div class="result" ng-if="buckets">
-  <h1 class="result" > Buckets</h1>
+  <div class="result-head">
+    <h1 class="result" > Buckets</h1>
+    <span class="search-desc">
+      Showing threshold {{ threshold }}
+      buckets containing reports with
+      <span ng-if="type">
+        type {{ type }}
+      </span>
+      <span ng-if="project">
+        in project {{ project }}
+      </span>
+      <span ng-if="since">
+        since {{ since }} (first seen will be limited to this date)
+      </span>
+      <span ng-if="until">
+        until {{ until }}
+      </span>
+      <span ng-if="query_string">
+        and matching {{ query_string }}
+      </span>.
+      <span ng-if="search">
+        <a href="{{ search | uiUrl }}">Link to this search.</a>
+      </span>
+    </span>
+  </div>
   <buckets-table buckets="buckets"></buckets-table>
 </div>
 <div class="result" ng-if="reports">
-  <h1 class="result" > Reports</h1>
-  <span class="search-desc">
-    Showing reports from
-    <span ng-if="type">
-      type {{ type }}
+  <div class="result-head">
+    <h1 class="result" > Reports</h1>
+    <span class="search-desc">
+      Showing reports from
+      <span ng-if="type">
+        type {{ type }}
+      </span>
+      <span ng-if="project">
+        project {{ project }}
+      </span>
+      <span ng-if="since">
+        since {{ since }}
+      </span>
+      <span ng-if="until">
+        until {{ until }}
+      </span>
+      <span ng-if="bucket_id">
+        in bucket {{ bucket_id }} (Threshold = {{ threshold }})
+      </span>
+      <span ng-if="query_string">
+        matching {{ query_string }}
+      </span>.
+      <span ng-if="search">
+        <a href="{{ search | uiUrl }}">Link to this search.</a>
+      </span>
     </span>
-    <span ng-if="project">
-      project {{ project }}
-    </span>
-    <span ng-if="since">
-      since {{ since }}
-    </span>
-    <span ng-if="until">
-      until {{ until }}
-    </span>
-    <span ng-if="bucket_id">
-      in bucket {{ bucket_id }} (Threshold = {{ threshold }})
-    </span>
-    <span ng-if="query_string">
-      matching {{ query_string }}
-    </span>.
-    <span ng-if="search">
-      <a href="{{ search | uiUrl }}">Link to this search.</a>
-    </span>
-  </span>
+  </div>
   <reports-table reports="reports"></reports-table>
 </div>
-<div class="pager">
+<div class="pager" ng-if="size">
   Showing results {{ from }} to {{ from + size }} of {{ total }}.
   <a href="{{ prev_page }}" ng-if="prev_page">
     Previous {{ size }}
@@ -48,7 +77,9 @@
   </a>
 </div>
 <div class="result" ng-if="result">
-  <h1 class="result" >Unknown Result  </h1>
-  <p>Unknown result: showing raw.</p>
+  <div class="result-head">
+    <h1 class="result" >Unknown Result </h1>
+    <p>Showing raw result.</p>
+  </div>
   <pc-tree value="result">
 </div>

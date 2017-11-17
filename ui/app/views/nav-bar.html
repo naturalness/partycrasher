@@ -1,7 +1,7 @@
 <form class="">
   <div class="row">
     <div class="logo">
-      <a href="{{basehref}}">🎉💥 PartyCrasher </a>
+      <a href="{{::basehref}}">🎉💥 PartyCrasher </a>
     </div>
     <div class="labeled-input q">
       <input type="search" name="q" ng-model="q"/>
@@ -14,12 +14,12 @@
     <selectator 
       field="type"
       value="report_type"
-      options="report_types"
+      options="::report_types"
     ></selectator>
     <selectator 
       field="project"
       value="project"
-      options="projects"
+      options="::projects"
     ></selectator>
     <datey field="since" value="since"></datey>
     <datey field="until" value="until"></datey>

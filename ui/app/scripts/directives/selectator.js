@@ -35,6 +35,7 @@ angular.module('PartyCrasherApp')
       } else {
         scope.number_selected = "any";
       }
+      console.log("selectator: " + l);
       scope.value = l;
     }
     for (var i = 0; i < scope.optors.length; i++) {

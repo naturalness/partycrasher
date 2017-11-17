@@ -97,6 +97,9 @@ angular.module('PartyCrasherApp')
       path += `projects/${state.project}/`;
     }
     if (state.grouping == 'buckets' || state.bucket) {
+      if (!state.threshold) {
+        state.threshold = DEFAULT_THRESHOLD;
+      }
       path += `thresholds/${state.threshold}/`;
     } 
     if (state.bucket) {
@@ -143,10 +146,13 @@ angular.module('PartyCrasherApp')
   
   function make_watcher(k) {
     var p = k;
+    console.log('Watching ' + p);
     return function(newValue, oldValue, scope) {
+      console.log(newValue + " " + oldValue + " " + p + " " + scope[p] 
+        + " " + state[p]);
       if (
         (newValue != oldValue) 
-        && (!Array.isArray(newValue))
+//         && (!Array.isArray(newValue))
       ) { // Don't trigger on init
         if (scope[p] != state[p]) {
           console.log('Changing location... ' 
