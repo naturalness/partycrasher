@@ -3,16 +3,12 @@ angular.module('PartyCrasherApp')
                                  DEFAULT_THRESHOLD, 
                                  THRESHOLDS,
                                  COG_IMAGE,
-                                 TYPE_NAMES
+                                 TYPE_NAMES,
+                                 PROJECT_NAMES
                                 ) {
   function link(scope, element, _attrs) {
     scope.COG_IMAGE=COG_IMAGE
-    scope.example_projects = [
-      'ubuntu',
-      'arch',
-      'fedora',
-      'debian'
-      ];
+    scope.projects = PROJECT_NAMES;
     scope.report_types = TYPE_NAMES;
     scope.groupings = [
       { value: "reports", name: "report (no grouping)" },

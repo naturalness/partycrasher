@@ -1,7 +1,6 @@
-<span ng-repeat="item in summary | limitTo: 11">
-      <a named-route="'view-search'"
-         route-params="{project: '*'}"
-         route-query-params="{q: item[0]}"
-         style="color: rgb({{item[1]}},{{item[1]}},{{item[1]}})"
-      >{{ item[0] }}</a>
-</span>
+<table class="keywords">
+<tr ng-repeat="item in summary | limitTo: 6">
+  <td style="color: rgb({{item[1]}},{{item[1]}},{{item[1]}})">{{ item[2] }}</td>
+  <td style="color: rgb({{item[1]}},{{item[1]}},{{item[1]}})">{{ item[3] }}</td>
+</tr>
+</table>

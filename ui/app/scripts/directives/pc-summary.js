@@ -2,17 +2,18 @@
  * Displays keywords for a crash.
  */
 angular.module('PartyCrasherApp')
-.directive('pcSummary', function(PartyCrasher, CrashReport) {
+.directive('pcSummary', function($http) {
   function link(scope, element, _attrs) {
     /* When database-id has stabilized, do a request. */
-    scope.$watch('databaseId', function (value) {
+    scope.$watch('href', function (value) {
       if (value === undefined) {
         return;
       }
 
       /* Value has stabilized, so we can fetch the summary! */
-      PartyCrasher.fetchSummary({ project: scope.project, id: value })
-        .then(summary => { scope.summary = groupSummary(summary); });
+      $http.get(scope.href + '?explain=true').then(function(response) {
+        scope.summary = groupSummary(response.data.auto_summary);
+      });
     });
   }
   
@@ -22,7 +23,7 @@ angular.module('PartyCrasherApp')
 //     });
 //     grouped = _.sortBy(_.toPairs(grouped), 1).reverse();
     var grouped = _.map(summary, (i) => {
-      return [i["field"] + ":" + i["term"], i["value"]];
+      return [i["field"] + ":" + i["term"], i["value"], i["field"], i["term"]];
     });
     grouped = _.sortBy(grouped, 1).reverse();
     
@@ -55,8 +56,7 @@ angular.module('PartyCrasherApp')
     templateUrl: 'views/pc-summary.html',
     link: link,
     scope: {
-      project: '<',
-      databaseId: '<'
+      href: '<',
     }
   };
 });

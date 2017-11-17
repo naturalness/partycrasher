@@ -6,9 +6,46 @@
 </h1>
 <pc-error class="pc-error" id="pc-error" error="error" ng-if="error">
 </pc-error>
+<div class="result" ng-if="buckets">
+  <h1 class="result" > Buckets</h1>
+  <buckets-table buckets="buckets"></buckets-table>
+</div>
 <div class="result" ng-if="reports">
   <h1 class="result" > Reports</h1>
+  <span class="search-desc">
+    Showing reports from
+    <span ng-if="type">
+      type {{ type }}
+    </span>
+    <span ng-if="project">
+      project {{ project }}
+    </span>
+    <span ng-if="since">
+      since {{ since }}
+    </span>
+    <span ng-if="until">
+      until {{ until }}
+    </span>
+    <span ng-if="bucket_id">
+      in bucket {{ bucket_id }} (Threshold = {{ threshold }})
+    </span>
+    <span ng-if="query_string">
+      matching {{ query_string }}
+    </span>.
+    <span ng-if="search">
+      <a href="{{ search | uiUrl }}">Link to this search.</a>
+    </span>
+  </span>
   <reports-table reports="reports"></reports-table>
+</div>
+<div class="pager">
+  Showing results {{ from }} to {{ from + size }} of {{ total }}.
+  <a href="{{ prev_page }}" ng-if="prev_page">
+    Previous {{ size }}
+  </a>
+  <a href="{{ next_page }}" ng-if="next_page">
+    Next {{ size }}
+  </a>
 </div>
 <div class="result" ng-if="result">
   <h1 class="result" >Unknown Result  </h1>

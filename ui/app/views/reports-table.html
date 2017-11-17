@@ -14,7 +14,7 @@
     <tbody>
       <tr ng-repeat="crash in reports track by $index">
         <td>
-          <a href="{{ ::crash.href | uiUrl: 'report' }}">
+          <a href="{{ ::crash.href | uiUrl }}">
             {{ ::crash.report.database_id }}
           </a>
         </td>
@@ -26,7 +26,7 @@
           <span mini-trace crash="crash.report"></span>
         </td>
         <td>
-          <span pc-summary database-id="crash.id" project="crash.project"></span>
+          <span pc-summary href="crash.href"></span>
         </td>
       </tr>
     </tbody>

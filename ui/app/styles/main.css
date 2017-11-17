@@ -530,3 +530,24 @@ input#bucket {
     animation-iteration-count: infinite;
     animation-timing-function: step-end;
 }
+
+.result-table thead th {
+    background: var(--light)
+}
+
+.result-table tr:nth-child(even) {
+    background: var(--light)
+}
+
+.result-table tr:nth-child(even) tr {
+    background: white;
+}
+
+.result-table tr:nth-child(odd) {
+    background: white;
+}
+
+.result-table tr:nth-child(odd) tr {
+    background: var(--light);
+}
+

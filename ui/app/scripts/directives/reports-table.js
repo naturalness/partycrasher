@@ -5,7 +5,7 @@ angular.module('PartyCrasherApp')
 //     link: link,
     restrict: 'E',
     scope: {
-      reports: '=',
+      reports: '<',
     }
   };
 });
