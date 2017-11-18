@@ -1,0 +1,33 @@
+<div class="result-table">
+  <table class="striped">
+    <thead>
+      <tr>
+        <th> Size* </th>
+        <th> First Seen </th>
+        <th> Last Seen </th>
+        <th> Latest Stacktrace </th>
+        <th> Common Features </th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr ng-repeat="bucket in buckets track by $index">
+        <td>
+          <a href="{{ ::bucket.reports | uiUrl }}">
+            {{ ::bucket.total }} Reports
+          </a>
+        </td>
+        <td>
+          {{ ::bucket.first_seen | fromNow }}
+        </td>
+        <td>
+          {{ ::bucket.last_seen | fromNow }}
+        </td>
+        <td>
+        </td>
+        <td>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
