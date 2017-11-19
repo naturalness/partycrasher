@@ -30,9 +30,11 @@ import traceback
 
 from flask import json, jsonify, request, redirect, make_response, url_for
 
-from partycrasher.crash import pretty
+from partycrasher.pc_encoder import pretty
 from partycrasher.pc_exceptions import PartyCrasherError
-from partycrasher.api.util import maybe_date, maybe_int, maybe_type
+from partycrasher.pc_type import maybe_date, maybe_int
+from partycrasher.project import multi_project
+from partycrasher.crash_type import multi_crash_type
 
 import logging
 logger = logging.getLogger(__name__)
@@ -247,10 +249,10 @@ def make_search(args, **kwargs):
     maybe_set(s, 'since', maybe_date(args.get('since', None)))
     maybe_set(s, 'until', maybe_date(args.get('until', None)))
     merge(args, 'project', 'projects')
-    maybe_set(s, 'project', args.get('project', None))
+    maybe_set(s, 'project', multi_project(args.get('project', None)))
     merge(args, 'type', 'type_')
     merge(args, 'type', 'types')
-    maybe_set(s, 'type', maybe_type(args.get('type', None)))
+    maybe_set(s, 'type', multi_crash_type(args.get('type', None)))
     merge(args, 'threshold', 'thresholds')
     maybe_set(s, 'threshold', args.get('threshold', None))
     merge(args, 'bucket_id', 'buckets')

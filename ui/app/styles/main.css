@@ -13,7 +13,7 @@
 
 :root {
     --light: #FFEBC2;
-    --lmlight: #ffd785;
+    --lmlight: #FFD785;
     --mlight: #FFC349;
     --medium: #FFAB00;
     --mdark: #BC7F00;
@@ -592,23 +592,17 @@ input#bucket {
 }
 
 .result-head {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
     align-items: baseline;
     padding-bottom: 0.5em;
 }
 
 .result-head h1 {
-    order: 0;
     display: inline;
     vertical-align: baseline;
-    margin: 0;
-    padding-right: 0.5em;
+    padding-right: 0.25em;
 }
 
 .result-head>span {
-    order: 1;
     display: inline;
     vertical-align: baseline;
 }

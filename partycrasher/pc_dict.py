@@ -28,19 +28,16 @@ DEBUG = logger.debug
 
 import sys
 from copy import copy, deepcopy
-import re
 
-from six import PY2, PY3, string_types
+from six import PY2, PY3, string_types, text_type
 if PY3:
     from collections.abc import MutableMapping, MutableSequence
 elif PY2:
     from collections import MutableMapping, MutableSequence
 
 from frozendict import frozendict
-    
-from partycrasher.pc_exceptions import BadKeyNameError
 
-good = re.compile('([\w_-]+)$')
+from partycrasher.pc_type import PCType, key_type
     
 class PCDict(MutableMapping):
     """
@@ -81,20 +78,9 @@ class PCDict(MutableMapping):
         else:
             return self._d.__getitem__(key)
     
-    def maybe_coerce(self, key, val):
-        if self.canonical_fields[key]['converter'] is not None:
-            #DEBUG(self.canonical_fields[key]['converter'])
-            return (
-                self.canonical_fields[key]['converter'](val))
-        else:
-            raise ValueError(key + " must be of type " +
-                        self.canonical_fields[key]['type'].__name__)
-
     def __setitem__(self, key, val):
-        # TODO: figure out how to fix this
-        #if (not key in self._d) and hasattr(self, key):
-            #raise BadKeyNameError(key)
-
+        assert val != "None"
+            
         # Force strings to be unicoded
         if not isinstance(key, string_types):
            raise BadKeyNameError(repr(key))
@@ -104,32 +90,16 @@ class PCDict(MutableMapping):
             key = self.synonyms[key]
         
         if key in self.canonical_fields:
-            # Check if the value has the type we require.
-            if isinstance(val, self.canonical_fields[key]['type']):
-                # It's the right type. No need to convert, just set.
-                return self._d.__setitem__(key, val)
-            elif (isinstance(val, list)
-                  and self.canonical_fields[key].get('multi', False)):
-                for i in range(0, len(val)):
-                    if isinstance(val[i], self.canonical_fields[key]['type']):
-                        continue
-                    else:
-                        val[i] = maybe_coerce(key, val[i])
-                return self._d.__setitem__(key, val)
-            else:
-                # Coerce to the required type.
-                return self._d.__setitem__(
-                    key,
-                    self.maybe_coerce(key, val)
+            try:
+                val = self.canonical_fields[key](val)
+            except ValueError as e:
+                raise ValueError(
+                    str(e) + " Key " + str(key) + " Value " + str(val)
                     )
-        else:
-            m = good.match(key)
-            if m is None:
-                raise BadKeyNameError(key)
-            if m.group(1) != key:
-                raise BadKeyNameError(key)
             return self._d.__setitem__(key, val)
-        assert False
+        else:
+            key = key_type(key)
+            return self._d.__setitem__(key, val)
 
     def __delitem__(self, key):
         return self._d.__delitem__(key)
@@ -141,7 +111,9 @@ class PCDict(MutableMapping):
         return self._d.__len__()
       
     def as_dict(self):
-        return dict(self._d)
+        for k, v in self._d.items():
+            assert v != "None", k + " was 'None'"
+        return self._d
     
     def __copy__(self):
         """Implements a shallow copy operation. Note that this will call __init__, so it will reconvert everything."""
@@ -157,6 +129,9 @@ class PCDict(MutableMapping):
         return self._d.keys()
     
     def freeze(self):
+        for k, v in self._d.items():
+            if isinstance(v, list):
+                self._d[k] = tuple(v)
         self._d = frozendict(self._d)
     
     def as_hashable(self):
@@ -168,7 +143,7 @@ class PCDict(MutableMapping):
     def check(self):
         for k, v in self._d.items():
             if k in self.canonical_fields:
-                assert isinstance(v, self.canonical_fields[k]['type'])
+                assert self.canonical_fields[k].checker(v)
 
 class PCList(MutableSequence):
     
@@ -226,7 +201,7 @@ class PCDefaultDict(PCDict):
     def __init__(self, *args, **kwargs):
         d = dict(*args, **kwargs)
         self._d = {
-            k: v['default'] for k, v in self.canonical_fields.items()
+            k: v.default for k, v in self.canonical_fields.items()
             }
         for k, v in d.items():
             self[k] = v

@@ -28,6 +28,8 @@ from copy import copy, deepcopy
 
 from six import string_types, text_type
 
+from partycrasher.pc_type import PCType, PCMaybeType
+
 class Threshold(object):
     """
     A wrapper for a bucket threshold value. Ensures proper serialization
@@ -94,7 +96,12 @@ class Threshold(object):
         Converts the threshold to a string, suitable for serialization as an
         ElasticSearch field name. Note that full stops ('.') are verbotten in
         ElasticSearch field names.
-        """
+        """        #elif isinstance(o, Bucket):
+            #o.check()
+            #return o.as_dict()
+        #elif isinstance(o, TopMatch):
+            #return o.as_dict()
+
         str_value = str(self)
         assert isinstance(self._value, Decimal)
         assert str_value.count('.') == 1, 'Invalid decimal number'
@@ -105,3 +112,10 @@ class Threshold(object):
     
     def __deepcopy__(self, memo):
         return Threshold(copy(self._value))
+    
+    def jsonify(self):
+        return text_type(self._value)
+
+mustbe_threshold = PCType(Threshold, Threshold)
+
+maybe_threshold = PCMaybeType(Threshold, Threshold)

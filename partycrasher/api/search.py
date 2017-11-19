@@ -36,70 +36,31 @@ elif PY2:
 from datetime import datetime
 from copy import copy, deepcopy
 
-from partycrasher.pc_dict import PCDict, PCDefaultDict
-from partycrasher.project import Project
-from partycrasher.threshold import Threshold
-#from partycrasher.crash import Crash
-from partycrasher.api.util import (
-    maybe_date, 
-    maybe_threshold, 
-    maybe_project,
-    maybe_bucket,
-    maybe_text,
-    maybe_type
+from partycrasher.pc_type import (
+    maybe_date,
+    maybe_string,
+    maybe_key
     )
+from partycrasher.pc_dict import PCDict, PCDefaultDict
+from partycrasher.project import Project, multi_project
+from partycrasher.threshold import Threshold, maybe_threshold
 from partycrasher.bucket import Bucket
 from partycrasher.api.report import Report
 from partycrasher.context import Context
-from partycrasher.crash_type import CrashType
+from partycrasher.crash_type import CrashType, multi_crash_type
 from partycrasher.es.crash import ESCrash
 
 class Search(PCDefaultDict):
     __slots__ = ('context',)
     
     canonical_fields = {
-        'threshold': {
-            'type': Threshold,
-            'converter': maybe_threshold,
-            'default': None,
-            'multi': True
-            },
-        'project': {
-            'type': Project,
-            'converter': maybe_project,
-            'default': None,
-            'multi': True
-            },
-        'since': {
-            'type': datetime,
-            'converter': maybe_date,
-            'default': None,
-            'multi': False
-            },
-        'until': {
-            'type': datetime,
-            'converter': maybe_date,
-            'default': None,
-            'multi': False
-            },
-        'query_string': {
-            'type': string_types,
-            'converter': maybe_text,
-            'default': None,
-            'multi': False
-            },
-        'bucket_id': {
-            'type': string_types,
-            'converter': maybe_text,
-            'default': None,
-            'multi': True
-            },
-        'type': {
-            'type': CrashType,
-            'converter': maybe_type,
-            'default': None,
-            'multi': True
-            },
+        'threshold': maybe_threshold,
+        'project': multi_project,
+        'since': maybe_date,
+        'until': maybe_date,
+        'query_string': maybe_string,
+        'bucket_id': maybe_key,
+        'type': multi_crash_type,
         }
         
     def __init__(self,
@@ -308,6 +269,8 @@ class Search(PCDefaultDict):
         return None
     
     def __eq__(self, other):
+        if not isinstance(other, Search):
+            return False
         return self._d.__eq__(other._d)
     
     def __hash__(self):

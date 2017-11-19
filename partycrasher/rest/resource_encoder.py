@@ -23,7 +23,7 @@ import sys
 
 from decimal import Decimal
 
-from partycrasher.crash import Crash, CrashEncoder
+from partycrasher.pc_encoder import PCEncoder
 from partycrasher.project import Project
 from partycrasher.threshold import Threshold
 from partycrasher.bucket import Bucket, TopMatch
@@ -121,7 +121,7 @@ except RuntimeError as ex:
     del tb
     del ex
 
-class ResourceEncoder(CrashEncoder):
+class ResourceEncoder(PCEncoder):
     def default(self, o):
         if isinstance(o, Search):
             return url_for_search(o)
@@ -131,8 +131,6 @@ class ResourceEncoder(CrashEncoder):
             return d
         elif hasattr(o, 'restify'):
             return o.restify()
-        elif isinstance(o, Threshold):
-            return str(o)
         elif isinstance(o, TopMatch):
             d = super(ResourceEncoder, self).default(o).copy()
             d['href'] = url_for_report_id(o['report_id'])

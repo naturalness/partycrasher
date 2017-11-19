@@ -35,7 +35,7 @@ from partycrasher.bucket import Bucket
 from partycrasher.threshold import Threshold
 from partycrasher.api.search import Page, Search
 from partycrasher.pc_dict import PCDict
-from partycrasher.crash import pretty
+from partycrasher.pc_encoder import pretty
 
 class ReportBucketPage(Page):
     """Class representing a page of reports from a bucket or search."""

@@ -29,12 +29,12 @@ from copy import deepcopy
 import dateparser
 
 from partycrasher.pc_exceptions import IdenticalReportError, ReportNotFoundError
+from partycrasher.pc_encoder import pretty
+from partycrasher.pc_type import parse_utc_date
 from partycrasher.crash import (
   Crash, 
   Stacktrace, 
   Stackframe, 
-  pretty,
-  parse_utc_date,
   )
 from partycrasher.es.bucket import ESBuckets
 from partycrasher.es.elastify import elastify, ESCrashEncoder

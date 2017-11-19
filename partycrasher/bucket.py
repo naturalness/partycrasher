@@ -19,17 +19,23 @@
 
 from collections import namedtuple, OrderedDict
 import os
-from datetime import datetime
 from copy import copy, deepcopy
-
-from six import text_type, string_types
-import dateparser
 from decimal import Decimal
 
-from partycrasher.pc_dict import PCDict, FixedPCDict
+from six import text_type
 
-from partycrasher.threshold import Threshold
-from partycrasher.project import Project
+from partycrasher.pc_dict import PCDict, FixedPCDict
+from partycrasher.pc_type import (
+    PCType,
+    PCMaybeType,
+    mustbe_string,
+    mustbe_int,
+    mustbe_float,
+    mustbe_date,
+    key_type
+    )
+from partycrasher.threshold import Threshold, mustbe_threshold
+from partycrasher.project import mustbe_project
 
 import logging
 logger = logging.getLogger(__name__)
@@ -41,13 +47,7 @@ debug = logger.debug
 from base64 import b64encode
 def random_bucketid():
     """Generates a random text_typeing for a bucket ID"""
-    return b64encode(os.urandom(12), b":_").decode("ascii")
-
-def first_seen(o):
-    
-    if isinstance(o, string_types):
-        return dateparser.parse(o)
-    return datetime(o)
+    return b64encode(os.urandom(12), b"-_").decode("ascii")
 
 class Bucket(PCDict):
     """
@@ -59,22 +59,11 @@ class Bucket(PCDict):
     __slots__ = tuple()
     
     canonical_fields = {
-        'id': {
-            'type': text_type,
-            'converter': text_type,
-        },
-        'threshold': {
-            'type': Threshold,
-            'converter': Threshold,
-        },
-        'first_seen': {
-            'type': datetime,
-            'converter': first_seen,
-        },
-        'total': {
-            'type': int,
-            'converter': int,
-         },
+        'id': key_type,
+        'threshold': mustbe_threshold,
+        'first_seen': mustbe_date,
+        'last_seen': mustbe_date,
+        'total': mustbe_int,
     }
         
     #def __init__(self, *args, **kwargs):
@@ -89,23 +78,26 @@ class Bucket(PCDict):
         kwargs['id'] = random_bucketid()
         return Bucket(**kwargs)
     
+    def jsonify(self):
+        return self.as_dict()
+    
+mustbe_bucket = PCType(Bucket, Bucket)
+
+maybe_bucket = PCMaybeType(Bucket, Bucket)
+    
 class TopMatch(FixedPCDict):
     __slots__ = tuple()
 
     canonical_fields = {
-        'report_id': {
-            'type': text_type,
-            'converter': text_type,
-        },
-        'score': {
-            'type': float,
-            'converter': float,
-        },
-        'project': {
-            'type': Project,
-            'converter': Project,
-        },
+        'report_id': key_type,
+        'score': mustbe_float,
+        'project': mustbe_project,
     }
+    
+    def jsonify(self):
+        return self.as_dict()
+
+mustbe_top_match = PCType(TopMatch, TopMatch)
 
 class Buckets(object):
     __slots__ = ('_od',)
@@ -173,7 +165,7 @@ class Buckets(object):
             assert not isinstance(v, Decimal)
         return new
 
-    def json_serializable(self):
+    def jsonify(self):
         d = OrderedDict()
         for k, v in self._od.items():
             k = text_type(k)
@@ -186,3 +178,4 @@ class Buckets(object):
                 if v is None:
                     self[k] = Bucket.new(k)
         
+mustbe_buckets = PCType(checker=Buckets, converter=Buckets)

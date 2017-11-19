@@ -2,10 +2,10 @@
   <table class="striped">
     <thead>
       <tr>
-        <th> Size* </th>
+        <th> Size<a>*</a> </th>
         <th> First Seen </th>
         <th> Last Seen </th>
-        <th> Latest Stacktrace </th>
+        <th> Common Stacktrace<a>*</a> </th>
         <th> Common Features </th>
       </tr>
     </thead>
@@ -24,10 +24,12 @@
           {{ ::bucket.last_seen | fromNow }}
         </td>
         <td>
+          <span mini-trace reports="::bucket.reports"></span>
         </td>
         <td>
         </td>
       </tr>
     </tbody>
   </table>
+  
 </div>

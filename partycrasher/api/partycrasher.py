@@ -22,7 +22,6 @@ from copy import copy
 import partycrasher
 from partycrasher.context import Context
 from partycrasher.bucket import Bucket
-from partycrasher.crash import pretty
 from partycrasher.threshold import Threshold
 
 # These imports are all the public API

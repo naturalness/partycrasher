@@ -48,7 +48,7 @@ import fake_data_generator
 # TODO: argparse
 DONT_ACTUALLY_COMPUTE_STATS=False
 BLOCK_SIZE=1000
-PARALLEL=8
+PARALLEL=0
 BOOTSTRAP_CRASHES=0 # WARNING: Destroys temporal relationships!
 BOOTSTRAP_RESUME_AT=0 # This doesn't actually work properly yet, don't use it.
 RESET_STATS_AFTER_BLOCK=True
@@ -117,9 +117,11 @@ def load_oracle_data(oracle_file_path):
 
     for database_id, crash in all_crashes.items():
         assert crash['database_id'] == database_id
+        pc_id = database_id.replace(':', '-')
+        crash['database_id'] = pc_id
         if len(crash['stacktrace']) < 1:
-            print("Skipping: " + database_id)
-            skipped_ids.add(database_id)
+            print("Skipping: " + pc_id)
+            skipped_ids.add(pc_id)
             continue
         for k in list(crash.keys()):
             if '.' in k:
@@ -127,28 +129,30 @@ def load_oracle_data(oracle_file_path):
                 del crash[k]
         if 'type' in crash and crash['type'] != 'Crash':
             debug("Skipping type: " + k)
-            skipped_ids.add(database_id)
+            skipped_ids.add(pc_id)
             continue
         if 'type' not in crash:
             crash['type'] = 'Crash'
         if 'date' not in crash:
             debug("Skipping (no date): " + k)
-            skipped_ids.add(database_id)
+            skipped_ids.add(pc_id)
             continue
-        crashes[database_id] = crash
+        crashes[pc_id] = crash
             
-            
+    oracle_pc = {}
     for k, v in oracle_all.items():
         assert k == v['database_id']
-        database_id = v['database_id']
-        if database_id in skipped_ids:
+        pc_id = k.replace(':', '-')
+        v['database_id'] = pc_id
+        if pc_id in skipped_ids:
             continue
         bucket = v['bucket']
-        all_ids[database_id] = bucket
+        all_ids[pc_id] = bucket
         if not bucket in all_buckets:
-            all_buckets[bucket] = [database_id]
+            all_buckets[bucket] = [pc_id]
         else:
-            all_buckets[bucket].append(database_id)
+            all_buckets[bucket].append(pc_id)
+        oracle_pc[pc_id] = v
 
     print(str(len(all_ids)) + " IDs used in oracle")
 
@@ -160,7 +164,7 @@ def load_oracle_data(oracle_file_path):
         total_ids = BOOTSTRAP_CRASHES
         total_buckets = len(all_buckets)
     
-    return (crashes, oracle_all, all_ids, total_ids, total_buckets)
+    return (crashes, oracle_pc, all_ids, total_ids, total_buckets)
 
 def argmax(d):
     mv = None

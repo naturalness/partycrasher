@@ -33,7 +33,7 @@ from partycrasher.bucket import Buckets, Bucket, TopMatch
 from partycrasher.threshold import Threshold
 from partycrasher.pc_exceptions import MissingBucketError
 from partycrasher.es.bucket import ESBuckets
-from partycrasher.crash import pretty
+from partycrasher.pc_encoder import pretty
 
 class MoreLikeThisHit(object):
     def __init__(self, raw_hit):

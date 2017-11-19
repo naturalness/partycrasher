@@ -23,11 +23,11 @@ from six import string_types
 from partycrasher.threshold import Threshold
 from partycrasher.bucket import Buckets
 from partycrasher.project import Project
-from partycrasher.crash import CrashEncoder
+from partycrasher.pc_encoder import PCEncoder
 from collections import OrderedDict
 
 
-class ESCrashEncoder(CrashEncoder):
+class ESCrashEncoder(PCEncoder):
 
     @staticmethod
     def hacky_serialize_thresholds(buckets):
@@ -56,10 +56,8 @@ class ESCrashEncoder(CrashEncoder):
         #print(type(o), file=sys.stderr)
         if isinstance(o, Buckets):
             return self.hacky_serialize_thresholds(o)
-        elif isinstance(o, Project):
-            return str(o)
         else:
-            return CrashEncoder.default(self, o)
+            return super(ESCrashEncoder, self).default(o)
 
 def elastify(o, **kwargs):
     return json.dumps(o, cls=ESCrashEncoder, **kwargs)

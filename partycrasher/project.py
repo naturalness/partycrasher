@@ -19,30 +19,28 @@
 
 from six import string_types
 import re
-from partycrasher.pc_exceptions import BadProjectNameError
-
-good = re.compile('(\w+)$')
+from partycrasher.pc_exceptions import BadProjectNameError, BadKeyNameError
+from partycrasher.pc_type import (
+    PCType,
+    PCMaybeType,
+    PCMultiType,
+    key_type
+    )
 
 class Project(object):
     """
     Metadata about a project.
     """
-    __slots__ = 'name'
+    __slots__ = ('name',)
     
     def __init__(self, project):
         if isinstance(project, Project):
             self.name = project.name
-        elif isinstance(project, string_types):
-            self.name = project
-        elif isinstance(project, dict) and 'name' in project:
-            self.name = project['name']
         else:
-            raise BadProjectNameError(repr(self.name))
-        m = good.match(self.name)
-        if m is None:
-            raise BadProjectNameError(self.name)
-        if m.group(1) != self.name:
-            raise BadProjectNameError(self.name)
+            try:
+                self.name = key_type(project)
+            except BadKeyNameError as e:
+                raise BadProjectNameError(repr(project))
     
     def __str__(self):
         return self.name
@@ -58,4 +56,12 @@ class Project(object):
     
     def __repr__(self):
         return self.__class__.__name__ + "(" + repr(self.name) + ")"
+    
+    def jsonify(self):
+        return self.name
 
+mustbe_project = PCType(checker=Project, converter=Project)
+
+maybe_project = PCMaybeType(checker=Project, converter=Project)
+
+multi_project = PCMultiType(Project, Project)

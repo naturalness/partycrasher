@@ -30,7 +30,8 @@ import math
 import copy
 from datetime import datetime
 
-from partycrasher.crash import Crash, Buckets, pretty
+from partycrasher.pc_encoder import pretty
+from partycrasher.crash import Crash, Buckets
 from partycrasher.es.crash import ESCrash, ESCrashEncoder
 from partycrasher.threshold import Threshold
 from partycrasher.pc_dict import PCDict, PCList

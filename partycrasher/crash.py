@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#  Copyright (C) 2015, 2016 Joshua Charles Campbell
+#  Copyright (C) 2015, 2016, 2017 Joshua Charles Campbell
 
 #  This program is free software; you can reditext_typeibute it and/or
 #  modify it under the terms of the GNU General Public License
@@ -19,23 +19,31 @@
 
 from __future__ import print_function
 
-import sys, json, datetime
-import dateparser
+import sys
+import datetime
 from collections import OrderedDict
 
-from partycrasher.threshold import Threshold
-from partycrasher.project import Project
-from partycrasher.bucket import Buckets, Bucket, TopMatch
+from partycrasher.threshold import Threshold, mustbe_threshold
+from partycrasher.project import Project, mustbe_project
+from partycrasher.bucket import (
+    Buckets,
+    Bucket,
+    TopMatch,
+    mustbe_buckets
+    )
 from partycrasher.pc_dict import PCDict, PCList
-from partycrasher.crash_type import CrashType
-from partycrasher.util import maybe
+from partycrasher.crash_type import CrashType, mustbe_crash_type
+from partycrasher.pc_type import (
+    PCType,
+    mustbe_date,
+    mustbe_int,
+    maybe_string,
+    mustbe_string,
+    key_type
+    )
 
 from six import string_types, text_type
 
-def parse_utc_date(s):
-    return dateparser.parse(s, settings={'TIMEZONE': 'UTC',
-                                         'RETURN_AS_TIMEZONE_AWARE': False})
-            
 class Stackframe(PCDict):
     """
     Represents a Stackframe in a crash object. Proxy object for a dictionary.
@@ -45,36 +53,29 @@ class Stackframe(PCDict):
     synonyms = {}
     
     canonical_fields = {
-        'depth': {
-            'type': int,
-            'converter': int,
-            },
-        'address': {
-            'type': text_type,
-            'converter': maybe(text_type),
-            },
-        'function': {
-            'type': text_type,
-            'converter': maybe(text_type),
-            },
-        'args': {
-            'type': text_type,
-            'converter': maybe(text_type),
-            },
-        'file': {
-            'type': text_type,
-            'converter': maybe(text_type),
-            },
-        'dylib': {
-            'type': text_type,
-            'converter': maybe(text_type),
-            },
+        'depth': mustbe_int,
+        'address': maybe_string,
+        'function': maybe_string,
+        'args': maybe_string,
+        'file': maybe_string,
+        'dylib': maybe_string,
     }
+    
+    def jsonify(self):
+        assert self["function"] != "None"
+        return self.as_dict()
+    
+mustbe_stackframe = PCType(Stackframe, Stackframe)
 
 class Stacktrace(PCList):
     __slots__ = tuple()
     member_type = Stackframe
     member_converter = Stackframe
+    
+    def jsonify(self):
+        return self._l
+    
+mustbe_stacktrace = PCType(Stacktrace, Stacktrace)
 
 class Crash(PCDict):
     
@@ -88,30 +89,15 @@ class Crash(PCDict):
     }
 
     canonical_fields = {
-        'date': {
-            'type': datetime.datetime,
-            'converter': parse_utc_date,
-            },
-        'stacktrace': {
-            'type': Stacktrace,
-            'converter': Stacktrace,
-            },
-        'database_id': {
-            'type': text_type,
-            'converter': text_type,
-            },
-        'project': {
-            'type': Project,
-            'converter': Project,
-            },
-        'type': {
-            'type': CrashType,
-            'converter': CrashType,
-            },
-        'buckets': {
-            'type': Buckets,
-            'converter': Buckets,
-            },
+        'date': mustbe_date,
+        'stacktrace': PCType(
+            checker=Stacktrace,
+            converter=Stacktrace,
+            ),
+        'database_id': mustbe_string,
+        'project': mustbe_project,
+        'type': mustbe_crash_type,
+        'buckets': mustbe_buckets,
     }
 
     def get_bucket_id(self, threshold):
@@ -150,14 +136,12 @@ class Crash(PCDict):
     @property
     def id(self):
         return self['database_id']
-
-    @property
-    def id_without_project(self):
-        return self['database_id']
-
-    def json(self):
-        return json.dumps(self, cls=CrashEncoder)
-
+        #elif isinstance(o, Buckets):
+            #return o.json_serializable()
+    
+    def jsonify(self):
+        return self.as_dict()
+    
     @classmethod
     def fromjson(cls, s):
         d = json.loads(s)
@@ -165,37 +149,7 @@ class Crash(PCDict):
         c = cls(d)
         return c
 
-class CrashEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, datetime.datetime):
-            serialized = o.isoformat()
-            return serialized
-        elif isinstance(o, Buckets):
-            return o.json_serializable()
-        elif isinstance(o, Crash):
-            o.check()
-            return o.as_dict()
-        elif isinstance(o, Stacktrace):
-            return o._l
-        elif isinstance(o, Stackframe):
-            return o.as_dict()
-        elif isinstance(o, Bucket):
-            o.check()
-            return o.as_dict()
-        elif isinstance(o, TopMatch):
-            return o.as_dict()
-        elif isinstance(o, Threshold):
-            return text_type(o)
-        elif isinstance(o, Project):
-            return o.name
-        elif isinstance(o, CrashType):
-            return o.name
-        else:
-            return super(CrashEncoder, self).default(o)
-
-def pretty(thing):
-    return json.dumps(thing, cls=CrashEncoder, indent=2)
-
+mustbe_crash = PCType(Crash, Crash)
 
 import unittest
 class TestCrash(unittest.TestCase):

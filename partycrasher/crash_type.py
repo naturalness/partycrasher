@@ -19,30 +19,28 @@
 
 from six import string_types
 import re
-from partycrasher.pc_exceptions import BadTypeNameError
-
-good = re.compile('(\w+)$')
+from partycrasher.pc_exceptions import BadTypeNameError, BadKeyNameError
+from partycrasher.pc_type import (
+    PCType, 
+    PCMaybeType,
+    PCMultiType,
+    key_type
+    )
 
 class CrashType(object):
     """
     Metadata about a crash type.
     """
-    __slots__ = 'name'
+    __slots__ = ('name',)
     
     def __init__(self, crash_type):
         if isinstance(crash_type, CrashType):
             self.name = crash_type.name
-        elif isinstance(crash_type, string_types):
-            self.name = crash_type
-        elif isinstance(crash_type, dict) and 'name' in crash_type:
-            self.name = crash_type['name']
         else:
-            raise BadTypeNameError(repr(crash_type))
-        m = good.match(self.name)
-        if m is None:
-            raise BadTypeNameError(self.name)
-        if m.group(1) != self.name:
-            raise BadTypeNameError(self.name)
+            try:
+                self.name = key_type(crash_type)
+            except BadKeyNameError as e:
+                raise BadTypeNameError(repr(crash_type))
     
     def __str__(self):
         return self.name
@@ -58,3 +56,13 @@ class CrashType(object):
     
     def __repr__(self):
         return self.__class__.__name__ + "(" + repr(self.name) + ")"
+    
+    def jsonify(self):
+        return self.name
+
+mustbe_crash_type = PCType(checker=CrashType, converter=CrashType)
+
+maybe_crash_type = PCMaybeType(checker=CrashType, converter=CrashType)
+
+multi_crash_type = PCMultiType(checker=CrashType, converter=CrashType)
+

@@ -60,7 +60,7 @@ from partycrasher.pc_exceptions import (
   PartyCrasherError, 
   IdenticalReportError
   )
-from partycrasher.crash import pretty
+from partycrasher.pc_encoder import pretty
 
 # Create and customize the Flask app.
 app = Flask('partycrasher', template_folder='../ui/app')
