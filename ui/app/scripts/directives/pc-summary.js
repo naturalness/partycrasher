@@ -5,6 +5,7 @@ angular.module('PartyCrasherApp')
 .directive('pcSummary', function($http) {
   function link(scope, element, _attrs) {
     /* When database-id has stabilized, do a request. */
+    scope.summary = null;
     scope.$watch('href', function (value) {
       if (value === undefined) {
         return;
@@ -13,6 +14,31 @@ angular.module('PartyCrasherApp')
       /* Value has stabilized, so we can fetch the summary! */
       $http.get(scope.href + '?explain=true').then(function(response) {
         scope.summary = groupSummary(response.data.auto_summary);
+      });
+    });
+    scope.$watch('reports', function (value) {
+      if (value === undefined) {
+        return;
+      }
+      $http.get(scope.reports + "?size=10").then(function(response) {
+        scope.summary_sum = {};
+        for (var crash of response.data.reports) {
+          $http.get(crash.href + "?explain=true").then(function(response) {
+            for (var t of response.data.auto_summary) {
+              key = t.field + ":" + t.term;
+              if (!(key in scope.summary_sum)) {
+                scope.summary_sum[key] = {
+                  field: t.field,
+                  term: t.term,
+                  value: 0.0,
+                };
+              }
+              scope.summary_sum[key].value += t.value;
+            }
+            var sums = Object.values(scope.summary_sum);
+            scope.summary = groupSummary(sums);
+          });
+        }
       });
     });
   }
@@ -57,6 +83,7 @@ angular.module('PartyCrasherApp')
     link: link,
     scope: {
       href: '<',
+      reports: '<',
     }
   };
 });

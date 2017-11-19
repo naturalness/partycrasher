@@ -28,7 +28,7 @@ class PCEncoder(json.JSONEncoder):
         for type_ in PCEncoder.types:
             if type_.jsonable(o):
                 return type_.jsonify(o)
-            
+        
         return super(PCEncoder, self).default(o)
 
 def pretty(thing):

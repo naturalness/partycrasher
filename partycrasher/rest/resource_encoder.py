@@ -38,7 +38,7 @@ from flask import json, request, redirect, make_response
 
 def search_url_append(path, params, key, conv=str):
     if key in params:
-        if isinstance(params[key], list):
+        if isinstance(params[key], (list, tuple)):
             path += key + 's/' + ','.join([conv(p) for p in params[key]]) + '/'
         else:
             path += key + 's/' + conv(params[key]) + '/'

@@ -376,6 +376,10 @@ pc-error {
 
 .result {
     display: inline;
+}
+
+.result-body {
+    display: block;
     overflow: hidden;
 }
 
@@ -605,4 +609,21 @@ input#bucket {
 .result-head>span {
     display: inline;
     vertical-align: baseline;
+}
+
+.status {
+    background-color: black;
+    font-weight: bold;
+    padding-left: 0.2em;
+    padding-right: 0.2em;
+    color: white;
+}
+.status.green {
+    color: lime;
+}
+.status.yellow {
+    color: yellow;
+}
+.status.red {
+    color: red;
 }

@@ -92,7 +92,7 @@ class Search(PCDefaultDict):
                               context=self.context)
 
     def build_disjunction(self, field, things):
-        if isinstance(things, list):
+        if isinstance(things, (list, tuple)):
             return {
                 "bool": {
                     "should": [
@@ -130,11 +130,7 @@ class Search(PCDefaultDict):
         
         # May filter optionally by project name.
         if self['project'] is not None:
-            must.append({
-                "term": {
-                    "project": self.project
-                }
-            })
+            must.append(self.build_disjunction("project", self['project']))
         
         # May filter optionally by type name.
         if self['type'] is not None:
@@ -319,16 +315,22 @@ class Page(PCDict):
             
         if self['project'] is not None:
             from partycrasher.api.report_project import ReportProject
-            self['project'] = ReportProject(
-                search=self['search'].new_blank(),
-                project=self['project']
-                )
+            self['project'] = [
+                ReportProject(
+                    search=self['search'].new_blank(),
+                    project=project_
+                    )
+                for project_ in self['project']
+                ]
         if self['type'] is not None:
             from partycrasher.api.report_type import ReportType
-            self['type'] = ReportType(
-                search=self['search'].new_blank(),
-                report_type=self['type']
-                )
+            self['type'] = [
+                ReportType(
+                    search=self['search'].new_blank(),
+                    report_type=type_
+                    )
+                for type_ in self['type']
+                ]
         self.freeze()
             
     def restify(self):

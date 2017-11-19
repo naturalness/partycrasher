@@ -5,7 +5,8 @@ angular.module('PartyCrasherApp')
   $rootScope,
   BASE_HREF,
   REST_BASE,
-  $timeout
+  $timeout,
+  DEFAULT_THRESHOLD
 ) {
   function link(scope, element, _attrs) {
     scope.error = null;
@@ -60,6 +61,29 @@ angular.module('PartyCrasherApp')
       getOut("threshold");
       getOut("query_string");
       getOut("search");
+      getOut("store");
+      getOut("version");
+      getOut("href");
+      getOut("types");
+      getOut("projects");
+      getOut("config");
+      getOut("default_threshold");
+      if ('buckets' in response.data 
+        && DEFAULT_THRESHOLD in response.data.buckets) {
+        $http.get(response.data.buckets[DEFAULT_THRESHOLD]).then(
+          function(response) {
+            scope.buckets = response.data.buckets;
+          }
+        );
+        delete response.data.buckets;
+      }
+      if ('reports' in response.data
+        && typeof response.data.reports == 'string') {
+        $http.get(response.data.reports).then(function(response) {
+          scope.reports = response.data.reports;
+        });
+        delete response.data.reports;
+      }        
       if (Object.keys(response.data).length) {
         scope.result = response.data;
       } else {

@@ -79,12 +79,6 @@ class PCDict(MutableMapping):
             return self._d.__getitem__(key)
     
     def __setitem__(self, key, val):
-        assert val != "None"
-            
-        # Force strings to be unicoded
-        if not isinstance(key, string_types):
-           raise BadKeyNameError(repr(key))
-            
         # Now do conversions.
         if key in self.synonyms:
             key = self.synonyms[key]
@@ -111,8 +105,6 @@ class PCDict(MutableMapping):
         return self._d.__len__()
       
     def as_dict(self):
-        for k, v in self._d.items():
-            assert v != "None", k + " was 'None'"
         return self._d
     
     def __copy__(self):

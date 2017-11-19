@@ -69,17 +69,63 @@
 </div>
 <div class="pager" ng-if="size">
   Showing results {{ from }} to {{ from + size }} of {{ total }}.
-  <a href="{{ prev_page }}" ng-if="prev_page">
+  <a href="{{ prev_page | uiUrl }}" ng-if="prev_page">
     Previous {{ size }}
   </a>
-  <a href="{{ next_page }}" ng-if="next_page">
+  <a href="{{ next_page | uiUrl }}" ng-if="next_page">
     Next {{ size }}
   </a>
+</div>
+<div class="result" ng-if="types">
+  <div class="result-head">
+    <h1 class="result" >Report Types </h1>
+    <!--<span class="search-desc">Showing raw result.</span>-->
+  </div>
+  <div class="result-body">
+    <ul>
+      <li ng-repeat="(type, typedata) in types">
+        <a href="{{::typedata.reports | uiUrl}}">{{ type }}</a>
+      </li>
+    </ul>
+  <div>
+</div>
+<div class="result" ng-if="projects">
+  <div class="result-head">
+    <h1 class="result" >Reporting Projects </h1>
+    <!--<span class="search-desc">Showing raw result.</span>-->
+  </div>
+  <div class="result-body">
+    <ul>
+      <li ng-repeat="(project, projectdata) in projects">
+        <a href="{{::projectdata.reports | uiUrl}}">{{ project }}</a>
+      </li>
+    </ul>
+  <div>
+</div>
+<div class="result" ng-if="store">
+  <div class="result-head">
+    <h1 class="result" > Status</h1>
+    <span class="search-desc">
+      PartyCrasher backend status.
+    </span>
+  </div>
+  <p ng-if="version">
+    Connected to PartyCrasher version {{ version }} at
+    <a href="{{ href }}">{{ href }}</a>
+  </p>
+  <p ng-if="store.connected">
+    Connected to database.
+    Database status: <span class="status {{ store.health.status }}">{{ store.health.status }}</span>.
+    {{ store.health.active_shards_percent_as_number }}% online.
+    Load: {{ store.health.number_of_pending_tasks }}.
+  </p>
 </div>
 <div class="result" ng-if="result">
   <div class="result-head">
     <h1 class="result" >Unknown Result </h1>
-    <p>Showing raw result.</p>
+    <span class="search-desc">Showing raw result.</span>
   </div>
-  <pc-tree value="result">
+  <div class="result-body">
+    <pc-tree value="result">
+  <div>
 </div>

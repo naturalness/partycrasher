@@ -28,11 +28,12 @@ DEBUG = logger.debug
 
 from types import FunctionType
 import re
+from collections import Iterable
+import datetime
 
 from six import PY2, PY3, string_types, text_type
 import dateparser
-import datetime
-from collections import Iterable
+from frozendict import frozendict
 
 from partycrasher.pc_exceptions import BadKeyNameError
 from partycrasher.pc_encoder import PCEncoder
@@ -123,7 +124,10 @@ class PCMultiType(PCType):
     def multiple(self, value):
         if value is None:
             return value
-        elif isinstance(value, Iterable):
+        elif (
+            isinstance(value, Iterable) 
+            and not isinstance(value, string_types)
+            ):
             if len(value) == 0:
                 return None
             else:
@@ -151,17 +155,17 @@ def key_checker(key):
     key_converter(key)
     return True
 
-key_type = PCType(checker=key_checker, converter=key_converter)
+key_type = PCType(key_checker, key_converter)
 
-maybe_key = PCMaybeType(checker=key_checker, converter=key_type)
+maybe_key = PCMaybeType(key_checker, key_type)
 
-mustbe_int = PCType(checker=int, converter=int)
+mustbe_int = PCType(int, int)
 
-maybe_int = PCMaybeType(checker=int, converter=int)
+maybe_int = PCMaybeType(int, int)
 
-mustbe_string = PCType(checker=string_types, converter=text_type)
+mustbe_string = PCType(string_types, text_type)
 
-maybe_string = PCMaybeType(checker=string_types, converter=text_type)
+maybe_string = PCMaybeType(string_types, text_type)
 
 def parse_utc_date(s):
     return dateparser.parse(s, settings={'TIMEZONE': 'UTC',
@@ -182,4 +186,7 @@ maybe_date = PCMaybeType(
 
 mustbe_float = PCType(checker=float, converter=float)
 
+def frozendict_jsonify(d):
+    return d._dict
 
+mustbe_frozendict = PCType(frozendict, frozendict, jsonify=frozendict_jsonify)
