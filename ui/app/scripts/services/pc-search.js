@@ -10,13 +10,23 @@
  *    size
  *    grouping
  */
+'use strict';
+
+var canceller;
+
 angular.module('PartyCrasherApp')
 .factory('pcSearch', function (
     $rootScope, 
     $location,
     BASE_HREF,
-    DEFAULT_THRESHOLD
+    DEFAULT_THRESHOLD,
+    $http,
+    $q
   ) {
+  canceller = $q.defer();
+  $http.defaults['timeout'] = canceller.promise;
+//   canceller.promise.then(function() {debugger;});
+  
   var state = {}; // shared state pojo
 
   function read_location() {
@@ -85,7 +95,7 @@ angular.module('PartyCrasherApp')
   
   function write_location() {
     // update current url from shared state
-    path = "/";
+    var path = "/";
     if (state.report_type.length == 0) {
       path += ``;
     } else {
@@ -124,14 +134,20 @@ angular.module('PartyCrasherApp')
   }
   
   function go() {
-    write_location();
+//     write_location();
   }
   
   write_location(); // ensure early sync -- basically a default route redirect
   
   function came() {
     // watch for url change
-    //console.log('$locationChangeSuccess changed!', new Date());
+    console.log('$locationChangeSuccess changed!', new Date());
+    canceller.resolve();
+    canceller = $q.defer();
+    $http.defaults['timeout'] = canceller.promise;
+//     debugger;
+//     $http.pendingRequests = [];
+
     read_location();
     $rootScope.$emit('search-changed');
   }

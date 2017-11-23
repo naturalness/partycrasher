@@ -57,8 +57,9 @@ class Context(object):
             index=self.index,
             )
         # Pull configuration details needed for search and fix it up.
-        self.fixed_summary_fields = dict(
-            self.config.UserInterface.fixed_summary_fields)
+        self.fixed_summary_fields = dict()
+        for k, v in self.config.UserInterface.fixed_summary_fields.items():
+            self.fixed_summary_fields[k + ".whole"] = v
         self.fixed_summary_fields["project"] = "Project"
         self.fixed_summary_fields["type"] = "Type"
         self.default_threshold = Threshold(

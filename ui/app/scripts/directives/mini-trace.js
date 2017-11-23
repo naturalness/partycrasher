@@ -37,7 +37,8 @@ angular.module('PartyCrasherApp')
       if (value === undefined) {
         return;
       }
-      $http.get(scope.reports + "?size=100").then(function(response) {
+      $http.get(scope.reports + "?size=100", {timeout: canceller.promise})
+        .then(function(response) {
         var stacks = [];
         var votes = [];
 //           debugger;

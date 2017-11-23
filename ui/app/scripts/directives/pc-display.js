@@ -70,7 +70,9 @@ angular.module('PartyCrasherApp')
       getOut("default_threshold");
       if ('buckets' in response.data 
         && DEFAULT_THRESHOLD in response.data.buckets) {
-        $http.get(response.data.buckets[DEFAULT_THRESHOLD]).then(
+        $http.get(response.data.buckets[DEFAULT_THRESHOLD], 
+          {timeout: canceller.promise}
+        ).then(
           function(response) {
             scope.buckets = response.data.buckets;
           }
@@ -79,7 +81,9 @@ angular.module('PartyCrasherApp')
       }
       if ('reports' in response.data
         && typeof response.data.reports == 'string') {
-        $http.get(response.data.reports).then(function(response) {
+        $http.get(response.data.reports,
+          {timeout: canceller.promise}
+        ).then(function(response) {
           scope.reports = response.data.reports;
         });
         delete response.data.reports;
@@ -115,7 +119,7 @@ angular.module('PartyCrasherApp')
       scope.result = null;
       scope.reports = null;
       scope.buckets = null;
-      $http.get(url).then(got, gotError);
+      $http.get(url, {timeout: canceller.promise}).then(got, gotError);
     }
     $rootScope.$on('$locationChangeSuccess', came);
     came();

@@ -12,7 +12,8 @@ angular.module('PartyCrasherApp')
       }
 
       /* Value has stabilized, so we can fetch the summary! */
-      $http.get(scope.href + '?explain=true').then(function(response) {
+      $http.get(scope.href + '?explain=true', 
+                {timeout: canceller.promise}).then(function(response) {
         scope.summary = groupSummary(response.data.auto_summary);
       });
     });
@@ -20,10 +21,12 @@ angular.module('PartyCrasherApp')
       if (value === undefined) {
         return;
       }
-      $http.get(scope.reports + "?size=10").then(function(response) {
+      $http.get(scope.reports + "?size=10", 
+                {timeout: canceller.promise}).then(function(response) {
         scope.summary_sum = {};
         for (var crash of response.data.reports) {
-          $http.get(crash.href + "?explain=true").then(function(response) {
+          $http.get(crash.href + "?explain=true", 
+                    {timeout: canceller.promise}).then(function(response) {
             for (var t of response.data.auto_summary) {
               key = t.field + ":" + t.term;
               if (!(key in scope.summary_sum)) {

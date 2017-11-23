@@ -48,6 +48,7 @@ class MoreLikeThisQuery(object):
         else:
             self.filterer = filterer
     
+    #TODO: try using .whole as well
     def make_mlt(self, 
                  crash,
                  filterer,

@@ -1,0 +1,20 @@
+<div class="counts">
+  <table class="striped">
+    <thead>
+      <tr>
+        <th> Field </th>
+        <th> Value </th>
+        <th> Count </th>
+      </tr>
+    </thead>
+
+    <tbody ng-repeat="(field, values) in counts">
+      <tr ng-repeat="(value, count) in values">
+        <td>{{ ::field }}</td>
+        <td>{{ ::value }}</td>
+
+        <td>{{ ::count }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

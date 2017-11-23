@@ -7,7 +7,7 @@
         <th> Project </th>
         <th> Date </th>
         <th> Stacktrace </th>
-        <th> Keywords </th>
+        <th ng-if="false"> Keywords </th>
       </tr>
     </thead>
 
@@ -25,7 +25,7 @@
         <td>
           <span mini-trace crash="crash.report"></span>
         </td>
-        <td>
+        <td ng-if="false">
           <span pc-summary href="crash.href"></span>
         </td>
       </tr>

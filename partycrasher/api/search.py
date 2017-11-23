@@ -39,7 +39,8 @@ from copy import copy, deepcopy
 from partycrasher.pc_type import (
     maybe_date,
     maybe_string,
-    maybe_key
+    maybe_key,
+    PCType
     )
 from partycrasher.pc_dict import PCDict, PCDefaultDict
 from partycrasher.project import Project, multi_project
@@ -271,11 +272,19 @@ class Search(PCDefaultDict):
     
     def __hash__(self):
         return hash(self.as_hashable())
+
+mustbe_search = PCType(Search, Search)
     
 class Page(PCDict):
+    canonical_fields = {
+        'search': mustbe_search
+    }
+    
     def __init__(self,
                  from_,
                  **kwargs):
+        assert 'search' in kwargs
+        assert kwargs['search'] is not None
         kwargs['from'] = from_
         super(Page, self).__init__(**kwargs)
         assert self['search'] is not None
@@ -347,6 +356,7 @@ class ReportPage(Page):
             Report(search=search, crash=r, saved=True, logdf=logdf)
             for r in reports
             ]
+        assert search is not None
         super(ReportPage, self).__init__(
             search=search,
             reports=reports,

@@ -95,6 +95,11 @@ class ESIndex(object):
                             # speed but it doesn't seem to actually do so
                             #'term_vector': 'yes',
                             # This can enable a second tokenizer for every field
+                            'fields': {
+                                'whole': {
+                                    'type': 'keyword'
+                                    },
+                                }
                             #'fields': {
                                 #'ws': {
                                     #'type': 'text',
@@ -247,12 +252,14 @@ class ESIndex(object):
                                 #'term_vector': 'yes',
                                 }
                             }
+                        },
+                    'extra': {
+                        'type': 'text',
+                        'analyzer': 'default',
                         }
                     }
                 }
             }
-        for f in self.config.UserInterface.fixed_summary_fields.keys():
-            properties[f] = string_not_analyzed
         return properties
 
     def termvectors(self, **kwargs):

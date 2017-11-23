@@ -9,6 +9,9 @@
 </div>
 <pc-error class="pc-error" id="pc-error" error="error" ng-if="error">
 </pc-error>
+<div class="summary" ng-if="counts">
+  <pc-counts counts="counts"></pc-counts>
+</div>
 <div class="result" ng-if="buckets">
   <div class="result-head">
     <h1 class="result" > Buckets</h1>
@@ -87,7 +90,7 @@
         <a href="{{::typedata.reports | uiUrl}}">{{ type }}</a>
       </li>
     </ul>
-  <div>
+  </div>
 </div>
 <div class="result" ng-if="projects">
   <div class="result-head">
@@ -100,7 +103,7 @@
         <a href="{{::projectdata.reports | uiUrl}}">{{ project }}</a>
       </li>
     </ul>
-  <div>
+  </div>
 </div>
 <div class="result" ng-if="store">
   <div class="result-head">

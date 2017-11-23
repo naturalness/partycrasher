@@ -31,9 +31,11 @@ from copy import copy, deepcopy
 
 from six import PY2, PY3, string_types, text_type
 if PY3:
-    from collections.abc import MutableMapping, MutableSequence
+    from collections.abc import (
+        MutableMapping, MutableSequence, Mapping, Sequence)
 elif PY2:
-    from collections import MutableMapping, MutableSequence
+    from collections import (
+        MutableMapping, MutableSequence, Mapping, Sequence)
 
 from frozendict import frozendict
 
@@ -45,13 +47,19 @@ class PCDict(MutableMapping):
     to ensure consistency.
     """
     
-    __slots__ = ('_d',)
+    __slots__ = ('_d','frozen')
 
     synonyms = {}
     
     canonical_fields = {}
     
+    default_dict_type = Mapping
+    default_list_type = Sequence
+    frozen_dict_type = frozendict
+    frozen_list_type = tuple
+    
     def __init__(self, *args, **kwargs):
+        self.frozen = False
         if (len(args) == 1):
             assert len(kwargs) == 0
             if isinstance(args[0], PCDict):
@@ -93,7 +101,7 @@ class PCDict(MutableMapping):
             return self._d.__setitem__(key, val)
         else:
             key = key_type(key)
-            return self._d.__setitem__(key, val)
+        return self._d.__setitem__(key, val)
 
     def __delitem__(self, key):
         return self._d.__delitem__(key)
@@ -122,9 +130,14 @@ class PCDict(MutableMapping):
     
     def freeze(self):
         for k, v in self._d.items():
-            if isinstance(v, list):
-                self._d[k] = tuple(v)
+            if (isinstance(v, self.default_list_type)
+                and not isinstance(v, string_types)
+                ):
+                self._d[k] = self.frozen_list_type(v)
+            elif isinstance(v, self.default_dict_type):
+                self._d[k] = self.frozen_dict_type(v)
         self._d = frozendict(self._d)
+        self.frozen = True
     
     def as_hashable(self):
         return tuple(self._d.items())

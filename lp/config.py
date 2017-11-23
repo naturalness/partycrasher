@@ -50,7 +50,7 @@ class Bucketing:
         search_weight = 1.0
 
 ################################################################################
-# ElasticSearch                                                                #
+# ElasticSearch                         MeAsSDiBg4DRHSSD/reports/                                       #
 ################################################################################
 class ElasticSearch:
     hosts = "localhost:9200"
@@ -83,7 +83,7 @@ class UserInterface:
     # A list of important fields for the fixed summary. 
     # database_name => Display Name
     # NOTE that this also disables tokenization for these fields!
-    fixed_summary_fields = {"uname": "UName",
-                            "signal": "Signal",
-                            "cpu": "CPU"}
+    fixed_summary_fields = {"Uname": "UName",
+                            "Signal": "Signal",
+                            "SourcePackage": "Package"}
                       
