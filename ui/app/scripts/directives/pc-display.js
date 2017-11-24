@@ -69,6 +69,7 @@ angular.module('PartyCrasherApp')
       getOut("config");
       getOut("default_threshold");
       getOut("counts");
+      getOut("report");
       if ('buckets' in response.data 
         && DEFAULT_THRESHOLD in response.data.buckets) {
         $http.get(response.data.buckets[DEFAULT_THRESHOLD], 
@@ -124,6 +125,7 @@ angular.module('PartyCrasherApp')
       scope.projects = null;
       scope.store = null;
       scope.counts = null;
+      scope.report = null;
       $http.get(url, {timeout: canceller.promise}).then(got, gotError);
     }
     $rootScope.$on('$locationChangeSuccess', came);

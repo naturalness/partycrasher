@@ -51,6 +51,7 @@ angular.module('PartyCrasherApp')
 //         return; // return without chaning drop
       }
       var children = element.find("input");
+      children.push(element.find("label"));
       for (var child in children) {
         child = children[child];
         if (ae === child) {
@@ -61,7 +62,7 @@ angular.module('PartyCrasherApp')
       return focused;
     }
     scope.checkFocus=() => {
-      $timeout(checkFocus, 0);
+      $timeout(checkFocus, 100);
     };
     scope.forceFocus=($event) => {
       element.find("input")[0].focus();

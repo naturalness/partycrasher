@@ -35,6 +35,7 @@ angular.module('PartyCrasherApp')
         }
       }
       scope.drop=focused;
+      return focused;
     }
     scope.checkFocus=() => {
       $timeout(checkFocus, 100);
