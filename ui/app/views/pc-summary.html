@@ -1,6 +1,14 @@
 <table class="keywords" ng-if="summary">
-  <tr ng-repeat="item in summary | limitTo: 6">
-    <td style="color: rgb({{item[1]}},{{item[1]}},{{item[1]}})">{{ item[2] }}</td>
-    <td style="color: rgb({{item[1]}},{{item[1]}},{{item[1]}})">{{ item[3] }}</td>
-  </tr>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Word</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="item in summary | limitTo: 6">
+      <td style="color: rgb({{item[1]}},{{item[1]}},{{item[1]}})">{{ item[2] }}</td>
+      <td style="color: rgb({{item[1]}},{{item[1]}},{{item[1]}})">{{ item[3] }}</td>
+    </tr>
+  </tbody>
 </table>

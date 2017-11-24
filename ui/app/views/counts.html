@@ -1,5 +1,5 @@
 <div class="counts">
-  <table class="striped">
+  <table class="body-striped">
     <thead>
       <tr>
         <th> Field </th>
@@ -9,11 +9,14 @@
     </thead>
 
     <tbody ng-repeat="(field, values) in counts">
-      <tr ng-repeat="(value, count) in values">
-        <td>{{ ::field }}</td>
-        <td>{{ ::value }}</td>
-
-        <td>{{ ::count }}</td>
+      <tr>
+        <td rowspan="{{ values.length }}" class="field">{{ ::field }}</td>
+        <td>{{ ::values[0][0] }}</td>
+        <td>{{ ::values[0][1] }}</td>
+      </tr>
+      <tr ng-repeat="count in values.slice(1)">
+        <td>{{ ::count[0] }}</td>
+        <td>{{ ::count[1] }}</td>
       </tr>
     </tbody>
   </table>

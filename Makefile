@@ -39,6 +39,7 @@ gunicorn: ## Starts the server locally (does not use Docker).
 		--timeout 60 \
 		--pid gunicorn.pid \
 		--capture-output \
+		--workers 8 \
 		partycrasher.rest.validator
 
 .PHONY: build

@@ -9,8 +9,21 @@
 </div>
 <pc-error class="pc-error" id="pc-error" error="error" ng-if="error">
 </pc-error>
-<div class="summary" ng-if="counts">
-  <pc-counts counts="counts"></pc-counts>
+<div class="result" ng-if="counts">
+  <div class="result-head">
+    <h1 class="result" > Summary</h1>
+    <span class="search-desc">
+  </div>
+  <div class="summary">
+    <div>
+      <h2> Counts </h2>
+      <counts counts="counts"></counts>
+    </div>
+    <div ng-if="reports">
+      <h2> Keywords </h2>
+      <pc-summary reports="reports"></pc-summary>
+    </div>
+  </div>
 </div>
 <div class="result" ng-if="buckets">
   <div class="result-head">

@@ -26,4 +26,4 @@ app = service.app
 app.debug = True
 
 service.crasher = (
-    PartyCrasher('lp/config_validator.py'))
+    PartyCrasher('lp/config.py'))

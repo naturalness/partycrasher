@@ -9,7 +9,7 @@
  * Main module of the application.
  */
 angular
-  .module('PartyCrasherApp', [])
+  .module('PartyCrasherApp', ['elif'])
   .config(function ($locationProvider) {
     /* Provide routing that looks like natural URLs. */
     $locationProvider.html5Mode({

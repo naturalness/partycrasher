@@ -83,7 +83,8 @@ class UserInterface:
     # A list of important fields for the fixed summary. 
     # database_name => Display Name
     # NOTE that this also disables tokenization for these fields!
-    fixed_summary_fields = {"Uname": "Uname",
+    fixed_summary_fields = {
                             "Signal": "Signal",
-                            "cpu": "CPU"}
+                            "cpu": "CPU",
+                            }
                       

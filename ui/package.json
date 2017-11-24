@@ -9,6 +9,7 @@
     "angular-route": "^1.5.0",
     "genericons-neue": "^4.0.5",
     "lodash": "^4.17.4",
-    "moment": "^2.18.1"
+    "moment": "^2.18.1",
+    "ng-elif": "^0.1.4"
   }
 }

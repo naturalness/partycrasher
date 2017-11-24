@@ -134,7 +134,7 @@ angular.module('PartyCrasherApp')
   }
   
   function go() {
-//     write_location();
+    write_location();
   }
   
   write_location(); // ensure early sync -- basically a default route redirect

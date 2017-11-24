@@ -1,6 +1,20 @@
-<h1 class="error" >
+<div class="result-head">
+  <h1 class="error" >
   PartyCrasher crashed.
-</h1>
-<p>How poetic.</p>
-<pc-tree value="error" />
-
+  </h1>
+  <span class="search-desc">How poetic.</span>
+</div>
+<div ng-if="error.data.error == 'BadDateError'">
+  <h2>
+  Bad date format.
+  </h2>
+  <p>
+    {{error.data.message}}
+  </p>
+  <p>
+    {{error.data.description}}
+  </p>
+</div>
+<div ng-else>
+  <pc-tree value="error" />
+</div>

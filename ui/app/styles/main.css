@@ -627,3 +627,42 @@ input#bucket {
 .status.red {
     color: red;
 }
+
+.body-striped tbody:nth-child(even) {
+    background: var(--light)
+}
+
+.body-striped tbody:nth-child(odd) {
+    background: var(--lmlight);
+}
+
+.keywords tbody tr:nth-child(even) {
+    background: var(--light)
+}
+
+.keywords tbody tr:nth-child(odd) {
+    background: var(--lmlight);
+}
+
+
+/*.striped tr:nth-child(even) {
+    background: var(--light)
+}
+
+.striped tr:nth-child(odd) {
+    background: var(--lmlight);
+}*/
+
+.summary {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+.summary>div {
+    padding-right: 1em;
+}
+
+h2 {
+    margin: 0;
+}

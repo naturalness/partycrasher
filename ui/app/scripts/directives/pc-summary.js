@@ -21,10 +21,9 @@ angular.module('PartyCrasherApp')
       if (value === undefined) {
         return;
       }
-      $http.get(scope.reports + "?size=10", 
-                {timeout: canceller.promise}).then(function(response) {
+      function from_reports(reports) {
         scope.summary_sum = {};
-        for (var crash of response.data.reports) {
+        for (var crash of reports) {
           $http.get(crash.href + "?explain=true", 
                     {timeout: canceller.promise}).then(function(response) {
             for (var t of response.data.auto_summary) {
@@ -42,7 +41,16 @@ angular.module('PartyCrasherApp')
             scope.summary = groupSummary(sums);
           });
         }
-      });
+      }
+      if (typeof value === 'string') {
+        $http.get(scope.reports + "?size=12", 
+                  {timeout: canceller.promise})
+        .then(function(response) {
+          from_reports(response.data.reports);
+        });
+      } else {
+        from_reports(scope.reports);
+      }
     });
   }
   

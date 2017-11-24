@@ -35,7 +35,7 @@ from six import PY2, PY3, string_types, text_type
 import dateparser
 from frozendict import frozendict
 
-from partycrasher.pc_exceptions import BadKeyNameError
+from partycrasher.pc_exceptions import BadKeyNameError, BadDateError
 from partycrasher.pc_encoder import PCEncoder
 
 class PCType(object):
@@ -94,7 +94,7 @@ class PCType(object):
                 raise ValueError("Value is type %s which is unacceptable"
                                  % (type(value).__name__))
             value = self.converter(value)
-            assert self.checker(value)
+            assert self.checker(value), repr(value)
             return value
         assert False
 
@@ -106,6 +106,8 @@ class PCMaybeType(PCType):
     def single(self, value):
         if value is None:
             return value
+        elif value == '':
+            return None
         elif self.checker(value):
             return value
         else:
@@ -113,7 +115,7 @@ class PCMaybeType(PCType):
                 raise ValueError("Value is type %s which is unacceptable"
                                  % (type(value).__name__))
             value = self.converter(value)
-            assert self.checker(value)
+            assert self.checker(value), repr(value)
             return value
 
     __call__ = single
@@ -168,8 +170,12 @@ mustbe_string = PCType(string_types, text_type)
 maybe_string = PCMaybeType(string_types, text_type)
 
 def parse_utc_date(s):
-    return dateparser.parse(s, settings={'TIMEZONE': 'UTC',
+    d = dateparser.parse(s, settings={'TIMEZONE': 'UTC',
                                          'RETURN_AS_TIMEZONE_AWARE': False})
+    if d is None:
+        raise BadDateError(s)
+    return d
+
 def deparse_utc_date(d):
     return d.isoformat()
 

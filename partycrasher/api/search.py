@@ -120,9 +120,9 @@ class Search(PCDefaultDict):
                 or (self['until'] is not None)):
             date = {}
             if self['since'] is not None:
-                date['gt'] = self.since.isoformat()
+                date['gt'] = self['since'].isoformat()
             if self['until'] is not None:
-                date['lt'] = self.until.isoformat()
+                date['lt'] = self['until'].isoformat()
             must.append({
                 "range": {
                     "date": date
@@ -140,7 +140,7 @@ class Search(PCDefaultDict):
         if self['query_string'] is not None:
             must.append({
                 "query_string": {
-                    "query": self.query_string,
+                    "query": self['query_string'],
                     # This is necessary due to how we tokenize things
                     # which is not on whitespace I.E. if the user 
                     # searched for CamelCaseThing it will be interpreted
@@ -204,7 +204,8 @@ class Search(PCDefaultDict):
             raw_agg = raw['aggregations'][field]['buckets']
             for b in raw_agg:
                 field_counts[b['key']] = b['doc_count']
-            counts[field] = field_counts
+            short = field.replace('.whole', '')
+            counts[short] = field_counts
         
         reports = []
         for hit in raw_hits:

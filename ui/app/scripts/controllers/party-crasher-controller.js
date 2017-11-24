@@ -10,9 +10,6 @@ angular.module('PartyCrasherApp')
 .controller('PartyCrasherController', function (
   $scope,
   pcSearch,
-  DEFAULT_THRESHOLD,
-  PartyCrasher,
-  PROJECT_NAMES
 ) {
   pcSearch.link($scope);
 });
