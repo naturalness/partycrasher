@@ -19,7 +19,25 @@
     <script src="%%node_modules%%/moment/moment.js"></script>
     <script src="%%node_modules%%/ng-elif/src/elif.js"></script>
     
-    <script src="scripts/app.js"></script>
+    <script type="text/javascript">
+      angular.module('PartyCrasherApp', ['elif'])
+        .config(function ($locationProvider) {
+          $locationProvider.html5Mode({
+            enabled: true,
+            requireBase: true
+          });
+        })
+        .constant('BASE_HREF', "%%basehref%%")
+        .constant('REST_BASE', "%%restbase%%")
+        .constant('DEFAULT_THRESHOLD', '%%default_threshold%%')
+        .constant('THRESHOLDS', %% thresholds|tojson|safe %%)
+        .constant('PROJECT_NAMES', %% project_names|tojson|safe %%)
+        .constant('TYPE_NAMES', %% type_names|tojson|safe %%)
+        .constant('COG_IMAGE', "%%node_modules%%/genericons-neue/svg-min/cog.svg")
+        .constant('FIXED_FIELDS', %% fixed_fields|tojson|safe %%)
+        ;
+    </script>
+    
     <script src="scripts/controllers/party-crasher-controller.js"></script>
     <script src="scripts/directives/nav-bar.js"></script>
     <script src="scripts/directives/selectator.js"></script>
@@ -29,28 +47,18 @@
     <script src="scripts/directives/pc-error.js"></script>
     <script src="scripts/directives/pc-summary.js"></script>
     <script src="scripts/directives/pc-threshold-select.js"></script>
-    <script src="scripts/directives/pc-bucket-summary.js"></script>
     <script src="scripts/directives/pc-display.js"></script>
     <script src="scripts/directives/mini-trace.js"></script>
     <script src="scripts/directives/date-tip.js"></script>
     <script src="scripts/directives/datey.js"></script>
     <script src="scripts/directives/radiotator.js"></script>
     <script src="scripts/directives/counts.js"></script>
+    <script src="scripts/directives/report.js"></script>
     <script src="scripts/filters/from-now.js"></script>
     <script src="scripts/filters/ui-url.js"></script>
     <script src="scripts/filters/unique.js"></script>
     <script src="scripts/services/pc-search.js"></script>
 
-    <script type="text/javascript">
-      angular.module('PartyCrasherApp')
-        .constant('BASE_HREF', "%%basehref%%")
-        .constant('REST_BASE', "%%restbase%%")
-        .constant('DEFAULT_THRESHOLD', '%%default_threshold%%')
-        .constant('THRESHOLDS', %% thresholds|tojson|safe %%)
-        .constant('PROJECT_NAMES', %% project_names|tojson|safe %%)
-        .constant('TYPE_NAMES', %% type_names|tojson|safe %%)
-        .constant('COG_IMAGE', "%%node_modules%%/genericons-neue/svg-min/cog.svg")
-    </script>
   </head>
   <body ng-controller="PartyCrasherController">
     <header pc-nav-bar></header>

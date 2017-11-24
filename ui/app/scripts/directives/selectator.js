@@ -46,10 +46,6 @@ angular.module('PartyCrasherApp')
     function checkFocus() {
       var focused = false;
       var ae = $document[0].activeElement;
-      if (ae.tagName == "BODY") {
-        console.log("body");
-//         return; // return without chaning drop
-      }
       var children = element.find("input");
       children.push(element.find("label"));
       for (var child in children) {

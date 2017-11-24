@@ -192,7 +192,8 @@ def home(filename=None):
         thresholds=[str(thresh) for thresh in crasher.thresholds],
         basehref=full_url_for('home'),
         restbase=full_url_for('root'),
-        default_threshold=str(crasher.default_threshold)
+        default_threshold=str(crasher.default_threshold),
+        fixed_fields=list(crasher.config.UserInterface.fixed_summary_fields),
     )
     if filename and os.path.exists(relative('ui/app/', filename)):
         if 'main.css' in filename:

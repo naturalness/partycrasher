@@ -61,42 +61,6 @@ class PartyCrasher(object):
                       **kwargs
                       )
     
-    #def report_bucket(self, 
-                      #threshold,
-                      #bucket_id,
-                      #from_=None, size=None, **kwargs):
-        #"""Factory for report buckets."""
-        #assert threshold is not None
-        #assert bucket_id is not None
-        #search = Search(context=self.context, **kwargs)
-        #bucket = Bucket(threshold=threshold, id=bucket_id)
-        #return ReportBucket(search=search, result=bucket, from_=from_, size=size)
-    
-    #def report_threshold(self,
-                         #threshold,
-                         #from_=None, size=None,
-                         #**kwargs):
-        #search = Search(context=self.context, 
-                        #threshold=threshold,
-                        #**kwargs)
-        #return ReportThreshold(
-            #search=search, 
-            #result=threshold, 
-            #from_=from_, size=size)
-    
-    #def report_project(self,
-                         #project,
-                         #from_=None, size=None,
-                         #**kwargs):
-        #search = Search(context=self.context, 
-                        #project=project,
-                        #**kwargs)
-        #return ReportProject(
-            #search=search, 
-            #project=project, 
-            #from_=from_, size=size)
-    
-
     def bucket_search(self, threshold, from_=None, size=None, **kwargs):
         """Factory for groups of report buckets."""
         threshold = Threshold(threshold)
