@@ -1,0 +1,12 @@
+<div class="result" ng-if="report">
+  <div class="result-head">
+    <h1 class="result" > Report</h1>
+    <span class="search-desc">
+      {{ report.type.name}} in {{report.project.name}} 
+      number {{ report.database_id }}
+      <a href="{{ href | uiUrl }}">
+        Link to this report.
+      </a>
+    </span>
+  </div>
+</div>
