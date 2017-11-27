@@ -86,5 +86,7 @@ class UserInterface:
     fixed_summary_fields = {
                             "Signal": "Signal",
                             "cpu": "CPU",
+                            "os": "OS",
+                            "SourcePackage": "SourcePackage",
                             }
                       

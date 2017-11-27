@@ -1,0 +1,9 @@
+<div class="pager" ng-if="size">
+  Showing results {{ from }} to {{ from + size }} of {{ total }}.
+  <a href="{{ prev_page | uiUrl }}" ng-if="prev_page">
+    Previous {{ size }}
+  </a>
+  <a href="{{ next_page | uiUrl }}" ng-if="next_page">
+    Next {{ size }}
+  </a>
+</div>

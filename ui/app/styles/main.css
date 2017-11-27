@@ -544,11 +544,11 @@ input#bucket {
 }
 
 .result-table thead th {
-    background: var(--light)
+    background: var(--light);
 }
 
 .result-table tr:nth-child(even) {
-    background: var(--light)
+    background: var(--light);
 }
 
 .result-table tr:nth-child(even) tr {
@@ -636,22 +636,20 @@ input#bucket {
     background: var(--lmlight);
 }
 
-.keywords tbody tr:nth-child(even) {
-    background: var(--light)
+.keywords tbody tr:nth-child(even),
+.striped tr:nth-child(even)
+{
+    background: var(--light);
 }
 
-.keywords tbody tr:nth-child(odd) {
-    background: var(--lmlight);
-}
-
-
-/*.striped tr:nth-child(even) {
-    background: var(--light)
-}
-
+.keywords tbody tr:nth-child(odd),
 .striped tr:nth-child(odd) {
     background: var(--lmlight);
-}*/
+}
+
+.striped thead tr:first-child {
+    background: var(--light);
+}
 
 .summary {
     display: flex;
@@ -666,3 +664,66 @@ input#bucket {
 h2 {
     margin: 0;
 }
+
+.function {
+    font-weight: bold;
+    font-size: 110%;
+}
+.file, .line {
+    font-weight: bold;
+}
+
+.stars {
+    display: inline-block;
+    height: 1em;
+    background-size: 1em;
+    background-repeat: repeat;
+    background-position: left center;
+    text-decoration: none;
+    background-image: url("%%node_modules%%/genericons-neue/svg-min/star.svg");
+/*     margin-left: auto; */
+}
+
+.report {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+}
+
+.report-column {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    margin-left: 1em;
+}
+
+.report-column:first-child {
+    margin-left: 0;
+    max-width: 33%;
+    word-break: break-all;
+}
+
+.report-column>div {
+    margin-bottom: 1em;
+}
+
+.bucket-count {
+    display: inline-block;
+    background: var(--medium);
+    font-weight: bold;
+}
+
+.precedent-score {
+    display: block;
+    height: 1.5em;
+    background-size: 1.5em;
+    background-repeat: repeat;
+    background-position: left center;
+    text-decoration: none;
+    background-image: url("%%node_modules%%/genericons-neue/svg-min/link.svg");
+/*     margin-left: auto; */
+/*     visibility: hidden; */
+}
+

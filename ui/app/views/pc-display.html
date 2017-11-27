@@ -13,6 +13,10 @@
   <div class="result-head">
     <h1 class="result" > Summary</h1>
     <span class="search-desc">
+      Of reports in this search<span ng-if="bucket_id">
+        and in bucket {{ bucket_id }} (Threshold = {{ threshold }})
+      </span>.
+    </span>
   </div>
   <div class="summary">
     <div>
@@ -52,7 +56,9 @@
       </span>
     </span>
   </div>
+  <pager></pager>
   <buckets-table buckets="buckets"></buckets-table>
+  <pager></pager>
 </div>
 <div class="result" ng-if="reports">
   <div class="result-head">
@@ -82,16 +88,9 @@
       </span>
     </span>
   </div>
+  <pager></pager>
   <reports-table reports="reports"></reports-table>
-</div>
-<div class="pager" ng-if="size">
-  Showing results {{ from }} to {{ from + size }} of {{ total }}.
-  <a href="{{ prev_page | uiUrl }}" ng-if="prev_page">
-    Previous {{ size }}
-  </a>
-  <a href="{{ next_page | uiUrl }}" ng-if="next_page">
-    Next {{ size }}
-  </a>
+  <pager></pager>
 </div>
 <div class="result" ng-if="types">
   <div class="result-head">

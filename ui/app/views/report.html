@@ -9,4 +9,165 @@
       </a>
     </span>
   </div>
+  <div class="result-body">
+    <div class="report">
+      <div class="report-column">
+        <div class="fixed-fields">
+          <h2>Key Features</h2>
+          <table class="striped">
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Type</td>
+                <td>{{ report.type.name }}</td>
+              </tr>
+              <tr>
+                <td>Project</td>
+                <td>{{ report.project.name }}</td>
+              </tr>
+              <tr>
+                <td>Date</td>
+                <td>{{ report.date }}<br/>({{report.date |fromNow}})</td>
+              </td>
+              <tr ng-repeat="field in fixed_fields">
+                <td>{{ field }}</td>
+                <td>{{ field | propertyByDotPath: report }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <!--<a href="#details">Jump to full details</a>-->
+        </div>
+        <div class="unique-keywords">
+          <h2>Uniquely Identifiying Words</h2>
+          <span pc-summary href="href"></span>
+        </div>
+        <div class="common-keywords">
+          <h2>Important Bucketing Words</h2>
+          <span pc-summary reports="commonReports"></span>
+        </div>
+        <div class="report-buckets">
+          <h2>In Buckets</h2>
+          <table class="striped">
+            <thead>
+              <tr>
+                <th>Threshold</th>
+                <th>Crashes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="bucket in buckets" 
+                ng-if="bucket.logCount < 0.99 * logBucketMax 
+                  && bucket.count > 1"inline-block
+              >
+                <td>
+                  <a href="{{bucket.reports | uiUrl }}">
+                    {{ bucket.threshold }}
+                  </a>
+                </td>
+                <td>
+                  <span class="bucket-count" 
+                    style="width: {{ (bucket.logCount / logBucketMax) * 10 }}em;">
+                      {{ bucket.count }}
+                    </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="precedents">
+          <h2>Family History</h2>
+          <table class="striped">
+            <thead>
+              <tr>
+                <th>Similarity</th>
+                <th>Stack</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="precedent in precedents">
+                <td>
+                  <div class="precedent-score"
+                  style="width: {{ precedent.score }}em;">
+                    &nbsp;
+                  </div>
+                  <a href="{{precedent.href | uiUrl }}">
+                    {{ precedent.report.database_id }}
+                  </a>
+                </td>
+                <td>
+                  <mini-trace crash="precedent.report"></mini-trace>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="report-column">
+        <div class="stacktrace">
+          <h2>Stacktrace</h2>
+          <table class="striped">
+            <thead>
+              <tr>
+                <th>Depth</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="frame in report.stacktrace">
+                <td>{{ frame.depth }}</td>
+                <td>
+                  <div class="function" ng-if="frame.function">
+                    {{ frame.function }}&nbsp;<span 
+                      class="stars"
+                      style="width: {{ frame.logdf /2  }}em;"
+                      >
+                    </span>
+                  </div>
+                  <div class="fileline" ng-if="frame.file || frame.fileline">
+                    <span ng-if="frame.file">
+                      in
+                    </span>
+                    <span class="file" ng-if="frame.file">
+                      {{ frame.file }}
+                    </span>
+                    <span ng-if="frame.fileline">
+                      line
+                    </span>
+                    <span class="line" ng-if="frame.fileline">
+                      {{ frame.fileline }}
+                    </span>
+                  </div>
+                  <div class="address" ng-if="frame.address">
+                    at {{ frame.address }}
+                  </div>
+                  <div class="args" ng-if="frame.args">
+                    with {{ frame.args }}
+                  </div>
+                  <div class="extra" ng-if="frame.extra">
+                    {{ frame.extra }}
+                  </div>
+                  <div class="extra" ng-repeat="(field, value) in frame">
+                    <div ng-if="field != 'function' && field != 'address' && field != 'file' && field != 'fileline' && field != 'depth' && field != 'args' && field != 'logdf'">
+                      with 
+                      <span class="frame-field">{{ field }}</span>
+                      {{ value }}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div id="details">
+      <h2>Details</h2>
+      <pc-tree value="reportMin">
+    </div>
+  </div>
 </div>

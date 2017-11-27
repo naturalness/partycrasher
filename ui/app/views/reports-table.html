@@ -7,6 +7,7 @@
         <th> Project </th>
         <th> Date </th>
         <th> Stacktrace </th>
+        <th> Features </th>
         <th ng-if="false"> Keywords </th>
       </tr>
     </thead>
@@ -24,6 +25,22 @@
         <td>{{ ::crash.report.date | fromNow }}</td>
         <td>
           <span mini-trace crash="crash.report"></span>
+        </td>
+        <td>
+          <table>
+<!--            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Value</th>
+              </tr>
+            </thead>-->
+            <tbody>
+              <tr ng-repeat="field in fixed_fields">
+                <td>{{ field }}</td>
+                <td>{{ field | propertyByDotPath: crash.report }}</td>
+              </tr>
+            </tbody>
+          </table>
         </td>
         <td ng-if="false">
           <span pc-summary href="crash.href"></span>
