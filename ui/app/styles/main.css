@@ -669,8 +669,13 @@ h2 {
     font-weight: bold;
     font-size: 110%;
 }
-.file, .line {
+.file{
     font-weight: bold;
+}
+
+.line{
+    font-weight: bold;
+    font-size: 110%;
 }
 
 .stars {
