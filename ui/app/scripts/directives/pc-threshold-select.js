@@ -23,13 +23,13 @@ angular.module('PartyCrasherApp')
      * index. */
     scope.$watch('thresholdIndex', (newValue, oldValue) => {
       if (newValue === oldValue) { // On init
-//         if (initialThreshold == null) {
-//           scope.thresholdIndex = thresholdIndex(DEFAULT_THRESHOLD);
-//           scope.threshold = initialThreshold;
-//         } else {
-//           scope.thresholdIndex = initialThresholdIndex;
-//           scope.threshold = initialThreshold;
-//         }
+        if (initialThreshold == null) {
+          scope.thresholdIndex = thresholdIndex(DEFAULT_THRESHOLD);
+          scope.threshold = DEFAULT_THRESHOLD;
+        } else {
+          scope.thresholdIndex = initialThresholdIndex;
+          scope.threshold = initialThreshold;
+        }
         return;
       }
       scope.threshold = THRESHOLDS[newValue];

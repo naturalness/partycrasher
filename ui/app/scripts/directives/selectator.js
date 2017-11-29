@@ -7,15 +7,27 @@ angular.module('PartyCrasherApp')
     scope.drop = false;
     scope.number_selected = scope.value.length;
     scope.optors = [];
-    for (let o of scope.options) {
-      scope.optors.push({
-        selected: (
-          scope.value.indexOf(o) >= 0
-        ),
-        id: `${field}_${o}`,
-        name: o
-      });
+    function read() {
+      scope.optors = [];
+      for (let o of scope.options) {
+        scope.optors.push({
+          selected: (
+            scope.value.indexOf(o) >= 0
+          ),
+          id: `${field}_${o}`,
+          name: o
+        });
+      }
     }
+    read();
+    
+    scope.$watch('value', function(newValue, oldValue) {
+      if (newValue === oldValue) { // On init
+        return;
+      }
+      
+      read();
+    });
     function watcher(newValue, oldValue, scope) {
       if (newValue === oldValue) { // On init
 //         return;

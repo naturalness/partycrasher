@@ -80,7 +80,7 @@ angular.module('PartyCrasherApp')
     state.from = $location.search().from;
     state.size = $location.search().size;
     state.grouping = pathGrouping ||
-      $location.search().grouping || null;
+       $location.search().grouping || 'buckets';
     state.bucket = pathBucket 
       $location.search().bucket || null;
     state.threshold = pathThreshold
@@ -88,6 +88,11 @@ angular.module('PartyCrasherApp')
     state.report_type = pathReportType
       || $location.search().type || null;
     state.report = pathReport || null;
+    
+    if (state.grouping == 'buckets' && state.threshold === null) {
+      state.threshold = DEFAULT_THRESHOLD;
+      write_location();
+    }
   }
   
   read_location(); /* ensure properties exist in state so I don't have to list
@@ -123,6 +128,8 @@ angular.module('PartyCrasherApp')
       } else {
         path += `reports/`;
       }
+    } else {
+        path += `buckets/`;
     }
     $location.search('q', state.q)
       .search('since', state.since)

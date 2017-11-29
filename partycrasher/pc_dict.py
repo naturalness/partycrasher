@@ -53,7 +53,7 @@ class PCDict(MutableMapping):
     
     canonical_fields = {}
     
-    default_dict_type = Mapping
+    default_dict_type = dict
     default_list_type = Sequence
     frozen_dict_type = frozendict
     frozen_list_type = tuple

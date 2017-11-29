@@ -108,11 +108,18 @@ angular.module('PartyCrasherApp')
         doneLoading();
       }, 1);
     }
+    var came;
     function gotError(response) {
-      scope.loading = false;
-      scope.error = response;
+      if (response.xhrStatus == "abort") {
+        came();
+      }
+      else
+      {
+        scope.loading = false;
+        scope.error = response;
+      }
     }
-    function came() {
+    came = function() {
       url = $location.absUrl();
       url = url.replace(BASE_HREF, REST_BASE);
       console.log(url);
