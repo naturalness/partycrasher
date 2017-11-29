@@ -21,7 +21,8 @@ angular.module('PartyCrasherApp')
     BASE_HREF,
     DEFAULT_THRESHOLD,
     $http,
-    $q
+    $q,
+    $timeout
   ) {
   canceller = $q.defer();
   $http.defaults['timeout'] = canceller.promise;
@@ -97,6 +98,7 @@ angular.module('PartyCrasherApp')
   
   read_location(); /* ensure properties exist in state so I don't have to list
                       them again */
+  var go_promise = null;
   
   function write_location() {
     // update current url from shared state
@@ -137,11 +139,17 @@ angular.module('PartyCrasherApp')
       .search('from', state.from)
       .search('size', state.size)
       .path(path);
-    // TODO
+    
+    go_promise = null;
   }
   
   function go() {
-    write_location();
+    if (go_promise !== null) {
+      $timeout.cancel(go_promise);
+      go_promise = null;
+    }
+    go_promise = $timeout(write_location, 700, false);
+    console.log("Waiting...");
   }
   
   write_location(); // ensure early sync -- basically a default route redirect
