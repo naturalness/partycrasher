@@ -433,6 +433,8 @@ def view(path=None):
     if wanted == 'reports':
         return jsonify(crasher.report_search(**s)(logdf=True))
     elif wanted == 'buckets':
+        assert s['threshold'] is not None
+        DEBUG(s['threshold'])
         return jsonify(crasher.bucket_search(**s)())
     elif wanted == 'report':
         return jsonify(crasher.report(

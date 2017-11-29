@@ -58,13 +58,25 @@ angular.module('PartyCrasherApp')
     function checkFocus() {
       var focused = false;
       var ae = $document[0].activeElement;
-      var children = element.find("input");
-      children.push(element.find("label"));
-      for (var child in children) {
-        child = children[child];
-        if (ae === child) {
-          focused = true;
+      if (ae.tagName == "BODY") {
+        var selection = window.getSelection()
+        if (selection) {
+          ae = selection.focusNode;
         }
+      }
+      console.log(ae.tagName);
+      
+      parent = ae;
+      children = element.children();
+      
+      while (parent.tagName != "BODY") {
+        console.log(parent.tagName);
+        for (child of children) {
+          if (parent === child) {
+            focused = true;
+          }
+        }
+        parent = parent.parentNode;
       }
       scope.drop=focused;
       return focused;
@@ -74,6 +86,7 @@ angular.module('PartyCrasherApp')
     };
     scope.forceFocus=($event) => {
       element.find("input")[0].focus();
+      $event.stopPropagation();
     };
     scope.toggle=($event) => {
       console.log(scope.drop);

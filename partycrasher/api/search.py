@@ -330,7 +330,7 @@ class Page(PCDict):
             from partycrasher.api.report_project import ReportProject
             self['project'] = [
                 ReportProject(
-                    search=self['search'].new_blank(),
+                    search=Search(context=self['search'].context),
                     project=project_
                     )
                 for project_ in self['project']
@@ -339,7 +339,7 @@ class Page(PCDict):
             from partycrasher.api.report_type import ReportType
             self['type'] = [
                 ReportType(
-                    search=self['search'].new_blank(),
+                    search=Search(context=self['search'].context),
                     report_type=type_
                     )
                 for type_ in self['type']

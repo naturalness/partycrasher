@@ -16,10 +16,13 @@
 <fieldset
   class="selectator-options dropdown"
   ng-show="drop"
-  ng-click="forceFocus()"
+  ng-click="forceFocus($event)"
+  ng-mouseup="forceFocus($event)"
 >
     <div ng-repeat="optor in optors"
       class="selectator-option" 
+      ng-click="forceFocus($event)"
+      ng-mouseup="forceFocus($event)"
     >
       <input
         type="checkbox"
@@ -29,6 +32,7 @@
         ng-focus="drop=true"
         ng-blur="checkFocus()"
         ng-click="$event.stopPropagation()"
+        ng-mousedown="$event.preventDefault()"
         />
       <label 
         for="{{optor.id}}"

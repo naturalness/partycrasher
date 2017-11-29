@@ -38,6 +38,7 @@ class BucketPage(Page):
                  buckets,
                  **kwargs):
         super(BucketPage, self).__init__(buckets=buckets, **kwargs)
+        assert self['threshold'] is not None
         
     @property
     def results(self):
@@ -151,6 +152,7 @@ class BucketSearch(Search):
                         )
                    for bucket in top_buckets]
         
+        assert self['threshold'] is not None
         r = BucketPage(
                        buckets=buckets,
                        total=total,

@@ -14,6 +14,11 @@ angular.module('PartyCrasherApp')
       { value: "reports", name: "report (no grouping)" },
       { value: "buckets", name: "automatic bucket" },
     ];
+    scope.$watch('grouping', function(newValue, oldValue) {
+      if (newValue == "buckets") {
+        scope.bucket = "";
+      }
+    });
   }
   
   return {
