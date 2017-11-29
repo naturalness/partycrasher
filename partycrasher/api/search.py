@@ -274,13 +274,7 @@ class Search(PCDefaultDict):
     def __hash__(self):
         return hash(self.as_hashable())
 
-mustbe_search = PCType(Search, Search)
-    
 class Page(PCDict):
-    canonical_fields = {
-        'search': mustbe_search
-    }
-    
     def __init__(self,
                  from_,
                  **kwargs):
@@ -289,9 +283,10 @@ class Page(PCDict):
         kwargs['from'] = from_
         super(Page, self).__init__(**kwargs)
         assert self['search'] is not None
+        assert isinstance(self['search'], Search)
         assert self['from'] is not None
         assert self['size'] is not None
-        self['search'] = Search(
+        self['search'] = self['search'].__class__(
             search=self['search'],
             from_=self['from'],
             size=self['size']
@@ -303,7 +298,7 @@ class Page(PCDict):
         
         if self['from']+self['size']<self['total']:
             next_from = self['from']+self['size']
-            self['next_page'] = Search(
+            self['next_page'] = self['search'].__class__(
                 search=self['search'],
                 from_=next_from,
                 size=self['size']
@@ -315,7 +310,7 @@ class Page(PCDict):
             prev_from = max(
                 0,
                 self['from']-self['size'])
-            self['prev_page'] = Search(
+            self['prev_page'] = self['search'].__class__(
                 search=self['search'],
                 from_=prev_from,
                 size=self['size']

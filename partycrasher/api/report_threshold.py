@@ -103,6 +103,9 @@ class BucketSearch(Search):
         
         if size is None:
           size = 10
+          
+        (query["aggs"]["top_buckets_filtered"]["aggs"]
+                  ["top_buckets"]["terms"]["size"]) = 1000
         
         #actual_size = size
         
@@ -135,7 +138,7 @@ class BucketSearch(Search):
             size = total
         
         buckets = [ReportBucket(
-                        search=copy(self), 
+                        search=self, 
                         id=bucket['key'], 
                         project=self['project'],
                         type=self['type'],
@@ -146,11 +149,13 @@ class BucketSearch(Search):
                         )
                    for bucket in top_buckets]
         
-        r = BucketPage(buckets=buckets,
+        r = BucketPage(
+                       buckets=buckets,
                        total=total,
                        search=self,
                        from_=from_,
-                       size=size)
+                       size=size
+                       )
         return r
     
 class ReportThreshold(Threshold):

@@ -16,6 +16,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+logger = logging.getLogger(__name__)
+ERROR = logger.error
+WARN = logger.warn
+INFO = logger.info
+DEBUG = logger.debug
+
 from datetime import datetime
 from collections import OrderedDict
 import traceback
@@ -60,6 +67,7 @@ def url_for_search(search, direct_search=True):
     path = search_url_append(path, params, 'threshold')
     merge(params, 'bucket', 'bucket_id')
     path = search_url_append(path, params, 'bucket')
+    DEBUG("search " + search.__class__.__name__)
     if isinstance(search, BucketSearch):
         path += 'buckets/'
     elif isinstance(search, Search):
