@@ -137,8 +137,10 @@ class BucketSearch(Search):
         else:
             size = total
         
+        first_page = self.new_first_page()
+        
         buckets = [ReportBucket(
-                        search=self, 
+                        search=first_page, 
                         id=bucket['key'], 
                         project=self['project'],
                         type=self['type'],

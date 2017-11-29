@@ -248,7 +248,15 @@ class Search(PCDefaultDict):
         return self._d
     
     def new_blank(self):
-        return Search(context=self.context)
+        return self.__class__(context=self.context)
+    
+    def new_first_page(self):
+        d = dict(self._d)
+        if 'from' in d:
+            del d['from']
+        if 'size' in d:
+            del d['size']
+        return self.__class__(context=self.context, search=d)
     
     @property
     def project(self):
