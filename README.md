@@ -35,7 +35,7 @@ npm install
 Run the REST service:
 
 ```sh
-python partycrasher/rest_service.py
+make start
 ```
 
 The HTTP service will now be listening on port 5000. Refer to the [API
