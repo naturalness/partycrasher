@@ -10,8 +10,7 @@ data available at the time of a crash. You can read the [paper about it](https:/
 
 # Install
 
-> Note that the provided `Dockerfile` creates a container that performs
-> all of the following steps for you.
+> Note that the provided `Dockerfile` is out of date.
 
 PartyCrasher requires [Elastic (ElasticSearch)](https://www.elastic.co/).
 
@@ -24,12 +23,11 @@ if that's your taste).
 pip install -r requirements.txt
 ```
 
-To install the UI, you must have NPM and Bower.
+To install the UI, you must have NPM.
 
 ```sh
-npm install -g bower
-cd partycrasher/ngapp
-bower install
+cd ui
+npm install
 ```
 
 # Usage
