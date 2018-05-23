@@ -33,23 +33,24 @@ import signal
 import subprocess
 import traceback
 import datetime
+import sys
 
 import logging
 logger = logging.getLogger(__name__)
-error = logger.error
-warn = logger.warn
-info = logger.info
-debug = logger.debug
-logging.getLogger().setLevel(logging.DEBUG)
-
+ERROR = logger.error
+WARN = logger.warn
+INFO = logger.info
+DEBUG = logger.debug
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+logging.getLogger("urllib3").setLevel(logging.WARN)
 import fake_data_generator
 
 
 # TODO: argparse
 DONT_ACTUALLY_COMPUTE_STATS=False
 BLOCK_SIZE=1000
-PARALLEL=0
-BOOTSTRAP_CRASHES=0 # WARNING: Destroys temporal relationships!
+PARALLEL=8
+BOOTSTRAP_CRASHES=200000 # WARNING: Destroys temporal relationships!
 BOOTSTRAP_RESUME_AT=0 # This doesn't actually work properly yet, don't use it.
 RESET_STATS_AFTER_BLOCK=True
 TOTALLY_FAKE_DATA=False
@@ -128,13 +129,13 @@ def load_oracle_data(oracle_file_path):
                 crash[k.replace('.', '_')] = crash[k]
                 del crash[k]
         if 'type' in crash and crash['type'] != 'Crash':
-            debug("Skipping type: " + k)
+            DEBUG("Skipping type: " + k)
             skipped_ids.add(pc_id)
             continue
         if 'type' not in crash:
             crash['type'] = 'Crash'
         if 'date' not in crash:
-            debug("Skipping (no date): " + k)
+            DEBUG("Skipping (no date): " + k)
             skipped_ids.add(pc_id)
             continue
         crashes[pc_id] = crash
@@ -183,6 +184,7 @@ def reset_index(client):
         response = requests.delete(client.path_to('reports'))
         assert response.status_code == 200
         del response
+        INFO("Index reset!")
     except:
         if response is not None:
             print(response.status_code)
@@ -208,7 +210,7 @@ def ingest_one(mblock):
             assert (response.status_code == 201 or response.status_code == 303), response.status_code
         except Exception as e:
             retries -= 1
-            #debug(response.content)
+            #DEBUG(response.content)
             traceback.print_exc()
             print("POST failed...", file=sys.stderr)
             sys.stderr.flush()
@@ -480,7 +482,7 @@ class FakeFieldInjector(object):
         for i in range(0, self.metadata_total_fields):
             field = self.metadata_fields.get_field(i)
             crashref[field.name] = " ".join(field.draw())
-        #debug(crash.pretty(crashref))
+        #DEBUG(crash.pretty(crashref))
 
         
 
@@ -511,7 +513,7 @@ def simulate(client, comparisons, oracle_data):
         if INJECT_FAKE_FIELDS:
             fake_field_injector = FakeFieldInjector()
         for fake_i in range(BOOTSTRAP_RESUME_AT, BOOTSTRAP_CRASHES):
-            database_id = "fake:%010i" % fake_i
+            database_id = "fake_%010i" % fake_i
             source_database_id = list(all_ids.keys())[
               random.randrange(0, len(all_ids.keys()))]
             oracledata = copy.copy(oracle_all[source_database_id])
@@ -536,7 +538,7 @@ class GunicornStarter(object):
         self.start_gunicorn()
     
     def start_gunicorn(self):
-        info("Starting gunicorn...")
+        INFO("Starting gunicorn...")
         if PARALLEL > 0:
             self.gunicorn = subprocess.Popen(['gunicorn',
                 '--access-logfile', 'gunicorn-access.log',
@@ -544,7 +546,7 @@ class GunicornStarter(object):
                 '--log-level', 'debug',
                 '--workers', str(PARALLEL),
                 '--worker-class', 'sync',
-                '--bind', 'localhost:5000',
+                '--bind', '0.0.0.0:5000',
                 '--timeout', '60',
                 '--pid', 'gunicorn.pid',
                 '--capture-output',

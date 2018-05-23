@@ -67,7 +67,7 @@ def url_for_search(search, direct_search=True):
     path = search_url_append(path, params, 'threshold')
     merge(params, 'bucket', 'bucket_id')
     path = search_url_append(path, params, 'bucket')
-    DEBUG("search " + search.__class__.__name__)
+    #DEBUG("search " + search.__class__.__name__)
     if isinstance(search, BucketSearch):
         path += 'buckets/'
     elif isinstance(search, Search):

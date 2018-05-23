@@ -67,7 +67,7 @@ angular.module('PartyCrasherApp')
       console.log(ae.tagName);
       
       parent = ae;
-      children = element.children();
+      children = Object.values(element.children());
       
       while (parent.tagName != "BODY") {
         console.log(parent.tagName);
