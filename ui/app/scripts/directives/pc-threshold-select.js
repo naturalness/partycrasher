@@ -26,9 +26,11 @@ angular.module('PartyCrasherApp')
         if (initialThreshold == null) {
           scope.thresholdIndex = thresholdIndex(DEFAULT_THRESHOLD);
           scope.threshold = DEFAULT_THRESHOLD;
+          console.log("Reset due to initialThreshold null");
         } else {
           scope.thresholdIndex = initialThresholdIndex;
           scope.threshold = initialThreshold;
+          console.log("!!!" + initialThreshold + " " + initialThresholdIndex);
         }
         return;
       }
@@ -40,7 +42,7 @@ angular.module('PartyCrasherApp')
     if (threshold == null) {
       return null;
     }
-    var index = THRESHOLDS.indexOf(threshold);
+    var index = THRESHOLDS.indexOf(threshold.toString());
     if (index < 0) {
       /* Return a reasonable default. */
       return THRESHOLDS.indexOf(DEFAULT_THRESHOLD);

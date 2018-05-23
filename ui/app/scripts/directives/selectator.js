@@ -71,7 +71,7 @@ angular.module('PartyCrasherApp')
       
       while (parent.tagName != "BODY") {
         console.log(parent.tagName);
-        for (child of children) {
+        for (child in children) {
           if (parent === child) {
             focused = true;
           }
