@@ -50,11 +50,11 @@ import fake_data_generator
 DONT_ACTUALLY_COMPUTE_STATS=False
 BLOCK_SIZE=1000
 PARALLEL=8
-BOOTSTRAP_CRASHES=200000 # WARNING: Destroys temporal relationships!
+BOOTSTRAP_CRASHES=1000000 # WARNING: Destroys temporal relationships!
 BOOTSTRAP_RESUME_AT=0 # This doesn't actually work properly yet, don't use it.
 RESET_STATS_AFTER_BLOCK=True
 TOTALLY_FAKE_DATA=False
-INJECT_FAKE_FIELDS=True
+INJECT_FAKE_FIELDS=False
 START_GUNICORN=True
 interval = BLOCK_SIZE
 increasing_spacing = False
@@ -554,7 +554,7 @@ class GunicornStarter(object):
                 ],
                 preexec_fn=os.setsid)
             print('gunicorn started on %i' % (self.gunicorn.pid))
-            time.sleep(5)
+            time.sleep(10)
         else:
             self.gunicorn = subprocess.Popen(['python',
                 'partycrasher/rest/service.py',

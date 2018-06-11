@@ -103,20 +103,20 @@ svg(filename="scalar.svg", width=page_width, height=height,
 mypar(c(1,2))
 nomax = read.csv("MQT20R500.csv")
 nomax$time = nomax$time/1000
-mysol = read.csv("T2000.csv")
-mysol1 = read.csv("T1000.csv")
+mysol = read.csv("T5.csv")
+mysol1 = read.csv("T10.csv")
 mysol$time = mysol$time/1000
 mysol1$time = mysol1$time/1000
 modelnomax = rlm(nomax$time ~ nomax$after)
 modelmysol = rlm(mysol$time ~ mysol$after)
 modelmysol1 = rlm(mysol1$time ~ mysol1$after)
-xlim = c(0, 225000)
+xlim = c(0, 1000000)
 # print(modelnomax)
-lnames = list("Original", "Workaround A", "Workaround B")
+lnames = list("Original", "Terminate After 5", "Terminate After 10")
 print(summary(modelmysol)$coefficients)
 plota(list(nomax$after, mysol$after, mysol1$after), 
       list(nomax$time, mysol$time, mysol1$time), "Time Per Crash", 
-      xlim=xlim, ylim=c(0,0.4),
+      xlim=xlim, ylim=c(0,0.5),
       lnames,
       lpos="topleft")
 plotablines(list(modelnomax, modelmysol, modelmysol1))

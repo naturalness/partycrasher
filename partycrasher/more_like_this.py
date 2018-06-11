@@ -23,6 +23,7 @@ from partycrasher.crash_filter import CrashFilter
 from partycrasher.more_like_this_response import MoreLikeThisResponse
 from partycrasher.es.crash import elastify
 from partycrasher.crash import Crash
+from partycrasher.pc_encoder import pretty
 
 import logging
 logger = logging.getLogger(__name__)
@@ -195,6 +196,7 @@ class MoreLikeThisSearcher(object):
     
     def __init__(self, index, **kwargs):
         self.index = index
+        self.terminate_after = kwargs['terminate_after']
         if 'rescore_filterer' in kwargs:
             self.querybuilder = MoreLikeThisRescored(index=index, **kwargs)
         else:
@@ -206,7 +208,12 @@ class MoreLikeThisSearcher(object):
               explain):
         body = self.querybuilder.make_body(crash, explain, None)
         #assert 'terminate_after' in body
-        response = self.index.search(body=elastify(body))
+        #with open('query:' + crash['database_id'], 'w') as debugfile:
+            #print(pretty(body), file=debugfile)
+        response = self.index.search(body)
+            #terminate_after=self.terminate_after)
+        if (not ('terminated_early' in response)) or (not (response['terminated_early'])):
+            warn("Didn't terminate early...")
         return MoreLikeThisResponse(response)
 
        

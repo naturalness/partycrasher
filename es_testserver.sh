@@ -9,7 +9,7 @@ WORK_DIR="$(pwd)/es/work"
 mkdir -p "$WORK_DIR"
 CONF_DIR="$(pwd)/es"
 CONF_FILE="es/elasticsearch.yml"
-#export ES_HEAP_SIZE=10g
+export ES_JAVA_OPTS="-Xms10g -Xmx10g"
 
 "$ES_HOME/elasticsearch" -Epath.conf=$CONF_DIR \
  -Epath.logs=$LOG_DIR \
