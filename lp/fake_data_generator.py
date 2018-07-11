@@ -104,10 +104,10 @@ class IndianBuffet(object):
         number_of_new_dishes = stats.poisson.rvs(poisson_lambda)
         new_dishes_popularity = [1] * number_of_new_dishes
         new_dishes_indices = list(range(len(self.dishes), len(self.dishes) + number_of_new_dishes))
-        new_dishes = map(
+        new_dishes = list(map(
             lambda _: self.source.draw(),
             new_dishes_indices
-            )
+            ))
         self.dishes_popularity.extend(new_dishes_popularity)
         self.dishes.extend(new_dishes)
         assert len(self.dishes) == len(self.dishes_popularity)
@@ -130,7 +130,7 @@ class IndianBuffet(object):
         if self.total_customers < 2:
             return self.draw_new_dishes()
         else:
-            return self.draw_old_dishes() + self.draw_new_dishes()
+            return self.draw_old_dishes() + list(self.draw_new_dishes())
         
 
 class Numbers(object):
@@ -406,6 +406,8 @@ class TestFakeDataGenerator(unittest.TestCase):
     
     def test_chinese_restaurant_process(self):
         print(sys.path)
+        import os
+        os.environ["MPLBACKEND"] = "Qt5Agg"
         from matplotlib import pyplot
         import matplotlib
         from scipy import stats
@@ -458,7 +460,8 @@ class TestFakeDataGenerator(unittest.TestCase):
             number_dishes = 0
             last_individuals_dishes = None
             for i in range(0, test_size):
-                new_sample = ib.draw()
+                new_sample = list(ib.draw())
+                assert len(new_sample) > 0
                 #individuals_dishes.observe(len(new_sample))
                 last_individuals_dishes = len(new_sample)
                 # add one here because the Numbers() source we used starts at
