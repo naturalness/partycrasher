@@ -49,6 +49,9 @@ class ChineseRestaurant(object):
             people = self.heap[index]
         assert people > 0
         return people
+    
+    def get_new_probability(self):
+        return self.alpha / (self.total() + self.alpha)
 
     def draw(self):
         if self.total() == 0:
@@ -58,7 +61,7 @@ class ChineseRestaurant(object):
             self.heap.append(1)
             return table
         else:
-            new_probability = self.alpha / (self.total() + self.alpha)
+            new_probability = self.get_new_probability()
             if random.random() < new_probability:
                 table = self.source.draw()
                 index = self.total_unique() + 1
@@ -81,6 +84,35 @@ class ChineseRestaurant(object):
                         tablei += 1 # move to second child
                 self.increment(tablei)
                 return self.index_to_table[tablei]
+
+class PreferentialAttachment(ChineseRestaurant):
+    """
+    Prefential Attachment Process
+    * Fixed linear increase in tables
+    * k_0 fixed to 1
+    * a fixed to 0
+    """
+    def __init__(self, m, k0, a, source):
+        super().__init__(None, source)
+        self.m = m
+        assert k0 == 1
+        assert a == 0
+
+    def get_new_probability(self):
+        if self.total() == self.m:
+            return 1
+        else:
+            return 0
+
+class PreferentialAttachmentPoisson(PreferentialAttachment):
+    """
+    Prefential Attachment Process - Poisson process for table generation
+    * Linear increase in tables at average rate 1/m
+    * k_0 fixed to 1
+    * a fixed to 0
+    """
+    def get_new_probability(self):
+        return 1.0/float(self.m)
 
 class IndianBuffet(object):
     """
@@ -411,9 +443,9 @@ class TestFakeDataGenerator(unittest.TestCase):
         from matplotlib import pyplot
         import matplotlib
         from scipy import stats
-        alpha = 20
-        test_size = 1000
-        tests = 1000
+        alpha = 10
+        test_size = 10000
+        tests = 100
         data = [0]
         for j in range(0, tests):
             cr = ChineseRestaurant(alpha, Numbers())
@@ -429,6 +461,7 @@ class TestFakeDataGenerator(unittest.TestCase):
         actual_plot, = pyplot.plot(range(1,len(data)), data[1:], label='actual avg')
         expected = [0]
         remain = test_size * tests
+        # stick breaking process
         for i in range(1, len(data)):
             break_ = stats.beta.mean(1.0, float(alpha)) * remain
             expected.append(break_)
