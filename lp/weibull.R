@@ -1,3 +1,7 @@
+library(fitdistrplus)
+library(logspline)
+library(moments)
+
 date_ranges = read.csv("date_ranges.csv")
 revdate_ranges <- date_ranges[rev(rownames(date_ranges)),]
 ndate_ranges = length(date_ranges$Count)

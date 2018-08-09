@@ -10,6 +10,8 @@ import datetime
 
 import six
 
+from numpy.random import weibull
+
 if six.PY2:
     maketrans = string.maketrans
 else:
@@ -38,6 +40,28 @@ class ChineseRestaurant(object):
             self.heap[tablei] += 1 # increment totals
             tablei >>= 1  # go the parent
         return self.heap[1]
+    
+    def pop(self, table):
+        # blows up a table
+        index = self.table_to_index[table]
+        subtract = self.people_at_table(len(self.heap)-1)
+        add = self.people_at_table(len(self.heap)-1)-self.people_at_table(index)
+        tablei = index
+        while tablei > 0:
+            self.heap[tablei] += add
+            tablei >>= 1
+        tablei = self.total_unique()
+        while tablei > 0:
+            self.heap[tablei] -= subtract
+            tablei >>= 1
+        assert self.heap[-1] == 0
+        self.heap.pop(-1)
+        self.index_to_table[index] = self.index_to_table[-1]
+        itable = self.index_to_table[index]
+        self.index_to_table.pop(-1)
+        self.table_to_index[itable] = index
+        del self.table_to_index[table]
+
     
     def people_at_table(self, index):
         if len(self.heap) > (index<<1)+1:
@@ -251,7 +275,16 @@ class FakeMetadataFields(object):
                                       mean_length)
             self.fields.append(new_field)
             return new_field
-        
+
+class TwoParameterWeibull(object):
+    def __init__(self,
+                 lambda_=1.0,
+                 k=1.0):
+            self.lambda_ = lambda_
+            self.k = k
+    
+    def draw(self):
+        return weibull(self.k)*self.lambda_
       
 class FakeBug(object):
     """ Responsible for storing data related to a single bug """
@@ -259,12 +292,17 @@ class FakeBug(object):
                  bug_field_word_alpha,
                  fields, 
                  nfields_alpha,
-                 name):
+                 name,
+                 now,
+                 lifetime):
         self.field_gen = IndianBuffet(nfields_alpha, Numbers())
         self.field_word_gens = []
         self.bug_field_word_alpha = bug_field_word_alpha
         self.name = name
         self.fields = fields
+        self.lifetime = lifetime
+        self.expires = now+self.lifetime
+        self.start = now
     
     def draw_field_contents(self, field, field_number):
         field_word_gen = self.field_word_gens[field_number]
@@ -286,36 +324,29 @@ class FakeBug(object):
             crash_metadata[field.name] = self.draw_field_contents(field,
                                                              field_number)
         return crash_metadata
-            
-class FakeCrashGen(object):
-    def __init__(self,
-                 bug_alpha,
-                 bug_field_word_alpha,
-                 nfields_alpha,
-                 metadata_fields,
-                 crash_name_gen,
-                 bug_name_gen,
-                 start_datetime,
-                 mean_crashes_per_second):
-        self.bug_field_word_alpha = bug_field_word_alpha
-        self.nfields_alpha = nfields_alpha
-        self.fields_source = metadata_fields
-        self.crash_name_gen = crash_name_gen
-        self.bug_name_gen = bug_name_gen
-        self.bug_id_source = ChineseRestaurant(bug_alpha, Numbers())
-        self.last_datetime = start_datetime
-        self.mean_crashes_per_second = mean_crashes_per_second
-        self.bugs = []
-     
-    def generate_timestamp(self):
-        delta_seconds = stats.expon.rvs(0, self.mean_crashes_per_second)
-        delta = datetime.timedelta(0, delta_seconds)
-        new_time = self.last_datetime + delta
-        self.last_datetime = new_time
-        return new_time.isoformat()
     
-    def generate_crash(self):
-        bug_number = self.bug_id_source.draw()
+class FakeBugGen(object):
+    def __init__(self,
+                 bug_rate,
+                 bug_life_lambda,
+                 bug_life_k,
+                 bug_field_word_alpha,
+                 fields_source,
+                 nfields_alpha,
+                 bug_name_gen):
+        self.bug_life = TwoParameterWeibull(bug_life_lambda, bug_life_k)
+        self.now = 0
+        self.bugs = []
+        self.bug_field_word_alpha = bug_field_word_alpha
+        self.fields_source = fields_source
+        self.nfields_alpha = nfields_alpha
+        self.bug_name_gen = bug_name_gen
+        self.bug_picker = PreferentialAttachmentPoisson(
+            self.bug_rate,
+            self.bug_name_gen)
+            
+        
+    def draw(self):
         if bug_number == len(self.bugs):
             # New bug!
             self.bugs.append(FakeBug(self.bug_field_word_alpha,
@@ -325,6 +356,28 @@ class FakeCrashGen(object):
                                      )
                              )
         bug = self.bugs[bug_number]
+        return bug
+        
+            
+class FakeCrashGen(object):
+    def __init__(self,
+                 metadata_fields,
+                 crash_name_gen,
+                 bug_gen,
+                 mean_crashes_per_second):
+        
+        self.fields_source = metadata_fields
+        self.crash_name_gen = crash_name_gen
+        self.last_datetime = start_datetime
+     
+    def generate_timestamp(self):
+        delta_seconds = stats.expon.rvs(0, self.mean_crashes_per_second)
+        delta = datetime.timedelta(0, delta_seconds)
+        new_time = self.last_datetime + delta
+        self.last_datetime = new_time
+        return new_time.isoformat()
+    
+    def generate_crash(self):
         crash = bug.draw_crash()
         crash['database_id'] = self.crash_name_gen.draw()
         crash['date'] = self.generate_timestamp()

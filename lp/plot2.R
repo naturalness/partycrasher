@@ -189,20 +189,20 @@ kurtosis(date_ranges$Delta)
 
 x=revdate_ranges[revdate_ranges$Count>2,][[3]]/(24*60*60)
 x=x/1500
-betaparm = fitdist(x, "beta", method="mme")
-betaparm
-gofstat(betaparm)
-betaparm2 = fitdist(x, "beta", method="mle")
-betaparm2
-# d = dbeta(seq(0, 1, length= length(x)+1), 0.01907475, 2.35506635)
-# d2 = dbeta(seq(0, 1, length= length(x)+1), 0.01907475, 2.14096941)
-pbetax = exp(seq(log(1/(24*365.25*4)), log(1), length= length(x)+1))
-d = pbeta(pbetax, betaparm[[1]][[1]], betaparm[[1]][[2]])
+gammaparm = fitdist(x, "gamma", method="mme")
+gammaparm
+gofstat(gammaparm)
+gammaparm2 = fitdist(x, "gamma", method="mle")
+gammaparm2
+# d = dgamma(seq(0, 1, length= length(x)+1), 0.01907475, 2.35506635)
+# d2 = dgamma(seq(0, 1, length= length(x)+1), 0.01907475, 2.14096941)
+pgammax = exp(seq(log(1/(24*365.25*4)), log(1), length= length(x)+1))
+d = pgamma(pgammax, gammaparm[[1]][[1]], gammaparm[[1]][[2]])
 library(goftest)
-ks.test(x, pbeta,  betaparm[[1]][[1]], betaparm[[1]][[2]])
-cvm.test(x, pbeta,  betaparm[[1]][[1]], betaparm[[1]][[2]])
-ad.test(x, pbeta,  betaparm[[1]][[1]], betaparm[[1]][[2]])
-# d2 = dbeta(seq(0, 1, length= length(x)+1), betaparm2[[1]][[1]], betaparm2[[1]][[2]])
+ks.test(x, pgamma,  gammaparm[[1]][[1]], gammaparm[[1]][[2]])
+cvm.test(x, pgamma,  gammaparm[[1]][[1]], gammaparm[[1]][[2]])
+ad.test(x, pgamma,  gammaparm[[1]][[1]], gammaparm[[1]][[2]])
+# d2 = dgamma(seq(0, 1, length= length(x)+1), gammaparm2[[1]][[1]], gammaparm2[[1]][[2]])
 # d = d[-1]
 # d2 = d2[-1]
 # middle_index = 100
@@ -220,7 +220,7 @@ plot(ecdf(x),
    xlim=c(1/(24*365.25*4), 1.0),
 #   ylim=c(1/24, 365.25*4)/1500
   )
-lines(pbetax, d, col=linecolor)
+lines(pgammax, d, col=linecolor)
 # lines(seq(1,  length(x)), d2, col=rgb(1,0,1))
 legend  ("topleft", 
         legend=c("Empirical CDF",
