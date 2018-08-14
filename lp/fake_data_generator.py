@@ -38,35 +38,44 @@ class ChineseRestaurant(object):
         tablei = index
         while tablei > 0: # go up the tree (i decreases until its 1 at root)
             self.heap[tablei] += 1 # increment totals
+            assert self.heap[tablei] is not None
             tablei >>= 1  # go the parent
         return self.heap[1]
     
     def pop(self, table):
         # blows up a table
         index = self.table_to_index[table]
+        assert index > 0
         subtract = self.people_at_table(len(self.heap)-1)
-        add = self.people_at_table(len(self.heap)-1)-self.people_at_table(index)
+        add = subtract-self.people_at_table(index)
         tablei = index
         while tablei > 0:
             self.heap[tablei] += add
+            assert self.heap[tablei] is not None
             tablei >>= 1
         tablei = self.total_unique()
         while tablei > 0:
             self.heap[tablei] -= subtract
+            assert self.heap[tablei] is not None
             tablei >>= 1
         assert self.heap[-1] == 0
-        self.heap.pop(-1)
+        self.heap.pop()
         self.index_to_table[index] = self.index_to_table[-1]
         itable = self.index_to_table[index]
-        self.index_to_table.pop(-1)
+        self.index_to_table.pop()
         self.table_to_index[itable] = index
         del self.table_to_index[table]
 
     
     def people_at_table(self, index):
+        assert index > 0
+        assert index < len(self.heap)
         if len(self.heap) > (index<<1)+1:
-            people = self.heap[index] - (self.heap[index<<1] + 
-                                        self.heap[(index<<1)+1])
+            people_left_child = self.heap[index<<1]
+            people_right_child = self.heap[(index<<1)+1]
+            people_children = people_left_child + people_right_child
+            people_self_and_children = self.heap[index]
+            people = people_self_and_children - people_children
         elif len(self.heap) > (index<<1):
             people = self.heap[index] - (self.heap[index<<1])
         else:
@@ -80,7 +89,7 @@ class ChineseRestaurant(object):
     def draw(self):
         if self.total() == 0:
             table = self.source.draw()
-            self.table_to_index[table] = 0
+            self.table_to_index[table] = 1
             self.index_to_table.append(table)
             self.heap.append(1)
             return table
@@ -95,6 +104,7 @@ class ChineseRestaurant(object):
                 self.heap.append(0)
                 assert len(self.heap) == index + 1
                 self.increment(index)
+                assert self.heap[index] is not None
                 return table
             else:
                 people_left = random.randrange(1, self.total()+1) # stupid python range is [)
@@ -294,7 +304,8 @@ class FakeBug(object):
                  nfields_alpha,
                  name,
                  now,
-                 lifetime):
+                 lifetime,
+                 bug_picker):
         self.field_gen = IndianBuffet(nfields_alpha, Numbers())
         self.field_word_gens = []
         self.bug_field_word_alpha = bug_field_word_alpha
@@ -303,6 +314,8 @@ class FakeBug(object):
         self.lifetime = lifetime
         self.expires = now+self.lifetime
         self.start = now
+        self.current = now
+        self.bug_picker = bug_picker
     
     def draw_field_contents(self, field, field_number):
         field_word_gen = self.field_word_gens[field_number]
@@ -311,8 +324,10 @@ class FakeBug(object):
         for word_number in range(0, field_length):
             field_contents.append(field_word_gen.draw())
         return " ".join(field_contents)
-    
+
     def draw_crash(self):
+        self.current = self.current + 1
+            
         crash_metadata = {}
         field_numbers = self.field_gen.draw()
         for field_number in field_numbers:
@@ -323,8 +338,37 @@ class FakeBug(object):
                     field.word_source))
             crash_metadata[field.name] = self.draw_field_contents(field,
                                                              field_number)
+        if self.current >= self.expires:
+            self.bug_picker.pop(self)
         return crash_metadata
     
+class FakeBugSource(object):
+    def __init__(self,
+                 bug_field_word_alpha,
+                 fields_source,
+                 nfields_alpha,
+                 bug_name_gen,
+                 bug_life,
+                 now,
+                 bug_picker):
+        self.bug_field_word_alpha = bug_field_word_alpha
+        self.fields_source = fields_source
+        self.nfields_alpha = nfields_alpha
+        self.bug_name_gen = bug_name_gen
+        self.now = now
+        self.bug_life = bug_life
+        self.bug_picker = bug_picker
+    def draw(self):
+            return FakeBug(
+                self.bug_field_word_alpha,
+                self.fields_source,
+                self.nfields_alpha,
+                self.bug_name_gen.draw(),
+                self.now,
+                self.bug_life.draw(),
+                self.bug_picker
+                )
+
 class FakeBugGen(object):
     def __init__(self,
                  bug_rate,
@@ -341,34 +385,43 @@ class FakeBugGen(object):
         self.fields_source = fields_source
         self.nfields_alpha = nfields_alpha
         self.bug_name_gen = bug_name_gen
+        self.fake_bug_source = FakeBugSource(
+                bug_field_word_alpha,
+                fields_source,
+                nfields_alpha,
+                bug_name_gen,
+                self.bug_life,
+                self.now,
+                self,
+                )
         self.bug_picker = PreferentialAttachmentPoisson(
-            self.bug_rate,
-            self.bug_name_gen)
-            
-        
+            bug_rate,
+            1,
+            0,
+            self.fake_bug_source
+            )
+    
+    def pop(self, bug_name):
+        return self.bug_picker.pop(bug_name)
+    
     def draw(self):
-        if bug_number == len(self.bugs):
-            # New bug!
-            self.bugs.append(FakeBug(self.bug_field_word_alpha,
-                                     self.fields_source,
-                                     self.nfields_alpha,
-                                     self.bug_name_gen.draw()
-                                     )
-                             )
-        bug = self.bugs[bug_number]
-        return bug
-        
-            
+        return self.bug_picker.draw()
+    
 class FakeCrashGen(object):
     def __init__(self,
                  metadata_fields,
                  crash_name_gen,
-                 bug_gen,
-                 mean_crashes_per_second):
+                 bug_picker,
+                 mean_crashes_per_second,
+                 start_datetime
+            ):
         
         self.fields_source = metadata_fields
         self.crash_name_gen = crash_name_gen
         self.last_datetime = start_datetime
+        self.bug_picker = bug_picker
+        self.mean_crashes_per_second = mean_crashes_per_second
+        self.start_datetime = start_datetime
      
     def generate_timestamp(self):
         delta_seconds = stats.expon.rvs(0, self.mean_crashes_per_second)
@@ -378,6 +431,7 @@ class FakeCrashGen(object):
         return new_time.isoformat()
     
     def generate_crash(self):
+        bug = self.bug_picker.draw()
         crash = bug.draw_crash()
         crash['database_id'] = self.crash_name_gen.draw()
         crash['date'] = self.generate_timestamp()
@@ -393,7 +447,9 @@ def example_fake_crash_gen():
     
     metadata_nfields_alpha = 10
     
-    bug_alpha = 1000
+    bug_rate = 3
+    bug_life_lambda = 1.0
+    bug_life_k = 1.0
     
     metadata_vocab = ChineseRestaurant(metadata_vocab_alpha, Strings('', 0))
     metadata_fields = FakeMetadataFields(metadata_vocab,
@@ -407,15 +463,26 @@ def example_fake_crash_gen():
     start_datetime = datetime.datetime(1980, 1, 1, 0, 0, 0)
     mean_crashes_per_second = 60
     
-    return FakeCrashGen(bug_alpha,
-                             bug_metadata_field_word_alpha,
-                             metadata_nfields_alpha,
-                             metadata_fields,
-                             crash_name_gen,
-                             bug_name_gen,
-                             start_datetime,
-                             mean_crashes_per_second)
-                             
+    bug_picker = FakeBugGen(
+        bug_rate,
+        bug_life_lambda,
+        bug_life_k,
+        bug_metadata_field_word_alpha,
+        metadata_fields,
+        metadata_nfields_alpha,
+        bug_name_gen
+        )
+        
+    
+    crash_gen = FakeCrashGen(
+        metadata_fields,
+        crash_name_gen,
+        bug_picker,
+        mean_crashes_per_second,
+        start_datetime,
+        )
+    
+    return crash_gen
 
 class PoissonChisq(object):
     """ Used by the testing code only! """
