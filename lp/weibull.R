@@ -36,8 +36,8 @@ skewness(date_ranges$Delta)
 kurtosis(date_ranges$Delta)
 
 
-# x=revdate_ranges[revdate_ranges$Count>1,][[3]]/(24*60*60*365*4)
-x=revdate_ranges[revdate_ranges$Count>1,][[3]]/(3177.706)
+x=revdate_ranges[revdate_ranges$Count>1,][[3]]/(24*60*60*365*4)
+x=revdate_ranges[revdate_ranges$Count>1,][[3]]
 weibullparm = fitdist(x, "weibull", method="mle", start=list(shape=1,scale=1), lower=c(0, 0))
 weibullparm
 gofstat(weibullparm)

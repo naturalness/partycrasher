@@ -12,6 +12,8 @@ library(invgamma)
 
 x=revdate_ranges[revdate_ranges$Count>2,][[3]]/(24*60*60)
 x=x/1500
+x=revdate_ranges[revdate_ranges$Count>1,][[2]]
+
 invgammaparm = fitdist(x, "invgamma", method="mle")
 invgammaparm
 gofstat(invgammaparm)

@@ -242,6 +242,8 @@ class PrefixedNumbers(object):
         n = self.numbers.draw()
         str_n = self.format_ % n
         return self.prefix + str_n
+    
+current = 0
       
 class FakeMetadataField(object):
     """ Responsible for storing a metadata field's properties regardless of bug or document. """
@@ -321,9 +323,8 @@ class FakeBug(object):
         self.name = name
         self.fields = fields
         self.lifetime = lifetime
-        self.expires = now+self.lifetime
-        self.start = now
-        self.current = now
+        self.expires = current+self.lifetime
+        self.start = current
         self.bug_picker = bug_picker
     
     def draw_field_contents(self, field, field_number):
@@ -335,7 +336,8 @@ class FakeBug(object):
         return " ".join(field_contents)
 
     def draw_crash(self):
-        self.current = self.current + 1
+        global current
+        current = current + 1
             
         crash_metadata = {}
         field_numbers = self.field_gen.draw()
@@ -349,14 +351,16 @@ class FakeBug(object):
                     )
             crash_metadata[field.name] = self.draw_field_contents(field,
                                                              field_number)
-        if self.current >= self.expires:
-            DEBUG(self.name + " fixed after " + str(self.current)
+        return crash_metadata
+
+    def try_expire(self):
+        if current >= self.expires:
+            DEBUG(self.name + " fixed after " + str(current-self.start)
                   + "; " +
                   str(self.bug_picker.bug_picker.total_unique())
                   + " bugs remain."
                   )
             self.bug_picker.pop(self)
-        return crash_metadata
     
 class FakeBugSource(object):
     def __init__(self,
@@ -375,15 +379,16 @@ class FakeBugSource(object):
         self.bug_life = bug_life
         self.bug_picker = bug_picker
     def draw(self):
-            return FakeBug(
+            bug = FakeBug(
                 self.new_bug_metadata_field_word_source,
                 self.fields_source,
                 self.nfields_alpha,
                 self.bug_name_gen.draw(),
                 self.now,
-                self.bug_life.draw(),
+                math.floor(self.bug_life.draw()),
                 self.bug_picker
                 )
+            return bug
 
 class FakeBugGen(object):
     def __init__(self,
@@ -421,6 +426,11 @@ class FakeBugGen(object):
         return self.bug_picker.pop(bug_name)
     
     def draw(self):
+        # TODO: optimize this
+        for bug in self.bug_picker.index_to_table:
+            if bug is None:
+                continue
+            bug.try_expire()
         return self.bug_picker.draw()
     
 class FakeCrashGen(object):
@@ -461,13 +471,14 @@ class FakeCrashGen(object):
       
 def example_fake_crash_gen():
     metadata_field_new_word_m = 21.1 # new word every m words
-    bug_metadata_field_new_word_m = 2 # TODO: estimate this
+    bug_metadata_field_new_word_m = 21.1 # TODO: estimate this
     
     metadata_mean_nfields = 50 # TODO: estimate this
-    metadata_mean_field_length = 1.5 # TODO: estimate this
+    metadata_mean_field_length = 20 # TODO: estimate this
     crash_metadata_total_words = metadata_mean_nfields * metadata_mean_field_length
     
     bug_rate = 1.39 # in bugs/crash not bugs/day
+    bug_rate = bug_rate * 10 # try to get this dang thing working
     bug_life_scale = 1580.2635286 # in bugs/crash not bugs/day
     bug_life_shape = 0.5221691 
     
@@ -495,9 +506,9 @@ def example_fake_crash_gen():
     def new_bug_metadata_field_word_source(metadata_field_word_source):
         return PreferentialAttachmentPoisson(
             bug_metadata_field_new_word_m,
-            1,
+            21,
             0,
-            metadata_field_word_source
+            Strings('', 0)
             )
     
     crash_name_gen = PrefixedNumbers('fake', 8)

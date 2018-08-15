@@ -16,6 +16,8 @@ kurtosis(date_ranges$Delta)
 
 x=revdate_ranges[revdate_ranges$Count>2,][[3]]/(24*60*60)
 x=x/1500
+x=revdate_ranges[revdate_ranges$Count>1,][[2]]
+
 ggammaparm = fitdist(x, "ggamma", method="mle", start=list(s=1,m=1,f=1), lower=0)
 ggammaparm
 gofstat(ggammaparm)

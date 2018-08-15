@@ -51,7 +51,7 @@ from fake_data_generator import example_fake_crash_gen
 DONT_ACTUALLY_COMPUTE_STATS=False
 BLOCK_SIZE=10000
 PARALLEL=8
-BOOTSTRAP_CRASHES=1000000 # WARNING: Destroys temporal relationships!
+BOOTSTRAP_CRASHES=10000 # WARNING: Destroys temporal relationships!
 BOOTSTRAP_RESUME_AT=0 # This doesn't actually work properly yet, don't use it.
 RESET_STATS_AFTER_BLOCK=True
 TOTALLY_FAKE_DATA=True
