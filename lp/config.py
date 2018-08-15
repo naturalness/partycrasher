@@ -7,8 +7,8 @@ class HTTP:
 ################################################################################
 # Bucketing                                                                    #
 ################################################################################
-#test_thresholds = [int(10**(t/24.0)*10)/10.0 for t in range(0, 24*2+1)]
-test_thresholds = [3.8]
+test_thresholds = [int(10**(t/24.0)*10)/10.0 for t in range(0, -24*2+1)]
+#test_thresholds = [3.8]
 #test_thresholds.append(0.0)
 #thresholds = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0]
 class Bucketing:

@@ -44,16 +44,17 @@ DEBUG = logger.debug
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 logging.getLogger("urllib3").setLevel(logging.WARN)
 import fake_data_generator
+from fake_data_generator import example_fake_crash_gen
 
 
 # TODO: argparse
 DONT_ACTUALLY_COMPUTE_STATS=False
-BLOCK_SIZE=1000
+BLOCK_SIZE=10000
 PARALLEL=8
 BOOTSTRAP_CRASHES=1000000 # WARNING: Destroys temporal relationships!
 BOOTSTRAP_RESUME_AT=0 # This doesn't actually work properly yet, don't use it.
 RESET_STATS_AFTER_BLOCK=True
-TOTALLY_FAKE_DATA=False
+TOTALLY_FAKE_DATA=True
 INJECT_FAKE_FIELDS=False
 START_GUNICORN=True
 interval = BLOCK_SIZE
@@ -207,7 +208,7 @@ def ingest_one(mblock):
         try:
             #print("p", file=sys.stderr)
             response = requests.post(client.path_to('reports'), json=crashdata)
-            assert (response.status_code == 201 or response.status_code == 303), response.status_code
+            assert (response.status_code == 201 or response.status_code == 303), response.text
         except Exception as e:
             retries -= 1
             #DEBUG(response.content)
@@ -436,8 +437,8 @@ def iterate_crash(
             'crashdata': crashdata
         })
     iterate_crash.crashes_so_far += 1
-    if ((iterate_crash.crashes_so_far >= iterate_crash.print_after)
-        or (iterate_crash.crashes_so_far >= (totals['total_ids']-2))):
+    if ((iterate_crash.crashes_so_far >= iterate_crash.print_after)):
+        #or (iterate_crash.crashes_so_far >= (totals['total_ids']-2))):
         if increasing_spacing:
             iterate_crash.print_after = (
                   (
@@ -512,18 +513,31 @@ def simulate(client, comparisons, oracle_data):
         fake_field_injector = None
         if INJECT_FAKE_FIELDS:
             fake_field_injector = FakeFieldInjector()
+        if TOTALLY_FAKE_DATA:
+            fake_crash_gen = example_fake_crash_gen()
         for fake_i in range(BOOTSTRAP_RESUME_AT, BOOTSTRAP_CRASHES):
-            database_id = "fake_%010i" % fake_i
-            source_database_id = list(all_ids.keys())[
-              random.randrange(0, len(all_ids.keys()))]
-            oracledata = copy.copy(oracle_all[source_database_id])
-            oracledata['database_id'] = database_id
-            crashdata = copy.copy(crashes[source_database_id])
-            crashdata['database_id'] = database_id
-            crashdata['date'] = datetime.datetime.fromtimestamp(
-                946684800 + fake_i).isoformat()
-            if INJECT_FAKE_FIELDS:
-                fake_field_injector.inject(crashdata)
+            if TOTALLY_FAKE_DATA:
+                (fake_crash, fake_bug) = fake_crash_gen.generate_crash()
+                fake_crash['project'] = 'fake'
+                fake_crash['type'] = 'crash'
+                database_id = fake_crash['database_id']
+                oracledata = copy.copy(fake_crash)
+                oracledata['bucket'] = fake_bug
+                crashdata = fake_crash
+                assert totals['total_ids'] == 0
+                assert totals['total_buckets'] == 0
+            else: # HALF FAKE DATA
+                database_id = "fake_%010i" % fake_i
+                source_database_id = list(all_ids.keys())[
+                random.randrange(0, len(all_ids.keys()))]
+                oracledata = copy.copy(oracle_all[source_database_id])
+                oracledata['database_id'] = database_id
+                crashdata = copy.copy(crashes[source_database_id])
+                crashdata['database_id'] = database_id
+                crashdata['date'] = datetime.datetime.fromtimestamp(
+                    946684800 + fake_i).isoformat()
+                if INJECT_FAKE_FIELDS: # HALF FAKE DATA
+                    fake_field_injector.inject(crashdata)
             iterate_crash(
                           client,
                           database_id,
@@ -592,7 +606,17 @@ def buckettest(oracle_file_path, rest_service_url):
         if not BOOTSTRAP_RESUME_AT:
             reset_index(client)
         if TOTALLY_FAKE_DATA:
-            synthesize(get_comparisons())
+            simulate(
+                client,
+                get_comparisons(client),
+                (
+                    [],
+                    {},
+                    [],
+                    0,
+                    0
+                    )
+            )
         else:
             simulate(
                 client,

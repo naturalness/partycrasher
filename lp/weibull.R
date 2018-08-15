@@ -2,6 +2,29 @@ library(fitdistrplus)
 library(logspline)
 library(moments)
 
+col_width=4
+
+height=col_width
+mypar <- function(mfrow) {
+par(
+    mfrow=mfrow,
+#     cex=(1/shrink),
+#     cex.axis=mex,
+#     cex.lab=mex,
+#     cex.main=mex,
+#     cex.sub=mex,
+#     mex=mex,
+#     lwd=(1/shrink),
+    oma=c(0,0,0,0),
+    xpd=FALSE,
+#     tcl=0.5,
+    xaxs="i",
+    yaxs="i",
+    bty="n"
+    )
+}
+
+
 date_ranges = read.csv("date_ranges.csv")
 revdate_ranges <- date_ranges[rev(rownames(date_ranges)),]
 ndate_ranges = length(date_ranges$Count)
@@ -13,8 +36,8 @@ skewness(date_ranges$Delta)
 kurtosis(date_ranges$Delta)
 
 
-x=revdate_ranges[revdate_ranges$Count>2,][[3]]/(24*60*60)
-x=x/1500
+# x=revdate_ranges[revdate_ranges$Count>1,][[3]]/(24*60*60*365*4)
+x=revdate_ranges[revdate_ranges$Count>1,][[3]]/(3177.706)
 weibullparm = fitdist(x, "weibull", method="mle", start=list(shape=1,scale=1), lower=c(0, 0))
 weibullparm
 gofstat(weibullparm)

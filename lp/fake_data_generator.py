@@ -17,6 +17,13 @@ if six.PY2:
 else:
     maketrans = str.maketrans
 
+import logging
+logger = logging.getLogger(__name__)
+ERROR = logger.error
+WARN = logger.warn
+INFO = logger.info
+DEBUG = logger.debug
+
 class ChineseRestaurant(object):
     def __init__(self, alpha, source):
         self.alpha = alpha
@@ -24,6 +31,8 @@ class ChineseRestaurant(object):
         self.table_to_index = {None: 0}  
         self.index_to_table = [None]
         self.heap = [None] # make array start 1 for nicer arithmetic
+        self.k0 = 1
+        self.a = 0
         
     def total(self):
         if len(self.heap) < 2:
@@ -33,11 +42,12 @@ class ChineseRestaurant(object):
     def total_unique(self):
         return len(self.heap)-1
     
-    def increment(self, index):
+    def increment(self, index, amount):
         # adapted from: http://stackoverflow.com/questions/2140787/select-k-random-elements-from-a-list-whose-elements-have-weights 2016-07-11
         tablei = index
+        assert amount >= 1
         while tablei > 0: # go up the tree (i decreases until its 1 at root)
-            self.heap[tablei] += 1 # increment totals
+            self.heap[tablei] += amount # increment totals
             assert self.heap[tablei] is not None
             tablei >>= 1  # go the parent
         return self.heap[1]
@@ -103,7 +113,7 @@ class ChineseRestaurant(object):
                 assert self.index_to_table[index] is table
                 self.heap.append(0)
                 assert len(self.heap) == index + 1
-                self.increment(index)
+                self.increment(index, self.k0)
                 assert self.heap[index] is not None
                 return table
             else:
@@ -116,20 +126,20 @@ class ChineseRestaurant(object):
                     if people_left > self.heap[tablei]:
                         people_left -= self.heap[tablei] # went past tablei and all of its children
                         tablei += 1 # move to second child
-                self.increment(tablei)
+                self.increment(tablei, 1)
                 return self.index_to_table[tablei]
 
 class PreferentialAttachment(ChineseRestaurant):
     """
     Prefential Attachment Process
     * Fixed linear increase in tables
-    * k_0 fixed to 1
+    * k0 is starting weight
     * a fixed to 0
     """
     def __init__(self, m, k0, a, source):
         super().__init__(None, source)
         self.m = m
-        assert k0 == 1
+        self.k0 = k0
         assert a == 0
 
     def get_new_probability(self):
@@ -142,7 +152,7 @@ class PreferentialAttachmentPoisson(PreferentialAttachment):
     """
     Prefential Attachment Process - Poisson process for table generation
     * Linear increase in tables at average rate 1/m
-    * k_0 fixed to 1
+    * k0 fixed to 1
     * a fixed to 0
     """
     def get_new_probability(self):
@@ -237,12 +247,11 @@ class FakeMetadataField(object):
     """ Responsible for storing a metadata field's properties regardless of bug or document. """
     def __init__(self,
                  name_source,
-                 metadata_vocab, 
-                 field_word_alpha, 
+                 new_word_source,
                  mean_len
                 ):
         self.name = name_source.draw()
-        self.word_source = ChineseRestaurant(field_word_alpha, metadata_vocab)
+        self.word_source = new_word_source()
         self.mean_len = mean_len
 
     def draw_length(self):
@@ -259,16 +268,14 @@ class FakeMetadataField(object):
 class FakeMetadataFields(object):
     """ Responsible for storing all metadata fields regardless of bug or document. """
     def __init__(self,
-                 metadata_vocab, 
                  len_total, 
                  nfields_total,
-                 field_word_alpha
+                 new_word_source,
                 ):
         self.name_source = Strings('field', 5)
-        self.metadata_vocab = metadata_vocab
         self.len_total = len_total
         self.nfields_total = nfields_total
-        self.field_word_alpha = field_word_alpha
+        self.new_word_source = new_word_source
         self.fields = []
         
     def get_field(self, index):
@@ -276,12 +283,14 @@ class FakeMetadataFields(object):
             return self.fields[index]
         else:
             assert index == len(self.fields)
-            mean_length = stats.gamma.rvs(self.len_total,
-                                          scale=(1.0/self.nfields_total))
+            mean_length = stats.gamma.rvs(
+                1.0,
+                scale=(self.len_total/self.nfields_total)
+                )
+            # in the line above it may be more proper to swap the 1.0 and the self.len_total buuuut then we get zero-length metadata fields so
             new_field = FakeMetadataField(
                                       self.name_source,
-                                      self.metadata_vocab,
-                                      self.field_word_alpha,
+                                      self.new_word_source,
                                       mean_length)
             self.fields.append(new_field)
             return new_field
@@ -299,7 +308,7 @@ class TwoParameterWeibull(object):
 class FakeBug(object):
     """ Responsible for storing data related to a single bug """
     def __init__(self,
-                 bug_field_word_alpha,
+                 new_bug_metadata_field_word_source,
                  fields, 
                  nfields_alpha,
                  name,
@@ -308,7 +317,7 @@ class FakeBug(object):
                  bug_picker):
         self.field_gen = IndianBuffet(nfields_alpha, Numbers())
         self.field_word_gens = []
-        self.bug_field_word_alpha = bug_field_word_alpha
+        self.new_bug_metadata_field_word_source = new_bug_metadata_field_word_source
         self.name = name
         self.fields = fields
         self.lifetime = lifetime
@@ -333,25 +342,32 @@ class FakeBug(object):
         for field_number in field_numbers:
             field = self.fields.get_field(field_number)
             if field_number > len(self.field_word_gens)-1:
-                self.field_word_gens.append(ChineseRestaurant(
-                    self.bug_field_word_alpha, 
-                    field.word_source))
+                self.field_word_gens.append(
+                    self.new_bug_metadata_field_word_source(
+                        field.word_source
+                        )
+                    )
             crash_metadata[field.name] = self.draw_field_contents(field,
                                                              field_number)
         if self.current >= self.expires:
+            DEBUG(self.name + " fixed after " + str(self.current)
+                  + "; " +
+                  str(self.bug_picker.bug_picker.total_unique())
+                  + " bugs remain."
+                  )
             self.bug_picker.pop(self)
         return crash_metadata
     
 class FakeBugSource(object):
     def __init__(self,
-                 bug_field_word_alpha,
+                 new_bug_metadata_field_word_source,
                  fields_source,
                  nfields_alpha,
                  bug_name_gen,
                  bug_life,
                  now,
                  bug_picker):
-        self.bug_field_word_alpha = bug_field_word_alpha
+        self.new_bug_metadata_field_word_source = new_bug_metadata_field_word_source
         self.fields_source = fields_source
         self.nfields_alpha = nfields_alpha
         self.bug_name_gen = bug_name_gen
@@ -360,7 +376,7 @@ class FakeBugSource(object):
         self.bug_picker = bug_picker
     def draw(self):
             return FakeBug(
-                self.bug_field_word_alpha,
+                self.new_bug_metadata_field_word_source,
                 self.fields_source,
                 self.nfields_alpha,
                 self.bug_name_gen.draw(),
@@ -374,19 +390,19 @@ class FakeBugGen(object):
                  bug_rate,
                  bug_life_lambda,
                  bug_life_k,
-                 bug_field_word_alpha,
+                 new_bug_metadata_field_word_source,
                  fields_source,
                  nfields_alpha,
                  bug_name_gen):
         self.bug_life = TwoParameterWeibull(bug_life_lambda, bug_life_k)
         self.now = 0
         self.bugs = []
-        self.bug_field_word_alpha = bug_field_word_alpha
+        self.new_bug_metadata_field_word_source = new_bug_metadata_field_word_source
         self.fields_source = fields_source
         self.nfields_alpha = nfields_alpha
         self.bug_name_gen = bug_name_gen
         self.fake_bug_source = FakeBugSource(
-                bug_field_word_alpha,
+                new_bug_metadata_field_word_source,
                 fields_source,
                 nfields_alpha,
                 bug_name_gen,
@@ -422,6 +438,8 @@ class FakeCrashGen(object):
         self.bug_picker = bug_picker
         self.mean_crashes_per_second = mean_crashes_per_second
         self.start_datetime = start_datetime
+        self.total_crashes = 0
+        self.total_words = 0
      
     def generate_timestamp(self):
         delta_seconds = stats.expon.rvs(0, self.mean_crashes_per_second)
@@ -433,43 +451,68 @@ class FakeCrashGen(object):
     def generate_crash(self):
         bug = self.bug_picker.draw()
         crash = bug.draw_crash()
+        #self.total_crashes += 1
+        #for k, v in crash.items():
+            #self.total_words += len(v.split())
+        #DEBUG("Average crash length: " + str(self.total_words / self.total_crashes))
         crash['database_id'] = self.crash_name_gen.draw()
         crash['date'] = self.generate_timestamp()
         return (crash, bug.name)
       
 def example_fake_crash_gen():
-    metadata_vocab_alpha = 1000
-    metadata_field_word_alpha = 10
-    bug_metadata_field_word_alpha = 5
+    metadata_field_new_word_m = 21.1 # new word every m words
+    bug_metadata_field_new_word_m = 2 # TODO: estimate this
     
-    metadata_total_words = 1000
-    metadata_total_fields = 500
+    metadata_mean_nfields = 50 # TODO: estimate this
+    metadata_mean_field_length = 1.5 # TODO: estimate this
+    crash_metadata_total_words = metadata_mean_nfields * metadata_mean_field_length
     
-    metadata_nfields_alpha = 10
+    bug_rate = 1.39 # in bugs/crash not bugs/day
+    bug_life_scale = 1580.2635286 # in bugs/crash not bugs/day
+    bug_life_shape = 0.5221691 
     
-    bug_rate = 3
-    bug_life_lambda = 1.0
-    bug_life_k = 1.0
+    #metadata_vocab = PreferentialAttachmentPoisson(
+        #metadata_vocab_alpha,
+        #1,
+        #0,
+        #Strings('', 0)
+        #)
+    metadata_vocab = Strings('', 0)
+    def new_metadata_field_word_source():
+        return PreferentialAttachmentPoisson(
+            metadata_field_new_word_m,
+            21,
+            0,
+            metadata_vocab
+            )
     
-    metadata_vocab = ChineseRestaurant(metadata_vocab_alpha, Strings('', 0))
-    metadata_fields = FakeMetadataFields(metadata_vocab,
-                                         metadata_total_words,
-                                         metadata_total_fields,
-                                         metadata_field_word_alpha)
+    metadata_fields = FakeMetadataFields(
+        crash_metadata_total_words,
+        metadata_mean_nfields,
+        new_metadata_field_word_source,
+        )
+    
+    def new_bug_metadata_field_word_source(metadata_field_word_source):
+        return PreferentialAttachmentPoisson(
+            bug_metadata_field_new_word_m,
+            1,
+            0,
+            metadata_field_word_source
+            )
     
     crash_name_gen = PrefixedNumbers('fake', 8)
     bug_name_gen = PrefixedNumbers('bug', 6)
     
     start_datetime = datetime.datetime(1980, 1, 1, 0, 0, 0)
-    mean_crashes_per_second = 60
+    mean_crashes_per_second = 1/3177.706
     
     bug_picker = FakeBugGen(
         bug_rate,
-        bug_life_lambda,
-        bug_life_k,
-        bug_metadata_field_word_alpha,
+        bug_life_scale,
+        bug_life_shape,
+        new_bug_metadata_field_word_source,
         metadata_fields,
-        metadata_nfields_alpha,
+        metadata_mean_nfields,
         bug_name_gen
         )
         
