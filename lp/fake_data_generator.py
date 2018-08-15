@@ -244,6 +244,7 @@ class PrefixedNumbers(object):
         return self.prefix + str_n
     
 current = 0
+expiry = {}
       
 class FakeMetadataField(object):
     """ Responsible for storing a metadata field's properties regardless of bug or document. """
@@ -324,6 +325,11 @@ class FakeBug(object):
         self.fields = fields
         self.lifetime = lifetime
         self.expires = current+self.lifetime
+        assert self.expires > current, lifetime
+        if self.expires in expiry:
+            expiry[self.expires].append(self)
+        else:
+            expiry[self.expires] = [self]
         self.start = current
         self.bug_picker = bug_picker
     
@@ -336,9 +342,6 @@ class FakeBug(object):
         return " ".join(field_contents)
 
     def draw_crash(self):
-        global current
-        current = current + 1
-            
         crash_metadata = {}
         field_numbers = self.field_gen.draw()
         for field_number in field_numbers:
@@ -385,7 +388,7 @@ class FakeBugSource(object):
                 self.nfields_alpha,
                 self.bug_name_gen.draw(),
                 self.now,
-                math.floor(self.bug_life.draw()),
+                math.ceil(self.bug_life.draw()),
                 self.bug_picker
                 )
             return bug
@@ -427,11 +430,14 @@ class FakeBugGen(object):
     
     def draw(self):
         # TODO: optimize this
-        for bug in self.bug_picker.index_to_table:
-            if bug is None:
-                continue
-            bug.try_expire()
-        return self.bug_picker.draw()
+        picked = self.bug_picker.draw()
+        global current
+        global expiry
+        current += 1
+        if current in expiry:
+            for bug in expiry[current]:
+                bug.try_expire()
+        return picked
     
 class FakeCrashGen(object):
     def __init__(self,
@@ -478,7 +484,6 @@ def example_fake_crash_gen():
     crash_metadata_total_words = metadata_mean_nfields * metadata_mean_field_length
     
     bug_rate = 1.39 # in bugs/crash not bugs/day
-    bug_rate = bug_rate * 10 # try to get this dang thing working
     bug_life_scale = 1580.2635286 # in bugs/crash not bugs/day
     bug_life_shape = 0.5221691 
     
