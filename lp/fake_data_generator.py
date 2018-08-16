@@ -474,7 +474,41 @@ class FakeCrashGen(object):
         crash['database_id'] = self.crash_name_gen.draw()
         crash['date'] = self.generate_timestamp()
         return (crash, bug.name)
-      
+
+class NoLonelyCrashGen(FakeCrashGen):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.queue = []
+        self.bugs = {}
+        self.crashes = {}
+        
+    def generate_crash(self):
+        
+        # Fill...
+        while len(self.queue) < 10000:
+            (crash, bug) = super().generate_crash()
+            if bug in self.bugs:
+                self.bugs[bug].append(crash)
+            else:
+                self.bugs[bug] = [crash]
+            self.crashes[id(crash)] = bug
+            self.queue.append(crash)
+        
+        # Drain...
+        while len(self.queue) > 0:
+            crash = self.queue.pop(0)
+            bug = self.crashes[id(crash)]
+            if len(self.bugs[bug]) > 1:
+                del self.crashes[id(crash)]
+                return (crash, bug)
+            else:
+                # lonely crash, skip it
+                del self.bugs[bug]
+                del self.crashes[id(crash)]
+        
+        ERROR("Ran out of crashes :(")
+        assert False
+    
 def example_fake_crash_gen():
     metadata_field_new_word_m = 21.1 # new word every m words
     bug_metadata_field_new_word_m = 21.1 # TODO: estimate this
@@ -533,7 +567,7 @@ def example_fake_crash_gen():
         )
         
     
-    crash_gen = FakeCrashGen(
+    crash_gen = NoLonelyCrashGen(
         metadata_fields,
         crash_name_gen,
         bug_picker,
