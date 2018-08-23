@@ -511,10 +511,10 @@ class NoLonelyCrashGen(FakeCrashGen):
     
 def example_fake_crash_gen():
     metadata_field_new_word_m = 21.1 # new word every m words
-    bug_metadata_field_new_word_m = 21.1 # TODO: estimate this
+    bug_metadata_field_new_word_m = 2 # TODO: estimate this
     
     metadata_mean_nfields = 50 # TODO: estimate this
-    metadata_mean_field_length = 20 # TODO: estimate this
+    metadata_mean_field_length = 200 # TODO: estimate this
     crash_metadata_total_words = metadata_mean_nfields * metadata_mean_field_length
     
     bug_rate = 1.39 # in bugs/crash not bugs/day
