@@ -257,16 +257,16 @@ class FakeMetadataField(object):
         self.word_source = new_word_source()
         self.mean_len = mean_len
 
-    def draw_length(self):
-        length = stats.poisson.rvs(self.mean_len)
-        return length
+    #def draw_length(self):
+        #length = stats.poisson.rvs(self.mean_len) + 1
+        #return length
         
-    def draw(self):
-        content = []
-        length = self.draw_length()
-        for i in range(0, length):
-            content.append(self.word_source.draw())
-        return content
+    #def draw(self):
+        #content = []
+        #length = self.draw_length()
+        #for i in range(0, length):
+            #content.append(self.word_source.draw())
+        #return content
       
 class FakeMetadataFields(object):
     """ Responsible for storing all metadata fields regardless of bug or document. """
@@ -334,12 +334,13 @@ class FakeBug(object):
         self.bug_picker = bug_picker
     
     def draw_field_contents(self, field, field_number):
-        field_word_gen = self.field_word_gens[field_number]
-        field_contents = []
-        field_length = field.draw_length()
-        for word_number in range(0, field_length):
-            field_contents.append(field_word_gen.draw())
-        return " ".join(field_contents)
+        #field_word_gen = self.field_word_gens[field_number]
+        #field_contents = []
+        #field_length = field.draw_length()
+        #for word_number in range(0, field_length):
+            #field_contents.append(field_word_gen.draw())
+        #return " ".join(field_contents)
+        return self.field_word_gens[field_number].draw()
 
     def draw_crash(self):
         crash_metadata = {}
@@ -349,7 +350,8 @@ class FakeBug(object):
             if field_number > len(self.field_word_gens)-1:
                 self.field_word_gens.append(
                     self.new_bug_metadata_field_word_source(
-                        field.word_source
+                        field.word_source,
+                        field.mean_len
                         )
                     )
             crash_metadata[field.name] = self.draw_field_contents(field,
@@ -514,7 +516,7 @@ def example_fake_crash_gen():
     bug_metadata_field_new_word_m = 2 # TODO: estimate this
     
     metadata_mean_nfields = 50 # TODO: estimate this
-    metadata_mean_field_length = 200 # TODO: estimate this
+    metadata_mean_field_length = 200-1 # TODO: estimate this
     crash_metadata_total_words = metadata_mean_nfields * metadata_mean_field_length
     
     bug_rate = 1.39 # in bugs/crash not bugs/day
@@ -542,13 +544,15 @@ def example_fake_crash_gen():
         new_metadata_field_word_source,
         )
     
-    def new_bug_metadata_field_word_source(metadata_field_word_source):
-        return PreferentialAttachmentPoisson(
-            bug_metadata_field_new_word_m,
-            21,
-            0,
-            Strings('', 0)
-            )
+    def new_bug_metadata_field_word_source(metadata_field_word_source, mean_len):
+        return IndianBuffet(mean_len,
+                            metadata_field_word_source)
+        #return PreferentialAttachmentPoisson(
+            #bug_metadata_field_new_word_m,
+            #21,
+            #0,
+            #Strings('', 0)
+            #)
     
     crash_name_gen = PrefixedNumbers('fake', 8)
     bug_name_gen = PrefixedNumbers('bug', 6)
