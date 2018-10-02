@@ -114,7 +114,7 @@ class Crash(PCDict):
 
     @classmethod
     def load_from_file(cls, path):
-        import launchpad_crash
+        from partycrasher import launchpad_crash
         crash_classes = [ launchpad_crash.LaunchpadCrash ]
 
         crash = None

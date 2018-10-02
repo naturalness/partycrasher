@@ -82,7 +82,7 @@ class PCDict(MutableMapping):
 
     def __getitem__(self, key):
         if key in self.synonyms:
-            return self._d.__getitem__(synonyms[key])
+            return self._d.__getitem__(self.synonyms[key])
         else:
             return self._d.__getitem__(key)
     

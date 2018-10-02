@@ -1,3 +1,5 @@
+from partycrasher.crash import Stackframe
+
 def stringify_value(v):
     """ Force ints/bools to strings for ES """
     if isinstance(v, list) and not isinstance(v, StringifiedList):
@@ -21,6 +23,7 @@ def fix_key_for_es(key):
         key = key.decode(encoding='utf-8', errors='replace')
     key = key.replace('.', '_')
     key = key.replace(':', '_')
+    key = key.replace(' ', '_')
     return key
 
 class StringifiedDict(dict):

@@ -133,8 +133,6 @@ def load_oracle_data(oracle_file_path):
             DEBUG("Skipping type: " + k)
             skipped_ids.add(pc_id)
             continue
-        if 'type' not in crash:
-            crash['type'] = 'Crash'
         if 'date' not in crash:
             DEBUG("Skipping (no date): " + k)
             skipped_ids.add(pc_id)

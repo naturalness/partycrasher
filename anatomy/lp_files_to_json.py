@@ -19,14 +19,24 @@
 from __future__ import division, print_function
 
 import os, sys, pprint, random
-import crash
+from partycrasher.crash import Crash, Stacktrace, Stackframe
+from partycrasher.project import Project
+from partycrasher.crash_type import CrashType
+from partycrasher import launchpad_crash
 import json
 import re
 import csv
 import datetime
 import operator
 from tokenizers import PatternTokenizer, camel
-Crash = crash.Crash
+
+import logging
+logger = logging.getLogger(__name__)
+ERROR = logger.error
+WARN = logger.warn
+INFO = logger.info
+DEBUG = logger.debug
+logging.basicConfig(level=logging.DEBUG)
 
 topdir = sys.argv[1]
 
@@ -38,8 +48,8 @@ no_stacktrace = 0
 crashes = dict()
 oracle = dict()
 
-idsfile = open('ids_okay', 'wb')
-idsbucketsfile = open('ids_okay_buckets', 'wb')
+idsfile = open('ids_okay', 'w')
+idsbucketsfile = open('ids_okay_buckets', 'w')
 
 packages = dict()
 
@@ -118,7 +128,7 @@ def save_date_ranges():
                 delta = date_range['min'] - date_range['max']
                 date_range['delta'] = delta.total_seconds()
             except:
-                print(date_range, file=sys.stderr)
+                ERROR(date_range)
                 raise
         date_ranges_sorted = sorted(date_ranges.items(),
             key = lambda x: x[1]['delta'])
@@ -183,16 +193,29 @@ lengths = dict()
 ulengths = dict()
 
 def iterate_all_fields(c, prefix, method):
+    def call_method(k, v):
+        if k[-1] == '.':
+            k = k[:-1]
+        method(k, v)
+
     if isinstance(c, dict):
         for k, v in c.iteritems():
+            subfields = iterate_all_fields(v, prefix + k + ".", method)
+    if isinstance(c, Crash) or isinstance(c, Stackframe):
+        for k, v in c._d.items():
             subfields = iterate_all_fields(v, prefix + k + ".", method)
     elif isinstance(c, list):
         for i in c:
             subfields = iterate_all_fields(i, prefix, method)
-    elif isinstance(c, basestring) or c is None:
-        if prefix[-1] == '.':
-            prefix = prefix[:-1]
-        method(prefix, c)
+    elif isinstance(c, Stacktrace):
+        for i in c._l:
+            subfields = iterate_all_fields(i, prefix, method)
+    elif isinstance(c, Project) or isinstance(c, CrashType):
+        call_method(prefix, c.name)
+    elif isinstance(c, str) or c is None:
+        call_method(prefix, c)
+    elif isinstance(c, int):
+        call_method(prefix, str(c))
     elif isinstance(c, datetime.datetime):
         pass
     else:
@@ -251,11 +274,11 @@ def rec_libs(crash):
         frame = crash['stacktrace'][0]
         if 'dylib' in frame:
             dylib = frame['dylib']
-            print(dylib, file=sys.stderr)
+            #DEBUG(dylib)
             match = re.search(r".+/([^/.]+)\.", dylib)
             if match is not None:
               dylib = match.group(1)
-              print(dylib, file=sys.stderr)
+              #DEBUG(dylib)
               if dylib not in libs:
                   libs[dylib] = 0
               libs[dylib] += 1
@@ -276,17 +299,17 @@ for bucketdir in os.listdir(topdir):
     #if len(buglist) < 2:
         #continue
     buckets.append(bucket)
-    print(bucket, file=sys.stderr)
+    INFO(bucket)
     for bugdir in buglist:
         bugdir = os.path.join(bucketdir, bugdir)
-        print(bugdir, file=sys.stderr)
+        INFO(bugdir)
         assert os.path.isdir(bugdir)
         #print repr(os.listdir(bugdir))
         if len(os.listdir(bugdir)) >= 1:
             database_id = 'launchpad:'+os.path.basename(bugdir)
             try:
-                print("Disk: " + database_id, file=sys.stderr)
-                crashdata = crash.Crash.load_from_file(bugdir)
+                INFO("Disk: " + database_id)
+                crashdata = Crash.load_from_file(bugdir)
             except IOError as e:
                 if "No stacktrace" in str(e):
                     no_stacktrace += 1
@@ -294,7 +317,7 @@ for bucketdir in os.listdir(topdir):
                 else:
                     raise
             crashes[database_id] = crashdata
-            oracledata = crash.Crash({
+            oracledata = Crash({
                 'database_id': database_id,
                 'bucket': bucket,
                 })
@@ -312,9 +335,9 @@ for bucketdir in os.listdir(topdir):
             rec_signal(crashdata)
             rec_lengths(crashdata)
             rec_libs(crashdata)
-print(str(bugs_total) + " loaded", file=sys.stderr)
-print(str(no_stacktrace) + " thrown out because of unparsable stacktraces", file=sys.stderr)
-print(json.dumps({'crashes': crashes, 'oracle': oracle}, cls=crash.CrashEncoder, indent=2))
+INFO(str(bugs_total) + " loaded")
+INFO(str(no_stacktrace) + " thrown out because of unparsable stacktraces")
+print(json.dumps({'crashes': crashes, 'oracle': oracle}, cls=CrashEncoder, indent=2))
 
 idsbucketsfile.close()
 idsfile.close()

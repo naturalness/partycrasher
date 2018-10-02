@@ -19,13 +19,21 @@
 
 from __future__ import print_function
 
-from crash import Crash, Stacktrace, Stackframe
+from partycrasher.crash import Crash, Stacktrace, Stackframe
 
 import os, re, io, gzip, json, sys
 import dateparser
 import unicodedata
 from logging import critical, error, warning, info, debug
 import datetime
+from partycrasher.stringified import fix_key_for_es
+
+import logging
+logger = logging.getLogger(__name__)
+ERROR = logger.error
+WARN = logger.warn
+INFO = logger.info
+DEBUG = logger.debug
 
 # list of commonly found fields in lp crash reports,
 # used to prevent ES from making lots of useless mappings
@@ -123,8 +131,12 @@ save_fields = [
     "CurrentDesktop", 
     "DkmsStatus", 
     "RelatedPackageVersions",
+    "Binary package hint",
     "extra"
 ]
+
+save_fields = [fix_key_for_es(k) for k in save_fields]
+maxlen = max([len(k) for k in save_fields])
 
 def fixline(line_raw, encoding_guess="utf-8"):
     line_raw=line_raw.decode(encoding=encoding_guess, errors='replace')
@@ -137,17 +149,41 @@ def fixline(line_raw, encoding_guess="utf-8"):
             ch = u'?'
         line += ch
     return line
-    
+
+#number address in function (args) at file from lib
+naifafl = re.compile(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\(([^\)]*)\)\s+at\s+(\S+)\sfrom\s+(\S+)\s*$')
+#number address in function (args) from lib
+naifal = re.compile(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\(([^\)]*)\)\s+from\s+(.+?)\s*$')
+#number address function (args) from lib (missing in)
+nafal = re.compile(r'^#([\dx]+)\s+(\S+)\s+(.+?)\s+\(([^\)]*)\)\s+from\s+(.+?)\s*$')
+#number address in function (args) at file
+naifaf = re.compile(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\((.*?)\)\s+at\s+(.+?)\s*$')
+#number function (args) at file
+nfaf = re.compile(r'^#([\dx]+)\s+(.+?)\s+\((.*?)\)\s+at\s+(\S+)\s*$')
+#number address in function (args
+naifa = re.compile(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s*\((.*?)\)?\s*$')
+#number address in function
+naif = re.compile(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s*$')
+#number function (args
+nfa = re.compile(r'^#([\dx]+)\s+(.+?)\s+\((.*?)\)?\s*$')
+#number <function>
+nf = re.compile(r'^#(\d+)\s+(<.*?>)\s*$')
+#file: line
+fl = re.compile(r'^([^:]+):(\d+)\s*$')
+# at file: line
+afl = re.compile(r'^\s*at\s+([^\s:]+):(\d+)\s*$')
 
 class LaunchpadFrame(Stackframe):
     
+    __slots__=()
+
     @classmethod
     def load_from_strings(cls, line, extras=None):
         frame = LaunchpadFrame()
         matched = False
         try:
-            if not matched: #number address in function (args) at file from lib
-                match = re.match(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\(([^\)]*)\)\s+at\s+(\S+)\sfrom\s+(\S+)\s*$', line)
+            if not matched: 
+                match = naifafl.match(line)
                 if match is not None:
                     frame['depth'] = int(match.group(1))
                     frame['address'] = match.group(2)
@@ -156,8 +192,8 @@ class LaunchpadFrame(Stackframe):
                     frame['file'] = match.group(5)
                     frame['dylib'] = match.group(6)
                     matched = True
-            if not matched: #number address in function (args) from lib
-                match = re.match(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\(([^\)]*)\)\s+from\s+(.+?)\s*$', line)
+            if not matched: 
+                match = naifal.match(line)
                 if match is not None:
                     frame['depth'] = int(match.group(1))
                     frame['address'] = match.group(2)
@@ -165,8 +201,8 @@ class LaunchpadFrame(Stackframe):
                     frame['args'] = match.group(4)
                     frame['dylib'] = match.group(5)
                     matched = True
-            if not matched: #number address function (args) from lib (missing in)
-                match = re.match(r'^#([\dx]+)\s+(\S+)\s+(.+?)\s+\(([^\)]*)\)\s+from\s+(.+?)\s*$', line)
+            if not matched: 
+                match = nafal.match(line)
                 if match is not None:
                     frame['depth'] = int(match.group(1))
                     frame['address'] = match.group(2)
@@ -174,8 +210,8 @@ class LaunchpadFrame(Stackframe):
                     frame['args'] = match.group(4)
                     frame['dylib'] = match.group(5)
                     matched = True
-            if not matched:  #number address in function (args) at file
-                match = re.match(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s+\((.*?)\)\s+at\s+(.+?)\s*$', line)
+            if not matched: 
+                match = naifaf.match(line)
                 if match is not None:
                     frame['depth'] = int(match.group(1))
                     frame['address'] = match.group(2)
@@ -183,16 +219,16 @@ class LaunchpadFrame(Stackframe):
                     frame['args'] = match.group(4)
                     frame['file'] = match.group(5)
                     matched = True
-            if not matched: #number function (args) at file
-                match = re.match(r'^#([\dx]+)\s+(.+?)\s+\((.*?)\)\s+at\s+(\S+)\s*$', line)
+            if not matched: 
+                match = nfaf.match(line)
                 if match is not None:
                     frame['depth'] = int(match.group(1))
                     frame['function'] = match.group(2)
                     frame['args'] = match.group(3)
                     frame['file'] = match.group(4)
                     matched = True
-            if not matched: #number address in function (args
-                match = re.match(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s*\((.*?)\)?\s*$', line)
+            if not matched: 
+                match = naifa.match(line)
                 if match is not None:
                     assert ((not re.search(' at ', line))
                             or re.search('memory at ', line)
@@ -204,8 +240,8 @@ class LaunchpadFrame(Stackframe):
                     frame['function'] = match.group(3)
                     frame['args'] = match.group(4)
                     matched = True
-            if not matched: #number address in function
-                match = re.match(r'^#([\dx]+)\s+(\S+)\s+in\s+(.+?)\s*$', line)
+            if not matched:
+                match = naif.match(line)
                 if match is not None:
                     assert (not re.search(' at ', line))
                     assert (not re.search(' from ', line))
@@ -214,8 +250,8 @@ class LaunchpadFrame(Stackframe):
                     frame['address'] = match.group(2)
                     frame['function'] = match.group(3)
                     matched = True
-            if not matched: #number function (args
-                match = re.match(r'^#([\dx]+)\s+(.+?)\s+\((.*?)\)?\s*$', line)
+            if not matched: 
+                match = nfa.match(line)
                 if match is not None:
                     assert ((not re.search(' at ', line))
                             or re.search('memory at ', line)
@@ -227,8 +263,8 @@ class LaunchpadFrame(Stackframe):
                     frame['function'] = match.group(2)
                     frame['args'] = match.group(3)
                     matched = True
-            if not matched: #number <function>
-                match = re.match(r'^#(\d+)\s+(<.*?>)\s*$', line)
+            if not matched: 
+                match = nf.match(line)
                 if match is not None:
                     assert (not re.search(' at ', line))
                     assert (not re.search(' from ', line))
@@ -237,13 +273,13 @@ class LaunchpadFrame(Stackframe):
                     frame['function'] = match.group(2)
                     matched = True
         except:
-            print(line, file=sys.stderr)
+            ERROR(line)
             raise
-        if frame['function'] == '??':
+        if frame.get('function') == '??':
             frame['function'] = None
         leftover_extras = []
         if 'file' in frame:
-            match = re.match(r'^([^:]+):(\d+)\s*$', frame['file'])
+            match = fl.match(frame['file'])
             if match is not None:
                 frame['file'] = match.group(1)
                 frame['fileline'] = match.group(2)
@@ -252,7 +288,7 @@ class LaunchpadFrame(Stackframe):
             for extra in extras:
                 extra_matched = False
                 if not extra_matched:
-                    match = re.match(r'^\s*at\s+([^\s:]+):(\d+)\s*$', extra)
+                    match = afl.match(extra)
                     if match is not None:
                         frame['file'] = match.group(1)
                         frame['fileline'] = match.group(2)
@@ -268,6 +304,8 @@ class LaunchpadFrame(Stackframe):
 
 class LaunchpadStack(Stacktrace):
     
+    __slots__=()
+
     stackframe_class = LaunchpadFrame
 
     @classmethod
@@ -302,10 +340,121 @@ class LaunchpadStack(Stacktrace):
             stack.append(LaunchpadFrame.load_from_strings(prevline,extras))
         
         return stack
+    
+lg_start = re.compile(r'^\S[^:]+:')
+indented = re.compile(r'^\s\S')
+whitespace = re.compile(r'^\s*$')
 
+class LaunchpadCrashParser(object):
+    
+    __slots__=('prevfield')
+    
+    def parse_post_line(self, line, crash):
+        if lg_start.match(line):
+            (field, _, contents) = line.partition(':')
+            field = fix_key_for_es(field)
+            field = field.replace("GTK+", "GTK_")
+            contents = contents.lstrip()
+            if (len(field) > maxlen
+                or (
+                    field not in save_fields
+                    and field not in crash.synonyms
+                    )
+                ): # bad/corrupt crash text
+                #DEBUG("skipping line starts with: " + field)
+                crash[self.prevfield] += '\n' + line
+            elif field == 'ProblemType' and ':' in contents:
+                assert contents.startswith('Crash')
+                crash['ProblemType'] = 'Crash'
+                (a, _, b) = contents.partition(':')
+                crash[a] = b.lstrip()
+                self.prevfield = a
+            elif field == 'ProblemType' and len(contents) > 5:
+                assert contents.startswith('Crash')
+                crash['ProblemType'] = 'Crash'
+                crash['extra'] += contents[5:]
+                self.prevfield = 'extra'
+            else: # it's ok put it in
+                crash[field] = contents
+                if (
+                    field == 'date' 
+                    or crash.synonyms.get(field) == 'date'
+                    or field == 'type'
+                    or crash.synonyms.get(field) == 'type'
+                    ):
+                    self.prevfield = 'extra'
+                else:
+                    self.prevfield = field
+        elif whitespace.match(line):
+            self.prevfield = 'extra'
+        elif indented.match(line):
+            crash[self.prevfield] += '\n'+line
+        else:
+            crash['extra'] += line + '\n'
+            self.prevfield = 'extra'
+    
+    def parse_post(self, post, crash):
+        self.prevfield = 'extra'
+        crash['extra'] = ''
+        for line in post.split(b'\n'):
+            line = fixline(line)
+            try:
+                self.parse_post_line(line, crash)
+            except:
+                ERROR(line)
+                raise
+    
+    def load_from_file(self, path):
+        crash = LaunchpadCrash()
+        if os.path.isdir(path):
+            post_path = os.path.join(path, "Post.txt")
+            crash['database_id'] = 'launchpad:' + os.path.basename(path)
+            if os.path.isfile(post_path):
+                #raise NotImplementedError("Missing %s, I don't know how to load this." % (post_path))
+                with open(post_path, mode='rb') as postfile: post = postfile.read()
+                self.parse_post(post, crash)
+            else:
+                # TODO: fix this, if it has a stacktrace, we should be able to find a timestamp
+                #crash['date'] = datetime.datetime.now()
+                crash['type'] = 'Crash'
+            stack_path = None
+            try_files = [
+                "Stacktrace.txt (retraced)",
+                "StacktraceSource.txt",
+                "Stacktrace.txt",
+                "Stacktrace",
+                "Stacktrace.gz",
+                "Stacktrace.txt.1",
+                ]
+            trace = None
+            first_crash = None
+            for fname in try_files:
+                stack_path = os.path.join(path, fname)
+                if os.path.isfile(stack_path):
+                    try:
+                        trace = LaunchpadStack.load_from_file(stack_path)
+                    except Exception as e:
+                        if first_crash is None:
+                            first_crash = e
+                        continue
+                    if trace is None:
+                        ERROR(stack_path + " did not contain a stack trace!")
+                        if first_crash is not None:
+                            raise first_crash
+                    else:
+                        break
+            if trace is None:
+                raise IOError("No stacktrace file found in %s" % (path))
+            crash['stacktrace'] = trace
+            crash['project'] = 'Ubuntu'
+            #print json.dumps(crash, indent=4, default=repr)
+        else:
+            raise NotImplementedError("Not a directory, I don't know how to load this.")
+        return crash
 
 class LaunchpadCrash(Crash):
     
+    __slots__=()
     stacktrace_class = LaunchpadStack
 
     synonyms = Crash.synonyms
@@ -330,69 +479,9 @@ class LaunchpadCrash(Crash):
         else:
             return super(LaunchpadCrash, self).__setitem__(key, val)
         
-    
-    @classmethod
-    def load_from_file(cls, path, skip_files=[]):
-        crash = LaunchpadCrash()
-        if os.path.isdir(path):
-            post_path = os.path.join(path, "Post.txt")
-            crash['database_id'] = 'launchpad:' + os.path.basename(path)
-            if os.path.isfile(post_path):
-                #raise NotImplementedError("Missing %s, I don't know how to load this." % (post_path))
-                with open(post_path) as postfile: post = postfile.read()
-                prevfield = 'extra'
-                crash['extra'] = ''
-                for line in post.split('\n'):
-                    line = fixline(line)
-                    match = re.match(r'^(\S[^:]+):\s*(.*)\s*$', line)
-                    if match is not None:
-                        #print repr(match.group(1)) + '|||' + repr(match.group(2))
-                        crash[match.group(1)] = match.group(2)
-                        prevfield = fix_key_for_es(match.group(1))
-                    else:
-                        if prevfield.lower() != 'date':
-                            crash[prevfield] += line + "\n"
-                        else:
-                            crash['extra'] += line + "\n"
-                for key, value in list(crash.iteritems()): # limit the number of field mappings that ES creates
-                    if not key in save_fields:
-                        del crash[key]
-                        crash['extra'] += key + ": " + value + "\n"
-            else:
-                crash['date'] = datetime.datetime.now()
-            stack_path = None
-            try_files = [
-                "Stacktrace.txt (retraced)",
-                "StacktraceSource.txt",
-                "Stacktrace.txt",
-                "Stacktrace",
-                "Stacktrace.gz",
-                "Stacktrace.txt.1",
-                ]
-            for fname in try_files:
-                try_stack_path = os.path.join(path, fname)
-                #print(try_stack_path, file=sys.stderr)
-                for skipname in skip_files:
-                    if skipname in try_stack_path:
-                        try_stack_path = None
-                        break
-                if try_stack_path is None:
-                    continue
-                if os.path.isfile(try_stack_path):
-                    stack_path = try_stack_path
-            if stack_path is None:
-                raise IOError("No stacktrace file found in %s" % (path))
-            trace = LaunchpadStack.load_from_file(stack_path)
-            if trace is None:
-                print(stack_path + " did not contain a stack trace!", file=sys.stderr)
-                skip_files.append(stack_path)
-                return cls.load_from_file(path, skip_files)
-            crash['stacktrace'] = trace
-            crash['project'] = 'Ubuntu'
-            #print json.dumps(crash, indent=4, default=repr)
-        else:
-            raise NotImplementedError("Not a directory, I don't know how to load this.")
-        return crash
+    def load_from_file(path):
+        parser = LaunchpadCrashParser()
+        return parser.load_from_file(path)
 
 import unittest
 class TestCrash(unittest.TestCase):
